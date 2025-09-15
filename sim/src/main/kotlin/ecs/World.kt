@@ -7,9 +7,13 @@ class World {
     val healths = mutableMapOf<EntityId, Health>()
     val weapons = mutableMapOf<EntityId, WeaponRef>()
     val orders = mutableMapOf<EntityId, OrderQueue>()
-    val visions = mutableMapOf<EntityId, Vision>() // NEW
+    val visions = mutableMapOf<EntityId, Vision>()
 
-    val alive: Sequence<EntityId> get() = transforms.keys.asSequence().filter { healths[it]?.hp ?: 0 > 0 }
+    val index = FactionIndex(this) // NEW
+
+    val alive: Sequence<EntityId>
+        get() =
+            transforms.keys.asSequence().filter { healths[it]?.hp ?: 0 > 0 }
 
     fun spawn(t: Transform, tag: UnitTag, h: Health, w: WeaponRef?, v: Vision? = null): EntityId {
         val id = Ids.newId()
@@ -20,10 +24,13 @@ class World {
         orders[id] = OrderQueue()
         motions[id] = Motion()
         if (v != null) visions[id] = v
+        index.add(id, tag.faction)       // keep index updated
         return id
     }
 
     fun remove(id: EntityId) {
+        val f = tags[id]?.faction
+        if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
     }

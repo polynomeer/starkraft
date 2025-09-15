@@ -28,38 +28,58 @@ class MovementSystem(private val world: World) {
 
 class CombatSystem(private val world: World, private val data: DataRepo) {
     fun tick() {
-        // Cooldowns & simple auto-targeting within range
+        // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
+        val enemiesCache: Map<Int, IntArray> = buildEnemyCache()
+
         for (id in world.alive) {
             val w = world.weapons[id] ?: continue
             if (w.cooldownTicks > 0) {
                 w.cooldownTicks--; continue
             }
-            val unit = world.tags[id]!!
+
+            val unitTag = world.tags[id]!!
             val tr = world.transforms[id]!!
             val def = data.weapon(w.id)
             val rng2 = def.range * def.range
-            // find nearest enemy
-            var best: EntityId? = null
+
+            // ② 아군은 제외된 "적 리스트"만 순회
+            val enemies = enemiesCache[unitTag.faction] ?: IntArray(0)
+            var best: EntityId = 0
             var bestD2 = Float.POSITIVE_INFINITY
-            for (other in world.alive) {
+            for (other in enemies) {
                 if (other == id) continue
-                val oTag = world.tags[other]!!
-                if (oTag.faction == unit.faction) continue
-                val otr = world.transforms[other]!!
-                val d2 = (otr.x - tr.x).let { dx -> dx * dx } + (otr.y - tr.y).let { dy -> dy * dy }
+                val oHp = world.healths[other] ?: continue
+                if (oHp.hp <= 0) continue
+                val otr = world.transforms[other] ?: continue
+                val dx = otr.x - tr.x
+                val dy = otr.y - tr.y
+                val d2 = dx * dx + dy * dy
                 if (d2 <= rng2 && d2 < bestD2) {
                     best = other; bestD2 = d2
                 }
             }
-            if (best != null) {
-                // fire
-                val targetHp = world.healths[best!!]!!
-                val dmg = max(0, def.damage - targetHp.armor)
+
+            if (best != 0) {
+                val targetHp = world.healths[best]!!
+                val dmg = kotlin.math.max(0, def.damage - targetHp.armor)
                 targetHp.hp -= dmg
                 w.cooldownTicks = def.cooldownTicks
-                if (targetHp.hp <= 0) world.remove(best!!)
+                if (targetHp.hp <= 0) world.remove(best)
             }
         }
+    }
+
+    private fun buildEnemyCache(): Map<Int, IntArray> {
+        val factions = world.tags.values.asSequence().map { it.faction }.toSet()
+        val cache = mutableMapOf<Int, IntArray>()
+        for (f in factions) {
+            val enemies = world.index.enemiesOf(f)
+                .filter { id -> (world.healths[id]?.hp ?: 0) > 0 }
+                .toList()
+                .toIntArray()
+            cache[f] = enemies
+        }
+        return cache
     }
 }
 
