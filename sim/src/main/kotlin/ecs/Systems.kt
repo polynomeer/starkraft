@@ -62,3 +62,20 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
         }
     }
 }
+
+class VisionSystem(
+    private val world: World,
+    private val fogTeam1: starkraft.sim.ecs.services.FogGrid,
+    private val fogTeam2: starkraft.sim.ecs.services.FogGrid
+) {
+    fun tick() {
+        fogTeam1.clear(); fogTeam2.clear()
+        for (id in world.alive) {
+            val v = world.visions[id] ?: continue
+            val tr = world.transforms[id] ?: continue
+            val tag = world.tags[id] ?: continue
+            if (tag.faction == 1) fogTeam1.markVisible(tr.x, tr.y, v.range)
+            else if (tag.faction == 2) fogTeam2.markVisible(tr.x, tr.y, v.range)
+        }
+    }
+}

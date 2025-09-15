@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
+import starkraft.sim.ecs.services.FogGrid
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
 
@@ -23,36 +24,35 @@ fun main() {
     val world = World()
     val movement = MovementSystem(world)
     val combat = CombatSystem(world, data)
+    val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
+    val fog2 = FogGrid(64, 64, 0.25f)
+    val visionSys = VisionSystem(world, fog1, fog2)
 
-    // Spawn two tiny squads
+    // Spawn with vision component
     repeat(5) {
-        world.spawn(Transform(2f + it * 0.2f, 2f), UnitTag(1, "Marine"), Health(45, 45), WeaponRef("Gauss"))
-        world.spawn(Transform(10f - it * 0.2f, 10f), UnitTag(2, "Zergling"), Health(35, 35), WeaponRef("Claw"))
+        // Marines (team1)
+        val idA = world.spawn(Transform(2f + it * 0.2f, 2f), UnitTag(1, "Marine"), Health(45, 45), WeaponRef("Gauss"))
+        world.visions[idA] = Vision(7f)
+
+        // Zerglings (team2)
+        val idB =
+            world.spawn(Transform(10f - it * 0.2f, 10f), UnitTag(2, "Zergling"), Health(35, 35), WeaponRef("Claw"))
+        world.visions[idB] = Vision(6f)
     }
 
     var tick = 0
-    val recorder = NullRecorder()
-
-    // Demo orders: make team 1 move toward center
-    val team1 = world.tags.filter { it.value.faction == 1 }.keys.toIntArray()
-    issue(Command.Move(0, team1, 6f, 6f), world, recorder)
-
-    val start = System.currentTimeMillis()
-    while (tick < 1500) { // ~30 seconds
-        // Process queued orders already stuffed into world.orders by issue()
+    while (tick < 1500) {
         movement.tick()
         combat.tick()
+        visionSys.tick()
 
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
-            println("tick=$tick  alive: team1=$m1 team2=$m2")
+            println("tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()}")
         }
-
         tick++
-        val targetNext = start + tick * Time.TICK_MS
-        val sleep = targetNext - System.currentTimeMillis()
-        if (sleep > 0) Thread.sleep(sleep)
+        Thread.sleep(Time.TICK_MS.toLong())
     }
 }
 

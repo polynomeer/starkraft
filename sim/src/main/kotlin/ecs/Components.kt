@@ -16,3 +16,5 @@ sealed interface Order {
     data class Move(val tx: Float, val ty: Float) : Order;
     data class Attack(val target: EntityId) : Order
 }
+
+data class Vision(var range: Float)
