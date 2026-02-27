@@ -9,6 +9,8 @@ class World {
     val orders = mutableMapOf<EntityId, OrderQueue>()
     val visions = mutableMapOf<EntityId, Vision>()
     val pathFollows = mutableMapOf<EntityId, PathFollow>()
+    val repathCooldowns = mutableMapOf<EntityId, RepathCooldown>()
+    val stucks = mutableMapOf<EntityId, StuckTracker>()
 
     val index = FactionIndex(this) // NEW
 
@@ -25,6 +27,8 @@ class World {
         orders[id] = OrderQueue()
         motions[id] = Motion()
         if (v != null) visions[id] = v
+        repathCooldowns[id] = RepathCooldown()
+        stucks[id] = StuckTracker(t.x, t.y, 0)
         index.add(id, tag.faction)       // keep index updated
         return id
     }
@@ -34,6 +38,6 @@ class World {
         if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
-        pathFollows.remove(id)
+        pathFollows.remove(id); repathCooldowns.remove(id); stucks.remove(id)
     }
 }

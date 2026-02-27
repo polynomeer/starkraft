@@ -8,15 +8,33 @@ import starkraft.sim.ecs.path.PathRequestQueue
 class MovementSystem(
     private val world: World,
     private val map: MapGrid,
+    private val occ: OccupancyGrid,
     private val pathPool: PathPool,
     private val pathQueue: PathRequestQueue
 ) {
     private val speed = 0.06f // tiles/tick demo speed
     private val arrivalEps = 0.05f
+    private val repathCooldownTicks = 10
+    private val stuckThresholdTicks = 20
+    private val stuckDist2 = 0.0001f
 
     fun tick() {
+        pathQueue.beginTick()
         for (id in world.alive) {
             val tr = world.transforms[id] ?: continue
+            val cooldown = world.repathCooldowns[id]
+            if (cooldown != null && cooldown.ticks > 0) cooldown.ticks--
+            val stuck = world.stucks[id]
+            if (stuck != null) {
+                val dx = tr.x - stuck.lastX
+                val dy = tr.y - stuck.lastY
+                if (dx * dx + dy * dy < stuckDist2) stuck.ticks++ else {
+                    stuck.ticks = 0
+                    stuck.lastX = tr.x
+                    stuck.lastY = tr.y
+                }
+            }
+
             val q = world.orders[id]?.items ?: continue
             if (q.isNotEmpty()) {
                 val o = q.first()
@@ -39,6 +57,17 @@ class MovementSystem(
                     val nx = node % map.width
                     val ny = node / map.width
 
+                    val blocked =
+                        !map.isPassable(nx, ny) || occ.isBlockedAllowing(nx, ny, curX, curY) || isDiagonalCornerBlocked(curX, curY, nx, ny)
+                    val isStuck = stuck != null && stuck.ticks >= stuckThresholdTicks
+                    if ((blocked || isStuck) && cooldown != null && cooldown.ticks == 0) {
+                        if (pathQueue.enqueue(id)) {
+                            cooldown.ticks = repathCooldownTicks
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        }
+                        continue
+                    }
+
                     val tx = nx + 0.5f
                     val ty = ny + 0.5f
                     val dx = tx - tr.x
@@ -57,9 +86,22 @@ class MovementSystem(
     }
 
     private fun tryEnqueuePath(id: EntityId) {
+        val cooldown = world.repathCooldowns[id]
+        if (cooldown != null && cooldown.ticks > 0) return
         if (pathQueue.enqueue(id)) {
-            // queued
+            if (cooldown != null) cooldown.ticks = repathCooldownTicks
         }
+    }
+
+    private fun isDiagonalCornerBlocked(cx: Int, cy: Int, nx: Int, ny: Int): Boolean {
+        if (cx == nx || cy == ny) return false
+        val ox = nx
+        val oy = cy
+        val px = cx
+        val py = ny
+        if (!map.isPassable(ox, oy) || occ.isBlocked(ox, oy)) return true
+        if (!map.isPassable(px, py) || occ.isBlocked(px, py)) return true
+        return false
     }
 }
 
@@ -117,6 +159,18 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             cache[f] = enemies
         }
         return cache
+    }
+}
+
+class OccupancySystem(private val world: World, private val occ: OccupancyGrid) {
+    fun tick() {
+        occ.clearDynamic()
+        for (id in world.alive) {
+            val tr = world.transforms[id] ?: continue
+            val x = floor(tr.x).toInt()
+            val y = floor(tr.y).toInt()
+            occ.addDynamic(x, y)
+        }
     }
 }
 

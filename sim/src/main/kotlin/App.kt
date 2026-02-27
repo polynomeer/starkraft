@@ -30,9 +30,10 @@ fun main() {
     val occ = OccupancyGrid(32, 32)
     val pathfinder = Pathfinder(map, occ, allowCornerCut = false)
     val pathPool = PathPool(map.width * map.height)
-    val pathQueue = PathRequestQueue(50)
+    val pathQueue = PathRequestQueue(256, 50)
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
-    val movement = MovementSystem(world, map, pathPool, pathQueue)
+    val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
+    val occupancy = OccupancySystem(world, occ)
     val combat = CombatSystem(world, data)
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
@@ -64,6 +65,7 @@ fun main() {
 
     var tick = 0
     while (tick < 1500) {
+        occupancy.tick()
         pathing.tick()
         movement.tick()
         combat.tick()
@@ -74,7 +76,7 @@ fun main() {
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
-                    "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved}"
+                    "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size}"
             )
         }
         tick++

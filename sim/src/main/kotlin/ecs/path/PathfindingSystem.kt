@@ -19,14 +19,20 @@ class PathPool(private val maxSize: Int, private val capacity: Int = 64) {
     }
 }
 
-class PathRequestQueue(private val maxSize: Int) {
+class PathRequestQueue(private val maxSize: Int, private val maxEnqueuesPerTick: Int) {
     private val ids = IntArray(maxSize)
     var count: Int = 0
         private set
+    private var enqueuedThisTick: Int = 0
+
+    val size: Int
+        get() = count
 
     fun enqueue(id: Int): Boolean {
+        if (enqueuedThisTick >= maxEnqueuesPerTick) return false
         if (count >= maxSize) return false
         ids[count++] = id
+        enqueuedThisTick++
         return true
     }
 
@@ -38,6 +44,10 @@ class PathRequestQueue(private val maxSize: Int) {
 
     fun reset(newCount: Int) {
         count = newCount
+    }
+
+    fun beginTick() {
+        enqueuedThisTick = 0
     }
 }
 
