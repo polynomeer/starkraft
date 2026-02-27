@@ -16,6 +16,8 @@ class Pathfinder(
 
     private val visitId = IntArray(size)
     private val state = ByteArray(size)
+    private val STATE_OPEN: Byte = 1
+    private val STATE_CLOSED: Byte = 2
     private val gScore = FloatArray(size)
     private val fScore = FloatArray(size)
     private val parent = IntArray(size)
@@ -63,7 +65,7 @@ class Pathfinder(
                 return 0
             }
             val current = heapPop(heap, heapPos, fScore, heapSize).also { heapSize-- }
-            state[current] = 2
+            state[current] = STATE_CLOSED
             lastNodesUsed++
             if (current == goal) {
                 return buildPath(start, goal, out)
@@ -91,16 +93,16 @@ class Pathfinder(
                 val step = if (i < 4) 1f else 1.41421356f
                 val ng = gCur + step * map.cost(nx, ny)
                 val visited = visitId[n] == searchId
-                if (!visited || (state[n] != 2 && ng < gScore[n])) {
+                if (!visited || (state[n] != STATE_CLOSED && ng < gScore[n])) {
                     parent[n] = current
                     val f = ng + heuristic(nx, ny, gx, gy)
-                    if (!visited || state[n] == 0) {
+                    if (!visited || state[n] == 0.toByte()) {
                         open(n, ng, f)
                         heap[heapSize] = n
                         heapPos[n] = heapSize
                         heapSize++
                         heapUp(heap, heapPos, fScore, heapSize - 1)
-                    } else if (state[n] == 1 && ng < gScore[n]) {
+                    } else if (state[n] == STATE_OPEN && ng < gScore[n]) {
                         gScore[n] = ng
                         fScore[n] = f
                         heapUp(heap, heapPos, fScore, heapPos[n])
@@ -113,7 +115,7 @@ class Pathfinder(
 
     private fun open(n: Int, g: Float, f: Float) {
         visitId[n] = searchId
-        state[n] = 1
+        state[n] = STATE_OPEN
         gScore[n] = g
         fScore[n] = f
         parent[n] = -1
