@@ -3,6 +3,10 @@ package starkraft.sim
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
+import starkraft.sim.ecs.path.Pathfinder
+import starkraft.sim.ecs.path.PathPool
+import starkraft.sim.ecs.path.PathRequestQueue
+import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
 
@@ -22,26 +26,45 @@ fun main() {
     val data = DataRepo(unitsJson, weaponsJson)
 
     val world = World()
-    val movement = MovementSystem(world)
+    val map = MapGrid(32, 32)
+    val occ = OccupancyGrid(32, 32)
+    val pathfinder = Pathfinder(map, occ, allowCornerCut = false)
+    val pathPool = PathPool(map.width * map.height)
+    val pathQueue = PathRequestQueue(50)
+    val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
+    val movement = MovementSystem(world, map, pathPool, pathQueue)
     val combat = CombatSystem(world, data)
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
     val visionSys = VisionSystem(world, fog1, fog2)
 
+    // Simple obstacles + rough terrain
+    for (x in 6..24) map.setBlocked(x, 14, true)
+    for (y in 6..14) map.setBlocked(12, y, true)
+    for (x in 18..22) for (y in 18..22) map.setCost(x, y, 3f)
+
     // Spawn with vision component
+    val team1 = mutableListOf<Int>()
+    val team2 = mutableListOf<Int>()
     repeat(5) {
         // Marines (team1)
         val idA = world.spawn(Transform(2f + it * 0.2f, 2f), UnitTag(1, "Marine"), Health(45, 45), WeaponRef("Gauss"))
         world.visions[idA] = Vision(7f)
+        team1.add(idA)
 
         // Zerglings (team2)
         val idB =
             world.spawn(Transform(10f - it * 0.2f, 10f), UnitTag(2, "Zergling"), Health(35, 35), WeaponRef("Claw"))
         world.visions[idB] = Vision(6f)
+        team2.add(idB)
     }
+
+    team1.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(28f, 28f)) }
+    team2.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(2f, 2f)) }
 
     var tick = 0
     while (tick < 1500) {
+        pathing.tick()
         movement.tick()
         combat.tick()
         visionSys.tick()
@@ -49,7 +72,10 @@ fun main() {
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
-            println("tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()}")
+            println(
+                "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
+                    "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved}"
+            )
         }
         tick++
         Thread.sleep(Time.TICK_MS.toLong())

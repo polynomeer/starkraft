@@ -8,6 +8,7 @@ class World {
     val weapons = mutableMapOf<EntityId, WeaponRef>()
     val orders = mutableMapOf<EntityId, OrderQueue>()
     val visions = mutableMapOf<EntityId, Vision>()
+    val pathFollows = mutableMapOf<EntityId, PathFollow>()
 
     val index = FactionIndex(this) // NEW
 
@@ -33,5 +34,6 @@ class World {
         if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
+        pathFollows.remove(id)
     }
 }

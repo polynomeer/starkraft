@@ -2,26 +2,63 @@ package starkraft.sim.ecs
 
 import starkraft.sim.data.DataRepo
 import kotlin.math.*
+import starkraft.sim.ecs.path.PathPool
+import starkraft.sim.ecs.path.PathRequestQueue
 
-class MovementSystem(private val world: World) {
+class MovementSystem(
+    private val world: World,
+    private val map: MapGrid,
+    private val pathPool: PathPool,
+    private val pathQueue: PathRequestQueue
+) {
+    private val speed = 0.06f // tiles/tick demo speed
+    private val arrivalEps = 0.05f
+
     fun tick() {
         for (id in world.alive) {
+            val tr = world.transforms[id] ?: continue
             val q = world.orders[id]?.items ?: continue
             if (q.isNotEmpty()) {
                 val o = q.first()
                 if (o is Order.Move) {
-                    val tr = world.transforms[id]!!
-                    val dx = o.tx - tr.x;
-                    val dy = o.ty - tr.y
+                    val pf = world.pathFollows[id]
+                    if (pf == null) {
+                        tryEnqueuePath(id)
+                        continue
+                    }
+
+                    if (pf.index >= pf.length) {
+                        world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        q.removeFirst()
+                        continue
+                    }
+
+                    val curX = floor(tr.x).toInt()
+                    val curY = floor(tr.y).toInt()
+                    val node = pf.nodes[pf.index]
+                    val nx = node % map.width
+                    val ny = node / map.width
+
+                    val tx = nx + 0.5f
+                    val ty = ny + 0.5f
+                    val dx = tx - tr.x
+                    val dy = ty - tr.y
                     val dist = hypot(dx, dy)
-                    val speed = 0.06f // tiles/tick demo speed
-                    if (dist < speed) {
-                        tr.x = o.tx; tr.y = o.ty; q.removeFirst()
+                    if (dist <= arrivalEps) {
+                        pf.index++
                     } else {
-                        tr.x += (dx / dist) * speed; tr.y += (dy / dist) * speed
+                        val step = min(speed, dist)
+                        tr.x += (dx / dist) * step
+                        tr.y += (dy / dist) * step
                     }
                 }
             }
+        }
+    }
+
+    private fun tryEnqueuePath(id: EntityId) {
+        if (pathQueue.enqueue(id)) {
+            // queued
         }
     }
 }
