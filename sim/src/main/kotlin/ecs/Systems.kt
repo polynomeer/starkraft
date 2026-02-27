@@ -110,7 +110,8 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
         // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
         val enemiesCache: Map<Int, IntArray> = buildEnemyCache()
 
-        for (id in world.alive) {
+        val aliveIds = world.alive.toList()
+        for (id in aliveIds) {
             val w = world.weapons[id] ?: continue
             if (w.cooldownTicks > 0) {
                 w.cooldownTicks--; continue
