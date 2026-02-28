@@ -26,10 +26,16 @@ class MovementSystem(
 
     var lastTickReplans: Int = 0
         private set
+    var lastTickReplansBlocked: Int = 0
+        private set
+    var lastTickReplansStuck: Int = 0
+        private set
 
     fun tick() {
         pathQueue.beginTick()
         lastTickReplans = 0
+        lastTickReplansBlocked = 0
+        lastTickReplansStuck = 0
         val alive = world.aliveSnapshot
         val ids = alive.ids
         val count = alive.count
@@ -79,6 +85,8 @@ class MovementSystem(
                             cooldown.ticks = repathCooldownTicks
                             world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
                             lastTickReplans++
+                            if (blocked) lastTickReplansBlocked++
+                            if (isStuck) lastTickReplansStuck++
                         }
                         continue
                     }
@@ -106,6 +114,7 @@ class MovementSystem(
         if (pathQueue.enqueue(id)) {
             if (cooldown != null) cooldown.ticks = repathCooldownTicks
             lastTickReplans++
+            // This is a "missing path" request, not caused by blocked/stuck.
         }
     }
 

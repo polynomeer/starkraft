@@ -68,6 +68,8 @@ object Benchmark {
         var tick = 0
         val samples = LongArray(ticksToMeasure)
         val replans = IntArray(ticksToMeasure)
+        val replansBlocked = IntArray(ticksToMeasure)
+        val replansStuck = IntArray(ticksToMeasure)
         while (tick < warmupTicks + ticksToMeasure) {
             if (tick % 500 == 0) {
                 val phase = (tick / 500) % targets.size
@@ -88,6 +90,8 @@ object Benchmark {
             if (tick >= warmupTicks) {
                 samples[tick - warmupTicks] = t1 - t0
                 replans[tick - warmupTicks] = movement.lastTickReplans
+                replansBlocked[tick - warmupTicks] = movement.lastTickReplansBlocked
+                replansStuck[tick - warmupTicks] = movement.lastTickReplansStuck
             }
             tick++
         }
@@ -99,11 +103,17 @@ object Benchmark {
         val max = sorted[sorted.size - 1]
         val replanP50 = percentileInt(replans, 50.0)
         val replanP95 = percentileInt(replans, 95.0)
+        val blockedP50 = percentileInt(replansBlocked, 50.0)
+        val blockedP95 = percentileInt(replansBlocked, 95.0)
+        val stuckP50 = percentileInt(replansStuck, 50.0)
+        val stuckP95 = percentileInt(replansStuck, 95.0)
 
         println("Benchmark ticks=$ticksToMeasure warmup=$warmupTicks")
         println(
             "p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us max=${nsToMicros(max)}us " +
-                "replan_p50=$replanP50 replan_p95=$replanP95"
+                "replan_p50=$replanP50 replan_p95=$replanP95 " +
+                "blocked_p50=$blockedP50 blocked_p95=$blockedP95 " +
+                "stuck_p50=$stuckP50 stuck_p95=$stuckP95"
         )
     }
 }

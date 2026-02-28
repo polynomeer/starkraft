@@ -87,7 +87,8 @@ fun main() {
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
                     "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} " +
-                    "replans=${movement.lastTickReplans}"
+                    "replans=${movement.lastTickReplans} " +
+                    "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}"
             )
         }
         tick++
