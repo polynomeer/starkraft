@@ -285,6 +285,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.Attack -> {
                     println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
                 }
+                is Command.Spawn -> {
+                    println("tick=$tick spawn faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
+                }
             }
         }
     }
