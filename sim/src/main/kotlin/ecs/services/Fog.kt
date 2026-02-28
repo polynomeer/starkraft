@@ -3,10 +3,17 @@ package starkraft.sim.ecs.services
 import kotlin.math.*
 
 class FogGrid(val width: Int, val height: Int, val tileSize: Float) {
-    private val visible = Array(height) { BooleanArray(width) }
+    private val stamp = IntArray(width * height)
+    private var current = 1
+    private var visibleCount = 0
 
     fun clear() {
-        for (y in 0 until height) java.util.Arrays.fill(visible[y], false)
+        current++
+        visibleCount = 0
+        if (current == Int.MAX_VALUE) {
+            java.util.Arrays.fill(stamp, 0)
+            current = 1
+        }
     }
 
     fun markVisible(cx: Float, cy: Float, range: Float) {
@@ -22,14 +29,18 @@ class FogGrid(val width: Int, val height: Int, val tileSize: Float) {
             val dy = ty - cyT
             for (tx in minX..maxX) {
                 val dx = tx - cxT
-                if (dx * dx + dy * dy <= r2) visible[ty][tx] = true
+                if (dx * dx + dy * dy <= r2) {
+                    val idx = ty * width + tx
+                    if (stamp[idx] != current) {
+                        stamp[idx] = current
+                        visibleCount++
+                    }
+                }
             }
         }
     }
 
     fun visibleCount(): Int {
-        var c = 0
-        for (y in 0 until height) for (x in 0 until width) if (visible[y][x]) c++
-        return c
+        return visibleCount
     }
 }
