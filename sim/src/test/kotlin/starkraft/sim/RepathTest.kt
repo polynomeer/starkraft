@@ -7,7 +7,6 @@ import starkraft.sim.ecs.path.PathPool
 import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.Pathfinder
 import starkraft.sim.ecs.path.PathfindingSystem
-import kotlin.math.abs
 import kotlin.math.floor
 
 class RepathTest {
@@ -56,7 +55,10 @@ class RepathTest {
         }
 
         val tr = world.transforms[id]!!
-        assertTrue(isNear(tr.x, 8f) && isNear(tr.y, 2f), "Unit did not reach goal")
+        assertTrue(
+            floor(tr.x).toInt() == 8 && floor(tr.y).toInt() == 2,
+            "Unit did not reach goal tile"
+        )
         assertTrue(safePathObserved, "Replan did not avoid blocked gap")
     }
 }
@@ -68,5 +70,3 @@ private fun pathContains(pf: PathFollow, width: Int, x: Int, y: Int): Boolean {
     }
     return false
 }
-
-private fun isNear(v: Float, target: Float): Boolean = abs(v - target) < 0.2f
