@@ -62,11 +62,14 @@ class PathfindingSystem(
         private set
     var lastTickSolved: Int = 0
         private set
+    var lastTickAvgPathLen: Float = 0f
+        private set
 
     fun tick() {
         var remainingBudget = nodesBudgetPerTick
         var newCount = 0
         var solved = 0
+        var totalLen = 0
         lastTickRequests = queue.count
 
         for (i in 0 until queue.count) {
@@ -92,6 +95,7 @@ class PathfindingSystem(
                 if (old != null) pool.recycle(old.nodes)
                 world.pathFollows[id] = PathFollow(out, len, 0)
                 solved++
+                totalLen += len
             } else {
                 pool.recycle(out)
                 if (pathfinder.lastBudgetExhausted) {
@@ -101,5 +105,6 @@ class PathfindingSystem(
         }
         queue.reset(newCount)
         lastTickSolved = solved
+        lastTickAvgPathLen = if (solved > 0) totalLen.toFloat() / solved.toFloat() else 0f
     }
 }

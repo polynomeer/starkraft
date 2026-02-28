@@ -70,6 +70,8 @@ object Benchmark {
         val replans = IntArray(ticksToMeasure)
         val replansBlocked = IntArray(ticksToMeasure)
         val replansStuck = IntArray(ticksToMeasure)
+        val avgPathLens = FloatArray(ticksToMeasure)
+        val queueSizes = IntArray(ticksToMeasure)
         while (tick < warmupTicks + ticksToMeasure) {
             if (tick % 500 == 0) {
                 val phase = (tick / 500) % targets.size
@@ -92,6 +94,8 @@ object Benchmark {
                 replans[tick - warmupTicks] = movement.lastTickReplans
                 replansBlocked[tick - warmupTicks] = movement.lastTickReplansBlocked
                 replansStuck[tick - warmupTicks] = movement.lastTickReplansStuck
+                avgPathLens[tick - warmupTicks] = pathing.lastTickAvgPathLen
+                queueSizes[tick - warmupTicks] = pathQueue.size
             }
             tick++
         }
@@ -107,13 +111,19 @@ object Benchmark {
         val blockedP95 = percentileInt(replansBlocked, 95.0)
         val stuckP50 = percentileInt(replansStuck, 50.0)
         val stuckP95 = percentileInt(replansStuck, 95.0)
+        val avgLenP50 = percentileFloat(avgPathLens, 50.0)
+        val avgLenP95 = percentileFloat(avgPathLens, 95.0)
+        val queueP50 = percentileInt(queueSizes, 50.0)
+        val queueP95 = percentileInt(queueSizes, 95.0)
 
         println("Benchmark ticks=$ticksToMeasure warmup=$warmupTicks")
         println(
             "p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us max=${nsToMicros(max)}us " +
                 "replan_p50=$replanP50 replan_p95=$replanP95 " +
                 "blocked_p50=$blockedP50 blocked_p95=$blockedP95 " +
-                "stuck_p50=$stuckP50 stuck_p95=$stuckP95"
+                "stuck_p50=$stuckP50 stuck_p95=$stuckP95 " +
+                "avglen_p50=${"%.2f".format(avgLenP50)} avglen_p95=${"%.2f".format(avgLenP95)} " +
+                "queue_p50=$queueP50 queue_p95=$queueP95"
         )
     }
 }
@@ -133,5 +143,14 @@ private fun percentileInt(values: IntArray, p: Double): Int {
     Arrays.sort(copy)
     val rank = p / 100.0 * (copy.size - 1)
     val idx = floor(rank).toInt().coerceIn(0, copy.size - 1)
+    return copy[idx]
+}
+
+private fun percentileFloat(values: FloatArray, p: Double): Float {
+    if (values.isEmpty()) return 0f
+    val copy = values.copyOf()
+    java.util.Arrays.sort(copy)
+    val rank = p / 100.0 * (copy.size - 1)
+    val idx = kotlin.math.floor(rank).toInt().coerceIn(0, copy.size - 1)
     return copy[idx]
 }
