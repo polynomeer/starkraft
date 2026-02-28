@@ -83,3 +83,14 @@ positions.
 
 ## Running
 Use `./gradlew :sim:run` with JDK 17.
+
+### Headless Script Input
+You can run a simple command script with:
+`./gradlew :sim:run --args="--script sim/scripts/sample.script --noSleep"`
+
+Script syntax:
+- `tick <n>` set absolute tick
+- `wait <n>` advance ticks
+- `select <id...>` select units by entity id
+- `move <x> <y>` move selection
+- `attack <targetId>` attack target

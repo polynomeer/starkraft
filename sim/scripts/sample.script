@@ -1,0 +1,14 @@
+# Sample headless command script
+# Units are addressed by entity id as spawned in App.kt (1..10)
+
+tick 0
+select 1 2 3 4 5
+move 20 20
+
+wait 50
+select 6 7 8 9 10
+move 5 5
+
+wait 50
+select 1 2 3
+attack 6
