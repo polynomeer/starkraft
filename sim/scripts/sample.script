@@ -12,3 +12,9 @@ move 5 5
 wait 50
 select 1 2 3
 attack 6
+
+wait 25
+# Spawn a new unit and command it
+spawn 1 Marine 12 12 7
+select 11
+move 22 22
