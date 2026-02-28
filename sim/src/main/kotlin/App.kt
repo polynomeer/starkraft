@@ -92,6 +92,7 @@ fun main(args: Array<String>) {
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
     val scriptValidate = hasFlag(args, "--scriptValidate")
+    val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -103,6 +104,10 @@ fun main(args: Array<String>) {
     if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
         printScriptCommands(commandsByTick)
+        return
+    }
+    if (replayValidateOnly && replayPath != null) {
+        println("replay validation ok: $replayPath")
         return
     }
 
