@@ -99,7 +99,7 @@ fun main(args: Array<String>) {
     val spawnCommands: Array<ArrayList<Command>> =
         if (spawnScriptPath != null) loadSpawnScriptCommands(spawnScriptPath) else arrayOf()
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
-    if (scriptValidate && scriptPath != null) {
+    if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
         printScriptCommands(commandsByTick)
         return
