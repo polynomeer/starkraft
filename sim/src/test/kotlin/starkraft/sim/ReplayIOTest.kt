@@ -1,6 +1,7 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayIO
@@ -16,6 +17,8 @@ class ReplayIOTest {
         )
         ReplayIO.save(tmp, cmds)
         val loaded = ReplayIO.load(tmp)
+        val payload = Files.readString(tmp)
+        assertTrue(payload.contains("\"replayHash\""))
         assertEquals(cmds.size, loaded.size)
         for (i in cmds.indices) {
             assertCommandsEqual(cmds[i], loaded[i])

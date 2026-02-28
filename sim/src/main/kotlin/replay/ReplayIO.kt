@@ -15,17 +15,35 @@ object ReplayIO {
     }
 
     fun save(path: Path, commands: List<Command>) {
-        val events = commands.map { ReplayEvent.fromCommand(it) }
-        val payload = json.encodeToString(events)
+        val recorder = ReplayHashRecorder()
+        for (c in commands) recorder.onCommand(c)
+        val container = ReplayContainer(
+            schema = 1,
+            replayHash = recorder.value(),
+            events = commands.map { ReplayEvent.fromCommand(it) }
+        )
+        val payload = json.encodeToString(container)
         Files.writeString(path, payload)
     }
 
     fun load(path: Path): List<Command> {
         val payload = Files.readString(path)
-        val events = json.decodeFromString<List<ReplayEvent>>(payload)
-        return events.map { it.toCommand() }
+        return if (payload.trimStart().startsWith("[")) {
+            val events = json.decodeFromString<List<ReplayEvent>>(payload)
+            events.map { it.toCommand() }
+        } else {
+            val container = json.decodeFromString<ReplayContainer>(payload)
+            container.events.map { it.toCommand() }
+        }
     }
 }
+
+@Serializable
+private data class ReplayContainer(
+    val schema: Int,
+    val replayHash: Long,
+    val events: List<ReplayEvent>
+)
 
 @Serializable
 private data class ReplayEvent(
