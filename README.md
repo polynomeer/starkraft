@@ -106,6 +106,7 @@ Other flags:
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end
 - `--printOrders` dump pending orders at the end
+- `--replayDump <path>` save a replay after script runs
 
 Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`

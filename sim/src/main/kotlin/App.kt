@@ -97,6 +97,7 @@ fun main(args: Array<String>) {
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
     val printEntities = hasFlag(args, "--printEntities")
     val printOrders = hasFlag(args, "--printOrders")
+    val replayDumpPath = parseReplayDumpPath(args)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -210,6 +211,12 @@ fun main(args: Array<String>) {
         ReplayIO.save(Paths.get(replayOutPath), recorded)
         println("replay out saved: $replayOutPath")
     }
+
+    if (replayDumpPath != null && scriptPath != null) {
+        val recorded = recorder.snapshot()
+        ReplayIO.save(Paths.get(replayDumpPath), recorded)
+        println("replay dump saved: $replayDumpPath")
+    }
 }
 
 private fun parseReplayPath(args: Array<String>): String? {
@@ -240,6 +247,17 @@ private fun parseReplayOutPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--replayOut" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--replayOut=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseReplayDumpPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--replayDump" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--replayDump=")) return a.substringAfter("=")
         i++
     }
     return null
