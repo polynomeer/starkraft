@@ -73,10 +73,15 @@ fun main(args: Array<String>) {
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
+    val scriptValidate = hasFlag(args, "--scriptValidate")
     val commandsByTick: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath)
         scriptPath != null -> loadScriptCommands(scriptPath)
         else -> arrayOf()
+    }
+    if (scriptValidate && scriptPath != null) {
+        printScriptCommands(commandsByTick)
+        return
     }
 
     if (replayPath == null) {
@@ -237,6 +242,24 @@ private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
         byTick[c.tick].add(c)
     }
     return byTick
+}
+
+private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
+    println("script commands:")
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            when (c) {
+                is Command.Move -> {
+                    println("tick=$tick move units=${c.units.joinToString(",")} x=${c.x} y=${c.y}")
+                }
+                is Command.Attack -> {
+                    println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
+                }
+            }
+        }
+    }
 }
 
 private fun hashWorldForReplay(world: World): Long {
