@@ -100,6 +100,7 @@ fun main(args: Array<String>) {
         if (spawnScriptPath != null) loadSpawnScriptCommands(spawnScriptPath) else arrayOf()
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     if (scriptValidate && scriptPath != null) {
+        validateSpawnTypes(commandsByTick, data)
         printScriptCommands(commandsByTick)
         return
     }
@@ -336,6 +337,22 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
     }
 }
 
+private fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            if (c is Command.Spawn) {
+                try {
+                    data.unit(c.typeId)
+                } catch (_: NoSuchElementException) {
+                    error("Unknown unit typeId '${c.typeId}' in spawn at tick $tick")
+                }
+            }
+        }
+    }
+}
+
 private fun hashWorldForReplay(world: World): Long {
     val ids = world.transforms.keys.sorted()
     var h = 1469598103934665603L
@@ -372,7 +389,11 @@ fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder, d
 
         is Command.Spawn -> {
             val repo = data ?: error("Spawn requires DataRepo")
-            val def = repo.unit(cmd.typeId)
+            val def = try {
+                repo.unit(cmd.typeId)
+            } catch (_: NoSuchElementException) {
+                error("Unknown unit typeId '${cmd.typeId}' in spawn command")
+            }
             val weapon = def.weaponId?.let { WeaponRef(it) }
             val vision = cmd.vision?.let { Vision(it) }
             world.spawn(
