@@ -16,9 +16,10 @@ class ReplayHashTest {
     fun replayHashIsDeterministic() {
         val h1 = runReplayScenario(1234L)
         val h2 = runReplayScenario(1234L)
-        println("ReplayHashTest replay1=${h1.replayHash} replay2=${h2.replayHash} world1=${h1.worldHash} world2=${h2.worldHash}")
         assertEquals(h1.replayHash, h2.replayHash)
         assertEquals(h1.worldHash, h2.worldHash)
+        assertEquals(6762632104746809539L, h1.replayHash)
+        assertEquals(6018382555110414077L, h1.worldHash)
     }
 }
 
