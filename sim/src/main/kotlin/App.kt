@@ -143,7 +143,7 @@ fun main(args: Array<String>) {
         println("replay saved: $recordPath")
     }
 
-    if (replayPath != null) {
+    if (replayPath != null || scriptPath != null) {
         val worldHash = hashWorldForReplay(world)
         val replayHash = ReplayHashRecorder().also { r ->
             val end = minOf(totalTicks, commandsByTick.size)
@@ -154,7 +154,8 @@ fun main(args: Array<String>) {
                 }
             }
         }.value()
-        println("replay hash=$replayHash world hash=$worldHash")
+        val source = if (replayPath != null) "replay" else "script"
+        println("$source hash=$replayHash world hash=$worldHash")
     }
 }
 
