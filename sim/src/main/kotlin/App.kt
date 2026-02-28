@@ -9,12 +9,15 @@ import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
+import starkraft.sim.replay.ReplayIO
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object Time {
     const val TICK_MS = 20
 }
 
-fun main() {
+fun main(args: Array<String>) {
     // Load data resources
     val unitsResource = object {}.javaClass.getResource("/data/units.json")
         ?: error("Resource '/data/units.json' not found. Ensure it exists in the resources directory.")
@@ -39,6 +42,7 @@ fun main() {
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
     val visionSys = VisionSystem(world, fog1, fog2)
+    val recorder = NullRecorder()
 
     // Simple obstacles + rough terrain
     for (x in 6..24) map.setBlocked(x, 14, true)
@@ -61,11 +65,18 @@ fun main() {
         team2.add(idB)
     }
 
-    team1.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(28f, 28f)) }
-    team2.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(2f, 2f)) }
+    val replayPath = parseReplayPath(args)
+    val commandsByTick: Array<ArrayList<Command>> =
+        if (replayPath != null) loadReplayCommands(replayPath) else arrayOf()
 
+    if (replayPath == null) {
+        team1.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(28f, 28f)) }
+        team2.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(2f, 2f)) }
+    }
+
+    val totalTicks = if (commandsByTick.isNotEmpty()) commandsByTick.size else 1500
     var tick = 0
-    while (tick < 1500) {
+    while (tick < totalTicks) {
         alive.tick()
         if (tick == 200) {
             for (x in 14..20) occ.addStatic(x, 10)
@@ -75,6 +86,13 @@ fun main() {
             for (x in 14..20) occ.removeStatic(x, 10)
             println("tick=$tick  remove static blockers at y=10 (x=14..20)")
         }
+        if (tick < commandsByTick.size) {
+            val cmds = commandsByTick[tick]
+            for (i in 0 until cmds.size) {
+                issue(cmds[i], world, recorder)
+            }
+        }
+
         occupancy.tick()
         pathing.tick()
         movement.tick()
@@ -94,6 +112,31 @@ fun main() {
         tick++
         Thread.sleep(Time.TICK_MS.toLong())
     }
+}
+
+private fun parseReplayPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--replay" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--replay=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
+    val path = Paths.get(pathStr)
+    if (!Files.exists(path)) error("Replay file not found: $pathStr")
+    val cmds = ReplayIO.load(path)
+    if (cmds.isEmpty()) return arrayOf()
+    var maxTick = 0
+    for (c in cmds) if (c.tick > maxTick) maxTick = c.tick
+    val byTick = Array(maxTick + 1) { ArrayList<Command>() }
+    for (c in cmds) {
+        byTick[c.tick].add(c)
+    }
+    return byTick
 }
 
 fun issue(cmd: Command, world: World, recorder: NullRecorder) {
