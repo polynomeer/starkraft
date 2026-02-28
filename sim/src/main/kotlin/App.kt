@@ -113,6 +113,7 @@ fun main(args: Array<String>) {
         validateSpawnTypes(commandsByTick, data)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
+            validateLabelUsage(commandsByTick)
         }
         printScriptCommands(commandsByTick)
         return
@@ -448,6 +449,35 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 }
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
+                }
+            }
+        }
+    }
+}
+
+private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
+    val defined = HashSet<Int>()
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            when (c) {
+                is Command.Spawn -> {
+                    val labelId = c.labelId
+                    if (labelId != null) defined.add(labelId)
+                }
+                is Command.Move -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in move at tick $tick (spawn first)")
+                    }
+                }
+                is Command.Attack -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in attack at tick $tick (spawn first)")
+                    }
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in attack at tick $tick (spawn first)")
+                    }
                 }
             }
         }
