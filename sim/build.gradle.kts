@@ -27,7 +27,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("AppKt")
+    mainClass.set("starkraft.sim.AppKt")
 }
 
 tasks.register<JavaExec>("benchmark") {
