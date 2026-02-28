@@ -96,6 +96,7 @@ fun main(args: Array<String>) {
     val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
     val printEntities = hasFlag(args, "--printEntities")
+    val printOrders = hasFlag(args, "--printOrders")
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -198,6 +199,10 @@ fun main(args: Array<String>) {
 
     if (printEntities) {
         printAliveEntities(world)
+    }
+
+    if (printOrders) {
+        printPendingOrders(world)
     }
 
     if (replayOutPath != null) {
@@ -462,6 +467,22 @@ private fun printAliveEntities(world: World) {
             "id=$id type=${tag?.typeId} faction=${tag?.faction} " +
                 "x=${"%.2f".format(tr.x)} y=${"%.2f".format(tr.y)} hp=$hp"
         )
+    }
+}
+
+private fun printPendingOrders(world: World) {
+    println("pending orders:")
+    val ids = world.orders.keys.sorted()
+    for (id in ids) {
+        val q = world.orders[id]?.items ?: continue
+        if (q.isEmpty()) continue
+        val items = q.joinToString(",") { o ->
+            when (o) {
+                is Order.Move -> "move(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
+                is Order.Attack -> "attack(${o.target})"
+            }
+        }
+        println("id=$id orders=[$items]")
     }
 }
 
