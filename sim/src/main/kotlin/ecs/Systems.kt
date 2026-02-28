@@ -24,8 +24,12 @@ class MovementSystem(
     private val stuckThresholdTicks = 20
     private val stuckDist2 = 0.0001f
 
+    var lastTickReplans: Int = 0
+        private set
+
     fun tick() {
         pathQueue.beginTick()
+        lastTickReplans = 0
         val alive = world.aliveSnapshot
         val ids = alive.ids
         val count = alive.count
@@ -74,6 +78,7 @@ class MovementSystem(
                         if (pathQueue.enqueue(id)) {
                             cooldown.ticks = repathCooldownTicks
                             world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            lastTickReplans++
                         }
                         continue
                     }
@@ -100,6 +105,7 @@ class MovementSystem(
         if (cooldown != null && cooldown.ticks > 0) return
         if (pathQueue.enqueue(id)) {
             if (cooldown != null) cooldown.ticks = repathCooldownTicks
+            lastTickReplans++
         }
     }
 

@@ -86,7 +86,8 @@ fun main() {
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
-                    "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size}"
+                    "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} " +
+                    "replans=${movement.lastTickReplans}"
             )
         }
         tick++

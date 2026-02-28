@@ -67,6 +67,7 @@ object Benchmark {
 
         var tick = 0
         val samples = LongArray(ticksToMeasure)
+        val replans = IntArray(ticksToMeasure)
         while (tick < warmupTicks + ticksToMeasure) {
             if (tick % 500 == 0) {
                 val phase = (tick / 500) % targets.size
@@ -86,6 +87,7 @@ object Benchmark {
 
             if (tick >= warmupTicks) {
                 samples[tick - warmupTicks] = t1 - t0
+                replans[tick - warmupTicks] = movement.lastTickReplans
             }
             tick++
         }
@@ -95,9 +97,14 @@ object Benchmark {
         val p50 = percentile(sorted, 50.0)
         val p95 = percentile(sorted, 95.0)
         val max = sorted[sorted.size - 1]
+        val replanP50 = percentileInt(replans, 50.0)
+        val replanP95 = percentileInt(replans, 95.0)
 
         println("Benchmark ticks=$ticksToMeasure warmup=$warmupTicks")
-        println("p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us max=${nsToMicros(max)}us")
+        println(
+            "p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us max=${nsToMicros(max)}us " +
+                "replan_p50=$replanP50 replan_p95=$replanP95"
+        )
     }
 }
 
@@ -109,3 +116,12 @@ private fun percentile(sorted: LongArray, p: Double): Long {
 }
 
 private fun nsToMicros(ns: Long): Long = ns / 1_000L
+
+private fun percentileInt(values: IntArray, p: Double): Int {
+    if (values.isEmpty()) return 0
+    val copy = values.copyOf()
+    Arrays.sort(copy)
+    val rank = p / 100.0 * (copy.size - 1)
+    val idx = floor(rank).toInt().coerceIn(0, copy.size - 1)
+    return copy[idx]
+}
