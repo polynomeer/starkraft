@@ -85,16 +85,20 @@ fun main(args: Array<String>) {
 
     val replayPath = parseReplayPath(args)
     val scriptPath = parseScriptPath(args)
+    val spawnScriptPath = parseSpawnScriptPath(args)
     val recordPath = parseRecordPath(args)
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
     val scriptValidate = hasFlag(args, "--scriptValidate")
-    val commandsByTick: Array<ArrayList<Command>> = when {
+    val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath)
         scriptPath != null -> loadScriptCommands(scriptPath)
         else -> arrayOf()
     }
+    val spawnCommands: Array<ArrayList<Command>> =
+        if (spawnScriptPath != null) loadSpawnScriptCommands(spawnScriptPath) else arrayOf()
+    val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     if (scriptValidate && scriptPath != null) {
         printScriptCommands(commandsByTick)
         return
@@ -208,6 +212,17 @@ private fun parseScriptPath(args: Array<String>): String? {
     return null
 }
 
+private fun parseSpawnScriptPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--spawnScript" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--spawnScript=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
 private fun parseTickLimit(args: Array<String>): Int? {
     var i = 0
     while (i < args.size) {
@@ -270,6 +285,34 @@ private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
         byTick[c.tick].add(c)
     }
     return byTick
+}
+
+private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> {
+    val all = loadScriptCommands(pathStr)
+    for (tick in all.indices) {
+        val cmds = all[tick]
+        val it = cmds.iterator()
+        while (it.hasNext()) {
+            val c = it.next()
+            if (c !is Command.Spawn) it.remove()
+        }
+    }
+    return all
+}
+
+private fun mergeCommands(
+    first: Array<ArrayList<Command>>,
+    second: Array<ArrayList<Command>>
+): Array<ArrayList<Command>> {
+    if (first.isEmpty()) return second
+    if (second.isEmpty()) return first
+    val size = maxOf(first.size, second.size)
+    val merged = Array(size) { ArrayList<Command>() }
+    for (i in 0 until size) {
+        if (i < first.size) merged[i].addAll(first[i])
+        if (i < second.size) merged[i].addAll(second[i])
+    }
+    return merged
 }
 
 private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
