@@ -65,6 +65,14 @@ fun main() {
 
     var tick = 0
     while (tick < 1500) {
+        if (tick == 200) {
+            for (x in 14..20) occ.addStatic(x, 10)
+            println("tick=$tick  add static blockers at y=10 (x=14..20)")
+        }
+        if (tick == 500) {
+            for (x in 14..20) occ.removeStatic(x, 10)
+            println("tick=$tick  remove static blockers at y=10 (x=14..20)")
+        }
         occupancy.tick()
         pathing.tick()
         movement.tick()
