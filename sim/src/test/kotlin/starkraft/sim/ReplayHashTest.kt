@@ -14,14 +14,18 @@ import java.util.Random
 class ReplayHashTest {
     @Test
     fun replayHashIsDeterministic() {
-        val h1 = runReplayScenario(1234L)
-        val h2 = runReplayScenario(1234L)
+        val seed = testSeed()
+        val h1 = runReplayScenario(seed)
+        val h2 = runReplayScenario(seed)
         assertEquals(h1.replayHash, h2.replayHash)
         assertEquals(h1.worldHash, h2.worldHash)
         assertEquals(6762632104746809539L, h1.replayHash)
         assertEquals(6018382555110414077L, h1.worldHash)
     }
 }
+
+private fun testSeed(): Long =
+    System.getProperty("seed")?.toLong() ?: 1234L
 
 private data class ReplayResult(val replayHash: Long, val worldHash: Long)
 

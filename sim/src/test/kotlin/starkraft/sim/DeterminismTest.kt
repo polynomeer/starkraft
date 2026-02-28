@@ -15,12 +15,16 @@ import java.util.Random
 class DeterminismTest {
     @Test
     fun deterministicSimulationHash() {
-        val h1 = runSimAndHash(1234L)
-        val h2 = runSimAndHash(1234L)
+        val seed = testSeed()
+        val h1 = runSimAndHash(seed)
+        val h2 = runSimAndHash(seed)
         assertEquals(h1, h2)
         assertEquals(6674930380010481897L, h1)
     }
 }
+
+private fun testSeed(): Long =
+    System.getProperty("seed")?.toLong() ?: 1234L
 
 private fun runSimAndHash(seed: Long): Long {
     Ids.resetForTest()
