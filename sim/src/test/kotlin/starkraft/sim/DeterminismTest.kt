@@ -17,6 +17,7 @@ class DeterminismTest {
     fun deterministicSimulationHash() {
         val h1 = runSimAndHash(1234L)
         val h2 = runSimAndHash(1234L)
+        println("DeterminismTest hash1=$h1 hash2=$h2")
         assertEquals(h1, h2)
     }
 }
