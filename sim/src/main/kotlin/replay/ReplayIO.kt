@@ -33,7 +33,9 @@ object ReplayIO {
             events.map { it.toCommand() }
         } else {
             val container = json.decodeFromString<ReplayContainer>(payload)
-            container.events.map { it.toCommand() }
+            val cmds = container.events.map { it.toCommand() }
+            verifyReplayHash(container.replayHash, cmds)
+            cmds
         }
     }
 }
@@ -69,5 +71,14 @@ private data class ReplayEvent(
                 is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
             }
         }
+    }
+}
+
+private fun verifyReplayHash(expected: Long, commands: List<Command>) {
+    val recorder = ReplayHashRecorder()
+    for (c in commands) recorder.onCommand(c)
+    val actual = recorder.value()
+    if (expected != actual) {
+        error("Replay hash mismatch: expected=$expected actual=$actual")
     }
 }
