@@ -108,6 +108,7 @@ Other flags:
 - `--printEntities` dump alive units at the end
 - `--printOrders` dump pending orders at the end
 - `--replayDump <path>` save a replay after script runs
+- `--labelDump` dump label→entity mappings
 
 Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`

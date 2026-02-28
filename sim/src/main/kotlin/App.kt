@@ -97,6 +97,7 @@ fun main(args: Array<String>) {
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
     val printEntities = hasFlag(args, "--printEntities")
     val printOrders = hasFlag(args, "--printOrders")
+    val labelDump = hasFlag(args, "--labelDump")
     val replayDumpPath = parseReplayDumpPath(args)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
@@ -208,6 +209,10 @@ fun main(args: Array<String>) {
 
     if (printOrders) {
         printPendingOrders(world)
+    }
+
+    if (labelDump) {
+        printLabelMappings(labelMap, labelIdMap)
     }
 
     if (replayOutPath != null) {
@@ -535,6 +540,23 @@ private fun printPendingOrders(world: World) {
             }
         }
         println("id=$id orders=[$items]")
+    }
+}
+
+private fun printLabelMappings(labelMap: Map<String, Int>, labelIdMap: Map<Int, Int>) {
+    println("label mappings:")
+    if (labelMap.isEmpty() && labelIdMap.isEmpty()) {
+        println("(none)")
+        return
+    }
+    for ((label, id) in labelMap.entries.sortedBy { it.key }) {
+        println("@$label -> $id")
+    }
+    val remaining = labelIdMap.filter { (_, id) ->
+        labelMap.values.none { it == id }
+    }
+    for ((labelId, id) in remaining.entries.sortedBy { it.key }) {
+        println("labelId=$labelId -> $id")
     }
 }
 
