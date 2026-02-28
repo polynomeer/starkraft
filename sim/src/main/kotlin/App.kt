@@ -9,6 +9,7 @@ import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
+import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayIO
 import starkraft.sim.replay.ReplayRecorder
 import java.nio.file.Files
@@ -123,8 +124,21 @@ fun main(args: Array<String>) {
     }
 
     if (recordPath != null) {
-        ReplayIO.save(Paths.get(recordPath), recorder.snapshot())
+        val recorded = recorder.snapshot()
+        ReplayIO.save(Paths.get(recordPath), recorded)
         println("replay saved: $recordPath")
+    }
+
+    if (replayPath != null) {
+        val worldHash = hashWorldForReplay(world)
+        val replayHash = ReplayHashRecorder().also { r ->
+            for (tickCmds in commandsByTick) {
+                for (i in 0 until tickCmds.size) {
+                    r.onCommand(tickCmds[i])
+                }
+            }
+        }.value()
+        println("replay hash=$replayHash world hash=$worldHash")
     }
 }
 
@@ -176,6 +190,29 @@ private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
         byTick[c.tick].add(c)
     }
     return byTick
+}
+
+private fun hashWorldForReplay(world: World): Long {
+    val ids = world.transforms.keys.sorted()
+    var h = 1469598103934665603L
+    fun mix(v: Long) {
+        h = h xor v
+        h *= 1099511628211L
+    }
+    for (id in ids) {
+        val tr = world.transforms[id]!!
+        mix(id.toLong())
+        mix((tr.x * 1000f).toInt().toLong())
+        mix((tr.y * 1000f).toInt().toLong())
+        val pf = world.pathFollows[id]
+        mix((pf?.index ?: -1).toLong())
+        mix((world.orders[id]?.items?.size ?: 0).toLong())
+        val hp = world.healths[id]
+        mix((hp?.hp ?: 0).toLong())
+        val w = world.weapons[id]
+        mix((w?.cooldownTicks ?: 0).toLong())
+    }
+    return h
 }
 
 fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder) {
