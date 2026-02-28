@@ -14,7 +14,7 @@ class ReplayIOTest {
         val cmds = listOf(
             Command.Move(0, intArrayOf(1, 2, 3), 5.5f, 6.5f),
             Command.Attack(10, intArrayOf(2), 7),
-            Command.Spawn(20, 1, "Marine", 3f, 4f, 6f)
+            Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1)
         )
         ReplayIO.save(tmp, cmds)
         val loaded = ReplayIO.load(tmp)
@@ -50,6 +50,8 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
             assertEquals(a.vision, b.vision)
+            assertEquals(a.label, b.label)
+            assertEquals(a.labelId, b.labelId)
         }
     }
 }

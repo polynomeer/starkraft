@@ -13,6 +13,8 @@ sealed interface Command {
         val typeId: String,
         val x: Float,
         val y: Float,
-        val vision: Float? = null
+        val vision: Float? = null,
+        val label: String? = null,
+        val labelId: Int? = null
     ) : Command
 }

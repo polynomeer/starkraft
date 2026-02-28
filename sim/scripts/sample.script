@@ -15,6 +15,6 @@ attack 6
 
 wait 25
 # Spawn a new unit and command it
-spawn 1 Marine 12 12 7
-select 11
+spawn @scout 1 Marine 12 12 7
+select @scout
 move 22 22

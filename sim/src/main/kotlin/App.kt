@@ -106,6 +106,9 @@ fun main(args: Array<String>) {
     val spawnCommands: Array<ArrayList<Command>> =
         if (spawnScriptPath != null) loadSpawnScriptCommands(spawnScriptPath) else arrayOf()
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
+    val labelMap = HashMap<String, Int>()
+    val labelIdMap = HashMap<Int, Int>()
+
     if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
         if (scriptPath != null) {
@@ -148,7 +151,7 @@ fun main(args: Array<String>) {
         if (tick < commandsByTick.size) {
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder, data)
+                issue(cmds[i], world, recorder, data, labelMap, labelIdMap)
             }
         }
 
@@ -399,7 +402,8 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                     println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
                 }
                 is Command.Spawn -> {
-                    println("tick=$tick spawn faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
+                    val label = c.label?.let { "@$it " } ?: ""
+                    println("tick=$tick spawn ${label}faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
                 }
             }
         }
@@ -430,15 +434,15 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
             val c = cmds[i]
             when (c) {
                 is Command.Move -> {
-                    for (id in c.units) if (!existing.contains(id)) {
+                    for (id in c.units) if (id >= 0 && !existing.contains(id)) {
                         error("Unknown unit id '$id' in move at tick $tick")
                     }
                 }
                 is Command.Attack -> {
-                    for (id in c.units) if (!existing.contains(id)) {
+                    for (id in c.units) if (id >= 0 && !existing.contains(id)) {
                         error("Unknown unit id '$id' in attack at tick $tick")
                     }
-                    if (!existing.contains(c.target)) {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
                         error("Unknown target id '${c.target}' in attack at tick $tick")
                     }
                 }
@@ -504,15 +508,29 @@ private fun printPendingOrders(world: World) {
     }
 }
 
-fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder, data: DataRepo? = null) {
+fun issue(
+    cmd: Command,
+    world: World,
+    recorder: starkraft.sim.replay.Recorder,
+    data: DataRepo? = null,
+    labelMap: MutableMap<String, Int> = mutableMapOf(),
+    labelIdMap: MutableMap<Int, Int> = mutableMapOf()
+) {
     recorder.onCommand(cmd)
     when (cmd) {
         is Command.Move -> {
-            cmd.units.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y)) }
+            cmd.units.forEach { id ->
+                val actual = resolveLabelId(id, labelIdMap)
+                world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+            }
         }
 
         is Command.Attack -> {
-            cmd.units.forEach { id -> world.orders[id]?.items?.addLast(Order.Attack(cmd.target)) }
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            cmd.units.forEach { id ->
+                val actual = resolveLabelId(id, labelIdMap)
+                world.orders[actual]?.items?.addLast(Order.Attack(target))
+            }
         }
 
         is Command.Spawn -> {
@@ -524,13 +542,24 @@ fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder, d
             }
             val weapon = def.weaponId?.let { WeaponRef(it) }
             val vision = cmd.vision?.let { Vision(it) }
-            world.spawn(
+            val id = world.spawn(
                 Transform(cmd.x, cmd.y),
                 UnitTag(cmd.faction, cmd.typeId),
                 Health(def.hp, def.hp, def.armor),
                 weapon,
                 vision
             )
+            if (cmd.label != null) {
+                labelMap[cmd.label] = id
+            }
+            if (cmd.labelId != null) {
+                labelIdMap[cmd.labelId] = id
+            }
         }
     }
+}
+
+private fun resolveLabelId(id: Int, labelIdMap: Map<Int, Int>): Int {
+    if (id >= 0) return id
+    return labelIdMap[id] ?: error("Unknown label id '$id' (spawn missing?)")
 }

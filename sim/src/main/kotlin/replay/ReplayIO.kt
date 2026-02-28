@@ -72,13 +72,15 @@ private data class ReplayEvent(
     val target: Int? = null,
     val faction: Int? = null,
     val typeId: String? = null,
-    val vision: Float? = null
+    val vision: Float? = null,
+    val label: String? = null,
+    val labelId: Int? = null
 ) {
     fun toCommand(): Command {
         return when (type) {
             "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f)
             "attack" -> Command.Attack(tick, units, target ?: 0)
-            "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision)
+            "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
             else -> error("Unknown replay event type: $type")
         }
     }
@@ -89,7 +91,19 @@ private data class ReplayEvent(
                 is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null)
                 is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
                 is Command.Spawn ->
-                    ReplayEvent("spawn", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction, cmd.typeId, cmd.vision)
+                    ReplayEvent(
+                        "spawn",
+                        cmd.tick,
+                        intArrayOf(),
+                        cmd.x,
+                        cmd.y,
+                        null,
+                        cmd.faction,
+                        cmd.typeId,
+                        cmd.vision,
+                        cmd.label,
+                        cmd.labelId
+                    )
             }
         }
     }

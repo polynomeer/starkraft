@@ -30,6 +30,12 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.vision ?: -1f))
+                if (cmd.label != null) {
+                    for (ch in cmd.label) mixInt(ch.code)
+                } else {
+                    mixInt(0)
+                }
+                mixInt(cmd.labelId ?: 0)
             }
         }
     }

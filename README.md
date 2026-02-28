@@ -92,9 +92,10 @@ Script syntax:
 - `tick <n>` set absolute tick
 - `wait <n>` advance ticks
 - `select <id...>` select units by entity id
+- `select @label...` select units by label (from spawn)
 - `move <x> <y>` move selection
-- `attack <targetId>` attack target
-- `spawn <faction> <typeId> <x> <y> [vision]` spawn a unit
+- `attack <targetId|@label>` attack target
+- `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 
 Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically

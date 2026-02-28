@@ -2,7 +2,7 @@
 # Spawns extra units before other commands run.
 
 tick 0
-spawn 1 Marine 4 4 7
-spawn 1 Marine 4.5 4 7
-spawn 2 Zergling 12 12 6
-spawn 2 Zergling 12.5 12 6
+spawn @m1 1 Marine 4 4 7
+spawn @m2 1 Marine 4.5 4 7
+spawn @z1 2 Zergling 12 12 6
+spawn @z2 2 Zergling 12.5 12 6
