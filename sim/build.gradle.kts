@@ -29,3 +29,10 @@ kotlin {
 application {
     mainClass.set("AppKt")
 }
+
+tasks.register<JavaExec>("benchmark") {
+    group = "application"
+    description = "Run headless simulation benchmark"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.bench.Benchmark")
+}
