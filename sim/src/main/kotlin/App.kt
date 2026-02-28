@@ -95,6 +95,7 @@ fun main(args: Array<String>) {
     val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
     val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
+    val printEntities = hasFlag(args, "--printEntities")
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -191,6 +192,10 @@ fun main(args: Array<String>) {
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
         val worldHash = hashWorldForReplay(world)
         println("world hash=$worldHash")
+    }
+
+    if (printEntities) {
+        printAliveEntities(world)
     }
 
     if (replayOutPath != null) {
@@ -441,6 +446,21 @@ private fun hashWorldForReplay(world: World): Long {
         mix((w?.cooldownTicks ?: 0).toLong())
     }
     return h
+}
+
+private fun printAliveEntities(world: World) {
+    println("alive entities:")
+    val ids = world.transforms.keys.sorted()
+    for (id in ids) {
+        val hp = world.healths[id]?.hp ?: 0
+        if (hp <= 0) continue
+        val tr = world.transforms[id]!!
+        val tag = world.tags[id]
+        println(
+            "id=$id type=${tag?.typeId} faction=${tag?.faction} " +
+                "x=${"%.2f".format(tr.x)} y=${"%.2f".format(tr.y)} hp=$hp"
+        )
+    }
 }
 
 fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder, data: DataRepo? = null) {

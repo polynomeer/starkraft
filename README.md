@@ -104,3 +104,4 @@ Other flags:
 - `--replayValidateOnly` load/validate replay and exit
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
+- `--printEntities` dump alive units at the end
