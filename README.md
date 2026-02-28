@@ -105,3 +105,6 @@ Other flags:
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end
+
+Sample spawn script:
+`./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`
