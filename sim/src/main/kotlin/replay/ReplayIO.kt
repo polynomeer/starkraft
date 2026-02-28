@@ -34,11 +34,11 @@ object ReplayIO {
                 error("Replay hash missing (legacy array format)")
             }
             val events = json.decodeFromString<List<ReplayEvent>>(payload)
-            events.map { it.toCommand() }
+            ensureLabelIds(events.map { it.toCommand() })
         } else {
             val container = json.decodeFromString<ReplayContainer>(payload)
             container.validateSchema()
-            val cmds = container.events.map { it.toCommand() }
+            val cmds = ensureLabelIds(container.events.map { it.toCommand() })
             if (container.schema != 0) {
                 verifyReplayHash(container.replayHash, cmds)
             } else if (strictHash) {
@@ -116,4 +116,24 @@ private fun verifyReplayHash(expected: Long, commands: List<Command>) {
     if (expected != actual) {
         error("Replay hash mismatch: expected=$expected actual=$actual")
     }
+}
+
+private fun ensureLabelIds(commands: List<Command>): List<Command> {
+    val labelToId = HashMap<String, Int>()
+    var nextLabelId = -1
+    var changed = false
+    val out = ArrayList<Command>(commands.size)
+    for (c in commands) {
+        if (c is Command.Spawn && c.label != null && c.labelId == null) {
+            val id = labelToId.getOrPut(c.label) { nextLabelId-- }
+            out.add(c.copy(labelId = id))
+            changed = true
+        } else {
+            if (c is Command.Spawn && c.label != null && c.labelId != null) {
+                labelToId.putIfAbsent(c.label, c.labelId)
+            }
+            out.add(c)
+        }
+    }
+    return if (changed) out else commands
 }

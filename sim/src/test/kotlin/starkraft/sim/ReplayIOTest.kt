@@ -25,6 +25,20 @@ class ReplayIOTest {
             assertCommandsEqual(cmds[i], loaded[i])
         }
     }
+
+    @Test
+    fun assignsLabelIdsWhenMissing() {
+        val tmp = Files.createTempFile("starkraft-replay", ".json")
+        val cmds = listOf(
+            Command.Spawn(0, 1, "Marine", 1f, 1f, 6f, label = "alpha", labelId = null),
+            Command.Move(1, intArrayOf(-1), 2f, 2f)
+        )
+        ReplayIO.save(tmp, cmds)
+        val loaded = ReplayIO.load(tmp)
+        val spawn = loaded[0] as Command.Spawn
+        assertEquals("alpha", spawn.label)
+        assertEquals(-1, spawn.labelId)
+    }
 }
 
 private fun assertCommandsEqual(a: Command, b: Command) {
