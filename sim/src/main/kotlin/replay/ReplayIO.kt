@@ -36,7 +36,9 @@ object ReplayIO {
             val container = json.decodeFromString<ReplayContainer>(payload)
             container.validateSchema()
             val cmds = container.events.map { it.toCommand() }
-            verifyReplayHash(container.replayHash, cmds)
+            if (container.schema != 0) {
+                verifyReplayHash(container.replayHash, cmds)
+            }
             cmds
         }
     }
@@ -49,9 +51,9 @@ private data class ReplayContainer(
     val events: List<ReplayEvent>
 ) {
     fun validateSchema() {
-        require(schema == SCHEMA_VERSION) {
-            "Unsupported replay schema: $schema (expected $SCHEMA_VERSION)"
-        }
+        if (schema == SCHEMA_VERSION) return
+        if (schema == 0) return
+        error("Unsupported replay schema: $schema (expected $SCHEMA_VERSION)")
     }
 }
 
