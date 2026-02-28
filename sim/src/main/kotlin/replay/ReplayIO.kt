@@ -1,0 +1,55 @@
+package starkraft.sim.replay
+
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import starkraft.sim.net.Command
+import java.nio.file.Files
+import java.nio.file.Path
+
+object ReplayIO {
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
+
+    fun save(path: Path, commands: List<Command>) {
+        val events = commands.map { ReplayEvent.fromCommand(it) }
+        val payload = json.encodeToString(events)
+        Files.writeString(path, payload)
+    }
+
+    fun load(path: Path): List<Command> {
+        val payload = Files.readString(path)
+        val events = json.decodeFromString<List<ReplayEvent>>(payload)
+        return events.map { it.toCommand() }
+    }
+}
+
+@Serializable
+private data class ReplayEvent(
+    val type: String,
+    val tick: Int,
+    val units: IntArray,
+    val x: Float? = null,
+    val y: Float? = null,
+    val target: Int? = null
+) {
+    fun toCommand(): Command {
+        return when (type) {
+            "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f)
+            "attack" -> Command.Attack(tick, units, target ?: 0)
+            else -> error("Unknown replay event type: $type")
+        }
+    }
+
+    companion object {
+        fun fromCommand(cmd: Command): ReplayEvent {
+            return when (cmd) {
+                is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null)
+                is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
+            }
+        }
+    }
+}
