@@ -106,7 +106,9 @@ fun main(args: Array<String>) {
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
-        validateCommandUnitIds(commandsByTick, world)
+        if (scriptPath != null) {
+            validateCommandUnitIds(commandsByTick, world)
+        }
         printScriptCommands(commandsByTick)
         return
     }
