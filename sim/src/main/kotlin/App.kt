@@ -261,7 +261,7 @@ private fun parseSeed(args: Array<String>): Long? {
 }
 
 private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
-    val path = Paths.get(pathStr)
+    val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Replay file not found: $pathStr")
     val cmds = ReplayIO.load(path)
     if (cmds.isEmpty()) return arrayOf()
@@ -275,7 +275,7 @@ private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
 }
 
 private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
-    val path = Paths.get(pathStr)
+    val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Script file not found: $pathStr")
     val cmds = ScriptRunner.load(path)
     if (cmds.isEmpty()) return arrayOf()
@@ -286,6 +286,14 @@ private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
         byTick[c.tick].add(c)
     }
     return byTick
+}
+
+private fun resolvePath(pathStr: String): java.nio.file.Path {
+    val p = Paths.get(pathStr)
+    if (p.isAbsolute) return p
+    val base = Paths.get("").toAbsolutePath()
+    val candidate = base.resolve(pathStr)
+    return if (Files.exists(candidate)) candidate else p
 }
 
 private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> {
