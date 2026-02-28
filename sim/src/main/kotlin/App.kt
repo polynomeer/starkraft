@@ -72,8 +72,12 @@ fun main(args: Array<String>) {
         if (replayPath != null) loadReplayCommands(replayPath) else arrayOf()
 
     if (replayPath == null) {
-        team1.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(28f, 28f)) }
-        team2.forEach { id -> world.orders[id]?.items?.addLast(Order.Move(2f, 2f)) }
+        if (team1.isNotEmpty()) {
+            issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder)
+        }
+        if (team2.isNotEmpty()) {
+            issue(Command.Move(0, team2.toIntArray(), 2f, 2f), world, recorder)
+        }
     }
 
     val totalTicks = if (commandsByTick.isNotEmpty()) commandsByTick.size else 1500
