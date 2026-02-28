@@ -2,11 +2,13 @@ package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.path.PathPool
 import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.Pathfinder
 import starkraft.sim.ecs.path.PathfindingSystem
+import starkraft.sim.ecs.services.FogGrid
 import kotlin.math.roundToInt
 import java.util.Random
 
@@ -22,6 +24,12 @@ class DeterminismTest {
 private fun runSimAndHash(seed: Long): Long {
     Ids.resetForTest()
     val rng = Random(seed)
+    val unitsResource = object {}.javaClass.getResource("/data/units.json")
+        ?: error("Resource '/data/units.json' not found. Ensure it exists in the resources directory.")
+    val weaponsResource = object {}.javaClass.getResource("/data/weapons.json")
+        ?: error("Resource '/data/weapons.json' not found. Ensure it exists in the resources directory.")
+    val data = DataRepo(unitsResource.readText(), weaponsResource.readText())
+
     val world = World()
     val map = MapGrid(32, 32)
     val occ = OccupancyGrid(32, 32)
@@ -31,6 +39,10 @@ private fun runSimAndHash(seed: Long): Long {
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val occupancy = OccupancySystem(world, occ)
+    val combat = CombatSystem(world, data)
+    val fog1 = FogGrid(64, 64, 0.25f)
+    val fog2 = FogGrid(64, 64, 0.25f)
+    val vision = VisionSystem(world, fog1, fog2)
 
     // Obstacles and rough terrain (matches demo)
     for (x in 6..24) map.setBlocked(x, 14, true)
@@ -42,7 +54,10 @@ private fun runSimAndHash(seed: Long): Long {
         val x = 2f + rng.nextInt(28) + rng.nextFloat()
         val y = 2f + rng.nextInt(28) + rng.nextFloat()
         val faction = if (i % 2 == 0) 1 else 2
-        ids[i] = world.spawn(Transform(x, y), UnitTag(faction, "Test"), Health(10, 10), null)
+        val type = if (faction == 1) "Marine" else "Zergling"
+        val weapon = if (faction == 1) "Gauss" else "Claw"
+        ids[i] = world.spawn(Transform(x, y), UnitTag(faction, type), Health(40, 40), WeaponRef(weapon))
+        world.visions[ids[i]] = Vision(if (faction == 1) 7f else 6f)
     }
 
     val phases = 5
@@ -66,12 +81,14 @@ private fun runSimAndHash(seed: Long): Long {
         occupancy.tick()
         pathing.tick()
         movement.tick()
+        combat.tick()
+        vision.tick()
     }
 
-    return hashWorld(world)
+    return hashWorld(world, fog1, fog2)
 }
 
-private fun hashWorld(world: World): Long {
+private fun hashWorld(world: World, fog1: FogGrid, fog2: FogGrid): Long {
     val ids = world.transforms.keys.sorted()
     var h = 1469598103934665603L
     fun mix(v: Long) {
@@ -86,6 +103,12 @@ private fun hashWorld(world: World): Long {
         val pf = world.pathFollows[id]
         mix((pf?.index ?: -1).toLong())
         mix((world.orders[id]?.items?.size ?: 0).toLong())
+        val hp = world.healths[id]
+        mix((hp?.hp ?: 0).toLong())
+        val w = world.weapons[id]
+        mix((w?.cooldownTicks ?: 0).toLong())
     }
+    mix(fog1.visibleCount().toLong())
+    mix(fog2.visibleCount().toLong())
     return h
 }
