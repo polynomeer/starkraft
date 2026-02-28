@@ -13,7 +13,8 @@ class ReplayIOTest {
         val tmp = Files.createTempFile("starkraft-replay", ".json")
         val cmds = listOf(
             Command.Move(0, intArrayOf(1, 2, 3), 5.5f, 6.5f),
-            Command.Attack(10, intArrayOf(2), 7)
+            Command.Attack(10, intArrayOf(2), 7),
+            Command.Spawn(20, 1, "Marine", 3f, 4f, 6f)
         )
         ReplayIO.save(tmp, cmds)
         val loaded = ReplayIO.load(tmp)
@@ -40,6 +41,15 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.tick, b.tick)
             assertEquals(a.target, b.target)
             assertEquals(a.units.toList(), b.units.toList())
+        }
+        is Command.Spawn -> {
+            require(b is Command.Spawn)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+            assertEquals(a.vision, b.vision)
         }
     }
 }

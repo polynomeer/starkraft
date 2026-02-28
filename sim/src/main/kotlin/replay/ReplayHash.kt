@@ -22,6 +22,15 @@ class ReplayHashRecorder : Recorder {
                 for (u in cmd.units) mixInt(u)
                 mixInt(cmd.target)
             }
+            is Command.Spawn -> {
+                mixInt(3)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+                for (ch in cmd.typeId) mixInt(ch.code)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.vision ?: -1f))
+            }
         }
     }
 

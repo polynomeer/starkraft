@@ -14,6 +14,7 @@ import starkraft.sim.replay.ReplayIO
 import starkraft.sim.replay.ReplayRecorder
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.Random
 
 object Time {
     const val TICK_MS = 20
@@ -51,18 +52,33 @@ fun main(args: Array<String>) {
     for (y in 6..14) map.setBlocked(12, y, true)
     for (x in 18..22) for (y in 18..22) map.setCost(x, y, 3f)
 
+    val seed = parseSeed(args)
+    val rng = if (seed != null) Random(seed) else null
+
     // Spawn with vision component
     val team1 = mutableListOf<Int>()
     val team2 = mutableListOf<Int>()
     repeat(5) {
         // Marines (team1)
-        val idA = world.spawn(Transform(2f + it * 0.2f, 2f), UnitTag(1, "Marine"), Health(45, 45), WeaponRef("Gauss"))
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.4f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.4f } ?: 0f
+        val idA = world.spawn(
+            Transform(2f + it * 0.2f + jitterX, 2f + jitterY),
+            UnitTag(1, "Marine"),
+            Health(45, 45),
+            WeaponRef("Gauss")
+        )
         world.visions[idA] = Vision(7f)
         team1.add(idA)
 
         // Zerglings (team2)
         val idB =
-            world.spawn(Transform(10f - it * 0.2f, 10f), UnitTag(2, "Zergling"), Health(35, 35), WeaponRef("Claw"))
+            world.spawn(
+                Transform(10f - it * 0.2f - jitterX, 10f - jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
         world.visions[idB] = Vision(6f)
         team2.add(idB)
     }
@@ -86,10 +102,10 @@ fun main(args: Array<String>) {
 
     if (replayPath == null) {
         if (team1.isNotEmpty()) {
-            issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder)
+            issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder, data)
         }
         if (team2.isNotEmpty()) {
-            issue(Command.Move(0, team2.toIntArray(), 2f, 2f), world, recorder)
+            issue(Command.Move(0, team2.toIntArray(), 2f, 2f), world, recorder, data)
         }
     }
 
@@ -113,7 +129,7 @@ fun main(args: Array<String>) {
         if (tick < commandsByTick.size) {
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder)
+                issue(cmds[i], world, recorder, data)
             }
         }
 
@@ -217,6 +233,17 @@ private fun parseReplayTicks(args: Array<String>): Int? {
     return null
 }
 
+private fun parseSeed(args: Array<String>): Long? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--seed" && i + 1 < args.size) return args[i + 1].toLong()
+        if (a.startsWith("--seed=")) return a.substringAfter("=").toLong()
+        i++
+    }
+    return null
+}
+
 private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
     val path = Paths.get(pathStr)
     if (!Files.exists(path)) error("Replay file not found: $pathStr")
@@ -286,7 +313,7 @@ private fun hashWorldForReplay(world: World): Long {
     return h
 }
 
-fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder) {
+fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder, data: DataRepo? = null) {
     recorder.onCommand(cmd)
     when (cmd) {
         is Command.Move -> {
@@ -295,6 +322,20 @@ fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder) {
 
         is Command.Attack -> {
             cmd.units.forEach { id -> world.orders[id]?.items?.addLast(Order.Attack(cmd.target)) }
+        }
+
+        is Command.Spawn -> {
+            val repo = data ?: error("Spawn requires DataRepo")
+            val def = repo.unit(cmd.typeId)
+            val weapon = def.weaponId?.let { WeaponRef(it) }
+            val vision = cmd.vision?.let { Vision(it) }
+            world.spawn(
+                Transform(cmd.x, cmd.y),
+                UnitTag(cmd.faction, cmd.typeId),
+                Health(def.hp, def.hp, def.armor),
+                weapon,
+                vision
+            )
         }
     }
 }

@@ -94,3 +94,7 @@ Script syntax:
 - `select <id...>` select units by entity id
 - `move <x> <y>` move selection
 - `attack <targetId>` attack target
+- `spawn <faction> <typeId> <x> <y> [vision]` spawn a unit
+
+Other flags:
+- `--seed <n>` jitter initial demo spawns deterministically

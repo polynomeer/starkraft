@@ -40,6 +40,15 @@ object ScriptRunner {
                     val target = parts[1].toInt()
                     out.add(Command.Attack(tick, selected.toIntArray(), target))
                 }
+                "spawn" -> {
+                    require(parts.size in 5..6) { "spawn <faction> <typeId> <x> <y> [vision] at line ${idx + 1}" }
+                    val faction = parts[1].toInt()
+                    val typeId = parts[2]
+                    val x = parts[3].toFloat()
+                    val y = parts[4].toFloat()
+                    val vision = if (parts.size == 6) parts[5].toFloat() else null
+                    out.add(Command.Spawn(tick, faction, typeId, x, y, vision))
+                }
                 else -> error("Unknown script command '${parts[0]}' at line ${idx + 1}")
             }
         }

@@ -51,15 +51,19 @@ private data class ReplayContainer(
 private data class ReplayEvent(
     val type: String,
     val tick: Int,
-    val units: IntArray,
+    val units: IntArray = intArrayOf(),
     val x: Float? = null,
     val y: Float? = null,
-    val target: Int? = null
+    val target: Int? = null,
+    val faction: Int? = null,
+    val typeId: String? = null,
+    val vision: Float? = null
 ) {
     fun toCommand(): Command {
         return when (type) {
             "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f)
             "attack" -> Command.Attack(tick, units, target ?: 0)
+            "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision)
             else -> error("Unknown replay event type: $type")
         }
     }
@@ -69,6 +73,8 @@ private data class ReplayEvent(
             return when (cmd) {
                 is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null)
                 is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
+                is Command.Spawn ->
+                    ReplayEvent("spawn", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction, cmd.typeId, cmd.vision)
             }
         }
     }
