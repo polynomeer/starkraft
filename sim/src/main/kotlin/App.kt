@@ -70,6 +70,7 @@ fun main(args: Array<String>) {
     val replayPath = parseReplayPath(args)
     val recordPath = parseRecordPath(args)
     val tickLimit = parseTickLimit(args)
+    val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
     val commandsByTick: Array<ArrayList<Command>> =
         if (replayPath != null) loadReplayCommands(replayPath) else arrayOf()
@@ -84,7 +85,11 @@ fun main(args: Array<String>) {
     }
 
     val defaultTicks = if (commandsByTick.isNotEmpty()) commandsByTick.size else 1500
-    val totalTicks = tickLimit?.coerceAtLeast(0) ?: defaultTicks
+    val totalTicks = when {
+        replayTicks != null -> minOf(defaultTicks, replayTicks.coerceAtLeast(0))
+        tickLimit != null -> tickLimit.coerceAtLeast(0)
+        else -> defaultTicks
+    }
     var tick = 0
     while (tick < totalTicks) {
         alive.tick()
@@ -132,7 +137,9 @@ fun main(args: Array<String>) {
     if (replayPath != null) {
         val worldHash = hashWorldForReplay(world)
         val replayHash = ReplayHashRecorder().also { r ->
-            for (tickCmds in commandsByTick) {
+            val end = minOf(totalTicks, commandsByTick.size)
+            for (idx in 0 until end) {
+                val tickCmds = commandsByTick[idx]
                 for (i in 0 until tickCmds.size) {
                     r.onCommand(tickCmds[i])
                 }
@@ -177,6 +184,17 @@ private fun parseTickLimit(args: Array<String>): Int? {
 
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
+
+private fun parseReplayTicks(args: Array<String>): Int? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--replayTicks" && i + 1 < args.size) return args[i + 1].toInt()
+        if (a.startsWith("--replayTicks=")) return a.substringAfter("=").toInt()
+        i++
+    }
+    return null
+}
 
 private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
     val path = Paths.get(pathStr)
