@@ -9,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 object ReplayIO {
+    private const val SCHEMA_VERSION = 1
     private val json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
@@ -18,7 +19,7 @@ object ReplayIO {
         val recorder = ReplayHashRecorder()
         for (c in commands) recorder.onCommand(c)
         val container = ReplayContainer(
-            schema = 1,
+            schema = SCHEMA_VERSION,
             replayHash = recorder.value(),
             events = commands.map { ReplayEvent.fromCommand(it) }
         )
@@ -33,6 +34,7 @@ object ReplayIO {
             events.map { it.toCommand() }
         } else {
             val container = json.decodeFromString<ReplayContainer>(payload)
+            container.validateSchema()
             val cmds = container.events.map { it.toCommand() }
             verifyReplayHash(container.replayHash, cmds)
             cmds
@@ -45,7 +47,13 @@ private data class ReplayContainer(
     val schema: Int,
     val replayHash: Long,
     val events: List<ReplayEvent>
-)
+) {
+    fun validateSchema() {
+        require(schema == SCHEMA_VERSION) {
+            "Unsupported replay schema: $schema (expected $SCHEMA_VERSION)"
+        }
+    }
+}
 
 @Serializable
 private data class ReplayEvent(
