@@ -100,3 +100,4 @@ Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically
 - `--script <path>` run a command script
 - `--spawnScript <path>` run a spawn-only script before other commands
+- `--replayOut <path>` save recorded commands after a run

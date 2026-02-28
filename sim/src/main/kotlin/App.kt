@@ -87,6 +87,7 @@ fun main(args: Array<String>) {
     val scriptPath = parseScriptPath(args)
     val spawnScriptPath = parseSpawnScriptPath(args)
     val recordPath = parseRecordPath(args)
+    val replayOutPath = parseReplayOutPath(args)
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
@@ -178,6 +179,12 @@ fun main(args: Array<String>) {
         val source = if (replayPath != null) "replay" else "script"
         println("$source hash=$replayHash world hash=$worldHash")
     }
+
+    if (replayOutPath != null) {
+        val recorded = recorder.snapshot()
+        ReplayIO.save(Paths.get(replayOutPath), recorded)
+        println("replay out saved: $replayOutPath")
+    }
 }
 
 private fun parseReplayPath(args: Array<String>): String? {
@@ -197,6 +204,17 @@ private fun parseRecordPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--record" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--record=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseReplayOutPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--replayOut" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--replayOut=")) return a.substringAfter("=")
         i++
     }
     return null
