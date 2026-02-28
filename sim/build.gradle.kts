@@ -36,3 +36,10 @@ tasks.register<JavaExec>("benchmark") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.bench.Benchmark")
 }
+
+tasks.register<JavaExec>("pathfindingBenchmark") {
+    group = "application"
+    description = "Run pathfinding micro-benchmark"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.bench.PathfindingMicroBenchmark")
+}
