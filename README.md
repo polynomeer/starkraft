@@ -102,3 +102,4 @@ Other flags:
 - `--spawnScript <path>` run a spawn-only script before other commands
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
+- `--dumpWorldHash` print world hash after a normal run

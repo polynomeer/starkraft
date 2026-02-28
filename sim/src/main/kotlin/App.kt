@@ -93,6 +93,7 @@ fun main(args: Array<String>) {
     val noSleep = hasFlag(args, "--noSleep")
     val scriptValidate = hasFlag(args, "--scriptValidate")
     val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
+    val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -183,6 +184,11 @@ fun main(args: Array<String>) {
         }.value()
         val source = if (replayPath != null) "replay" else "script"
         println("$source hash=$replayHash world hash=$worldHash")
+    }
+
+    if (dumpWorldHash && replayPath == null && scriptPath == null) {
+        val worldHash = hashWorldForReplay(world)
+        println("world hash=$worldHash")
     }
 
     if (replayOutPath != null) {
