@@ -19,12 +19,11 @@ class ReplayRunnerTest {
         ReplayIO.save(replayPath, cmds)
 
         val worldHash = runReplay(replayPath.toString())
-        println("ReplayRunnerTest worldHash=$worldHash")
         assertEquals(GOLDEN_WORLD_HASH, worldHash)
     }
 }
 
-private const val GOLDEN_WORLD_HASH = 0L
+private const val GOLDEN_WORLD_HASH = 3423039781053103764L
 
 private fun runReplay(path: String): Long {
     val world = World()
