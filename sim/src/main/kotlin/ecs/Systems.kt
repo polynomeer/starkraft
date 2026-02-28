@@ -106,9 +106,12 @@ class MovementSystem(
 }
 
 class CombatSystem(private val world: World, private val data: DataRepo) {
+    private val enemyLists = mutableMapOf<Int, EnemyList>()
+    private val emptyIds = IntArray(0)
+
     fun tick() {
         // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
-        val enemiesCache: Map<Int, IntArray> = buildEnemyCache()
+        val enemiesCache: Map<Int, EnemyList> = buildEnemyCache()
 
         val aliveIds = world.alive.toList()
         for (id in aliveIds) {
@@ -123,10 +126,13 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             val rng2 = def.range * def.range
 
             // ② 아군은 제외된 "적 리스트"만 순회
-            val enemies = enemiesCache[unitTag.faction] ?: IntArray(0)
+            val enemies = enemiesCache[unitTag.faction]
+            val enemyIds = enemies?.ids ?: emptyIds
+            val enemyCount = enemies?.count ?: 0
             var best: EntityId = 0
             var bestD2 = Float.POSITIVE_INFINITY
-            for (other in enemies) {
+            for (i in 0 until enemyCount) {
+                val other = enemyIds[i]
                 if (other == id) continue
                 val oHp = world.healths[other] ?: continue
                 if (oHp.hp <= 0) continue
@@ -149,19 +155,28 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
         }
     }
 
-    private fun buildEnemyCache(): Map<Int, IntArray> {
+    private fun buildEnemyCache(): Map<Int, EnemyList> {
         val factions = world.tags.values.asSequence().map { it.faction }.toSet()
-        val cache = mutableMapOf<Int, IntArray>()
+        val cache = mutableMapOf<Int, EnemyList>()
         for (f in factions) {
-            val enemies = world.index.enemiesOf(f)
-                .filter { id -> (world.healths[id]?.hp ?: 0) > 0 }
-                .toList()
-                .toIntArray()
-            cache[f] = enemies
+            val list = enemyLists.getOrPut(f) { EnemyList(IntArray(32), 0) }
+            var count = 0
+            val seq = world.index.enemiesOf(f)
+            for (id in seq) {
+                if ((world.healths[id]?.hp ?: 0) <= 0) continue
+                if (count >= list.ids.size) {
+                    list.ids = list.ids.copyOf(list.ids.size * 2)
+                }
+                list.ids[count++] = id
+            }
+            list.count = count
+            cache[f] = list
         }
         return cache
     }
 }
+
+private data class EnemyList(var ids: IntArray, var count: Int)
 
 class OccupancySystem(private val world: World, private val occ: OccupancyGrid) {
     fun tick() {
