@@ -8,7 +8,7 @@ import starkraft.sim.ecs.path.PathPool
 import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
-import starkraft.sim.replay.NullRecorder
+import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayIO
 import starkraft.sim.replay.ReplayRecorder
@@ -68,12 +68,16 @@ fun main(args: Array<String>) {
     }
 
     val replayPath = parseReplayPath(args)
+    val scriptPath = parseScriptPath(args)
     val recordPath = parseRecordPath(args)
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
-    val commandsByTick: Array<ArrayList<Command>> =
-        if (replayPath != null) loadReplayCommands(replayPath) else arrayOf()
+    val commandsByTick: Array<ArrayList<Command>> = when {
+        replayPath != null -> loadReplayCommands(replayPath)
+        scriptPath != null -> loadScriptCommands(scriptPath)
+        else -> arrayOf()
+    }
 
     if (replayPath == null) {
         if (team1.isNotEmpty()) {
@@ -171,6 +175,17 @@ private fun parseRecordPath(args: Array<String>): String? {
     return null
 }
 
+private fun parseScriptPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--script" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--script=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
 private fun parseTickLimit(args: Array<String>): Int? {
     var i = 0
     while (i < args.size) {
@@ -200,6 +215,20 @@ private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
     val path = Paths.get(pathStr)
     if (!Files.exists(path)) error("Replay file not found: $pathStr")
     val cmds = ReplayIO.load(path)
+    if (cmds.isEmpty()) return arrayOf()
+    var maxTick = 0
+    for (c in cmds) if (c.tick > maxTick) maxTick = c.tick
+    val byTick = Array(maxTick + 1) { ArrayList<Command>() }
+    for (c in cmds) {
+        byTick[c.tick].add(c)
+    }
+    return byTick
+}
+
+private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
+    val path = Paths.get(pathStr)
+    if (!Files.exists(path)) error("Script file not found: $pathStr")
+    val cmds = ScriptRunner.load(path)
     if (cmds.isEmpty()) return arrayOf()
     var maxTick = 0
     for (c in cmds) if (c.tick > maxTick) maxTick = c.tick
