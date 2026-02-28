@@ -10,6 +10,7 @@ import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
 import starkraft.sim.replay.ReplayIO
+import starkraft.sim.replay.ReplayRecorder
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -42,7 +43,7 @@ fun main(args: Array<String>) {
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
     val visionSys = VisionSystem(world, fog1, fog2)
-    val recorder = NullRecorder()
+    val recorder = ReplayRecorder()
 
     // Simple obstacles + rough terrain
     for (x in 6..24) map.setBlocked(x, 14, true)
@@ -66,6 +67,7 @@ fun main(args: Array<String>) {
     }
 
     val replayPath = parseReplayPath(args)
+    val recordPath = parseRecordPath(args)
     val commandsByTick: Array<ArrayList<Command>> =
         if (replayPath != null) loadReplayCommands(replayPath) else arrayOf()
 
@@ -112,6 +114,11 @@ fun main(args: Array<String>) {
         tick++
         Thread.sleep(Time.TICK_MS.toLong())
     }
+
+    if (recordPath != null) {
+        ReplayIO.save(Paths.get(recordPath), recorder.snapshot())
+        println("replay saved: $recordPath")
+    }
 }
 
 private fun parseReplayPath(args: Array<String>): String? {
@@ -120,6 +127,17 @@ private fun parseReplayPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--replay" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--replay=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseRecordPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--record" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--record=")) return a.substringAfter("=")
         i++
     }
     return null
@@ -139,7 +157,7 @@ private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
     return byTick
 }
 
-fun issue(cmd: Command, world: World, recorder: NullRecorder) {
+fun issue(cmd: Command, world: World, recorder: starkraft.sim.replay.Recorder) {
     recorder.onCommand(cmd)
     when (cmd) {
         is Command.Move -> {
