@@ -104,6 +104,7 @@ fun main(args: Array<String>) {
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
+        validateCommandUnitIds(commandsByTick, world)
         printScriptCommands(commandsByTick)
         return
     }
@@ -384,6 +385,34 @@ private fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: 
                     data.unit(c.typeId)
                 } catch (_: NoSuchElementException) {
                     error("Unknown unit typeId '${c.typeId}' in spawn at tick $tick")
+                }
+            }
+        }
+    }
+}
+
+private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, world: World) {
+    val existing = world.transforms.keys
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            when (c) {
+                is Command.Move -> {
+                    for (id in c.units) if (!existing.contains(id)) {
+                        error("Unknown unit id '$id' in move at tick $tick")
+                    }
+                }
+                is Command.Attack -> {
+                    for (id in c.units) if (!existing.contains(id)) {
+                        error("Unknown unit id '$id' in attack at tick $tick")
+                    }
+                    if (!existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in attack at tick $tick")
+                    }
+                }
+                is Command.Spawn -> {
+                    // Spawn adds new ids; no validation needed here.
                 }
             }
         }
