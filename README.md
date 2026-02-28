@@ -103,3 +103,4 @@ Other flags:
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
 - `--dumpWorldHash` print world hash after a normal run
+- `--strictReplayHash` fail if replay is missing a hash

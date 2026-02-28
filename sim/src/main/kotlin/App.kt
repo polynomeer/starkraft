@@ -94,8 +94,9 @@ fun main(args: Array<String>) {
     val scriptValidate = hasFlag(args, "--scriptValidate")
     val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
     val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
+    val strictReplayHash = hasFlag(args, "--strictReplayHash")
     val baseCommands: Array<ArrayList<Command>> = when {
-        replayPath != null -> loadReplayCommands(replayPath)
+        replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
         scriptPath != null -> loadScriptCommands(scriptPath)
         else -> arrayOf()
     }
@@ -290,10 +291,10 @@ private fun parseSeed(args: Array<String>): Long? {
     return null
 }
 
-private fun loadReplayCommands(pathStr: String): Array<ArrayList<Command>> {
+private fun loadReplayCommands(pathStr: String, strictHash: Boolean): Array<ArrayList<Command>> {
     val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Replay file not found: $pathStr")
-    val cmds = ReplayIO.load(path)
+    val cmds = ReplayIO.load(path, strictHash)
     if (cmds.isEmpty()) return arrayOf()
     var maxTick = 0
     for (c in cmds) if (c.tick > maxTick) maxTick = c.tick

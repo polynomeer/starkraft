@@ -27,9 +27,12 @@ object ReplayIO {
         Files.writeString(path, payload)
     }
 
-    fun load(path: Path): List<Command> {
+    fun load(path: Path, strictHash: Boolean = false): List<Command> {
         val payload = Files.readString(path)
         return if (payload.trimStart().startsWith("[")) {
+            if (strictHash) {
+                error("Replay hash missing (legacy array format)")
+            }
             val events = json.decodeFromString<List<ReplayEvent>>(payload)
             events.map { it.toCommand() }
         } else {
@@ -38,6 +41,8 @@ object ReplayIO {
             val cmds = container.events.map { it.toCommand() }
             if (container.schema != 0) {
                 verifyReplayHash(container.replayHash, cmds)
+            } else if (strictHash) {
+                error("Replay hash missing (legacy schema 0)")
             }
             cmds
         }
