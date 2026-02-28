@@ -440,13 +440,17 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
             val c = cmds[i]
             when (c) {
                 is Command.Move -> {
-                    for (id in c.units) if (id >= 0 && !existing.contains(id)) {
-                        error("Unknown unit id '$id' in move at tick $tick")
+                    if (!(c.units.size == 1 && c.units[0] == 0)) {
+                        for (id in c.units) if (id >= 0 && !existing.contains(id)) {
+                            error("Unknown unit id '$id' in move at tick $tick")
+                        }
                     }
                 }
                 is Command.Attack -> {
-                    for (id in c.units) if (id >= 0 && !existing.contains(id)) {
-                        error("Unknown unit id '$id' in attack at tick $tick")
+                    if (!(c.units.size == 1 && c.units[0] == 0)) {
+                        for (id in c.units) if (id >= 0 && !existing.contains(id)) {
+                            error("Unknown unit id '$id' in attack at tick $tick")
+                        }
                     }
                     if (c.target >= 0 && !existing.contains(c.target)) {
                         error("Unknown target id '${c.target}' in attack at tick $tick")
@@ -571,17 +575,31 @@ fun issue(
     recorder.onCommand(cmd)
     when (cmd) {
         is Command.Move -> {
-            cmd.units.forEach { id ->
-                val actual = resolveLabelId(id, labelIdMap)
-                world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+            if (cmd.units.size == 1 && cmd.units[0] == 0) {
+                for (id in world.orders.keys) {
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+                }
+            } else {
+                cmd.units.forEach { id ->
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+                }
             }
         }
 
         is Command.Attack -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
-            cmd.units.forEach { id ->
-                val actual = resolveLabelId(id, labelIdMap)
-                world.orders[actual]?.items?.addLast(Order.Attack(target))
+            if (cmd.units.size == 1 && cmd.units[0] == 0) {
+                for (id in world.orders.keys) {
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Attack(target))
+                }
+            } else {
+                cmd.units.forEach { id ->
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Attack(target))
+                }
             }
         }
 

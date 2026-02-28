@@ -4,6 +4,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 object ScriptRunner {
+    private val ALL_UNITS = intArrayOf(0)
     private fun labelId(label: String, map: MutableMap<String, Int>, next: () -> Int): Int {
         return map.getOrPut(label) { next() }
     }
@@ -40,6 +41,10 @@ object ScriptRunner {
                             selected.add(token.toInt())
                         }
                     }
+                }
+                "selectAll" -> {
+                    selected.clear()
+                    selected.addAll(ALL_UNITS)
                 }
                 "move" -> {
                     require(parts.size == 3) { "move <x> <y>" }
