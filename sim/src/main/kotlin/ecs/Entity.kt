@@ -6,4 +6,7 @@ typealias EntityId = Int
 object Ids {
     private var next = 1;
     fun newId(): EntityId = next++
+    fun resetForTest(start: Int = 1) {
+        next = start
+    }
 }

@@ -20,6 +20,7 @@ class DeterminismTest {
 }
 
 private fun runSimAndHash(seed: Long): Long {
+    Ids.resetForTest()
     val rng = Random(seed)
     val world = World()
     val map = MapGrid(32, 32)
