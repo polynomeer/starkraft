@@ -70,11 +70,12 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
     - Use replay as the canonical regression tool for simulation changes.
 
 ### System Order (Recommended)
-1. `OccupancySystem`
-2. `PathfindingSystem`
-3. `MovementSystem`
-4. `CombatSystem`
-5. `VisionSystem`
+1. `AliveSystem`
+2. `OccupancySystem`
+3. `PathfindingSystem`
+4. `MovementSystem`
+5. `CombatSystem`
+6. `VisionSystem`
 
 This order prevents movement from using stale occupancy, ensures path requests
 are ready before movement executes, and avoids combat targeting out of date

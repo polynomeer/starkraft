@@ -5,6 +5,12 @@ import kotlin.math.*
 import starkraft.sim.ecs.path.PathPool
 import starkraft.sim.ecs.path.PathRequestQueue
 
+class AliveSystem(private val world: World) {
+    fun tick() {
+        world.updateAliveSnapshot()
+    }
+}
+
 class MovementSystem(
     private val world: World,
     private val map: MapGrid,
@@ -20,7 +26,11 @@ class MovementSystem(
 
     fun tick() {
         pathQueue.beginTick()
-        for (id in world.alive) {
+        val alive = world.aliveSnapshot
+        val ids = alive.ids
+        val count = alive.count
+        for (i in 0 until count) {
+            val id = ids[i]
             val tr = world.transforms[id] ?: continue
             val cooldown = world.repathCooldowns[id]
             if (cooldown != null && cooldown.ticks > 0) cooldown.ticks--
@@ -113,8 +123,11 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
         // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
         val enemiesCache: Map<Int, EnemyList> = buildEnemyCache()
 
-        val aliveIds = world.alive.toList()
-        for (id in aliveIds) {
+        val alive = world.aliveSnapshot
+        val ids = alive.ids
+        val count = alive.count
+        for (i in 0 until count) {
+            val id = ids[i]
             val w = world.weapons[id] ?: continue
             if (w.cooldownTicks > 0) {
                 w.cooldownTicks--; continue
@@ -181,7 +194,11 @@ private data class EnemyList(var ids: IntArray, var count: Int)
 class OccupancySystem(private val world: World, private val occ: OccupancyGrid) {
     fun tick() {
         occ.clearDynamic()
-        for (id in world.alive) {
+        val alive = world.aliveSnapshot
+        val ids = alive.ids
+        val count = alive.count
+        for (i in 0 until count) {
+            val id = ids[i]
             val tr = world.transforms[id] ?: continue
             val x = floor(tr.x).toInt()
             val y = floor(tr.y).toInt()
@@ -197,7 +214,11 @@ class VisionSystem(
 ) {
     fun tick() {
         fogTeam1.clear(); fogTeam2.clear()
-        for (id in world.alive) {
+        val alive = world.aliveSnapshot
+        val ids = alive.ids
+        val count = alive.count
+        for (i in 0 until count) {
+            val id = ids[i]
             val v = world.visions[id] ?: continue
             val tr = world.transforms[id] ?: continue
             val tag = world.tags[id] ?: continue

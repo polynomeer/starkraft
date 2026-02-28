@@ -39,6 +39,7 @@ private fun runSimAndHash(seed: Long): Long {
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val occupancy = OccupancySystem(world, occ)
+    val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
     val fog1 = FogGrid(64, 64, 0.25f)
     val fog2 = FogGrid(64, 64, 0.25f)
@@ -78,6 +79,7 @@ private fun runSimAndHash(seed: Long): Long {
                 world.orders[ids[i]]?.items?.addLast(Order.Move(tx[phase][i], ty[phase][i]))
             }
         }
+        alive.tick()
         occupancy.tick()
         pathing.tick()
         movement.tick()

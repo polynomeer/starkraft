@@ -34,6 +34,7 @@ fun main() {
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val occupancy = OccupancySystem(world, occ)
+    val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
@@ -65,6 +66,7 @@ fun main() {
 
     var tick = 0
     while (tick < 1500) {
+        alive.tick()
         if (tick == 200) {
             for (x in 14..20) occ.addStatic(x, 10)
             println("tick=$tick  add static blockers at y=10 (x=14..20)")

@@ -13,10 +13,25 @@ class World {
     val stucks = mutableMapOf<EntityId, StuckTracker>()
 
     val index = FactionIndex(this) // NEW
+    val aliveSnapshot = AliveSnapshot(IntArray(64), 0)
 
     val alive: Sequence<EntityId>
         get() =
             transforms.keys.asSequence().filter { healths[it]?.hp ?: 0 > 0 }
+
+    fun updateAliveSnapshot() {
+        var ids = aliveSnapshot.ids
+        var count = 0
+        for (id in transforms.keys) {
+            if ((healths[id]?.hp ?: 0) <= 0) continue
+            if (count >= ids.size) {
+                ids = ids.copyOf(ids.size * 2)
+            }
+            ids[count++] = id
+        }
+        aliveSnapshot.ids = ids
+        aliveSnapshot.count = count
+    }
 
     fun spawn(t: Transform, tag: UnitTag, h: Health, w: WeaponRef?, v: Vision? = null): EntityId {
         val id = Ids.newId()
@@ -41,3 +56,5 @@ class World {
         pathFollows.remove(id); repathCooldowns.remove(id); stucks.remove(id)
     }
 }
+
+data class AliveSnapshot(var ids: IntArray, var count: Int)
