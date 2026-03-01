@@ -8,6 +8,8 @@ import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
+import starkraft.sim.client.MapBlockedTileRecord
+import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
@@ -15,6 +17,7 @@ import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
+import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
@@ -399,6 +402,25 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"occupancy\",\"sequence\":20,\"tick\":15,\"changes\":[{\"x\":14,\"y\":10,\"blocked\":true},{\"x\":20,\"y\":10,\"blocked\":false}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders map state stream record json`() {
+        val json =
+            renderMapStateStreamRecordJson(
+                sequence = 21L,
+                width = 32,
+                height = 32,
+                blockedTiles = listOf(MapBlockedTileRecord(6, 14), MapBlockedTileRecord(12, 6)),
+                weightedTiles = listOf(MapCostTileRecord(18, 18, 3f)),
+                staticOccupancyTiles = emptyList(),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[]}",
             json
         )
     }

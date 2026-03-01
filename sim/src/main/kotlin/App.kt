@@ -5,6 +5,8 @@ import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
+import starkraft.sim.client.MapBlockedTileRecord
+import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -12,6 +14,7 @@ import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
+import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
@@ -157,6 +160,7 @@ fun main(args: Array<String>) {
             ),
             resolvedSnapshotOutPath
         )
+        emitMapStateRecord(map, occ, resolvedSnapshotOutPath, streamSequence)
     }
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseProgram: LoadedProgram = when {
@@ -1729,6 +1733,44 @@ private fun emitOccupancyChangeRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             changes = changes,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitMapStateRecord(
+    map: MapGrid,
+    occ: OccupancyGrid,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val blockedTiles = ArrayList<MapBlockedTileRecord>()
+    val weightedTiles = ArrayList<MapCostTileRecord>()
+    val staticOccupancyTiles = ArrayList<MapBlockedTileRecord>()
+    for (y in 0 until map.height) {
+        for (x in 0 until map.width) {
+            if (map.isBlocked(x, y)) {
+                blockedTiles.add(MapBlockedTileRecord(x, y))
+            }
+            val cost = map.cost(x, y)
+            if (cost != 1f) {
+                weightedTiles.add(MapCostTileRecord(x, y, cost))
+            }
+            if (occ.isStaticBlocked(x, y)) {
+                staticOccupancyTiles.add(MapBlockedTileRecord(x, y))
+            }
+        }
+    }
+    emitSnapshotLine(
+        renderMapStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            width = map.width,
+            height = map.height,
+            blockedTiles = blockedTiles,
+            weightedTiles = weightedTiles,
+            staticOccupancyTiles = staticOccupancyTiles,
             pretty = false
         ),
         snapshotOutPath

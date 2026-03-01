@@ -119,6 +119,7 @@ Other flags:
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
+  They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, and current static occupancy.
   Issued commands are also emitted as `command` records.
   Script-driven selection changes emit `selection` records before commands for that tick.
   Spawn commands emit `spawn` records with resolved runtime entity ids.

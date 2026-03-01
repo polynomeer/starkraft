@@ -21,4 +21,7 @@ class MapGrid(val width: Int, val height: Int) {
         if (!inBounds(x, y)) return
         cost[y * width + x] = value
     }
+
+    fun isBlocked(x: Int, y: Int): Boolean =
+        inBounds(x, y) && !passable[y * width + x]
 }

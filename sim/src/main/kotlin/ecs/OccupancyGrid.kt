@@ -24,6 +24,11 @@ class OccupancyGrid(val width: Int, val height: Int) {
         if (staticCounts[idx] > 0) staticCounts[idx]--
     }
 
+    fun isStaticBlocked(x: Int, y: Int): Boolean {
+        if (!inBounds(x, y)) return true
+        return staticCounts[y * width + x] > 0
+    }
+
     fun isBlocked(x: Int, y: Int): Boolean {
         if (!inBounds(x, y)) return true
         val idx = y * width + x

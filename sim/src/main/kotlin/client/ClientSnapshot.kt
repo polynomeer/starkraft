@@ -276,6 +276,30 @@ data class OccupancyChangeStreamRecord(
     val changes: List<OccupancyChangeEventRecord>
 )
 
+@Serializable
+data class MapBlockedTileRecord(
+    val x: Int,
+    val y: Int
+)
+
+@Serializable
+data class MapCostTileRecord(
+    val x: Int,
+    val y: Int,
+    val cost: Float
+)
+
+@Serializable
+data class MapStateStreamRecord(
+    val recordType: String = "mapState",
+    val sequence: Long,
+    val width: Int,
+    val height: Int,
+    val blockedTiles: List<MapBlockedTileRecord>,
+    val weightedTiles: List<MapCostTileRecord>,
+    val staticOccupancyTiles: List<MapBlockedTileRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -649,6 +673,27 @@ fun renderOccupancyChangeStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = OccupancyChangeStreamRecord(sequence = sequence, tick = tick, changes = changes)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderMapStateStreamRecordJson(
+    sequence: Long,
+    width: Int,
+    height: Int,
+    blockedTiles: List<MapBlockedTileRecord>,
+    weightedTiles: List<MapCostTileRecord>,
+    staticOccupancyTiles: List<MapBlockedTileRecord>,
+    pretty: Boolean = false
+): String {
+    val record =
+        MapStateStreamRecord(
+            sequence = sequence,
+            width = width,
+            height = height,
+            blockedTiles = blockedTiles,
+            weightedTiles = weightedTiles,
+            staticOccupancyTiles = staticOccupancyTiles
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
