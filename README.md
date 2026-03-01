@@ -94,6 +94,8 @@ Script syntax:
 - `select <id...>` select units by entity id
 - `select @label...` select units by label (from spawn)
 - `selectAll` select all units
+- `selectFaction <id>` select units by faction at execution time
+- `selectType <typeId>` select units by type at execution time
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit

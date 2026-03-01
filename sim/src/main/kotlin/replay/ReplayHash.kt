@@ -15,11 +15,37 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
             }
+            is Command.MoveFaction -> {
+                mixInt(11)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
+            is Command.MoveType -> {
+                mixInt(12)
+                mixInt(cmd.tick)
+                for (ch in cmd.typeId) mixInt(ch.code)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
             is Command.Attack -> {
                 mixInt(2)
                 mixInt(cmd.tick)
                 mixInt(cmd.units.size)
                 for (u in cmd.units) mixInt(u)
+                mixInt(cmd.target)
+            }
+            is Command.AttackFaction -> {
+                mixInt(21)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+                mixInt(cmd.target)
+            }
+            is Command.AttackType -> {
+                mixInt(22)
+                mixInt(cmd.tick)
+                for (ch in cmd.typeId) mixInt(ch.code)
                 mixInt(cmd.target)
             }
             is Command.Spawn -> {

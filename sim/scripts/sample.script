@@ -13,6 +13,14 @@ wait 50
 select 6 7 8 9 10
 move 5 5
 
+wait 25
+selectFaction 1
+move 18 18
+
+wait 25
+selectType Zergling
+move 8 8
+
 wait 50
 select 1 2 3
 attack 6

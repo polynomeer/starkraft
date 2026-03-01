@@ -9,10 +9,17 @@ object ScriptRunner {
         return map.getOrPut(label) { next() }
     }
 
+    private sealed interface Selection {
+        data class Units(val ids: IntArray) : Selection
+        data object All : Selection
+        data class Faction(val id: Int) : Selection
+        data class Type(val typeId: String) : Selection
+    }
+
     fun load(path: Path): List<Command> {
         val lines = Files.readAllLines(path)
         var tick = 0
-        val selected = ArrayList<Int>()
+        var selection: Selection? = null
         val labelIds = HashMap<String, Int>()
         var nextLabelId = -1
         val out = ArrayList<Command>(lines.size)
@@ -32,7 +39,7 @@ object ScriptRunner {
                     tick += parts[1].toInt()
                 }
                 "select" -> {
-                    selected.clear()
+                    val selected = ArrayList<Int>()
                     for (i in 1 until parts.size) {
                         val token = parts[i]
                         if (token.startsWith("@")) {
@@ -41,28 +48,36 @@ object ScriptRunner {
                             selected.add(token.toInt())
                         }
                     }
+                    selection = Selection.Units(selected.toIntArray())
                 }
                 "selectAll" -> {
-                    selected.clear()
-                    selected.addAll(ALL_UNITS)
+                    selection = Selection.All
+                }
+                "selectFaction" -> {
+                    require(parts.size == 2) { "selectFaction <id>" }
+                    selection = Selection.Faction(parts[1].toInt())
+                }
+                "selectType" -> {
+                    require(parts.size == 2) { "selectType <typeId>" }
+                    selection = Selection.Type(parts[1])
                 }
                 "move" -> {
                     require(parts.size == 3) { "move <x> <y>" }
-                    require(selected.isNotEmpty()) { "move requires selection" }
+                    require(selection != null) { "move requires selection" }
                     val x = parts[1].toFloat()
                     val y = parts[2].toFloat()
-                    out.add(Command.Move(tick, selected.toIntArray(), x, y))
+                    out.add(moveCommand(tick, selection!!, x, y))
                 }
                 "attack" -> {
                     require(parts.size == 2) { "attack <targetId>" }
-                    require(selected.isNotEmpty()) { "attack requires selection" }
+                    require(selection != null) { "attack requires selection" }
                     val token = parts[1]
                     val target = if (token.startsWith("@")) {
                         labelId(token.substring(1), labelIds) { nextLabelId-- }
                     } else {
                         token.toInt()
                     }
-                    out.add(Command.Attack(tick, selected.toIntArray(), target))
+                    out.add(attackCommand(tick, selection!!, target))
                 }
                 "spawn" -> {
                     require(parts.size in 5..7) { "spawn [@label] <faction> <typeId> <x> <y> [vision]" }
@@ -90,5 +105,23 @@ object ScriptRunner {
             }
         }
         return out
+    }
+
+    private fun moveCommand(tick: Int, selection: Selection, x: Float, y: Float): Command {
+        return when (selection) {
+            is Selection.Units -> Command.Move(tick, selection.ids, x, y)
+            is Selection.All -> Command.Move(tick, ALL_UNITS, x, y)
+            is Selection.Faction -> Command.MoveFaction(tick, selection.id, x, y)
+            is Selection.Type -> Command.MoveType(tick, selection.typeId, x, y)
+        }
+    }
+
+    private fun attackCommand(tick: Int, selection: Selection, target: Int): Command {
+        return when (selection) {
+            is Selection.Units -> Command.Attack(tick, selection.ids, target)
+            is Selection.All -> Command.Attack(tick, ALL_UNITS, target)
+            is Selection.Faction -> Command.AttackFaction(tick, selection.id, target)
+            is Selection.Type -> Command.AttackType(tick, selection.typeId, target)
+        }
     }
 }

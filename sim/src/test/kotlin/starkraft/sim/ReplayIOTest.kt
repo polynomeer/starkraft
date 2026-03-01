@@ -13,7 +13,11 @@ class ReplayIOTest {
         val tmp = Files.createTempFile("starkraft-replay", ".json")
         val cmds = listOf(
             Command.Move(0, intArrayOf(1, 2, 3), 5.5f, 6.5f),
+            Command.MoveFaction(5, 1, 8f, 9f),
+            Command.MoveType(7, "Marine", 4f, 5f),
             Command.Attack(10, intArrayOf(2), 7),
+            Command.AttackFaction(12, 2, 9),
+            Command.AttackType(14, "Zergling", 3),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1)
         )
         ReplayIO.save(tmp, cmds)
@@ -55,6 +59,32 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.tick, b.tick)
             assertEquals(a.target, b.target)
             assertEquals(a.units.toList(), b.units.toList())
+        }
+        is Command.MoveFaction -> {
+            require(b is Command.MoveFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.MoveType -> {
+            require(b is Command.MoveType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.AttackFaction -> {
+            require(b is Command.AttackFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.target, b.target)
+        }
+        is Command.AttackType -> {
+            require(b is Command.AttackType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.target, b.target)
         }
         is Command.Spawn -> {
             require(b is Command.Spawn)

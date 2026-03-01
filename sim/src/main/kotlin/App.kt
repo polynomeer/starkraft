@@ -404,8 +404,20 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.Move -> {
                     println("tick=$tick move units=${c.units.joinToString(",")} x=${c.x} y=${c.y}")
                 }
+                is Command.MoveFaction -> {
+                    println("tick=$tick moveFaction faction=${c.faction} x=${c.x} y=${c.y}")
+                }
+                is Command.MoveType -> {
+                    println("tick=$tick moveType type=${c.typeId} x=${c.x} y=${c.y}")
+                }
                 is Command.Attack -> {
                     println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
+                }
+                is Command.AttackFaction -> {
+                    println("tick=$tick attackFaction faction=${c.faction} target=${c.target}")
+                }
+                is Command.AttackType -> {
+                    println("tick=$tick attackType type=${c.typeId} target=${c.target}")
                 }
                 is Command.Spawn -> {
                     val label = c.label?.let { "@$it " } ?: ""
@@ -456,6 +468,18 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown target id '${c.target}' in attack at tick $tick")
                     }
                 }
+                is Command.MoveFaction -> Unit
+                is Command.MoveType -> Unit
+                is Command.AttackFaction -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in attackFaction at tick $tick")
+                    }
+                }
+                is Command.AttackType -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in attackType at tick $tick")
+                    }
+                }
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
                 }
@@ -486,6 +510,18 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                     }
                     if (c.target < 0 && !defined.contains(c.target)) {
                         error("Unknown label id '${c.target}' in attack at tick $tick (spawn first)")
+                    }
+                }
+                is Command.MoveFaction -> Unit
+                is Command.MoveType -> Unit
+                is Command.AttackFaction -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in attackFaction at tick $tick (spawn first)")
+                    }
+                }
+                is Command.AttackType -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in attackType at tick $tick (spawn first)")
                     }
                 }
             }
@@ -587,6 +623,20 @@ fun issue(
                 }
             }
         }
+        is Command.MoveFaction -> {
+            for ((id, tag) in world.tags) {
+                if (tag.faction == cmd.faction) {
+                    world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+                }
+            }
+        }
+        is Command.MoveType -> {
+            for ((id, tag) in world.tags) {
+                if (tag.typeId == cmd.typeId) {
+                    world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+                }
+            }
+        }
 
         is Command.Attack -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -599,6 +649,22 @@ fun issue(
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.Attack(target))
+                }
+            }
+        }
+        is Command.AttackFaction -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            for ((id, tag) in world.tags) {
+                if (tag.faction == cmd.faction) {
+                    world.orders[id]?.items?.addLast(Order.Attack(target))
+                }
+            }
+        }
+        is Command.AttackType -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            for ((id, tag) in world.tags) {
+                if (tag.typeId == cmd.typeId) {
+                    world.orders[id]?.items?.addLast(Order.Attack(target))
                 }
             }
         }
