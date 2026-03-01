@@ -140,6 +140,22 @@ data class CombatStreamRecord(
     val events: List<CombatEventRecord>
 )
 
+@Serializable
+data class DespawnEventRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String? = null,
+    val reason: String? = null
+)
+
+@Serializable
+data class DespawnStreamRecord(
+    val recordType: String = "despawn",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<DespawnEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -344,6 +360,16 @@ fun renderCombatStreamRecordJson(
             kills = kills,
             events = events
         )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderDespawnStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<DespawnEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = DespawnStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

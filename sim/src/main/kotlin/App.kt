@@ -2,9 +2,11 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
+import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -212,6 +214,7 @@ fun main(args: Array<String>) {
     }
     var tick = 0
     while (tick < totalTicks) {
+        world.clearRemovedEvents()
         alive.tick()
         if (tick == 200) {
             for (x in 14..20) occ.addStatic(x, 10)
@@ -233,6 +236,7 @@ fun main(args: Array<String>) {
         movement.tick()
         combat.tick()
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
+        emitDespawnRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
@@ -583,6 +587,35 @@ private fun emitCombatRecord(
             attacks = combat.lastTickAttacks,
             kills = combat.lastTickKills,
             events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitDespawnRecord(
+    world: World,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || world.removedEventCount == 0) return
+    val entities = ArrayList<DespawnEventRecord>(world.removedEventCount)
+    for (i in 0 until world.removedEventCount) {
+        entities.add(
+            DespawnEventRecord(
+                entityId = world.removedEntityId(i),
+                faction = world.removedFaction(i),
+                typeId = world.removedTypeId(i),
+                reason = world.removedReason(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderDespawnStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
             pretty = false
         ),
         snapshotOutPath

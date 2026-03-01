@@ -194,7 +194,7 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
                 w.cooldownTicks = def.cooldownTicks
                 val killed = targetHp.hp <= 0
                 recordEvent(id, best, dmg, targetHp.hp, killed)
-                if (killed) world.remove(best)
+                if (killed) world.remove(best, reason = "death")
             }
         }
     }

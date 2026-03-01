@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
+import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -214,6 +216,26 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"combat\",\"sequence\":11,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders despawn stream record json`() {
+        val json =
+            renderDespawnStreamRecordJson(
+                sequence = 12L,
+                tick = 7,
+                entities =
+                    listOf(
+                        DespawnEventRecord(entityId = 9, faction = 2, typeId = "Zergling", reason = "death"),
+                        DespawnEventRecord(entityId = 14, faction = 1, typeId = "Marine", reason = "despawn")
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"despawn\",\"sequence\":12,\"tick\":7,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
             json
         )
     }

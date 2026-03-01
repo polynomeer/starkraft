@@ -121,6 +121,7 @@ Other flags:
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
   Issued commands are also emitted as `command` records.
   Combat ticks emit `combat` records with attack and kill events.
+  Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
