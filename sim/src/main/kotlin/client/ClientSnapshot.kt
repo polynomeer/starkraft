@@ -7,6 +7,7 @@ import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.services.FogGrid
+import starkraft.sim.net.Command
 
 private val snapshotJsonPretty = Json {
     prettyPrint = true
@@ -79,6 +80,23 @@ data class SnapshotSessionEndRecord(
     val tick: Int,
     val worldHash: Long,
     val replayHash: Long? = null
+)
+
+@Serializable
+data class CommandStreamRecord(
+    val recordType: String = "command",
+    val sequence: Long,
+    val tick: Int,
+    val commandType: String,
+    val units: IntArray = intArrayOf(),
+    val faction: Int? = null,
+    val typeId: String? = null,
+    val target: Int? = null,
+    val x: Float? = null,
+    val y: Float? = null,
+    val vision: Float? = null,
+    val label: String? = null,
+    val labelId: Int? = null
 )
 
 fun buildClientSnapshot(
@@ -166,6 +184,77 @@ fun renderSnapshotSessionEndJson(
     pretty: Boolean = false
 ): String {
     val record = SnapshotSessionEndRecord(sequence = sequence, tick = tick, worldHash = worldHash, replayHash = replayHash)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean = false): String {
+    val record =
+        when (cmd) {
+            is Command.Move ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "move",
+                    units = cmd.units,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.MoveFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "moveFaction",
+                    faction = cmd.faction,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.MoveType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "moveType",
+                    typeId = cmd.typeId,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.Attack ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attack",
+                    units = cmd.units,
+                    target = cmd.target
+                )
+            is Command.AttackFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackFaction",
+                    faction = cmd.faction,
+                    target = cmd.target
+                )
+            is Command.AttackType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackType",
+                    typeId = cmd.typeId,
+                    target = cmd.target
+                )
+            is Command.Spawn ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "spawn",
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    x = cmd.x,
+                    y = cmd.y,
+                    vision = cmd.vision,
+                    label = cmd.label,
+                    labelId = cmd.labelId
+                )
+        }
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

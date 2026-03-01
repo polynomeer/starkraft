@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -124,14 +125,14 @@ fun main(args: Array<String>) {
     val resolvedSnapshotOutPath = snapshotOutPath?.let(::resolvePath)
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
-    val snapshotSequence = longArrayOf(0L)
+    val streamSequence = longArrayOf(0L)
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
-                sequence = nextSnapshotSequence(snapshotSequence),
+                sequence = nextStreamSequence(streamSequence),
                 mapId = DEMO_MAP_ID,
                 buildVersion = BUILD_VERSION,
                 seed = seed,
@@ -193,10 +194,10 @@ fun main(args: Array<String>) {
 
     if (replayPath == null) {
         if (team1.isNotEmpty()) {
-            issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder, data)
+            issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder, data, snapshotOutPath = resolvedSnapshotOutPath, streamSequence = streamSequence)
         }
         if (team2.isNotEmpty()) {
-            issue(Command.Move(0, team2.toIntArray(), 2f, 2f), world, recorder, data)
+            issue(Command.Move(0, team2.toIntArray(), 2f, 2f), world, recorder, data, snapshotOutPath = resolvedSnapshotOutPath, streamSequence = streamSequence)
         }
     }
 
@@ -220,7 +221,7 @@ fun main(args: Array<String>) {
         if (tick < commandsByTick.size) {
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder, data, labelMap, labelIdMap)
+                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence)
             }
         }
 
@@ -231,7 +232,7 @@ fun main(args: Array<String>) {
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
-            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, snapshotSequence)
+            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
         }
 
         if (tick % 25 == 0) {
@@ -303,12 +304,12 @@ fun main(args: Array<String>) {
     }
 
     if (snapshotJson) {
-        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, snapshotSequence)
+        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionEndJson(
-                sequence = nextSnapshotSequence(snapshotSequence),
+                sequence = nextStreamSequence(streamSequence),
                 tick = tick,
                 worldHash = finalWorldHash,
                 replayHash = finalReplayHash,
@@ -478,7 +479,7 @@ private fun emitClientSnapshot(
     seed: Long?,
     compactJson: Boolean,
     snapshotOutPath: java.nio.file.Path? = null,
-    snapshotSequence: LongArray? = null
+    streamSequence: LongArray? = null
 ) {
     val snapshot = buildClientSnapshot(
         world = world,
@@ -492,7 +493,7 @@ private fun emitClientSnapshot(
     if (snapshotOutPath == null) {
         emitSnapshotLine(renderClientSnapshotJson(snapshot, pretty = !compactJson), null)
     } else {
-        val sequence = snapshotSequence?.let(::nextSnapshotSequence) ?: 0L
+        val sequence = streamSequence?.let(::nextStreamSequence) ?: 0L
         emitSnapshotLine(renderSnapshotStreamRecordJson(snapshot, sequence = sequence, pretty = false), snapshotOutPath)
     }
 }
@@ -502,7 +503,7 @@ internal fun shouldEmitSnapshotAtTick(tick: Int, every: Int): Boolean {
     return tick % every == 0
 }
 
-internal fun nextSnapshotSequence(state: LongArray): Long {
+internal fun nextStreamSequence(state: LongArray): Long {
     val value = state[0]
     state[0] = value + 1L
     return value
@@ -1164,9 +1165,17 @@ fun issue(
     recorder: starkraft.sim.replay.Recorder,
     data: DataRepo? = null,
     labelMap: MutableMap<String, Int> = mutableMapOf(),
-    labelIdMap: MutableMap<Int, Int> = mutableMapOf()
+    labelIdMap: MutableMap<Int, Int> = mutableMapOf(),
+    snapshotOutPath: java.nio.file.Path? = null,
+    streamSequence: LongArray? = null
 ) {
     recorder.onCommand(cmd)
+    if (snapshotOutPath != null && streamSequence != null) {
+        emitSnapshotLine(
+            renderCommandStreamRecordJson(cmd, sequence = nextStreamSequence(streamSequence), pretty = false),
+            snapshotOutPath
+        )
+    }
     when (cmd) {
         is Command.Move -> {
             if (cmd.units.size == 1 && cmd.units[0] == 0) {

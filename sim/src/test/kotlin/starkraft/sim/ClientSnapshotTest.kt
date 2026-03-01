@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -17,6 +18,7 @@ import starkraft.sim.ecs.Vision
 import starkraft.sim.ecs.WeaponRef
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.services.FogGrid
+import starkraft.sim.net.Command
 import java.nio.file.Files
 
 class ClientSnapshotTest {
@@ -152,8 +154,18 @@ class ClientSnapshotTest {
     @Test
     fun `increments snapshot sequence monotonically`() {
         val state = longArrayOf(0L)
-        assertEquals(0L, nextSnapshotSequence(state))
-        assertEquals(1L, nextSnapshotSequence(state))
-        assertEquals(2L, nextSnapshotSequence(state))
+        assertEquals(0L, nextStreamSequence(state))
+        assertEquals(1L, nextStreamSequence(state))
+        assertEquals(2L, nextStreamSequence(state))
+    }
+
+    @Test
+    fun `renders command stream record json`() {
+        val json = renderCommandStreamRecordJson(Command.Move(3, intArrayOf(7, 8), 4f, 5f), sequence = 9L, pretty = false)
+
+        assertEquals(
+            "{\"recordType\":\"command\",\"sequence\":9,\"tick\":3,\"commandType\":\"move\",\"units\":[7,8],\"faction\":null,\"typeId\":null,\"target\":null,\"x\":4.0,\"y\":5.0,\"vision\":null,\"label\":null,\"labelId\":null}",
+            json
+        )
     }
 }
