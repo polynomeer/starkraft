@@ -261,6 +261,21 @@ data class PathProgressStreamRecord(
     val entities: List<PathProgressEventRecord>
 )
 
+@Serializable
+data class OccupancyChangeEventRecord(
+    val x: Int,
+    val y: Int,
+    val blocked: Boolean
+)
+
+@Serializable
+data class OccupancyChangeStreamRecord(
+    val recordType: String = "occupancy",
+    val sequence: Long,
+    val tick: Int,
+    val changes: List<OccupancyChangeEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -624,6 +639,16 @@ fun renderPathProgressStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = PathProgressStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderOccupancyChangeStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    changes: List<OccupancyChangeEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = OccupancyChangeStreamRecord(sequence = sequence, tick = tick, changes = changes)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

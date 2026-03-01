@@ -126,6 +126,7 @@ Other flags:
   Those order applications also emit `orderQueue` records with the resulting queue sizes.
   Successful path solves emit `pathAssigned` records when units receive new waypoint lists.
   Waypoint consumption emits `pathProgress` records as units advance and finish paths.
+  Static blocker changes emit `occupancy` records with tile-level blocked/unblocked deltas.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.

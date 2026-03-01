@@ -4,6 +4,7 @@ import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
+import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -13,6 +14,7 @@ import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
+import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -230,11 +232,17 @@ fun main(args: Array<String>) {
         world.clearRemovedEvents()
         alive.tick()
         if (tick == 200) {
+            val changes = ArrayList<OccupancyChangeEventRecord>(7)
             for (x in 14..20) occ.addStatic(x, 10)
+            for (x in 14..20) changes.add(OccupancyChangeEventRecord(x, 10, blocked = true))
+            emitOccupancyChangeRecord(tick, changes, resolvedSnapshotOutPath, streamSequence)
             println("tick=$tick  add static blockers at y=10 (x=14..20)")
         }
         if (tick == 500) {
+            val changes = ArrayList<OccupancyChangeEventRecord>(7)
             for (x in 14..20) occ.removeStatic(x, 10)
+            for (x in 14..20) changes.add(OccupancyChangeEventRecord(x, 10, blocked = false))
+            emitOccupancyChangeRecord(tick, changes, resolvedSnapshotOutPath, streamSequence)
             println("tick=$tick  remove static blockers at y=10 (x=14..20)")
         }
         if (tick < commandsByTick.size) {
@@ -1703,6 +1711,24 @@ private fun emitPathProgressRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitOccupancyChangeRecord(
+    tick: Int,
+    changes: List<OccupancyChangeEventRecord>,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || changes.isEmpty()) return
+    emitSnapshotLine(
+        renderOccupancyChangeStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            changes = changes,
             pretty = false
         ),
         snapshotOutPath

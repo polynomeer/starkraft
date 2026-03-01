@@ -7,6 +7,7 @@ import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
+import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
@@ -16,6 +17,7 @@ import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
+import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
@@ -381,6 +383,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"pathProgress\",\"sequence\":19,\"tick\":14,\"entities\":[{\"entityId\":7,\"waypointIndex\":3,\"remainingNodes\":5,\"completed\":false},{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders occupancy change stream record json`() {
+        val json =
+            renderOccupancyChangeStreamRecordJson(
+                sequence = 20L,
+                tick = 15,
+                changes = listOf(OccupancyChangeEventRecord(14, 10, true), OccupancyChangeEventRecord(20, 10, false)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"occupancy\",\"sequence\":20,\"tick\":15,\"changes\":[{\"x\":14,\"y\":10,\"blocked\":true},{\"x\":20,\"y\":10,\"blocked\":false}]}",
             json
         )
     }
