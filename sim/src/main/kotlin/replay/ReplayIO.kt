@@ -136,7 +136,8 @@ private data class ReplayEvent(
     val hp: Int? = null,
     val armor: Int? = null,
     val mineralCost: Int? = null,
-    val gasCost: Int? = null
+    val gasCost: Int? = null,
+    val buildTicks: Int? = null
 ) {
     fun toCommand(): Command {
         return when (type) {
@@ -158,6 +159,17 @@ private data class ReplayEvent(
                     height = height ?: 0,
                     hp = hp ?: 0,
                     armor = armor ?: 0,
+                    mineralCost = mineralCost ?: 0,
+                    gasCost = gasCost ?: 0,
+                    label = label,
+                    labelId = labelId
+                )
+            "train" ->
+                Command.Train(
+                    tick = tick,
+                    buildingId = target ?: 0,
+                    typeId = typeId ?: "",
+                    buildTicks = buildTicks ?: 0,
                     mineralCost = mineralCost ?: 0,
                     gasCost = gasCost ?: 0
                 )
@@ -201,6 +213,18 @@ private data class ReplayEvent(
                         hp = cmd.hp,
                         armor = cmd.armor,
                         mineralCost = cmd.mineralCost,
+                        gasCost = cmd.gasCost,
+                        label = cmd.label,
+                        labelId = cmd.labelId
+                    )
+                is Command.Train ->
+                    ReplayEvent(
+                        type = "train",
+                        tick = cmd.tick,
+                        target = cmd.buildingId,
+                        typeId = cmd.typeId,
+                        buildTicks = cmd.buildTicks,
+                        mineralCost = cmd.mineralCost,
                         gasCost = cmd.gasCost
                     )
             }
@@ -227,8 +251,15 @@ private fun ensureLabelIds(commands: List<Command>): List<Command> {
             val id = labelToId.getOrPut(c.label) { nextLabelId-- }
             out.add(c.copy(labelId = id))
             changed = true
+        } else if (c is Command.Build && c.label != null && c.labelId == null) {
+            val id = labelToId.getOrPut(c.label) { nextLabelId-- }
+            out.add(c.copy(labelId = id))
+            changed = true
         } else {
             if (c is Command.Spawn && c.label != null && c.labelId != null) {
+                labelToId.putIfAbsent(c.label, c.labelId)
+            }
+            if (c is Command.Build && c.label != null && c.labelId != null) {
                 labelToId.putIfAbsent(c.label, c.labelId)
             }
             out.add(c)

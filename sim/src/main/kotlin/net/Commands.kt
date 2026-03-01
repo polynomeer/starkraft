@@ -32,6 +32,16 @@ sealed interface Command {
         val hp: Int,
         val armor: Int = 0,
         val mineralCost: Int = 0,
+        val gasCost: Int = 0,
+        val label: String? = null,
+        val labelId: Int? = null
+    ) : Command
+    data class Train(
+        override val tick: Int,
+        val buildingId: Int,
+        val typeId: String,
+        val buildTicks: Int,
+        val mineralCost: Int = 0,
         val gasCost: Int = 0
     ) : Command
 }

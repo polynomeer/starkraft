@@ -116,20 +116,42 @@ object ScriptRunner {
                     out.add(Command.Spawn(tick, faction, typeId, x, y, vision, label, labelIdValue))
                 }
                 "build" -> {
-                    require(parts.size in 8..11) {
-                        "build <faction> <typeId> <tileX> <tileY> <width> <height> <hp> [armor] [minerals] [gas]"
+                    require(parts.size in 8..12) {
+                        "build [@label] <faction> <typeId> <tileX> <tileY> <width> <height> <hp> [armor] [minerals] [gas]"
                     }
-                    val faction = parts[1].toInt()
+                    var idxStart = 1
+                    var label: String? = null
+                    var labelIdValue: Int? = null
+                    if (parts[1].startsWith("@")) {
+                        label = parts[1].substring(1)
+                        labelIdValue = labelId(label, labelIds) { nextLabelId-- }
+                        idxStart++
+                    }
+                    val faction = parts[idxStart].toInt()
+                    val typeId = parts[idxStart + 1]
+                    val tileX = parts[idxStart + 2].toInt()
+                    val tileY = parts[idxStart + 3].toInt()
+                    val width = parts[idxStart + 4].toInt()
+                    val height = parts[idxStart + 5].toInt()
+                    val hp = parts[idxStart + 6].toInt()
+                    val armor = if (parts.size > idxStart + 7) parts[idxStart + 7].toInt() else 0
+                    val minerals = if (parts.size > idxStart + 8) parts[idxStart + 8].toInt() else 0
+                    val gas = if (parts.size > idxStart + 9) parts[idxStart + 9].toInt() else 0
+                    out.add(Command.Build(tick, faction, typeId, tileX, tileY, width, height, hp, armor, minerals, gas, label, labelIdValue))
+                }
+                "train" -> {
+                    require(parts.size in 4..6) { "train <buildingId|@label> <typeId> <buildTicks> [minerals] [gas]" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
                     val typeId = parts[2]
-                    val tileX = parts[3].toInt()
-                    val tileY = parts[4].toInt()
-                    val width = parts[5].toInt()
-                    val height = parts[6].toInt()
-                    val hp = parts[7].toInt()
-                    val armor = if (parts.size > 8) parts[8].toInt() else 0
-                    val minerals = if (parts.size > 9) parts[9].toInt() else 0
-                    val gas = if (parts.size > 10) parts[10].toInt() else 0
-                    out.add(Command.Build(tick, faction, typeId, tileX, tileY, width, height, hp, armor, minerals, gas))
+                    val buildTicks = parts[3].toInt()
+                    val minerals = if (parts.size > 4) parts[4].toInt() else 0
+                    val gas = if (parts.size > 5) parts[5].toInt() else 0
+                    out.add(Command.Train(tick, buildingId, typeId, buildTicks, minerals, gas))
                 }
                 else -> error("Unknown command")
             }

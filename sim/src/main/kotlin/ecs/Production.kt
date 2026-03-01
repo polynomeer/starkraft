@@ -6,14 +6,19 @@ class BuildingProductionSystem(
     private val world: World,
     private val map: MapGrid,
     private val occ: OccupancyGrid,
-    private val data: DataRepo
+    private val data: DataRepo,
+    private val resources: ResourceSystem? = null
 ) {
     private var buildingIds = IntArray(16)
 
-    fun enqueue(buildingId: EntityId, typeId: String, buildTicks: Int): Boolean {
+    fun enqueue(buildingId: EntityId, typeId: String, buildTicks: Int, mineralCost: Int = 0, gasCost: Int = 0): Boolean {
         if (!world.footprints.containsKey(buildingId)) return false
         if (buildTicks <= 0) return false
         data.unit(typeId)
+        if (resources != null) {
+            val faction = world.tags[buildingId]?.faction ?: return false
+            if (!resources.spend(faction, mineralCost, gasCost)) return false
+        }
         val queue = world.productionQueues.getOrPut(buildingId) { ProductionQueue() }
         queue.items.addLast(ProductionJob(typeId, buildTicks))
         return true

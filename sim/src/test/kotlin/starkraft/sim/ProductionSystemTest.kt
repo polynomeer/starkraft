@@ -11,6 +11,8 @@ import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
 import starkraft.sim.ecs.ResourceSystem
 import starkraft.sim.ecs.World
+import starkraft.sim.net.Command
+import starkraft.sim.replay.NullRecorder
 
 class ProductionSystemTest {
     private fun testData(): DataRepo {
@@ -36,11 +38,12 @@ class ProductionSystemTest {
         val occ = OccupancyGrid(16, 16)
         val resources = ResourceSystem(world)
         val buildings = BuildingPlacementSystem(world, map, occ, resources)
-        val production = BuildingProductionSystem(world, map, occ, testData())
+        val production = BuildingProductionSystem(world, map, occ, testData(), resources)
         resources.set(1, 500, 0)
         val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
 
-        assertTrue(production.enqueue(buildingId, "Marine", 2))
+        assertTrue(production.enqueue(buildingId, "Marine", 2, mineralCost = 50))
+        assertEquals(350, world.stockpiles[1]?.minerals)
         production.tick()
         assertEquals(1, world.footprints.size)
         assertEquals(1, world.productionQueues.size)
@@ -59,7 +62,7 @@ class ProductionSystemTest {
         val occ = OccupancyGrid(16, 16)
         val resources = ResourceSystem(world)
         val buildings = BuildingPlacementSystem(world, map, occ, resources)
-        val production = BuildingProductionSystem(world, map, occ, testData())
+        val production = BuildingProductionSystem(world, map, occ, testData(), resources)
         resources.set(1, 500, 0)
         val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
 
@@ -69,7 +72,7 @@ class ProductionSystemTest {
                 if (onBorder) occ.addDynamic(x, y)
             }
         }
-        assertTrue(production.enqueue(buildingId, "Marine", 1))
+        assertTrue(production.enqueue(buildingId, "Marine", 1, mineralCost = 50))
         production.tick()
 
         assertFalse(world.tags.values.any { it.typeId == "Marine" })
@@ -79,5 +82,54 @@ class ProductionSystemTest {
         production.tick()
 
         assertTrue(world.tags.values.any { it.typeId == "Marine" })
+    }
+
+    @Test
+    fun `production enqueue fails when resources are insufficient`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, testData(), resources)
+        resources.set(1, 120, 0)
+        val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
+
+        assertFalse(production.enqueue(buildingId, "Marine", 2, mineralCost = 50))
+        assertEquals(20, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.productionQueues.size)
+    }
+
+    @Test
+    fun `train command enqueues production via label`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, testData(), resources)
+        val labels = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
+        resources.set(1, 300, 0)
+
+        issue(
+            Command.Build(0, 1, "Depot", 6, 6, 2, 2, 400, 0, 100, 0, "depot", -1),
+            world,
+            NullRecorder(),
+            labelMap = labels,
+            labelIdMap = labelIds,
+            buildings = buildings
+        )
+        issue(
+            Command.Train(1, -1, "Marine", 2, 50, 0),
+            world,
+            NullRecorder(),
+            labelMap = labels,
+            labelIdMap = labelIds,
+            production = production
+        )
+
+        assertEquals(1, world.productionQueues.size)
+        assertEquals(150, world.stockpiles[1]?.minerals)
     }
 }

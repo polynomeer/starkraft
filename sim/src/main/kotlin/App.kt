@@ -79,7 +79,7 @@ fun main(args: Array<String>) {
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val resources = ResourceSystem(world)
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
-    val production = BuildingProductionSystem(world, map, occ, data)
+    val production = BuildingProductionSystem(world, map, occ, data, resources)
     val occupancy = OccupancySystem(world, occ)
     val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
@@ -97,7 +97,7 @@ fun main(args: Array<String>) {
     val depotId =
         buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400, mineralCost = 100)
     if (depotId != null) {
-        production.enqueue(depotId, typeId = "Marine", buildTicks = 75)
+        production.enqueue(depotId, typeId = "Marine", buildTicks = 75, mineralCost = 50)
     }
 
     val seed = parseSeed(args)
@@ -283,7 +283,7 @@ fun main(args: Array<String>) {
             }
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence, buildings)
+                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence, buildings, production)
             }
         }
 
@@ -962,10 +962,17 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                     println("tick=$tick spawn ${label}faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
                 }
                 is Command.Build -> {
+                    val label = c.label?.let { "@$it " } ?: ""
                     println(
-                        "tick=$tick build faction=${c.faction} type=${c.typeId} " +
+                        "tick=$tick build ${label}faction=${c.faction} type=${c.typeId} " +
                             "tileX=${c.tileX} tileY=${c.tileY} width=${c.width} height=${c.height} " +
                             "hp=${c.hp} armor=${c.armor} minerals=${c.mineralCost} gas=${c.gasCost}"
+                    )
+                }
+                is Command.Train -> {
+                    println(
+                        "tick=$tick train building=${c.buildingId} type=${c.typeId} " +
+                            "buildTicks=${c.buildTicks} minerals=${c.mineralCost} gas=${c.gasCost}"
                     )
                 }
             }
@@ -1029,6 +1036,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                     // Spawn adds new ids; no validation needed here.
                 }
                 is Command.Build -> Unit
+                is Command.Train -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in train at tick $tick")
+                    }
+                }
             }
         }
     }
@@ -1042,6 +1054,10 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
             val c = cmds[i]
             when (c) {
                 is Command.Spawn -> {
+                    val labelId = c.labelId
+                    if (labelId != null) defined.add(labelId)
+                }
+                is Command.Build -> {
                     val labelId = c.labelId
                     if (labelId != null) defined.add(labelId)
                 }
@@ -1070,7 +1086,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '${c.target}' in attackType at tick $tick (spawn first)")
                     }
                 }
-                is Command.Build -> Unit
+                is Command.Train -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in train at tick $tick (spawn/build first)")
+                    }
+                }
             }
         }
     }
@@ -1290,6 +1310,7 @@ internal fun buildCommandStats(
                 }
                 is Command.Spawn -> tickSpawns++
                 is Command.Build -> Unit
+                is Command.Train -> Unit
             }
         }
         if (count > 0) {
@@ -1354,6 +1375,7 @@ internal fun buildCommandStats(
                 }
                 is Command.Spawn -> spawns++
                 is Command.Build -> Unit
+                is Command.Train -> Unit
             }
         }
     }
@@ -1537,7 +1559,8 @@ fun issue(
     labelIdMap: MutableMap<Int, Int> = mutableMapOf(),
     snapshotOutPath: java.nio.file.Path? = null,
     streamSequence: LongArray? = null,
-    buildings: BuildingPlacementSystem? = null
+    buildings: BuildingPlacementSystem? = null,
+    production: BuildingProductionSystem? = null
 ) {
     recorder.onCommand(cmd)
     if (snapshotOutPath != null && streamSequence != null) {
@@ -1680,6 +1703,12 @@ fun issue(
                     mineralCost = cmd.mineralCost,
                     gasCost = cmd.gasCost
                 ) ?: return
+            if (cmd.label != null) {
+                labelMap[cmd.label] = id
+            }
+            if (cmd.labelId != null) {
+                labelIdMap[cmd.labelId] = id
+            }
             if (snapshotOutPath != null && streamSequence != null) {
                 emitSnapshotLine(
                     renderSpawnStreamRecordJson(
@@ -1698,6 +1727,17 @@ fun issue(
                     snapshotOutPath
                 )
             }
+        }
+        is Command.Train -> {
+            val productionSystem = production ?: error("Train requires BuildingProductionSystem")
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            productionSystem.enqueue(
+                buildingId = buildingId,
+                typeId = cmd.typeId,
+                buildTicks = cmd.buildTicks,
+                mineralCost = cmd.mineralCost,
+                gasCost = cmd.gasCost
+            )
         }
     }
 }

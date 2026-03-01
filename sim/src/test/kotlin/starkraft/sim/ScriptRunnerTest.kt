@@ -46,6 +46,26 @@ class ScriptRunnerTest {
         val program = ScriptRunner.loadProgram(path)
 
         assertEquals(1, program.commands.size)
-        assertEquals(Command.Build(4, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0), program.commands[0])
+        assertEquals(Command.Build(4, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0, null, null), program.commands[0])
+    }
+
+    @Test
+    fun `parses train commands with labels`() {
+        val path = Files.createTempFile("starkraft-train-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 0
+            build @depot 1 Depot 4 4 2 2 400 0 100 0
+            wait 1
+            train @depot Marine 75 50 0
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(2, program.commands.size)
+        assertEquals(Command.Build(0, 1, "Depot", 4, 4, 2, 2, 400, 0, 100, 0, "depot", -1), program.commands[0])
+        assertEquals(Command.Train(1, -1, "Marine", 75, 50, 0), program.commands[1])
     }
 }

@@ -76,6 +76,21 @@ class ReplayHashRecorder : Recorder {
                 mixInt(cmd.armor)
                 mixInt(cmd.mineralCost)
                 mixInt(cmd.gasCost)
+                if (cmd.label != null) {
+                    for (ch in cmd.label) mixInt(ch.code)
+                } else {
+                    mixInt(0)
+                }
+                mixInt(cmd.labelId ?: 0)
+            }
+            is Command.Train -> {
+                mixInt(5)
+                mixInt(cmd.tick)
+                mixInt(cmd.buildingId)
+                for (ch in cmd.typeId) mixInt(ch.code)
+                mixInt(cmd.buildTicks)
+                mixInt(cmd.mineralCost)
+                mixInt(cmd.gasCost)
             }
         }
     }
