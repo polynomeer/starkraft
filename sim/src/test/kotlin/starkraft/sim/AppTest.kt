@@ -220,6 +220,23 @@ class AppTest {
     }
 
     @Test
+    fun `renders compact command stats json on one line`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Move(0, intArrayOf(1), 4f, 5f),
+                    Command.Spawn(0, 1, "Marine", 2f, 3f)
+                )
+            )
+
+        val json = renderCommandStatsJson(buildCommandStats(commandsByTick, replayMeta = null), pretty = false)
+
+        assertTrue(!json.contains("\n"))
+        assertTrue(json.startsWith("{\"metadata\":null,"))
+        assertTrue(json.contains("\"totals\":{\"total\":2"))
+    }
+
+    @Test
     fun `renders compact command stats text for many ticks`() {
         val commandsByTick =
             Array(13) { tick ->
@@ -288,6 +305,37 @@ class AppTest {
             """.trimIndent(),
             json
         )
+    }
+
+    @Test
+    fun `renders compact replay metadata json on one line`() {
+        val json =
+            renderReplayMetaJson(
+                buildReplayMetaReport(
+                    replayMeta =
+                        ReplayMetadata(
+                            schema = 1,
+                            replayHash = 12L,
+                            seed = 42L,
+                            mapId = "other-map",
+                            buildVersion = "0.9.0",
+                            eventCount = 5,
+                            fileSizeBytes = 256,
+                            legacy = false
+                        ),
+                    replayPath = "/tmp/demo.replay.json",
+                    currentMapId = "demo-32x32-obstacles",
+                    currentBuildVersion = "1.0-SNAPSHOT",
+                    currentSeed = 99L,
+                    strictReplayMeta = true,
+                    strictReplayHash = true
+                ),
+                pretty = false
+            )
+
+        assertTrue(!json.contains("\n"))
+        assertTrue(json.startsWith("{\"replayPath\":\"/tmp/demo.replay.json\""))
+        assertTrue(json.contains("\"metadata\":{\"schema\":1"))
     }
 
     @Test

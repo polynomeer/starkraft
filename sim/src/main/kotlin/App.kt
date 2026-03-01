@@ -110,6 +110,7 @@ fun main(args: Array<String>) {
     val replayStats = hasFlag(args, "--replayStats")
     val replayStatsJson = hasFlag(args, "--replayStatsJson")
     val replayMetaJson = hasFlag(args, "--replayMetaJson")
+    val compactJson = hasFlag(args, "--compactJson")
     val replayDumpPath = parseReplayDumpPath(args)
     val resolvedReplayPath = replayPath?.let(::resolvePath)
     val replayMeta =
@@ -149,7 +150,7 @@ fun main(args: Array<String>) {
     }
     if (replayMetaJson && replayPath != null) {
         println(
-            statsJson.encodeToString(
+            renderReplayMetaJson(
                 buildReplayMetaReport(
                     replayMeta = replayMeta,
                     replayPath = resolvedReplayPath?.toAbsolutePath()?.normalize()?.toString(),
@@ -158,7 +159,8 @@ fun main(args: Array<String>) {
                     currentSeed = seed,
                     strictReplayMeta = strictReplayMeta,
                     strictReplayHash = strictReplayHash
-                )
+                ),
+                pretty = !compactJson
             )
         )
         return
@@ -262,7 +264,7 @@ fun main(args: Array<String>) {
             printCommandStats(stats)
         }
         if (replayStatsJson) {
-            println(statsJson.encodeToString(stats))
+            println(renderCommandStatsJson(stats, pretty = !compactJson))
         }
     }
 
@@ -656,6 +658,11 @@ private val statsJson = Json {
     encodeDefaults = true
 }
 
+private val compactStatsJson = Json {
+    prettyPrint = false
+    encodeDefaults = true
+}
+
 @Serializable
 internal data class CommandStats(
     val metadata: CommandStatsMetadata? = null,
@@ -923,8 +930,13 @@ internal fun buildReplayMetaReport(
     )
 }
 
-internal fun renderCommandStatsJson(stats: CommandStats): String = statsJson.encodeToString(stats)
-internal fun renderReplayMetaJson(report: ReplayMetaReport): String = statsJson.encodeToString(report)
+internal fun renderCommandStatsJson(stats: CommandStats, pretty: Boolean = true): String {
+    return if (pretty) statsJson.encodeToString(stats) else compactStatsJson.encodeToString(stats)
+}
+
+internal fun renderReplayMetaJson(report: ReplayMetaReport, pretty: Boolean = true): String {
+    return if (pretty) statsJson.encodeToString(report) else compactStatsJson.encodeToString(report)
+}
 
 private const val COMPACT_TICK_PREVIEW_COUNT = 5
 private const val COMPACT_TICK_THRESHOLD = 12
