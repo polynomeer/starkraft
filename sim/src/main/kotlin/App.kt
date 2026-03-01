@@ -639,7 +639,7 @@ private val statsJson = Json {
 }
 
 @Serializable
-private data class CommandStats(
+internal data class CommandStats(
     val metadata: CommandStatsMetadata? = null,
     val warnings: List<String> = emptyList(),
     val ticks: List<CommandTickCount>,
@@ -647,7 +647,7 @@ private data class CommandStats(
 )
 
 @Serializable
-private data class CommandStatsMetadata(
+internal data class CommandStatsMetadata(
     val schema: Int,
     val replayHash: Long? = null,
     val seed: Long? = null,
@@ -657,20 +657,28 @@ private data class CommandStatsMetadata(
 )
 
 @Serializable
-private data class CommandTickCount(
+internal data class CommandTickCount(
     val tick: Int,
     val commands: Int
 )
 
 @Serializable
-private data class CommandTotals(
+internal data class CommandTotals(
     val total: Int,
     val spawns: Int,
     val moves: Int,
-    val attacks: Int
+    val attacks: Int,
+    val selectors: CommandSelectorTotals
 )
 
-private fun buildCommandStats(
+@Serializable
+internal data class CommandSelectorTotals(
+    val direct: Int,
+    val faction: Int,
+    val type: Int
+)
+
+internal fun buildCommandStats(
     commandsByTick: Array<ArrayList<Command>>,
     replayMeta: ReplayMetadata?
 ): CommandStats {
@@ -678,6 +686,9 @@ private fun buildCommandStats(
     var spawns = 0
     var moves = 0
     var attacks = 0
+    var direct = 0
+    var faction = 0
+    var type = 0
     val ticks = ArrayList<CommandTickCount>()
     for (tick in commandsByTick.indices) {
         val count = commandsByTick[tick].size
@@ -687,8 +698,30 @@ private fun buildCommandStats(
         }
         for (cmd in commandsByTick[tick]) {
             when (cmd) {
-                is Command.Move, is Command.MoveFaction, is Command.MoveType -> moves++
-                is Command.Attack, is Command.AttackFaction, is Command.AttackType -> attacks++
+                is Command.Move -> {
+                    moves++
+                    direct++
+                }
+                is Command.MoveFaction -> {
+                    moves++
+                    faction++
+                }
+                is Command.MoveType -> {
+                    moves++
+                    type++
+                }
+                is Command.Attack -> {
+                    attacks++
+                    direct++
+                }
+                is Command.AttackFaction -> {
+                    attacks++
+                    faction++
+                }
+                is Command.AttackType -> {
+                    attacks++
+                    type++
+                }
                 is Command.Spawn -> spawns++
             }
         }
@@ -707,7 +740,13 @@ private fun buildCommandStats(
             },
         warnings = replayCompatibilityWarnings(replayMeta),
         ticks = ticks,
-        totals = CommandTotals(total, spawns, moves, attacks)
+        totals = CommandTotals(
+            total = total,
+            spawns = spawns,
+            moves = moves,
+            attacks = attacks,
+            selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type)
+        )
     )
 }
 
@@ -730,6 +769,10 @@ private fun printCommandStats(stats: CommandStats) {
     println(
         "total=${stats.totals.total} spawns=${stats.totals.spawns} " +
             "moves=${stats.totals.moves} attacks=${stats.totals.attacks}"
+    )
+    println(
+        "selectors: direct=${stats.totals.selectors.direct} " +
+            "faction=${stats.totals.selectors.faction} type=${stats.totals.selectors.type}"
     )
 }
 

@@ -3,6 +3,7 @@ package starkraft.sim
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayMetadata
 
 class AppTest {
@@ -89,5 +90,31 @@ class AppTest {
             "runtime metadata: mapId=demo-32x32-obstacles buildVersion=1.0-SNAPSHOT seed=42",
             currentRuntimeMetadataLine(42L)
         )
+    }
+
+    @Test
+    fun `builds selector split command totals`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Move(0, intArrayOf(1, 2), 4f, 5f),
+                    Command.AttackFaction(0, 1, 9)
+                ),
+                arrayListOf<Command>(
+                    Command.MoveType(1, "Marine", 7f, 8f),
+                    Command.Attack(1, intArrayOf(3), 10),
+                    Command.Spawn(1, 1, "Marine", 2f, 3f)
+                )
+            )
+
+        val stats = buildCommandStats(commandsByTick, replayMeta = null)
+
+        assertEquals(5, stats.totals.total)
+        assertEquals(1, stats.totals.spawns)
+        assertEquals(2, stats.totals.moves)
+        assertEquals(2, stats.totals.attacks)
+        assertEquals(2, stats.totals.selectors.direct)
+        assertEquals(1, stats.totals.selectors.faction)
+        assertEquals(1, stats.totals.selectors.type)
     }
 }
