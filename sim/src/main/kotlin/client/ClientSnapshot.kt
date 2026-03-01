@@ -179,10 +179,31 @@ data class TickSummaryStreamRecord(
     val despawns: Int,
     val builds: Int,
     val buildFailures: Int,
+    val buildFailureReasons: BuildFailureCounts,
     val trainsQueued: Int,
     val trainsCompleted: Int,
     val trainsCancelled: Int,
-    val trainFailures: Int
+    val trainFailures: Int,
+    val trainFailureReasons: TrainFailureCounts
+)
+
+@Serializable
+data class BuildFailureCounts(
+    val invalidDefinition: Int,
+    val invalidFootprint: Int,
+    val invalidPlacement: Int,
+    val insufficientResources: Int
+)
+
+@Serializable
+data class TrainFailureCounts(
+    val missingBuilding: Int,
+    val invalidUnit: Int,
+    val invalidBuildTime: Int,
+    val incompatibleProducer: Int,
+    val insufficientResources: Int,
+    val queueFull: Int,
+    val nothingToCancel: Int
 )
 
 @Serializable
@@ -357,10 +378,12 @@ data class SessionStatsStreamRecord(
     val despawns: Int,
     val builds: Int,
     val buildFailures: Int,
+    val buildFailureReasons: BuildFailureCounts,
     val trainsQueued: Int,
     val trainsCompleted: Int,
     val trainsCancelled: Int,
     val trainFailures: Int,
+    val trainFailureReasons: TrainFailureCounts,
     val finalVisibleTilesFaction1: Int,
     val finalVisibleTilesFaction2: Int,
     val finalWorldHash: Long,
@@ -662,10 +685,12 @@ fun renderTickSummaryStreamRecordJson(
     despawns: Int,
     builds: Int,
     buildFailures: Int,
+    buildFailureReasons: BuildFailureCounts,
     trainsQueued: Int,
     trainsCompleted: Int,
     trainsCancelled: Int,
     trainFailures: Int,
+    trainFailureReasons: TrainFailureCounts,
     pretty: Boolean = false
 ): String {
     val record =
@@ -687,10 +712,12 @@ fun renderTickSummaryStreamRecordJson(
             despawns = despawns,
             builds = builds,
             buildFailures = buildFailures,
+            buildFailureReasons = buildFailureReasons,
             trainsQueued = trainsQueued,
             trainsCompleted = trainsCompleted,
             trainsCancelled = trainsCancelled,
-            trainFailures = trainFailures
+            trainFailures = trainFailures,
+            trainFailureReasons = trainFailureReasons
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
@@ -869,10 +896,12 @@ fun renderSessionStatsStreamRecordJson(
     despawns: Int,
     builds: Int,
     buildFailures: Int,
+    buildFailureReasons: BuildFailureCounts,
     trainsQueued: Int,
     trainsCompleted: Int,
     trainsCancelled: Int,
     trainFailures: Int,
+    trainFailureReasons: TrainFailureCounts,
     finalVisibleTilesFaction1: Int,
     finalVisibleTilesFaction2: Int,
     finalWorldHash: Long,
@@ -893,10 +922,12 @@ fun renderSessionStatsStreamRecordJson(
             despawns = despawns,
             builds = builds,
             buildFailures = buildFailures,
+            buildFailureReasons = buildFailureReasons,
             trainsQueued = trainsQueued,
             trainsCompleted = trainsCompleted,
             trainsCancelled = trainsCancelled,
             trainFailures = trainFailures,
+            trainFailureReasons = trainFailureReasons,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
             finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
             finalWorldHash = finalWorldHash,

@@ -152,6 +152,7 @@ Other flags:
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
   Snapshot cadence also emits compact `tickSummary` records for fast per-tick client consumption.
+  `tickSummary` and `sessionStats` include build/train failure counters split by reason.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Example consumer:

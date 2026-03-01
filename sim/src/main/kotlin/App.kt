@@ -1,6 +1,7 @@
 package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
+import starkraft.sim.client.BuildFailureCounts
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
@@ -33,6 +34,7 @@ import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.ProductionEventRecord
+import starkraft.sim.client.TrainFailureCounts
 import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
@@ -232,10 +234,12 @@ fun main(args: Array<String>) {
     var totalDespawns = 0
     var totalBuilds = 0
     var totalBuildFailures = 0
+    val totalBuildFailureReasons = BuildFailureCounterSet()
     var totalTrainsQueued = 0
     var totalTrainsCompleted = 0
     var totalTrainsCancelled = 0
     var totalTrainFailures = 0
+    val totalTrainFailureReasons = TrainFailureCounterSet()
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -362,10 +366,12 @@ fun main(args: Array<String>) {
         totalDespawns += world.removedEventCount
         totalBuilds += commandOutcomeCounters.builds
         totalBuildFailures += commandOutcomeCounters.buildFailures
+        totalBuildFailureReasons.add(commandOutcomeCounters.buildFailureReasons)
         totalTrainsQueued += commandOutcomeCounters.trainsQueued
         totalTrainsCompleted += tickTrainsCompleted
         totalTrainsCancelled += commandOutcomeCounters.trainsCancelled
         totalTrainFailures += commandOutcomeCounters.trainFailures
+        totalTrainFailureReasons.add(commandOutcomeCounters.trainFailureReasons)
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -475,10 +481,12 @@ fun main(args: Array<String>) {
                 despawns = totalDespawns,
                 builds = totalBuilds,
                 buildFailures = totalBuildFailures,
+                buildFailureReasons = totalBuildFailureReasons.toRecord(),
                 trainsQueued = totalTrainsQueued,
                 trainsCompleted = totalTrainsCompleted,
                 trainsCancelled = totalTrainsCancelled,
                 trainFailures = totalTrainFailures,
+                trainFailureReasons = totalTrainFailureReasons.toRecord(),
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
                 finalVisibleTilesFaction2 = fog2.visibleCount(),
                 finalWorldHash = finalWorldHash,
@@ -931,10 +939,12 @@ private fun emitTickSummaryRecord(
             despawns = world.removedEventCount,
             builds = commandOutcomeCounters.builds,
             buildFailures = commandOutcomeCounters.buildFailures,
+            buildFailureReasons = commandOutcomeCounters.buildFailureReasons.toRecord(),
             trainsQueued = commandOutcomeCounters.trainsQueued,
             trainsCompleted = tickTrainsCompleted,
             trainsCancelled = commandOutcomeCounters.trainsCancelled,
             trainFailures = commandOutcomeCounters.trainFailures,
+            trainFailureReasons = commandOutcomeCounters.trainFailureReasons.toRecord(),
             pretty = false
         ),
         snapshotOutPath
@@ -1723,10 +1733,65 @@ internal fun currentRuntimeMetadataLine(seed: Long?): String {
 data class CommandOutcomeCounters(
     var builds: Int = 0,
     var buildFailures: Int = 0,
+    val buildFailureReasons: BuildFailureCounterSet = BuildFailureCounterSet(),
     var trainsQueued: Int = 0,
     var trainsCancelled: Int = 0,
-    var trainFailures: Int = 0
+    var trainFailures: Int = 0,
+    val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet()
 )
+
+data class BuildFailureCounterSet(
+    var invalidDefinition: Int = 0,
+    var invalidFootprint: Int = 0,
+    var invalidPlacement: Int = 0,
+    var insufficientResources: Int = 0
+) {
+    fun add(other: BuildFailureCounterSet) {
+        invalidDefinition += other.invalidDefinition
+        invalidFootprint += other.invalidFootprint
+        invalidPlacement += other.invalidPlacement
+        insufficientResources += other.insufficientResources
+    }
+
+    fun toRecord(): BuildFailureCounts =
+        BuildFailureCounts(
+            invalidDefinition = invalidDefinition,
+            invalidFootprint = invalidFootprint,
+            invalidPlacement = invalidPlacement,
+            insufficientResources = insufficientResources
+        )
+}
+
+data class TrainFailureCounterSet(
+    var missingBuilding: Int = 0,
+    var invalidUnit: Int = 0,
+    var invalidBuildTime: Int = 0,
+    var incompatibleProducer: Int = 0,
+    var insufficientResources: Int = 0,
+    var queueFull: Int = 0,
+    var nothingToCancel: Int = 0
+) {
+    fun add(other: TrainFailureCounterSet) {
+        missingBuilding += other.missingBuilding
+        invalidUnit += other.invalidUnit
+        invalidBuildTime += other.invalidBuildTime
+        incompatibleProducer += other.incompatibleProducer
+        insufficientResources += other.insufficientResources
+        queueFull += other.queueFull
+        nothingToCancel += other.nothingToCancel
+    }
+
+    fun toRecord(): TrainFailureCounts =
+        TrainFailureCounts(
+            missingBuilding = missingBuilding,
+            invalidUnit = invalidUnit,
+            invalidBuildTime = invalidBuildTime,
+            incompatibleProducer = incompatibleProducer,
+            insufficientResources = insufficientResources,
+            queueFull = queueFull,
+            nothingToCancel = nothingToCancel
+        )
+}
 
 fun issue(
     cmd: Command,
@@ -1878,7 +1943,10 @@ fun issue(
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             if (width <= 0 || height <= 0 || hp <= 0) {
-                if (outcomeCounters != null) outcomeCounters.buildFailures++
+                if (outcomeCounters != null) {
+                    outcomeCounters.buildFailures++
+                    outcomeCounters.buildFailureReasons.invalidDefinition++
+                }
                 emitCommandFailureRecord(
                     tick = cmd.tick,
                     commandType = "build",
@@ -1907,7 +1975,14 @@ fun issue(
                 )
             val id = result.entityId
             if (id == null) {
-                if (outcomeCounters != null) outcomeCounters.buildFailures++
+                if (outcomeCounters != null) {
+                    outcomeCounters.buildFailures++
+                    when (result.failure) {
+                        BuildFailureReason.INSUFFICIENT_RESOURCES -> outcomeCounters.buildFailureReasons.insufficientResources++
+                        BuildFailureReason.INVALID_FOOTPRINT -> outcomeCounters.buildFailureReasons.invalidFootprint++
+                        else -> outcomeCounters.buildFailureReasons.invalidPlacement++
+                    }
+                }
                 val reason =
                     when (result.failure) {
                         BuildFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
@@ -1966,7 +2041,17 @@ fun issue(
                 gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             )
             if (failure != null) {
-                if (outcomeCounters != null) outcomeCounters.trainFailures++
+                if (outcomeCounters != null) {
+                    outcomeCounters.trainFailures++
+                    when (failure) {
+                        TrainFailureReason.MISSING_BUILDING -> outcomeCounters.trainFailureReasons.missingBuilding++
+                        TrainFailureReason.INVALID_UNIT -> outcomeCounters.trainFailureReasons.invalidUnit++
+                        TrainFailureReason.INVALID_BUILD_TIME -> outcomeCounters.trainFailureReasons.invalidBuildTime++
+                        TrainFailureReason.INCOMPATIBLE_PRODUCER -> outcomeCounters.trainFailureReasons.incompatibleProducer++
+                        TrainFailureReason.INSUFFICIENT_RESOURCES -> outcomeCounters.trainFailureReasons.insufficientResources++
+                        TrainFailureReason.QUEUE_FULL -> outcomeCounters.trainFailureReasons.queueFull++
+                    }
+                }
                 val reason =
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
@@ -1995,7 +2080,10 @@ fun issue(
             if (productionSystem.cancelLast(buildingId)) {
                 if (outcomeCounters != null) outcomeCounters.trainsCancelled++
             } else {
-                if (outcomeCounters != null) outcomeCounters.trainFailures++
+                if (outcomeCounters != null) {
+                    outcomeCounters.trainFailures++
+                    outcomeCounters.trainFailureReasons.nothingToCancel++
+                }
                 emitCommandFailureRecord(
                     tick = cmd.tick,
                     commandType = "cancelTrain",
