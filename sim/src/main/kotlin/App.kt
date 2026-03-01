@@ -3,6 +3,7 @@ package starkraft.sim
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -232,6 +233,7 @@ fun main(args: Array<String>) {
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
+            emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
             emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
         }
 
@@ -507,6 +509,49 @@ internal fun nextStreamSequence(state: LongArray): Long {
     val value = state[0]
     state[0] = value + 1L
     return value
+}
+
+private fun emitMetricsRecord(
+    world: World,
+    fog1: FogGrid,
+    fog2: FogGrid,
+    tick: Int,
+    pathing: PathfindingSystem,
+    pathQueue: PathRequestQueue,
+    movement: MovementSystem,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    var alive1 = 0
+    var alive2 = 0
+    val alive = world.aliveSnapshot
+    for (i in 0 until alive.count) {
+        when (world.tags[alive.ids[i]]?.faction) {
+            1 -> alive1++
+            2 -> alive2++
+        }
+    }
+    emitSnapshotLine(
+        renderMetricsStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            factions =
+                listOf(
+                    starkraft.sim.client.MetricsFactionRecord(1, alive1, fog1.visibleCount()),
+                    starkraft.sim.client.MetricsFactionRecord(2, alive2, fog2.visibleCount())
+                ),
+            pathRequests = pathing.lastTickRequests,
+            pathSolved = pathing.lastTickSolved,
+            pathQueueSize = pathQueue.size,
+            avgPathLength = pathing.lastTickAvgPathLen,
+            replans = movement.lastTickReplans,
+            replansBlocked = movement.lastTickReplansBlocked,
+            replansStuck = movement.lastTickReplansStuck,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
 }
 
 internal fun emitSnapshotLine(snapshotJson: String, snapshotOutPath: java.nio.file.Path?) {

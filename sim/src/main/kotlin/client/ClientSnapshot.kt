@@ -99,6 +99,28 @@ data class CommandStreamRecord(
     val labelId: Int? = null
 )
 
+@Serializable
+data class MetricsFactionRecord(
+    val faction: Int,
+    val alive: Int,
+    val visibleTiles: Int
+)
+
+@Serializable
+data class MetricsStreamRecord(
+    val recordType: String = "metrics",
+    val sequence: Long,
+    val tick: Int,
+    val factions: List<MetricsFactionRecord>,
+    val pathRequests: Int,
+    val pathSolved: Int,
+    val pathQueueSize: Int,
+    val avgPathLength: Float,
+    val replans: Int,
+    val replansBlocked: Int,
+    val replansStuck: Int
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -255,6 +277,35 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     labelId = cmd.labelId
                 )
         }
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderMetricsStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    factions: List<MetricsFactionRecord>,
+    pathRequests: Int,
+    pathSolved: Int,
+    pathQueueSize: Int,
+    avgPathLength: Float,
+    replans: Int,
+    replansBlocked: Int,
+    replansStuck: Int,
+    pretty: Boolean = false
+): String {
+    val record =
+        MetricsStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            factions = factions,
+            pathRequests = pathRequests,
+            pathSolved = pathSolved,
+            pathQueueSize = pathQueueSize,
+            avgPathLength = avgPathLength,
+            replans = replans,
+            replansBlocked = replansBlocked,
+            replansStuck = replansStuck
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

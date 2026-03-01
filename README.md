@@ -120,6 +120,7 @@ Other flags:
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
   Issued commands are also emitted as `command` records.
+  Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run

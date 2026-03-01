@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
@@ -165,6 +167,29 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"command\",\"sequence\":9,\"tick\":3,\"commandType\":\"move\",\"units\":[7,8],\"faction\":null,\"typeId\":null,\"target\":null,\"x\":4.0,\"y\":5.0,\"vision\":null,\"label\":null,\"labelId\":null}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders metrics stream record json`() {
+        val json =
+            renderMetricsStreamRecordJson(
+                sequence = 10L,
+                tick = 4,
+                factions = listOf(MetricsFactionRecord(1, 5, 20), MetricsFactionRecord(2, 4, 18)),
+                pathRequests = 3,
+                pathSolved = 2,
+                pathQueueSize = 7,
+                avgPathLength = 6.5f,
+                replans = 2,
+                replansBlocked = 1,
+                replansStuck = 1,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"metrics\",\"sequence\":10,\"tick\":4,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20},{\"faction\":2,\"alive\":4,\"visibleTiles\":18}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
             json
         )
     }
