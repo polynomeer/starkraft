@@ -12,6 +12,7 @@ import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
+import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
@@ -29,6 +30,7 @@ import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
+import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
@@ -421,6 +423,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders vision stream record json`() {
+        val json =
+            renderVisionStreamRecordJson(
+                sequence = 22L,
+                tick = 16,
+                changes = listOf(VisionChangeEventRecord(1, 8, 8, true), VisionChangeEventRecord(2, 12, 12, false)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"vision\",\"sequence\":22,\"tick\":16,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
             json
         )
     }

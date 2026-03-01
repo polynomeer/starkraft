@@ -43,4 +43,9 @@ class FogGrid(val width: Int, val height: Int, val tileSize: Float) {
     fun visibleCount(): Int {
         return visibleCount
     }
+
+    fun isVisibleTile(x: Int, y: Int): Boolean {
+        if (x < 0 || y < 0 || x >= width || y >= height) return false
+        return stamp[y * width + x] == current
+    }
 }

@@ -300,6 +300,22 @@ data class MapStateStreamRecord(
     val staticOccupancyTiles: List<MapBlockedTileRecord>
 )
 
+@Serializable
+data class VisionChangeEventRecord(
+    val faction: Int,
+    val x: Int,
+    val y: Int,
+    val visible: Boolean
+)
+
+@Serializable
+data class VisionStreamRecord(
+    val recordType: String = "vision",
+    val sequence: Long,
+    val tick: Int,
+    val changes: List<VisionChangeEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -694,6 +710,16 @@ fun renderMapStateStreamRecordJson(
             weightedTiles = weightedTiles,
             staticOccupancyTiles = staticOccupancyTiles
         )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderVisionStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    changes: List<VisionChangeEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = VisionStreamRecord(sequence = sequence, tick = tick, changes = changes)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

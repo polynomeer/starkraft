@@ -9,6 +9,7 @@ import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
+import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
@@ -26,6 +27,7 @@ import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
+import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
@@ -146,6 +148,8 @@ fun main(args: Array<String>) {
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
     val streamSequence = longArrayOf(0L)
+    val visionPrevTeam1 = BooleanArray(fog1.width * fog1.height)
+    val visionPrevTeam2 = BooleanArray(fog2.width * fog2.height)
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
     }
@@ -273,6 +277,7 @@ fun main(args: Array<String>) {
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
+            emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, combat, resolvedSnapshotOutPath, streamSequence)
             emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
@@ -1775,4 +1780,48 @@ private fun emitMapStateRecord(
         ),
         snapshotOutPath
     )
+}
+
+private fun emitVisionRecord(
+    fog1: FogGrid,
+    fog2: FogGrid,
+    tick: Int,
+    prev1: BooleanArray,
+    prev2: BooleanArray,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val changes = ArrayList<VisionChangeEventRecord>()
+    collectVisionChanges(fog1, 1, prev1, changes)
+    collectVisionChanges(fog2, 2, prev2, changes)
+    if (changes.isEmpty()) return
+    emitSnapshotLine(
+        renderVisionStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            changes = changes,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun collectVisionChanges(
+    fog: FogGrid,
+    faction: Int,
+    previous: BooleanArray,
+    out: MutableList<VisionChangeEventRecord>
+) {
+    var idx = 0
+    for (y in 0 until fog.height) {
+        for (x in 0 until fog.width) {
+            val visible = fog.isVisibleTile(x, y)
+            if (previous[idx] != visible) {
+                previous[idx] = visible
+                out.add(VisionChangeEventRecord(faction = faction, x = x, y = y, visible = visible))
+            }
+            idx++
+        }
+    }
 }
