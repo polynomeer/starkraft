@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
@@ -124,6 +125,17 @@ fun main(args: Array<String>) {
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
+    }
+    if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
+        emitSnapshotLine(
+            renderSnapshotSessionStartJson(
+                mapId = DEMO_MAP_ID,
+                buildVersion = BUILD_VERSION,
+                seed = seed,
+                pretty = false
+            ),
+            resolvedSnapshotOutPath
+        )
     }
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseCommands: Array<ArrayList<Command>> = when {

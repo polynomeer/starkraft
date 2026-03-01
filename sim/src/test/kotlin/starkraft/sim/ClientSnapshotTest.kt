@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
@@ -125,5 +126,15 @@ class ClientSnapshotTest {
 
         assertTrue(json.startsWith("{\"recordType\":\"snapshot\",\"tick\":3,"))
         assertTrue(json.contains("\"snapshot\":{\"tick\":3"))
+    }
+
+    @Test
+    fun `renders snapshot session start json`() {
+        val json = renderSnapshotSessionStartJson("demo-map", "test-build", 7L, pretty = false)
+
+        assertEquals(
+            "{\"recordType\":\"sessionStart\",\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
+            json
+        )
     }
 }

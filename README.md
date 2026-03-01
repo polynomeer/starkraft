@@ -118,6 +118,7 @@ Other flags:
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
+  NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
