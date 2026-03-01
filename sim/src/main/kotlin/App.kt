@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.data.DataRepo
@@ -251,25 +252,30 @@ fun main(args: Array<String>) {
         println("replay saved: $recordPath")
     }
 
-    if (replayPath != null || scriptPath != null) {
-        val worldHash = hashWorldForReplay(world)
-        val replayHash = ReplayHashRecorder().also { r ->
-            val end = minOf(totalTicks, commandsByTick.size)
-            for (idx in 0 until end) {
-                val tickCmds = commandsByTick[idx]
-                for (i in 0 until tickCmds.size) {
-                    r.onCommand(tickCmds[i])
+    val finalWorldHash = hashWorldForReplay(world)
+    val finalReplayHash =
+        if (replayPath != null || scriptPath != null) {
+            ReplayHashRecorder().also { r ->
+                val end = minOf(totalTicks, commandsByTick.size)
+                for (idx in 0 until end) {
+                    val tickCmds = commandsByTick[idx]
+                    for (i in 0 until tickCmds.size) {
+                        r.onCommand(tickCmds[i])
+                    }
                 }
-            }
-        }.value()
+            }.value()
+        } else {
+            null
+        }
+
+    if (replayPath != null || scriptPath != null) {
         val source = if (replayPath != null) "replay" else "script"
-        println("$source hash=$replayHash world hash=$worldHash")
+        println("$source hash=$finalReplayHash world hash=$finalWorldHash")
         println(currentRuntimeMetadataLine(seed))
     }
 
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
-        val worldHash = hashWorldForReplay(world)
-        println("world hash=$worldHash")
+        println("world hash=$finalWorldHash")
     }
 
     if (printEntities) {
@@ -296,6 +302,17 @@ fun main(args: Array<String>) {
 
     if (snapshotJson) {
         emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath)
+    }
+    if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
+        emitSnapshotLine(
+            renderSnapshotSessionEndJson(
+                tick = tick,
+                worldHash = finalWorldHash,
+                replayHash = finalReplayHash,
+                pretty = false
+            ),
+            resolvedSnapshotOutPath
+        )
     }
 
     if (replayOutPath != null) {

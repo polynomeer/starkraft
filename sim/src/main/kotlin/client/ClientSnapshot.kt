@@ -70,6 +70,14 @@ data class SnapshotSessionStartRecord(
     val seed: Long? = null
 )
 
+@Serializable
+data class SnapshotSessionEndRecord(
+    val recordType: String = "sessionEnd",
+    val tick: Int,
+    val worldHash: Long,
+    val replayHash: Long? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -143,6 +151,16 @@ fun renderSnapshotSessionStartJson(
     pretty: Boolean = false
 ): String {
     val record = SnapshotSessionStartRecord(mapId = mapId, buildVersion = buildVersion, seed = seed)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderSnapshotSessionEndJson(
+    tick: Int,
+    worldHash: Long,
+    replayHash: Long?,
+    pretty: Boolean = false
+): String {
+    val record = SnapshotSessionEndRecord(tick = tick, worldHash = worldHash, replayHash = replayHash)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

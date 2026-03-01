@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.ecs.Health
@@ -134,6 +135,16 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"sessionStart\",\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders snapshot session end json`() {
+        val json = renderSnapshotSessionEndJson(tick = 15, worldHash = 123L, replayHash = 456L, pretty = false)
+
+        assertEquals(
+            "{\"recordType\":\"sessionEnd\",\"tick\":15,\"worldHash\":123,\"replayHash\":456}",
             json
         )
     }
