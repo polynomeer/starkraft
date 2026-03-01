@@ -315,6 +315,10 @@ class ClientSnapshotTest {
                 aliveTotal = 7,
                 visibleTilesFaction1 = 20,
                 visibleTilesFaction2 = 18,
+                mineralsFaction1 = 150,
+                mineralsFaction2 = 80,
+                gasFaction1 = 25,
+                gasFaction2 = 10,
                 pathRequests = 3,
                 pathSolved = 2,
                 pathQueueSize = 6,
@@ -337,7 +341,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildFailures\":0,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":0,\"insufficientResources\":0},\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":0,\"trainFailures\":1,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0}}",
+            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"mineralsFaction1\":150,\"mineralsFaction2\":80,\"gasFaction1\":25,\"gasFaction2\":10,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildFailures\":0,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":0,\"insufficientResources\":0},\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":0,\"trainFailures\":1,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0}}",
             json
         )
     }
@@ -558,13 +562,17 @@ class ClientSnapshotTest {
                 trainFailureReasons = TrainFailureCounts(0, 0, 0, 1, 0, 1, 0),
                 finalVisibleTilesFaction1 = 220,
                 finalVisibleTilesFaction2 = 198,
+                finalMineralsFaction1 = 350,
+                finalMineralsFaction2 = 500,
+                finalGasFaction1 = 25,
+                finalGasFaction2 = 10,
                 finalWorldHash = 123456789L,
                 finalReplayHash = 987654321L,
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"builds\":3,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"trainsQueued\":8,\"trainsCompleted\":6,\"trainsCancelled\":1,\"trainFailures\":2,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":1,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
+            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"builds\":3,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"trainsQueued\":8,\"trainsCompleted\":6,\"trainsCancelled\":1,\"trainFailures\":2,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":1,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalMineralsFaction1\":350,\"finalMineralsFaction2\":500,\"finalGasFaction1\":25,\"finalGasFaction2\":10,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
             json
         )
     }

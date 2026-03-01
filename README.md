@@ -164,6 +164,7 @@ Other flags:
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
   Snapshot cadence also emits compact `tickSummary` records for fast per-tick client consumption.
   `tickSummary` and `sessionStats` include build/train failure counters split by reason.
+  `tickSummary` and `sessionStats` also include faction 1/2 minerals and gas.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Example consumer:
