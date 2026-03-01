@@ -10,6 +10,7 @@ class World {
     val visions = mutableMapOf<EntityId, Vision>()
     val pathFollows = mutableMapOf<EntityId, PathFollow>()
     val repathCooldowns = mutableMapOf<EntityId, RepathCooldown>()
+    val footprints = mutableMapOf<EntityId, BuildingFootprint>()
     val stucks = mutableMapOf<EntityId, StuckTracker>()
 
     val index = FactionIndex(this) // NEW
@@ -61,7 +62,7 @@ class World {
         if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
-        pathFollows.remove(id); repathCooldowns.remove(id); stucks.remove(id)
+        pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); stucks.remove(id)
     }
 
     fun clearRemovedEvents() {

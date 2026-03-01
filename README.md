@@ -58,8 +58,9 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
 
 ### Extending Features
 12. **Buildings / Footprints**
-    - Add building placement/removal that updates `OccupancyGrid` (static counts).
-    - Keep building behavior in its own system and avoid branching in movement.
+   - Add building placement/removal that updates `OccupancyGrid` (static counts).
+   - Keep building behavior in its own system and avoid branching in movement.
+   - `BuildingPlacementSystem` now covers headless placement/removal for rectangular footprints.
 
 13. **Unit Behaviors**
     - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing

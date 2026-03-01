@@ -23,6 +23,8 @@ data class PathFollow(var nodes: IntArray, var length: Int, var index: Int = 0)
 
 data class RepathCooldown(var ticks: Int = 0)
 
+data class BuildingFootprint(val tileX: Int, val tileY: Int, val width: Int, val height: Int)
+
 data class StuckTracker(
     var lastX: Float = 0f,
     var lastY: Float = 0f,
