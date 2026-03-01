@@ -37,6 +37,7 @@ import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
+import starkraft.sim.client.renderTrainFailureStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.TrainFailureCounts
@@ -2413,6 +2414,16 @@ fun issue(
                         producerTypeId = producerTypeId,
                         typeId = cmd.typeId
                     )
+                } else {
+                    emitTrainFailureRecord(
+                        tick = cmd.tick,
+                        typeId = cmd.typeId,
+                        reason = reason,
+                        snapshotOutPath = snapshotOutPath,
+                        streamSequence = streamSequence,
+                        buildingId = buildingId,
+                        producerTypeId = producerTypeId
+                    )
                 }
             } else {
                 if (outcomeCounters != null) outcomeCounters.trainsQueued++
@@ -2627,6 +2638,30 @@ private fun emitProducerFailureRecord(
             buildingId = buildingId,
             producerTypeId = producerTypeId,
             typeId = typeId,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitTrainFailureRecord(
+    tick: Int,
+    typeId: String,
+    reason: String,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?,
+    buildingId: Int? = null,
+    producerTypeId: String? = null
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderTrainFailureStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            typeId = typeId,
+            reason = reason,
+            buildingId = buildingId,
+            producerTypeId = producerTypeId,
             pretty = false
         ),
         snapshotOutPath

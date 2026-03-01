@@ -42,6 +42,7 @@ import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
+import starkraft.sim.client.renderTrainFailureStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
@@ -477,6 +478,25 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"buildFailure\",\"sequence\":20,\"tick\":13,\"faction\":1,\"typeId\":\"Depot\",\"tileX\":9,\"tileY\":10,\"reason\":\"invalidPlacement\"}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders train failure stream record json`() {
+        val json =
+            renderTrainFailureStreamRecordJson(
+                sequence = 21L,
+                tick = 14,
+                buildingId = 41,
+                producerTypeId = "Depot",
+                typeId = "Marine",
+                reason = "queueFull",
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"trainFailure\",\"sequence\":21,\"tick\":14,\"buildingId\":41,\"producerTypeId\":\"Depot\",\"typeId\":\"Marine\",\"reason\":\"queueFull\"}",
             json
         )
     }
