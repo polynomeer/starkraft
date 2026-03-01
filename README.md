@@ -66,6 +66,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Keep faction stockpiles in deterministic sim state.
    - Apply spending at placement / production time, not lazily.
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
+   - `DataRepo.buildSpec(...)` and `DataRepo.trainSpec(...)` provide typed defaults for build/train semantics.
 
 14. **Unit Behaviors**
    - `BuildingProductionSystem` now supports deterministic per-building production queues.

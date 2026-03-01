@@ -97,14 +97,32 @@ fun main(args: Array<String>) {
     for (x in 18..22) for (y in 18..22) map.setCost(x, y, 3f)
     resources.set(faction = 1, minerals = 500, gas = 0)
     resources.set(faction = 2, minerals = 500, gas = 0)
+    val depotBuild = data.buildSpec("Depot")
     val depotId =
-        buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400, mineralCost = data.unit("Depot").mineralCost)
+        if (depotBuild != null) {
+            buildings.place(
+                faction = 1,
+                typeId = depotBuild.typeId,
+                tileX = 24,
+                tileY = 4,
+                width = depotBuild.footprintWidth,
+                height = depotBuild.footprintHeight,
+                hp = depotBuild.hp,
+                armor = depotBuild.armor,
+                mineralCost = depotBuild.mineralCost,
+                gasCost = depotBuild.gasCost
+            )
+        } else {
+            null
+        }
     if (depotId != null) {
+        val marineTrain = data.trainSpec("Marine")
         production.enqueue(
             depotId,
             typeId = "Marine",
-            buildTicks = data.unit("Marine").buildTicks,
-            mineralCost = data.unit("Marine").mineralCost
+            buildTicks = marineTrain?.buildTicks ?: 75,
+            mineralCost = marineTrain?.mineralCost ?: 50,
+            gasCost = marineTrain?.gasCost ?: 0
         )
     }
 
@@ -1784,18 +1802,13 @@ fun issue(
         is Command.Build -> {
             val placement = buildings ?: error("Build requires BuildingPlacementSystem")
             val repo = data ?: error("Build requires DataRepo")
-            val def =
-                try {
-                    repo.unit(cmd.typeId)
-                } catch (_: NoSuchElementException) {
-                    null
-                }
-            val width = if (cmd.width > 0) cmd.width else (def?.footprintWidth ?: 0)
-            val height = if (cmd.height > 0) cmd.height else (def?.footprintHeight ?: 0)
-            val hp = if (cmd.hp > 0) cmd.hp else (def?.hp ?: 0)
-            val armor = if (cmd.armor > 0) cmd.armor else (def?.armor ?: 0)
-            val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (def?.mineralCost ?: 0)
-            val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (def?.gasCost ?: 0)
+            val spec = repo.buildSpec(cmd.typeId)
+            val width = if (cmd.width > 0) cmd.width else (spec?.footprintWidth ?: 0)
+            val height = if (cmd.height > 0) cmd.height else (spec?.footprintHeight ?: 0)
+            val hp = if (cmd.hp > 0) cmd.hp else (spec?.hp ?: 0)
+            val armor = if (cmd.armor > 0) cmd.armor else (spec?.armor ?: 0)
+            val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
+            val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             if (width <= 0 || height <= 0 || hp <= 0) {
                 emitCommandFailureRecord(
                     tick = cmd.tick,
@@ -1873,18 +1886,13 @@ fun issue(
             val productionSystem = production ?: error("Train requires BuildingProductionSystem")
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
             val repo = data ?: error("Train requires DataRepo")
-            val def =
-                try {
-                    repo.unit(cmd.typeId)
-                } catch (_: NoSuchElementException) {
-                    null
-                }
+            val spec = repo.trainSpec(cmd.typeId)
             val failure = productionSystem.enqueueResult(
                 buildingId = buildingId,
                 typeId = cmd.typeId,
-                buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else (def?.buildTicks ?: 0),
-                mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (def?.mineralCost ?: 0),
-                gasCost = if (cmd.gasCost > 0) cmd.gasCost else (def?.gasCost ?: 0)
+                buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else (spec?.buildTicks ?: 0),
+                mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0),
+                gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             )
             if (failure != null) {
                 val reason =
