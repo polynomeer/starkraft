@@ -218,6 +218,7 @@ fun main(args: Array<String>) {
         }.value()
         val source = if (replayPath != null) "replay" else "script"
         println("$source hash=$replayHash world hash=$worldHash")
+        println(currentRuntimeMetadataLine(seed))
     }
 
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
@@ -758,6 +759,10 @@ internal fun requireReplayCompatibility(meta: ReplayMetadata?, strict: Boolean) 
     if (warnings.isNotEmpty()) {
         error(warnings.joinToString(separator = "\n"))
     }
+}
+
+internal fun currentRuntimeMetadataLine(seed: Long?): String {
+    return "runtime metadata: mapId=$DEMO_MAP_ID buildVersion=$BUILD_VERSION seed=$seed"
 }
 
 fun issue(

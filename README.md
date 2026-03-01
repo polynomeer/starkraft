@@ -113,6 +113,7 @@ Other flags:
 - `--replayStatsJson` print replay stats as JSON
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
+- Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end

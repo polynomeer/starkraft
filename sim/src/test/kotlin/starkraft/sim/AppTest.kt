@@ -82,4 +82,12 @@ class AppTest {
             ex.message
         )
     }
+
+    @Test
+    fun `prints current runtime metadata line`() {
+        assertEquals(
+            "runtime metadata: mapId=demo-32x32-obstacles buildVersion=1.0-SNAPSHOT seed=42",
+            currentRuntimeMetadataLine(42L)
+        )
+    }
 }
