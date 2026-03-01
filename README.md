@@ -109,7 +109,7 @@ Other flags:
 - `--spawnScript <path>` run a spawn-only script before other commands
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
-- `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`
+- `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks
 - `--replayStatsJson` print replay stats as JSON, including per-tick selector splits and action breakdowns
 - Replay stats JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON

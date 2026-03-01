@@ -220,6 +220,23 @@ class AppTest {
     }
 
     @Test
+    fun `renders compact command stats text for many ticks`() {
+        val commandsByTick =
+            Array(13) { tick ->
+                arrayListOf<Command>(Command.Move(tick, intArrayOf(tick + 1), tick.toFloat(), tick.toFloat()))
+            }
+
+        val text = renderCommandStatsText(buildCommandStats(commandsByTick, replayMeta = null))
+
+        assertTrue(text.contains("tick=0 commands=1"))
+        assertTrue(text.contains("tick=4 commands=1"))
+        assertTrue(text.contains("... 3 ticks omitted ..."))
+        assertTrue(text.contains("tick=8 commands=1"))
+        assertTrue(text.contains("tick=12 commands=1"))
+        assertTrue(text.contains("total=13 spawns=0 moves=13 attacks=0"))
+    }
+
+    @Test
     fun `builds replay metadata report with warnings`() {
         val report =
             buildReplayMetaReport(

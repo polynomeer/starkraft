@@ -925,44 +925,66 @@ internal fun buildReplayMetaReport(
 
 internal fun renderCommandStatsJson(stats: CommandStats): String = statsJson.encodeToString(stats)
 
-private fun printCommandStats(stats: CommandStats) {
-    println("command stats:")
+private const val COMPACT_TICK_PREVIEW_COUNT = 5
+private const val COMPACT_TICK_THRESHOLD = 12
+
+internal fun renderCommandStatsText(stats: CommandStats): String {
+    val lines = ArrayList<String>(stats.ticks.size + 8)
+    lines.add("command stats:")
     for (warning in stats.warnings) {
-        println(warning)
+        lines.add(warning)
     }
     val meta = stats.metadata
     if (meta != null) {
-        println(
+        lines.add(
             "replay metadata: schema=${meta.schema} seed=${meta.seed} " +
                 "mapId=${meta.mapId} buildVersion=${meta.buildVersion} " +
                 "replayHash=${meta.replayHash} eventCount=${meta.eventCount} fileSizeBytes=${meta.fileSizeBytes}"
         )
     }
-    for (tick in stats.ticks) {
-        println(
-            "tick=${tick.tick} commands=${tick.commands} spawns=${tick.spawns} " +
-                "moves=${tick.moves} attacks=${tick.attacks} " +
-                "selectors=${tick.selectors.direct}/${tick.selectors.faction}/${tick.selectors.type} " +
-                "move=${tick.breakdown.move.direct}/${tick.breakdown.move.faction}/${tick.breakdown.move.type} " +
-                "attack=${tick.breakdown.attack.direct}/${tick.breakdown.attack.faction}/${tick.breakdown.attack.type}"
-        )
+    if (stats.ticks.size <= COMPACT_TICK_THRESHOLD) {
+        for (tick in stats.ticks) {
+            lines.add(formatTickStatsLine(tick))
+        }
+    } else {
+        for (i in 0 until COMPACT_TICK_PREVIEW_COUNT) {
+            lines.add(formatTickStatsLine(stats.ticks[i]))
+        }
+        val omitted = stats.ticks.size - (COMPACT_TICK_PREVIEW_COUNT * 2)
+        lines.add("... $omitted ticks omitted ...")
+        for (i in stats.ticks.size - COMPACT_TICK_PREVIEW_COUNT until stats.ticks.size) {
+            lines.add(formatTickStatsLine(stats.ticks[i]))
+        }
     }
-    println(
+    lines.add(
         "total=${stats.totals.total} spawns=${stats.totals.spawns} " +
             "moves=${stats.totals.moves} attacks=${stats.totals.attacks}"
     )
-    println(
+    lines.add(
         "selectors: direct=${stats.totals.selectors.direct} " +
             "faction=${stats.totals.selectors.faction} type=${stats.totals.selectors.type}"
     )
-    println(
+    lines.add(
         "move selectors: direct=${stats.totals.breakdown.move.direct} " +
             "faction=${stats.totals.breakdown.move.faction} type=${stats.totals.breakdown.move.type}"
     )
-    println(
+    lines.add(
         "attack selectors: direct=${stats.totals.breakdown.attack.direct} " +
             "faction=${stats.totals.breakdown.attack.faction} type=${stats.totals.breakdown.attack.type}"
     )
+    return lines.joinToString(separator = "\n")
+}
+
+private fun formatTickStatsLine(tick: CommandTickCount): String {
+    return "tick=${tick.tick} commands=${tick.commands} spawns=${tick.spawns} " +
+        "moves=${tick.moves} attacks=${tick.attacks} " +
+        "selectors=${tick.selectors.direct}/${tick.selectors.faction}/${tick.selectors.type} " +
+        "move=${tick.breakdown.move.direct}/${tick.breakdown.move.faction}/${tick.breakdown.move.type} " +
+        "attack=${tick.breakdown.attack.direct}/${tick.breakdown.attack.faction}/${tick.breakdown.attack.type}"
+}
+
+private fun printCommandStats(stats: CommandStats) {
+    println(renderCommandStatsText(stats))
 }
 
 private fun printReplayCompatibilityWarnings(meta: ReplayMetadata?) {
