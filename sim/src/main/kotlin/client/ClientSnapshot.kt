@@ -245,6 +245,22 @@ data class PathAssignedStreamRecord(
     val entities: List<PathAssignedEventRecord>
 )
 
+@Serializable
+data class PathProgressEventRecord(
+    val entityId: Int,
+    val waypointIndex: Int,
+    val remainingNodes: Int,
+    val completed: Boolean
+)
+
+@Serializable
+data class PathProgressStreamRecord(
+    val recordType: String = "pathProgress",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<PathProgressEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -598,6 +614,16 @@ fun renderPathAssignedStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = PathAssignedStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderPathProgressStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<PathProgressEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = PathProgressStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

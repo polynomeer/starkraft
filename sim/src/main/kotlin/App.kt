@@ -5,6 +5,7 @@ import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
+import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
@@ -13,6 +14,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
+import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -252,6 +254,7 @@ fun main(args: Array<String>) {
         pathing.tick()
         emitPathAssignedRecord(pathing, tick, resolvedSnapshotOutPath, streamSequence)
         movement.tick()
+        emitPathProgressRecord(movement, tick, resolvedSnapshotOutPath, streamSequence)
         combat.tick()
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitDespawnRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
@@ -1668,6 +1671,35 @@ private fun emitPathAssignedRecord(
     }
     emitSnapshotLine(
         renderPathAssignedStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitPathProgressRecord(
+    movement: MovementSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || movement.lastTickProgressCount == 0) return
+    val entities = ArrayList<PathProgressEventRecord>(movement.lastTickProgressCount)
+    for (i in 0 until movement.lastTickProgressCount) {
+        entities.add(
+            PathProgressEventRecord(
+                entityId = movement.progressEntityId(i),
+                waypointIndex = movement.progressWaypointIndex(i),
+                remainingNodes = movement.progressRemainingNodes(i),
+                completed = movement.progressCompleted(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderPathProgressStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,

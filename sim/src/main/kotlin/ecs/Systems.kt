@@ -30,12 +30,19 @@ class MovementSystem(
         private set
     var lastTickReplansStuck: Int = 0
         private set
+    private var progressEntityIds = IntArray(16)
+    private var progressWaypointIndices = IntArray(16)
+    private var progressRemainingNodes = IntArray(16)
+    private var progressCompleted = BooleanArray(16)
+    var lastTickProgressCount: Int = 0
+        private set
 
     fun tick() {
         pathQueue.beginTick()
         lastTickReplans = 0
         lastTickReplansBlocked = 0
         lastTickReplansStuck = 0
+        lastTickProgressCount = 0
         val alive = world.aliveSnapshot
         val ids = alive.ids
         val count = alive.count
@@ -66,6 +73,7 @@ class MovementSystem(
                     }
 
                     if (pf.index >= pf.length) {
+                        recordProgress(id, pf.index, 0, completed = true)
                         world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
                         q.removeFirst()
                         continue
@@ -98,6 +106,8 @@ class MovementSystem(
                     val dist = hypot(dx, dy)
                     if (dist <= arrivalEps) {
                         pf.index++
+                        val remaining = (pf.length - pf.index).coerceAtLeast(0)
+                        recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
                     } else {
                         val step = min(speed, dist)
                         tr.x += (dx / dist) * step
@@ -127,6 +137,30 @@ class MovementSystem(
         if (!map.isPassable(ox, oy) || occ.isBlocked(ox, oy)) return true
         if (!map.isPassable(px, py) || occ.isBlocked(px, py)) return true
         return false
+    }
+
+    fun progressEntityId(index: Int): Int = progressEntityIds[index]
+
+    fun progressWaypointIndex(index: Int): Int = progressWaypointIndices[index]
+
+    fun progressRemainingNodes(index: Int): Int = progressRemainingNodes[index]
+
+    fun progressCompleted(index: Int): Boolean = progressCompleted[index]
+
+    private fun recordProgress(entityId: Int, waypointIndex: Int, remainingNodes: Int, completed: Boolean) {
+        val index = lastTickProgressCount
+        if (index >= progressEntityIds.size) {
+            val nextSize = progressEntityIds.size * 2
+            progressEntityIds = progressEntityIds.copyOf(nextSize)
+            progressWaypointIndices = progressWaypointIndices.copyOf(nextSize)
+            progressRemainingNodes = progressRemainingNodes.copyOf(nextSize)
+            progressCompleted = progressCompleted.copyOf(nextSize)
+        }
+        progressEntityIds[index] = entityId
+        progressWaypointIndices[index] = waypointIndex
+        progressRemainingNodes[index] = remainingNodes
+        progressCompleted[index] = completed
+        lastTickProgressCount = index + 1
     }
 }
 

@@ -8,6 +8,7 @@ import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
+import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
@@ -16,6 +17,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
+import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -363,6 +365,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"pathAssigned\",\"sequence\":18,\"tick\":13,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28},{\"entityId\":8,\"pathLength\":6,\"goalX\":12,\"goalY\":10}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders path progress stream record json`() {
+        val json =
+            renderPathProgressStreamRecordJson(
+                sequence = 19L,
+                tick = 14,
+                entities = listOf(PathProgressEventRecord(7, 3, 5, false), PathProgressEventRecord(8, 6, 0, true)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"pathProgress\",\"sequence\":19,\"tick\":14,\"entities\":[{\"entityId\":7,\"waypointIndex\":3,\"remainingNodes\":5,\"completed\":false},{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
             json
         )
     }
