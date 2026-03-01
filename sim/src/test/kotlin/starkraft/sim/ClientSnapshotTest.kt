@@ -31,6 +31,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
@@ -418,6 +419,23 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"rally\",\"sequence\":17,\"tick\":12,\"buildingId\":41,\"x\":15.0,\"y\":16.0}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders rally failure stream record json`() {
+        val json =
+            renderRallyFailureStreamRecordJson(
+                sequence = 18L,
+                tick = 12,
+                buildingId = 41,
+                reason = "unsupportedRally",
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"rallyFailure\",\"sequence\":18,\"tick\":12,\"buildingId\":41,\"reason\":\"unsupportedRally\"}",
             json
         )
     }

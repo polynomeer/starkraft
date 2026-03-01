@@ -26,6 +26,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -2385,6 +2386,7 @@ fun issue(
                     streamSequence = streamSequence,
                     buildingId = buildingId
                 )
+                emitRallyFailureRecord(cmd.tick, "missingBuilding", snapshotOutPath, streamSequence, buildingId)
                 return
             }
             val buildingType = world.tags[buildingId]?.typeId
@@ -2398,6 +2400,7 @@ fun issue(
                     streamSequence = streamSequence,
                     buildingId = buildingId
                 )
+                emitRallyFailureRecord(cmd.tick, "unsupportedRally", snapshotOutPath, streamSequence, buildingId)
                 return
             }
             world.rallyPoints[buildingId] = RallyPoint(cmd.x, cmd.y)
@@ -2517,6 +2520,26 @@ private fun emitRallyRecord(
             buildingId = buildingId,
             x = x,
             y = y,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitRallyFailureRecord(
+    tick: Int,
+    reason: String,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?,
+    buildingId: Int? = null
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderRallyFailureStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            reason = reason,
+            buildingId = buildingId,
             pretty = false
         ),
         snapshotOutPath
