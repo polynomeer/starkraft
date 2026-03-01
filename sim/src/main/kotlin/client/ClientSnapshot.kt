@@ -34,7 +34,9 @@ data class ClientSnapshot(
 @Serializable
 data class FactionSnapshot(
     val faction: Int,
-    val visibleTiles: Int
+    val visibleTiles: Int,
+    val minerals: Int = 0,
+    val gas: Int = 0
 )
 
 @Serializable
@@ -490,7 +492,15 @@ fun buildClientSnapshot(
     val factions = ArrayList<FactionSnapshot>(fogByFaction.size)
     for (faction in fogByFaction.keys.sorted()) {
         val fog = fogByFaction[faction] ?: continue
-        factions.add(FactionSnapshot(faction = faction, visibleTiles = fog.visibleCount()))
+        val stockpile = world.stockpiles[faction]
+        factions.add(
+            FactionSnapshot(
+                faction = faction,
+                visibleTiles = fog.visibleCount(),
+                minerals = stockpile?.minerals ?: 0,
+                gas = stockpile?.gas ?: 0
+            )
+        )
     }
     return ClientSnapshot(
         tick = tick,

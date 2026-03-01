@@ -48,6 +48,7 @@ import starkraft.sim.ecs.BuildingFootprint
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.RallyPoint
+import starkraft.sim.ecs.ResourceStockpile
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.Vision
@@ -73,6 +74,8 @@ class ClientSnapshotTest {
         world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
         world.footprints[idB] = BuildingFootprint(tileX = 0, tileY = 1, width = 2, height = 3, clearance = 1)
         world.rallyPoints[idB] = RallyPoint(10f, 11f)
+        world.stockpiles[1] = ResourceStockpile(150, 25)
+        world.stockpiles[2] = ResourceStockpile(80, 10)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
 
@@ -105,6 +108,10 @@ class ClientSnapshotTest {
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })
         assertTrue(snapshot.factions[0].visibleTiles > 0)
         assertTrue(snapshot.factions[1].visibleTiles > 0)
+        assertEquals(150, snapshot.factions[0].minerals)
+        assertEquals(25, snapshot.factions[0].gas)
+        assertEquals(80, snapshot.factions[1].minerals)
+        assertEquals(10, snapshot.factions[1].gas)
     }
 
     @Test
