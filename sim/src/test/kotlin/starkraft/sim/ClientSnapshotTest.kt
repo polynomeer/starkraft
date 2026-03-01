@@ -46,6 +46,7 @@ import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
+import starkraft.sim.ecs.RallyPoint
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.Vision
@@ -69,6 +70,7 @@ class ClientSnapshotTest {
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
         world.orders[idB]?.items?.addLast(Order.Move(9f, 9f))
         world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
+        world.rallyPoints[idB] = RallyPoint(10f, 11f)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
 
@@ -93,6 +95,8 @@ class ClientSnapshotTest {
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
         assertEquals(12, entitiesById[idB]?.activeProductionRemainingTicks)
+        assertEquals(10f, entitiesById[idB]?.rallyX)
+        assertEquals(11f, entitiesById[idB]?.rallyY)
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })
         assertTrue(snapshot.factions[0].visibleTiles > 0)
         assertTrue(snapshot.factions[1].visibleTiles > 0)

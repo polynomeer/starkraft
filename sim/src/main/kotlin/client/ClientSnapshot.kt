@@ -56,7 +56,9 @@ data class EntitySnapshot(
     val pathRemainingNodes: Int = 0,
     val productionQueueSize: Int = 0,
     val activeProductionType: String? = null,
-    val activeProductionRemainingTicks: Int = 0
+    val activeProductionRemainingTicks: Int = 0,
+    val rallyX: Float? = null,
+    val rallyY: Float? = null
 )
 
 @Serializable
@@ -452,6 +454,7 @@ fun buildClientSnapshot(
         val orders = world.orders[id]?.items
         val path = world.pathFollows[id]
         val production = world.productionQueues[id]?.items
+        val rally = world.rallyPoints[id]
         entities.add(
             EntitySnapshot(
                 id = id,
@@ -471,7 +474,9 @@ fun buildClientSnapshot(
                 pathRemainingNodes = path?.let { it.length - it.index } ?: 0,
                 productionQueueSize = production?.size ?: 0,
                 activeProductionType = production?.firstOrNull()?.typeId,
-                activeProductionRemainingTicks = production?.firstOrNull()?.remainingTicks ?: 0
+                activeProductionRemainingTicks = production?.firstOrNull()?.remainingTicks ?: 0,
+                rallyX = rally?.x,
+                rallyY = rally?.y
             )
         )
     }
