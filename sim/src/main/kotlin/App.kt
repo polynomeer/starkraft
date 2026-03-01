@@ -18,6 +18,7 @@ import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
+import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
@@ -380,6 +381,7 @@ fun main(args: Array<String>) {
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
+            emitEconomyRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
                 world,
                 fog1,
@@ -783,6 +785,29 @@ private fun emitDamageRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitEconomyRecord(
+    world: World,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val factions = ArrayList<starkraft.sim.client.EconomyFactionRecord>(world.stockpiles.size)
+    for (faction in world.stockpiles.keys.sorted()) {
+        val stockpile = world.stockpiles[faction] ?: continue
+        factions.add(starkraft.sim.client.EconomyFactionRecord(faction, stockpile.minerals, stockpile.gas))
+    }
+    emitSnapshotLine(
+        renderEconomyStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            factions = factions,
             pretty = false
         ),
         snapshotOutPath

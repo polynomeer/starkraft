@@ -8,6 +8,7 @@ import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
+import starkraft.sim.client.EconomyFactionRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
@@ -22,6 +23,7 @@ import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
+import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
@@ -247,10 +249,26 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders economy stream record json`() {
+        val json =
+            renderEconomyStreamRecordJson(
+                sequence = 11L,
+                tick = 5,
+                factions = listOf(EconomyFactionRecord(1, 150, 25), EconomyFactionRecord(2, 80, 10)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"economy\",\"sequence\":11,\"tick\":5,\"factions\":[{\"faction\":1,\"minerals\":150,\"gas\":25},{\"faction\":2,\"minerals\":80,\"gas\":10}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders combat stream record json`() {
         val json =
             renderCombatStreamRecordJson(
-                sequence = 11L,
+                sequence = 12L,
                 tick = 6,
                 attacks = 2,
                 kills = 1,
@@ -263,7 +281,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"combat\",\"sequence\":11,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            "{\"recordType\":\"combat\",\"sequence\":12,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }
@@ -272,7 +290,7 @@ class ClientSnapshotTest {
     fun `renders despawn stream record json`() {
         val json =
             renderDespawnStreamRecordJson(
-                sequence = 12L,
+                sequence = 13L,
                 tick = 7,
                 entities =
                     listOf(
@@ -283,7 +301,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"despawn\",\"sequence\":12,\"tick\":7,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
+            "{\"recordType\":\"despawn\",\"sequence\":13,\"tick\":7,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
             json
         )
     }

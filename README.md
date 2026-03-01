@@ -154,6 +154,7 @@ Other flags:
   Waypoint consumption emits `pathProgress` records as units advance and finish paths.
   Static blocker changes emit `occupancy` records with tile-level blocked/unblocked deltas.
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
+  Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
   Combat ticks also emit `damage` records for health-bar style UI updates.
   Production activity emits `production` records for enqueue/progress/complete events.
   Invalid build/train commands emit `commandFailure` records with deterministic reasons.

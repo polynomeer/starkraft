@@ -132,6 +132,21 @@ data class MetricsStreamRecord(
 )
 
 @Serializable
+data class EconomyFactionRecord(
+    val faction: Int,
+    val minerals: Int,
+    val gas: Int
+)
+
+@Serializable
+data class EconomyStreamRecord(
+    val recordType: String = "economy",
+    val sequence: Long,
+    val tick: Int,
+    val factions: List<EconomyFactionRecord>
+)
+
+@Serializable
 data class CombatEventRecord(
     val attackerId: Int,
     val targetId: Int,
@@ -676,6 +691,16 @@ fun renderMetricsStreamRecordJson(
             replansBlocked = replansBlocked,
             replansStuck = replansStuck
         )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderEconomyStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    factions: List<EconomyFactionRecord>,
+    pretty: Boolean = false
+): String {
+    val record = EconomyStreamRecord(sequence = sequence, tick = tick, factions = factions)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
