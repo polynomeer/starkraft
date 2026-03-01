@@ -135,7 +135,7 @@ fun main(args: Array<String>) {
         return
     }
     if (replayValidateOnly && replayPath != null) {
-        replayCompatibilityWarning(replayMeta)?.let(::println)
+        printReplayCompatibilityWarnings(replayMeta)
         println(
             "replay validation ok: $replayPath schema=${replayMeta?.schema} " +
                 "seed=${replayMeta?.seed} mapId=${replayMeta?.mapId} " +
@@ -238,7 +238,6 @@ fun main(args: Array<String>) {
     if ((replayStats || replayStatsJson) && commandsByTick.isNotEmpty()) {
         val stats = buildCommandStats(commandsByTick, replayMeta)
         if (replayStats) {
-            replayCompatibilityWarning(replayMeta)?.let(::println)
             printCommandStats(stats)
         }
         if (replayStatsJson) {
@@ -639,6 +638,7 @@ private val statsJson = Json {
 @Serializable
 private data class CommandStats(
     val metadata: CommandStatsMetadata? = null,
+    val warnings: List<String> = emptyList(),
     val ticks: List<CommandTickCount>,
     val totals: CommandTotals
 )
@@ -702,6 +702,7 @@ private fun buildCommandStats(
                     legacy = it.legacy
                 )
             },
+        warnings = replayCompatibilityWarnings(replayMeta),
         ticks = ticks,
         totals = CommandTotals(total, spawns, moves, attacks)
     )
@@ -709,6 +710,9 @@ private fun buildCommandStats(
 
 private fun printCommandStats(stats: CommandStats) {
     println("command stats:")
+    for (warning in stats.warnings) {
+        println(warning)
+    }
     val meta = stats.metadata
     if (meta != null) {
         println(
@@ -726,11 +730,24 @@ private fun printCommandStats(stats: CommandStats) {
     )
 }
 
-internal fun replayCompatibilityWarning(meta: ReplayMetadata?): String? {
-    if (meta == null || meta.legacy) return null
-    val replayBuild = meta.buildVersion ?: return null
-    if (replayBuild == BUILD_VERSION) return null
-    return "replay warning: buildVersion=$replayBuild current=$BUILD_VERSION"
+private fun printReplayCompatibilityWarnings(meta: ReplayMetadata?) {
+    for (warning in replayCompatibilityWarnings(meta)) {
+        println(warning)
+    }
+}
+
+internal fun replayCompatibilityWarnings(meta: ReplayMetadata?): List<String> {
+    if (meta == null || meta.legacy) return emptyList()
+    val warnings = ArrayList<String>(2)
+    val replayMap = meta.mapId
+    if (replayMap != null && replayMap != DEMO_MAP_ID) {
+        warnings.add("replay warning: mapId=$replayMap current=$DEMO_MAP_ID")
+    }
+    val replayBuild = meta.buildVersion
+    if (replayBuild != null && replayBuild != BUILD_VERSION) {
+        warnings.add("replay warning: buildVersion=$replayBuild current=$BUILD_VERSION")
+    }
+    return warnings
 }
 
 fun issue(
