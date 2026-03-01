@@ -109,6 +109,7 @@ Script syntax:
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
+- `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
 - If optional build/train values are omitted or `0`, the sim falls back to values from unit data defs when available
 
 Other flags:

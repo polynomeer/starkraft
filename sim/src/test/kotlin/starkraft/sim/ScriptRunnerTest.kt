@@ -86,4 +86,22 @@ class ScriptRunnerTest {
         assertEquals(Command.Build(2, 1, "Depot", 10, 10, 0, 0, 0, 0, 0, 0, "depot", -1), program.commands[0])
         assertEquals(Command.Train(2, -1, "Marine", 0, 0, 0), program.commands[1])
     }
+
+    @Test
+    fun `parses cancel train commands`() {
+        val path = Files.createTempFile("starkraft-cancel-train-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 0
+            build @depot 1 Depot 4 4
+            wait 1
+            cancelTrain @depot
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(Command.CancelTrain(1, -1), program.commands[1])
+    }
 }

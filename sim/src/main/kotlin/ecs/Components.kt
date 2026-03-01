@@ -27,7 +27,12 @@ data class BuildingFootprint(val tileX: Int, val tileY: Int, val width: Int, val
 
 data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)
 
-data class ProductionJob(val typeId: String, var remainingTicks: Int)
+data class ProductionJob(
+    val typeId: String,
+    var remainingTicks: Int,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0
+)
 
 data class ProductionQueue(val items: ArrayDeque<ProductionJob> = ArrayDeque())
 

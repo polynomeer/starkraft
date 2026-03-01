@@ -101,6 +101,44 @@ class ProductionSystemTest {
     }
 
     @Test
+    fun `cancel train refunds resources and clears queue tail`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data = testDataWithDepot()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 300, 0)
+        val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
+
+        assertTrue(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
+        assertEquals(150, world.stockpiles[1]?.minerals)
+        assertTrue(production.cancelLast(buildingId))
+        assertEquals(200, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.productionQueues.size)
+    }
+
+    @Test
+    fun `production queue enforces max size`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data = testDataWithDepot()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 1000, 0)
+        val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
+
+        repeat(5) {
+            assertTrue(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
+        }
+        assertFalse(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
+        assertEquals(650, world.stockpiles[1]?.minerals)
+    }
+
+    @Test
     fun `train command enqueues production via label`() {
         val world = World()
         val map = MapGrid(16, 16)

@@ -44,4 +44,8 @@ sealed interface Command {
         val mineralCost: Int = 0,
         val gasCost: Int = 0
     ) : Command
+    data class CancelTrain(
+        override val tick: Int,
+        val buildingId: Int
+    ) : Command
 }

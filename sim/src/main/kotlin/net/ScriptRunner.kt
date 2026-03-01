@@ -153,6 +153,16 @@ object ScriptRunner {
                     val gas = if (parts.size > 5) parts[5].toInt() else 0
                     out.add(Command.Train(tick, buildingId, typeId, buildTicks, minerals, gas))
                 }
+                "cancelTrain" -> {
+                    require(parts.size == 2) { "cancelTrain <buildingId|@label>" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    out.add(Command.CancelTrain(tick, buildingId))
+                }
                 else -> error("Unknown command")
             }
             } catch (e: Exception) {

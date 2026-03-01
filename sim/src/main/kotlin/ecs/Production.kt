@@ -9,6 +9,7 @@ class BuildingProductionSystem(
     private val data: DataRepo,
     private val resources: ResourceSystem? = null
 ) {
+    private val maxQueueSize = 5
     private var buildingIds = IntArray(16)
     private var eventKinds = ByteArray(16)
     private var eventBuildingIds = IntArray(16)
@@ -31,8 +32,29 @@ class BuildingProductionSystem(
             if (!resources.spend(faction, mineralCost, gasCost)) return false
         }
         val queue = world.productionQueues.getOrPut(buildingId) { ProductionQueue() }
-        queue.items.addLast(ProductionJob(typeId, buildTicks))
+        if (queue.items.size >= maxQueueSize) {
+            if (resources != null) {
+                val faction = world.tags[buildingId]?.faction ?: return false
+                resources.refund(faction, mineralCost, gasCost)
+            }
+            return false
+        }
+        queue.items.addLast(ProductionJob(typeId, buildTicks, mineralCost, gasCost))
         recordEvent(EVENT_ENQUEUE, buildingId, typeId, buildTicks, 0)
+        return true
+    }
+
+    fun cancelLast(buildingId: EntityId): Boolean {
+        val queue = world.productionQueues[buildingId] ?: return false
+        val job = queue.items.removeLastOrNull() ?: return false
+        if (resources != null) {
+            val faction = world.tags[buildingId]?.faction ?: return false
+            resources.refund(faction, job.mineralCost, job.gasCost)
+        }
+        recordEvent(EVENT_CANCEL, buildingId, job.typeId, job.remainingTicks, 0)
+        if (queue.items.isEmpty()) {
+            world.productionQueues.remove(buildingId)
+        }
         return true
     }
 
@@ -128,5 +150,6 @@ class BuildingProductionSystem(
         const val EVENT_ENQUEUE: Byte = 1
         const val EVENT_PROGRESS: Byte = 2
         const val EVENT_COMPLETE: Byte = 3
+        const val EVENT_CANCEL: Byte = 4
     }
 }
