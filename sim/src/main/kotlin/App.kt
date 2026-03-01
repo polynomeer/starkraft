@@ -31,6 +31,8 @@ import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
+import starkraft.sim.client.ProductionEventRecord
+import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
@@ -259,6 +261,7 @@ fun main(args: Array<String>) {
     var tick = 0
     while (tick < totalTicks) {
         world.clearRemovedEvents()
+        production.clearTickEvents()
         alive.tick()
         if (tick == 200) {
             val changes = ArrayList<OccupancyChangeEventRecord>(7)
@@ -289,6 +292,7 @@ fun main(args: Array<String>) {
 
         occupancy.tick()
         production.tick()
+        emitProductionRecord(production, tick, resolvedSnapshotOutPath, streamSequence)
         pathing.tick()
         emitPathAssignedRecord(pathing, tick, resolvedSnapshotOutPath, streamSequence)
         movement.tick()
@@ -674,6 +678,43 @@ private fun emitDamageRecord(
     }
     emitSnapshotLine(
         renderDamageStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitProductionRecord(
+    production: BuildingProductionSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || production.lastTickEventCount == 0) return
+    val events = ArrayList<ProductionEventRecord>(production.lastTickEventCount)
+    for (i in 0 until production.lastTickEventCount) {
+        val kind =
+            when (production.eventKind(i)) {
+                BuildingProductionSystem.EVENT_ENQUEUE -> "enqueue"
+                BuildingProductionSystem.EVENT_COMPLETE -> "complete"
+                else -> "progress"
+            }
+        val spawnedId = production.eventSpawnedId(i).takeIf { it != 0 }
+        events.add(
+            ProductionEventRecord(
+                kind = kind,
+                buildingId = production.eventBuildingId(i),
+                typeId = production.eventTypeId(i) ?: "",
+                remainingTicks = production.eventRemainingTicks(i),
+                spawnedEntityId = spawnedId
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderProductionStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             events = events,

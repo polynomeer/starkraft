@@ -13,6 +13,7 @@ import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
+import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -34,6 +35,7 @@ import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
+import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
@@ -485,6 +487,26 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders production stream record json`() {
+        val json =
+            renderProductionStreamRecordJson(
+                sequence = 25L,
+                tick = 18,
+                events =
+                    listOf(
+                        ProductionEventRecord("enqueue", 41, "Marine", 75, null),
+                        ProductionEventRecord("complete", 41, "Marine", 0, 88)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"production\",\"sequence\":25,\"tick\":18,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":41,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":41,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":88}]}",
             json
         )
     }

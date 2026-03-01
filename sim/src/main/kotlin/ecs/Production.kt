@@ -10,6 +10,17 @@ class BuildingProductionSystem(
     private val resources: ResourceSystem? = null
 ) {
     private var buildingIds = IntArray(16)
+    private var eventKinds = ByteArray(16)
+    private var eventBuildingIds = IntArray(16)
+    private var eventRemainingTicks = IntArray(16)
+    private var eventSpawnedIds = IntArray(16)
+    private var eventTypeIds = arrayOfNulls<String>(16)
+    var lastTickEventCount: Int = 0
+        private set
+
+    fun clearTickEvents() {
+        lastTickEventCount = 0
+    }
 
     fun enqueue(buildingId: EntityId, typeId: String, buildTicks: Int, mineralCost: Int = 0, gasCost: Int = 0): Boolean {
         if (!world.footprints.containsKey(buildingId)) return false
@@ -21,6 +32,7 @@ class BuildingProductionSystem(
         }
         val queue = world.productionQueues.getOrPut(buildingId) { ProductionQueue() }
         queue.items.addLast(ProductionJob(typeId, buildTicks))
+        recordEvent(EVENT_ENQUEUE, buildingId, typeId, buildTicks, 0)
         return true
     }
 
@@ -37,9 +49,17 @@ class BuildingProductionSystem(
             val queue = world.productionQueues[id] ?: continue
             val job = queue.items.firstOrNull() ?: continue
             job.remainingTicks--
-            if (job.remainingTicks > 0) continue
+            if (job.remainingTicks > 0) {
+                recordEvent(EVENT_PROGRESS, id, job.typeId, job.remainingTicks, 0)
+                continue
+            }
+            job.remainingTicks = 0
             val footprint = world.footprints[id] ?: continue
-            val spawnTile = findSpawnTile(footprint) ?: continue
+            val spawnTile = findSpawnTile(footprint)
+            if (spawnTile == null) {
+                recordEvent(EVENT_PROGRESS, id, job.typeId, 0, 0)
+                continue
+            }
             val tag = world.tags[id] ?: continue
             val def = data.unit(job.typeId)
             val weapon = def.weaponId?.let { WeaponRef(it) }
@@ -50,12 +70,23 @@ class BuildingProductionSystem(
                 weapon
             )
             world.visions[unitId] = Vision(6f)
+            recordEvent(EVENT_COMPLETE, id, job.typeId, 0, unitId)
             queue.items.removeFirst()
             if (queue.items.isEmpty()) {
                 world.productionQueues.remove(id)
             }
         }
     }
+
+    fun eventKind(index: Int): Byte = eventKinds[index]
+
+    fun eventBuildingId(index: Int): Int = eventBuildingIds[index]
+
+    fun eventRemainingTicks(index: Int): Int = eventRemainingTicks[index]
+
+    fun eventSpawnedId(index: Int): Int = eventSpawnedIds[index]
+
+    fun eventTypeId(index: Int): String? = eventTypeIds[index]
 
     private fun findSpawnTile(footprint: BuildingFootprint): Pair<Int, Int>? {
         val minX = footprint.tileX - 1
@@ -73,5 +104,29 @@ class BuildingProductionSystem(
             }
         }
         return null
+    }
+
+    private fun recordEvent(kind: Byte, buildingId: Int, typeId: String, remainingTicks: Int, spawnedId: Int) {
+        val index = lastTickEventCount
+        if (index >= eventKinds.size) {
+            val nextSize = eventKinds.size * 2
+            eventKinds = eventKinds.copyOf(nextSize)
+            eventBuildingIds = eventBuildingIds.copyOf(nextSize)
+            eventRemainingTicks = eventRemainingTicks.copyOf(nextSize)
+            eventSpawnedIds = eventSpawnedIds.copyOf(nextSize)
+            eventTypeIds = eventTypeIds.copyOf(nextSize)
+        }
+        eventKinds[index] = kind
+        eventBuildingIds[index] = buildingId
+        eventRemainingTicks[index] = remainingTicks
+        eventSpawnedIds[index] = spawnedId
+        eventTypeIds[index] = typeId
+        lastTickEventCount = index + 1
+    }
+
+    companion object {
+        const val EVENT_ENQUEUE: Byte = 1
+        const val EVENT_PROGRESS: Byte = 2
+        const val EVENT_COMPLETE: Byte = 3
     }
 }

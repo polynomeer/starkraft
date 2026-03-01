@@ -352,6 +352,23 @@ data class SessionStatsStreamRecord(
     val finalReplayHash: Long? = null
 )
 
+@Serializable
+data class ProductionEventRecord(
+    val kind: String,
+    val buildingId: Int,
+    val typeId: String,
+    val remainingTicks: Int,
+    val spawnedEntityId: Int? = null
+)
+
+@Serializable
+data class ProductionStreamRecord(
+    val recordType: String = "production",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<ProductionEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -821,6 +838,16 @@ fun renderSessionStatsStreamRecordJson(
             finalWorldHash = finalWorldHash,
             finalReplayHash = finalReplayHash
         )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderProductionStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<ProductionEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ProductionStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
