@@ -237,6 +237,60 @@ class AppTest {
     }
 
     @Test
+    fun `renders replay metadata json golden shape`() {
+        val json =
+            renderReplayMetaJson(
+                buildReplayMetaReport(
+                    replayMeta =
+                        ReplayMetadata(
+                            schema = 1,
+                            replayHash = 12L,
+                            seed = 42L,
+                            mapId = "other-map",
+                            buildVersion = "0.9.0",
+                            eventCount = 5,
+                            fileSizeBytes = 256,
+                            legacy = false
+                        ),
+                    replayPath = "/tmp/demo.replay.json",
+                    currentMapId = "demo-32x32-obstacles",
+                    currentBuildVersion = "1.0-SNAPSHOT",
+                    currentSeed = 99L,
+                    strictReplayMeta = true,
+                    strictReplayHash = true
+                )
+            )
+
+        assertEquals(
+            """
+            {
+                "replayPath": "/tmp/demo.replay.json",
+                "currentMapId": "demo-32x32-obstacles",
+                "currentBuildVersion": "1.0-SNAPSHOT",
+                "currentSeed": 99,
+                "strictReplayMeta": true,
+                "strictReplayHash": true,
+                "metadata": {
+                    "schema": 1,
+                    "replayHash": 12,
+                    "seed": 42,
+                    "mapId": "other-map",
+                    "buildVersion": "0.9.0",
+                    "eventCount": 5,
+                    "fileSizeBytes": 256,
+                    "legacy": false
+                },
+                "warnings": [
+                    "replay warning: mapId=other-map current=demo-32x32-obstacles",
+                    "replay warning: buildVersion=0.9.0 current=1.0-SNAPSHOT"
+                ]
+            }
+            """.trimIndent(),
+            json
+        )
+    }
+
+    @Test
     fun `builds replay metadata report with warnings`() {
         val report =
             buildReplayMetaReport(

@@ -924,6 +924,7 @@ internal fun buildReplayMetaReport(
 }
 
 internal fun renderCommandStatsJson(stats: CommandStats): String = statsJson.encodeToString(stats)
+internal fun renderReplayMetaJson(report: ReplayMetaReport): String = statsJson.encodeToString(report)
 
 private const val COMPACT_TICK_PREVIEW_COUNT = 5
 private const val COMPACT_TICK_THRESHOLD = 12
