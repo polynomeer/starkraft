@@ -1230,6 +1230,7 @@ internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, da
 
 internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
     val labeledBuildingTypes = HashMap<Int, String>()
+    val labeledQueueState = HashMap<Int, ValidationQueueState>()
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
@@ -1237,7 +1238,11 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
             when (c) {
                 is Command.Build -> {
                     val labelId = c.labelId
-                    if (labelId != null) labeledBuildingTypes[labelId] = c.typeId
+                    if (labelId != null) {
+                        labeledBuildingTypes[labelId] = c.typeId
+                        val queueLimit = data.buildSpec(c.typeId)?.productionQueueLimit ?: 5
+                        labeledQueueState[labelId] = ValidationQueueState(queueLimit)
+                    }
                 }
                 is Command.Train -> {
                     val spec = data.trainSpec(c.typeId)
@@ -1256,11 +1261,50 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                                     "(allowed=${spec.producerTypes.joinToString(",")})"
                             )
                         }
+                        val queueState = labeledQueueState[c.buildingId]
+                        if (queueState != null) {
+                            queueState.discardCompleted(tick)
+                            if (queueState.size >= queueState.limit) {
+                                error(
+                                    "Queue limit exceeded for '$buildingType' in train at tick $tick " +
+                                        "(limit=${queueState.limit}, queued=${queueState.size})"
+                                )
+                            }
+                            queueState.enqueue(tick, buildTicks)
+                        }
+                    }
+                }
+                is Command.CancelTrain -> {
+                    if (c.buildingId < 0) {
+                        labeledQueueState[c.buildingId]?.discardCompleted(tick)
+                        labeledQueueState[c.buildingId]?.cancelLast()
                     }
                 }
                 else -> Unit
             }
         }
+    }
+}
+
+private class ValidationQueueState(val limit: Int) {
+    private val completionTicks = ArrayDeque<Int>()
+
+    val size: Int
+        get() = completionTicks.size
+
+    fun discardCompleted(currentTick: Int) {
+        while (completionTicks.isNotEmpty() && completionTicks.first() <= currentTick) {
+            completionTicks.removeFirst()
+        }
+    }
+
+    fun enqueue(currentTick: Int, buildTicks: Int) {
+        val startTick = completionTicks.lastOrNull() ?: currentTick
+        completionTicks.addLast(startTick + buildTicks)
+    }
+
+    fun cancelLast() {
+        completionTicks.removeLastOrNull()
     }
 }
 
