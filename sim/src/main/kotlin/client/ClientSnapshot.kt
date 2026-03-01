@@ -233,6 +233,16 @@ data class SelectionStreamRecord(
 )
 
 @Serializable
+data class RallyStreamRecord(
+    val recordType: String = "rally",
+    val sequence: Long,
+    val tick: Int,
+    val buildingId: Int,
+    val x: Float,
+    val y: Float
+)
+
+@Serializable
 data class OrderAppliedStreamRecord(
     val recordType: String = "orderApplied",
     val sequence: Long,
@@ -801,6 +811,18 @@ fun renderOrderAppliedStreamRecordJson(
             x = x,
             y = y
         )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderRallyStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    buildingId: Int,
+    x: Float,
+    y: Float,
+    pretty: Boolean = false
+): String {
+    val record = RallyStreamRecord(sequence = sequence, tick = tick, buildingId = buildingId, x = x, y = y)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

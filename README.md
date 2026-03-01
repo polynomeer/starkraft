@@ -146,6 +146,7 @@ Other flags:
   They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, and current static occupancy.
   Issued commands are also emitted as `command` records.
   Script-driven selection changes emit `selection` records before commands for that tick.
+  Rally overrides emit `rally` records when producer rally points change.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Applied move and attack orders emit `orderApplied` records after selector resolution.
   Those order applications also emit `orderQueue` records with the resulting queue sizes.

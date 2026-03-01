@@ -25,6 +25,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -2338,6 +2339,7 @@ fun issue(
                 return
             }
             world.rallyPoints[buildingId] = RallyPoint(cmd.x, cmd.y)
+            emitRallyRecord(cmd.tick, buildingId, cmd.x, cmd.y, snapshotOutPath, streamSequence)
         }
     }
 }
@@ -2431,6 +2433,28 @@ private fun emitOrderQueueRecord(
             tick = tick,
             orderType = orderType,
             entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitRallyRecord(
+    tick: Int,
+    buildingId: Int,
+    x: Float,
+    y: Float,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderRallyStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            buildingId = buildingId,
+            x = x,
+            y = y,
             pretty = false
         ),
         snapshotOutPath

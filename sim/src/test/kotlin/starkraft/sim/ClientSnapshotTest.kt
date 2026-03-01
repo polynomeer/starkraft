@@ -29,6 +29,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -366,18 +367,36 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders rally stream record json`() {
+        val json =
+            renderRallyStreamRecordJson(
+                sequence = 17L,
+                tick = 12,
+                buildingId = 41,
+                x = 15f,
+                y = 16f,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"rally\",\"sequence\":17,\"tick\":12,\"buildingId\":41,\"x\":15.0,\"y\":16.0}",
+            json
+        )
+    }
+
+    @Test
     fun `renders order queue stream record json`() {
         val json =
             renderOrderQueueStreamRecordJson(
-                sequence = 17L,
-                tick = 12,
+                sequence = 18L,
+                tick = 13,
                 orderType = "move",
                 entities = listOf(OrderQueueEntityRecord(3, 2), OrderQueueEntityRecord(4, 1)),
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"orderQueue\",\"sequence\":17,\"tick\":12,\"orderType\":\"move\",\"entities\":[{\"entityId\":3,\"queueSize\":2},{\"entityId\":4,\"queueSize\":1}]}",
+            "{\"recordType\":\"orderQueue\",\"sequence\":18,\"tick\":13,\"orderType\":\"move\",\"entities\":[{\"entityId\":3,\"queueSize\":2},{\"entityId\":4,\"queueSize\":1}]}",
             json
         )
     }
