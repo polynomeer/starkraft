@@ -20,11 +20,13 @@ class ReplayIOTest {
             Command.AttackType(14, "Zergling", 3),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1)
         )
-        ReplayIO.save(tmp, cmds, seed = 1234L)
+        ReplayIO.save(tmp, cmds, seed = 1234L, mapId = "demo-map", buildVersion = "test-build")
         val loaded = ReplayIO.load(tmp)
         val payload = Files.readString(tmp)
         assertTrue(payload.contains("\"replayHash\""))
         assertTrue(payload.contains("\"seed\":1234"))
+        assertTrue(payload.contains("\"mapId\":\"demo-map\""))
+        assertTrue(payload.contains("\"buildVersion\":\"test-build\""))
         assertEquals(cmds.size, loaded.size)
         for (i in cmds.indices) {
             assertCommandsEqual(cmds[i], loaded[i])
@@ -49,10 +51,12 @@ class ReplayIOTest {
     fun inspectsReplayMetadata() {
         val tmp = Files.createTempFile("starkraft-replay", ".json")
         val cmds = listOf(Command.Move(0, intArrayOf(1), 2f, 3f))
-        ReplayIO.save(tmp, cmds, seed = 77L)
+        ReplayIO.save(tmp, cmds, seed = 77L, mapId = "demo-map", buildVersion = "test-build")
         val meta = ReplayIO.inspect(tmp)
         assertEquals(1, meta.schema)
         assertEquals(77L, meta.seed)
+        assertEquals("demo-map", meta.mapId)
+        assertEquals("test-build", meta.buildVersion)
         assertTrue(meta.replayHash != null)
         assertEquals(false, meta.legacy)
     }

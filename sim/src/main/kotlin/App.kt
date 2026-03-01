@@ -24,6 +24,9 @@ object Time {
     const val TICK_MS = 20
 }
 
+private const val DEMO_MAP_ID = "demo-32x32-obstacles"
+private const val BUILD_VERSION = "1.0-SNAPSHOT"
+
 fun main(args: Array<String>) {
     // Load data resources
     val unitsResource = object {}.javaClass.getResource("/data/units.json")
@@ -134,7 +137,8 @@ fun main(args: Array<String>) {
     if (replayValidateOnly && replayPath != null) {
         println(
             "replay validation ok: $replayPath schema=${replayMeta?.schema} " +
-                "seed=${replayMeta?.seed} replayHash=${replayMeta?.replayHash}"
+                "seed=${replayMeta?.seed} mapId=${replayMeta?.mapId} " +
+                "buildVersion=${replayMeta?.buildVersion} replayHash=${replayMeta?.replayHash}"
         )
         return
     }
@@ -194,7 +198,7 @@ fun main(args: Array<String>) {
 
     if (recordPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(recordPath), recorded, seed)
+        ReplayIO.save(Paths.get(recordPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
         println("replay saved: $recordPath")
     }
 
@@ -242,13 +246,13 @@ fun main(args: Array<String>) {
 
     if (replayOutPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayOutPath), recorded, seed)
+        ReplayIO.save(Paths.get(replayOutPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
         println("replay out saved: $replayOutPath")
     }
 
     if (replayDumpPath != null && scriptPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayDumpPath), recorded, seed)
+        ReplayIO.save(Paths.get(replayDumpPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
         println("replay dump saved: $replayDumpPath")
     }
 }
@@ -642,6 +646,8 @@ private data class CommandStatsMetadata(
     val schema: Int,
     val replayHash: Long? = null,
     val seed: Long? = null,
+    val mapId: String? = null,
+    val buildVersion: String? = null,
     val legacy: Boolean
 )
 
@@ -689,6 +695,8 @@ private fun buildCommandStats(
                     schema = it.schema,
                     replayHash = it.replayHash,
                     seed = it.seed,
+                    mapId = it.mapId,
+                    buildVersion = it.buildVersion,
                     legacy = it.legacy
                 )
             },
@@ -701,7 +709,11 @@ private fun printCommandStats(stats: CommandStats) {
     println("command stats:")
     val meta = stats.metadata
     if (meta != null) {
-        println("replay metadata: schema=${meta.schema} seed=${meta.seed} replayHash=${meta.replayHash}")
+        println(
+            "replay metadata: schema=${meta.schema} seed=${meta.seed} " +
+                "mapId=${meta.mapId} buildVersion=${meta.buildVersion} " +
+                "replayHash=${meta.replayHash}"
+        )
     }
     for (tick in stats.ticks) {
         println("tick=${tick.tick} commands=${tick.commands}")

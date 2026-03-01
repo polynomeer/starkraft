@@ -15,13 +15,21 @@ object ReplayIO {
         ignoreUnknownKeys = true
     }
 
-    fun save(path: Path, commands: List<Command>, seed: Long? = null) {
+    fun save(
+        path: Path,
+        commands: List<Command>,
+        seed: Long? = null,
+        mapId: String? = null,
+        buildVersion: String? = null
+    ) {
         val recorder = ReplayHashRecorder()
         for (c in commands) recorder.onCommand(c)
         val container = ReplayContainer(
             schema = SCHEMA_VERSION,
             replayHash = recorder.value(),
             seed = seed,
+            mapId = mapId,
+            buildVersion = buildVersion,
             events = commands.map { ReplayEvent.fromCommand(it) }
         )
         val payload = json.encodeToString(container)
@@ -59,6 +67,8 @@ object ReplayIO {
             schema = container.schema,
             replayHash = if (container.schema == 0) null else container.replayHash,
             seed = container.seed,
+            mapId = container.mapId,
+            buildVersion = container.buildVersion,
             legacy = container.schema == 0
         )
     }
@@ -68,6 +78,8 @@ data class ReplayMetadata(
     val schema: Int,
     val replayHash: Long?,
     val seed: Long?,
+    val mapId: String?,
+    val buildVersion: String?,
     val legacy: Boolean
 )
 
@@ -76,6 +88,8 @@ private data class ReplayContainer(
     val schema: Int,
     val replayHash: Long,
     val seed: Long? = null,
+    val mapId: String? = null,
+    val buildVersion: String? = null,
     val events: List<ReplayEvent>
 ) {
     fun validateSchema() {
