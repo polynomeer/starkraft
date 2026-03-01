@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
+import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
@@ -13,6 +14,7 @@ import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
@@ -272,6 +274,7 @@ fun main(args: Array<String>) {
         movement.tick()
         emitPathProgressRecord(movement, tick, resolvedSnapshotOutPath, streamSequence)
         combat.tick()
+        emitDamageRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitDespawnRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
         visionSys.tick()
@@ -594,6 +597,36 @@ private fun emitMetricsRecord(
             replans = movement.lastTickReplans,
             replansBlocked = movement.lastTickReplansBlocked,
             replansStuck = movement.lastTickReplansStuck,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitDamageRecord(
+    combat: CombatSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || combat.lastTickEventCount == 0) return
+    val events = ArrayList<DamageEventRecord>(combat.lastTickEventCount)
+    for (i in 0 until combat.lastTickEventCount) {
+        events.add(
+            DamageEventRecord(
+                attackerId = combat.eventAttacker(i),
+                targetId = combat.eventTarget(i),
+                damage = combat.eventDamage(i),
+                targetHp = combat.eventTargetHp(i),
+                killed = combat.eventKilled(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderDamageStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = events,
             pretty = false
         ),
         snapshotOutPath

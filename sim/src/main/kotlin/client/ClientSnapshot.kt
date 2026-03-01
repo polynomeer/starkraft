@@ -316,6 +316,23 @@ data class VisionStreamRecord(
     val changes: List<VisionChangeEventRecord>
 )
 
+@Serializable
+data class DamageEventRecord(
+    val attackerId: Int,
+    val targetId: Int,
+    val damage: Int,
+    val targetHp: Int,
+    val killed: Boolean
+)
+
+@Serializable
+data class DamageStreamRecord(
+    val recordType: String = "damage",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<DamageEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -720,6 +737,16 @@ fun renderVisionStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = VisionStreamRecord(sequence = sequence, tick = tick, changes = changes)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderDamageStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<DamageEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = DamageStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

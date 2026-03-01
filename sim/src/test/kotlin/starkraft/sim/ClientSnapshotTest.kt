@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
+import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
@@ -16,6 +17,7 @@ import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
@@ -439,6 +441,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"vision\",\"sequence\":22,\"tick\":16,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders damage stream record json`() {
+        val json =
+            renderDamageStreamRecordJson(
+                sequence = 23L,
+                tick = 17,
+                events = listOf(DamageEventRecord(3, 8, 6, 12, false), DamageEventRecord(4, 9, 9, -1, true)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"damage\",\"sequence\":23,\"tick\":17,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }
