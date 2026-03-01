@@ -8,8 +8,9 @@ import starkraft.sim.net.Command
 import java.nio.file.Files
 import java.nio.file.Path
 
+private const val SCHEMA_VERSION = 1
+
 object ReplayIO {
-    private const val SCHEMA_VERSION = 1
     private val json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
@@ -22,15 +23,16 @@ object ReplayIO {
         mapId: String? = null,
         buildVersion: String? = null
     ) {
+        val normalized = ensureLabelIds(commands)
         val recorder = ReplayHashRecorder()
-        for (c in commands) recorder.onCommand(c)
+        for (c in normalized) recorder.onCommand(c)
         val container = ReplayContainer(
             schema = SCHEMA_VERSION,
             replayHash = recorder.value(),
             seed = seed,
             mapId = mapId,
             buildVersion = buildVersion,
-            events = commands.map { ReplayEvent.fromCommand(it) }
+            events = normalized.map { ReplayEvent.fromCommand(it) }
         )
         val payload = json.encodeToString(container)
         Files.writeString(path, payload)
@@ -60,7 +62,14 @@ object ReplayIO {
     fun inspect(path: Path): ReplayMetadata {
         val payload = Files.readString(path)
         if (payload.trimStart().startsWith("[")) {
-            return ReplayMetadata(schema = 0, replayHash = null, seed = null, legacy = true)
+            return ReplayMetadata(
+                schema = 0,
+                replayHash = null,
+                seed = null,
+                mapId = null,
+                buildVersion = null,
+                legacy = true
+            )
         }
         val container = json.decodeFromString<ReplayContainer>(payload)
         return ReplayMetadata(

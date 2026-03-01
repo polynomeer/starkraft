@@ -135,6 +135,7 @@ fun main(args: Array<String>) {
         return
     }
     if (replayValidateOnly && replayPath != null) {
+        replayCompatibilityWarning(replayMeta)?.let(::println)
         println(
             "replay validation ok: $replayPath schema=${replayMeta?.schema} " +
                 "seed=${replayMeta?.seed} mapId=${replayMeta?.mapId} " +
@@ -237,6 +238,7 @@ fun main(args: Array<String>) {
     if ((replayStats || replayStatsJson) && commandsByTick.isNotEmpty()) {
         val stats = buildCommandStats(commandsByTick, replayMeta)
         if (replayStats) {
+            replayCompatibilityWarning(replayMeta)?.let(::println)
             printCommandStats(stats)
         }
         if (replayStatsJson) {
@@ -722,6 +724,13 @@ private fun printCommandStats(stats: CommandStats) {
         "total=${stats.totals.total} spawns=${stats.totals.spawns} " +
             "moves=${stats.totals.moves} attacks=${stats.totals.attacks}"
     )
+}
+
+internal fun replayCompatibilityWarning(meta: ReplayMetadata?): String? {
+    if (meta == null || meta.legacy) return null
+    val replayBuild = meta.buildVersion ?: return null
+    if (replayBuild == BUILD_VERSION) return null
+    return "replay warning: buildVersion=$replayBuild current=$BUILD_VERSION"
 }
 
 fun issue(
