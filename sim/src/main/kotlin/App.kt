@@ -92,6 +92,7 @@ fun main(args: Array<String>) {
     val replayTicks = parseReplayTicks(args)
     val noSleep = hasFlag(args, "--noSleep")
     val scriptValidate = hasFlag(args, "--scriptValidate")
+    val scriptDryRun = hasFlag(args, "--scriptDryRun")
     val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
     val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
@@ -110,11 +111,14 @@ fun main(args: Array<String>) {
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
 
-    if (scriptValidate && (scriptPath != null || spawnScriptPath != null)) {
+    if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
+        }
+        if (scriptDryRun) {
+            println("script dry run ok")
         }
         printScriptCommands(commandsByTick)
         return
