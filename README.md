@@ -73,6 +73,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - `BuildingProductionSystem` now supports deterministic per-building production queues.
    - Spawn completed units onto free tiles around building footprints.
    - Training compatibility is data-driven via allowed producer building type ids.
+   - Producer queue limits are data-driven in building defs rather than hardcoded in the system.
    - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
      move + attack decisions at the order layer.
 

@@ -31,7 +31,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)
@@ -137,11 +137,11 @@ class ProductionSystemTest {
         resources.set(1, 1000, 0)
         val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
 
-        repeat(5) {
+        repeat(3) {
             assertTrue(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
         }
         assertFalse(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
-        assertEquals(650, world.stockpiles[1]?.minerals)
+        assertEquals(750, world.stockpiles[1]?.minerals)
     }
 
     @Test
@@ -250,7 +250,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)

@@ -7,6 +7,7 @@
       "footprintWidth": 2,
       "footprintHeight": 2,
       "placementClearance": 1,
+      "productionQueueLimit": 3,
       "mineralCost": 100,
       "gasCost": 0
     }

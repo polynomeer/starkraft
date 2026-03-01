@@ -36,6 +36,7 @@ data class BuildingDef(
     val footprintWidth: Int,
     val footprintHeight: Int,
     val placementClearance: Int = 0,
+    val productionQueueLimit: Int = 5,
     val mineralCost: Int = 0,
     val gasCost: Int = 0
 )

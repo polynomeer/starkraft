@@ -18,7 +18,6 @@ class BuildingProductionSystem(
     private val data: DataRepo,
     private val resources: ResourceSystem? = null
 ) {
-    private val maxQueueSize = 5
     private var buildingIds = IntArray(16)
     private var eventKinds = ByteArray(16)
     private var eventBuildingIds = IntArray(16)
@@ -55,8 +54,9 @@ class BuildingProductionSystem(
         if (unit.producerTypes.isNotEmpty() && !unit.producerTypes.contains(buildingType)) {
             return TrainFailureReason.INCOMPATIBLE_PRODUCER
         }
+        val queueLimit = data.buildSpec(buildingType)?.productionQueueLimit ?: 5
         val queue = world.productionQueues[buildingId]
-        if (queue != null && queue.items.size >= maxQueueSize) return TrainFailureReason.QUEUE_FULL
+        if (queue != null && queue.items.size >= queueLimit) return TrainFailureReason.QUEUE_FULL
         if (resources != null) {
             val faction = world.tags[buildingId]?.faction ?: return TrainFailureReason.MISSING_BUILDING
             if (!resources.spend(faction, mineralCost, gasCost)) return TrainFailureReason.INSUFFICIENT_RESOURCES
