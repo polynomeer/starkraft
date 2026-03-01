@@ -58,6 +58,7 @@ data class EntitySnapshot(
 @Serializable
 data class SnapshotStreamRecord(
     val recordType: String = "snapshot",
+    val sequence: Long,
     val tick: Int,
     val snapshot: ClientSnapshot
 )
@@ -65,6 +66,7 @@ data class SnapshotStreamRecord(
 @Serializable
 data class SnapshotSessionStartRecord(
     val recordType: String = "sessionStart",
+    val sequence: Long,
     val mapId: String,
     val buildVersion: String,
     val seed: Long? = null
@@ -73,6 +75,7 @@ data class SnapshotSessionStartRecord(
 @Serializable
 data class SnapshotSessionEndRecord(
     val recordType: String = "sessionEnd",
+    val sequence: Long,
     val tick: Int,
     val worldHash: Long,
     val replayHash: Long? = null
@@ -139,28 +142,30 @@ fun renderClientSnapshotJson(snapshot: ClientSnapshot, pretty: Boolean = true): 
     return if (pretty) snapshotJsonPretty.encodeToString(snapshot) else snapshotJsonCompact.encodeToString(snapshot)
 }
 
-fun renderSnapshotStreamRecordJson(snapshot: ClientSnapshot, pretty: Boolean = false): String {
-    val record = SnapshotStreamRecord(tick = snapshot.tick, snapshot = snapshot)
+fun renderSnapshotStreamRecordJson(snapshot: ClientSnapshot, sequence: Long, pretty: Boolean = false): String {
+    val record = SnapshotStreamRecord(sequence = sequence, tick = snapshot.tick, snapshot = snapshot)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
 fun renderSnapshotSessionStartJson(
+    sequence: Long,
     mapId: String,
     buildVersion: String,
     seed: Long?,
     pretty: Boolean = false
 ): String {
-    val record = SnapshotSessionStartRecord(mapId = mapId, buildVersion = buildVersion, seed = seed)
+    val record = SnapshotSessionStartRecord(sequence = sequence, mapId = mapId, buildVersion = buildVersion, seed = seed)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
 fun renderSnapshotSessionEndJson(
+    sequence: Long,
     tick: Int,
     worldHash: Long,
     replayHash: Long?,
     pretty: Boolean = false
 ): String {
-    val record = SnapshotSessionEndRecord(tick = tick, worldHash = worldHash, replayHash = replayHash)
+    val record = SnapshotSessionEndRecord(sequence = sequence, tick = tick, worldHash = worldHash, replayHash = replayHash)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

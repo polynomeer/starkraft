@@ -96,12 +96,12 @@ class ClientSnapshotTest {
         val path = Files.createTempFile("starkraft-snapshot", ".ndjson")
         Files.deleteIfExists(path)
 
-        emitSnapshotLine("{\"recordType\":\"snapshot\",\"tick\":1,\"snapshot\":{\"tick\":1}}", path)
-        emitSnapshotLine("{\"recordType\":\"snapshot\",\"tick\":2,\"snapshot\":{\"tick\":2}}", path)
+        emitSnapshotLine("{\"recordType\":\"snapshot\",\"sequence\":0,\"tick\":1,\"snapshot\":{\"tick\":1}}", path)
+        emitSnapshotLine("{\"recordType\":\"snapshot\",\"sequence\":1,\"tick\":2,\"snapshot\":{\"tick\":2}}", path)
 
         assertEquals(
-            "{\"recordType\":\"snapshot\",\"tick\":1,\"snapshot\":{\"tick\":1}}\n" +
-                "{\"recordType\":\"snapshot\",\"tick\":2,\"snapshot\":{\"tick\":2}}\n",
+            "{\"recordType\":\"snapshot\",\"sequence\":0,\"tick\":1,\"snapshot\":{\"tick\":1}}\n" +
+                "{\"recordType\":\"snapshot\",\"sequence\":1,\"tick\":2,\"snapshot\":{\"tick\":2}}\n",
             Files.readString(path)
         )
     }
@@ -123,29 +123,37 @@ class ClientSnapshotTest {
             fogByFaction = mapOf(1 to fog)
         )
 
-        val json = renderSnapshotStreamRecordJson(snapshot, pretty = false)
+        val json = renderSnapshotStreamRecordJson(snapshot, sequence = 4L, pretty = false)
 
-        assertTrue(json.startsWith("{\"recordType\":\"snapshot\",\"tick\":3,"))
+        assertTrue(json.startsWith("{\"recordType\":\"snapshot\",\"sequence\":4,\"tick\":3,"))
         assertTrue(json.contains("\"snapshot\":{\"tick\":3"))
     }
 
     @Test
     fun `renders snapshot session start json`() {
-        val json = renderSnapshotSessionStartJson("demo-map", "test-build", 7L, pretty = false)
+        val json = renderSnapshotSessionStartJson(0L, "demo-map", "test-build", 7L, pretty = false)
 
         assertEquals(
-            "{\"recordType\":\"sessionStart\",\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
+            "{\"recordType\":\"sessionStart\",\"sequence\":0,\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
             json
         )
     }
 
     @Test
     fun `renders snapshot session end json`() {
-        val json = renderSnapshotSessionEndJson(tick = 15, worldHash = 123L, replayHash = 456L, pretty = false)
+        val json = renderSnapshotSessionEndJson(sequence = 5L, tick = 15, worldHash = 123L, replayHash = 456L, pretty = false)
 
         assertEquals(
-            "{\"recordType\":\"sessionEnd\",\"tick\":15,\"worldHash\":123,\"replayHash\":456}",
+            "{\"recordType\":\"sessionEnd\",\"sequence\":5,\"tick\":15,\"worldHash\":123,\"replayHash\":456}",
             json
         )
+    }
+
+    @Test
+    fun `increments snapshot sequence monotonically`() {
+        val state = longArrayOf(0L)
+        assertEquals(0L, nextSnapshotSequence(state))
+        assertEquals(1L, nextSnapshotSequence(state))
+        assertEquals(2L, nextSnapshotSequence(state))
     }
 }

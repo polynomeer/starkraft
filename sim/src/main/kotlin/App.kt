@@ -124,12 +124,14 @@ fun main(args: Array<String>) {
     val resolvedSnapshotOutPath = snapshotOutPath?.let(::resolvePath)
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
+    val snapshotSequence = longArrayOf(0L)
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
+                sequence = nextSnapshotSequence(snapshotSequence),
                 mapId = DEMO_MAP_ID,
                 buildVersion = BUILD_VERSION,
                 seed = seed,
@@ -229,7 +231,7 @@ fun main(args: Array<String>) {
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
-            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath)
+            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, snapshotSequence)
         }
 
         if (tick % 25 == 0) {
@@ -301,11 +303,12 @@ fun main(args: Array<String>) {
     }
 
     if (snapshotJson) {
-        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath)
+        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, snapshotSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionEndJson(
+                sequence = nextSnapshotSequence(snapshotSequence),
                 tick = tick,
                 worldHash = finalWorldHash,
                 replayHash = finalReplayHash,
@@ -474,7 +477,8 @@ private fun emitClientSnapshot(
     tick: Int,
     seed: Long?,
     compactJson: Boolean,
-    snapshotOutPath: java.nio.file.Path? = null
+    snapshotOutPath: java.nio.file.Path? = null,
+    snapshotSequence: LongArray? = null
 ) {
     val snapshot = buildClientSnapshot(
         world = world,
@@ -488,13 +492,20 @@ private fun emitClientSnapshot(
     if (snapshotOutPath == null) {
         emitSnapshotLine(renderClientSnapshotJson(snapshot, pretty = !compactJson), null)
     } else {
-        emitSnapshotLine(renderSnapshotStreamRecordJson(snapshot, pretty = false), snapshotOutPath)
+        val sequence = snapshotSequence?.let(::nextSnapshotSequence) ?: 0L
+        emitSnapshotLine(renderSnapshotStreamRecordJson(snapshot, sequence = sequence, pretty = false), snapshotOutPath)
     }
 }
 
 internal fun shouldEmitSnapshotAtTick(tick: Int, every: Int): Boolean {
     if (every <= 0) return false
     return tick % every == 0
+}
+
+internal fun nextSnapshotSequence(state: LongArray): Long {
+    val value = state[0]
+    state[0] = value + 1L
+    return value
 }
 
 internal fun emitSnapshotLine(snapshotJson: String, snapshotOutPath: java.nio.file.Path?) {
