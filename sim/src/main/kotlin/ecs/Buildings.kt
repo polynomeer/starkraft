@@ -75,7 +75,7 @@ class BuildingPlacementSystem(
         val centerX = tileX.toFloat() + width.toFloat() * 0.5f
         val centerY = tileY.toFloat() + height.toFloat() * 0.5f
         val id = world.spawn(Transform(centerX, centerY), UnitTag(faction, typeId), Health(hp, hp, armor), w = null)
-        world.footprints[id] = BuildingFootprint(tileX, tileY, width, height)
+        world.footprints[id] = BuildingFootprint(tileX, tileY, width, height, clearance)
         return BuildPlacementResult(entityId = id)
     }
 

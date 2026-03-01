@@ -23,7 +23,13 @@ data class PathFollow(var nodes: IntArray, var length: Int, var index: Int = 0)
 
 data class RepathCooldown(var ticks: Int = 0)
 
-data class BuildingFootprint(val tileX: Int, val tileY: Int, val width: Int, val height: Int)
+data class BuildingFootprint(
+    val tileX: Int,
+    val tileY: Int,
+    val width: Int,
+    val height: Int,
+    val clearance: Int = 0
+)
 
 data class RallyPoint(val x: Float, val y: Float)
 

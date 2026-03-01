@@ -44,6 +44,7 @@ import starkraft.sim.client.TrainFailureCounts
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
+import starkraft.sim.ecs.BuildingFootprint
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.RallyPoint
@@ -70,6 +71,7 @@ class ClientSnapshotTest {
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
         world.orders[idB]?.items?.addLast(Order.Move(9f, 9f))
         world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
+        world.footprints[idB] = BuildingFootprint(tileX = 0, tileY = 1, width = 2, height = 3, clearance = 1)
         world.rallyPoints[idB] = RallyPoint(10f, 11f)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
@@ -95,6 +97,9 @@ class ClientSnapshotTest {
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
         assertEquals(12, entitiesById[idB]?.activeProductionRemainingTicks)
+        assertEquals(2, entitiesById[idB]?.footprintWidth)
+        assertEquals(3, entitiesById[idB]?.footprintHeight)
+        assertEquals(1, entitiesById[idB]?.placementClearance)
         assertEquals(10f, entitiesById[idB]?.rallyX)
         assertEquals(11f, entitiesById[idB]?.rallyY)
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })
