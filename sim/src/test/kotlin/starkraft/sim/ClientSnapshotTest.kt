@@ -11,6 +11,7 @@ import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
+import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -307,6 +308,24 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"selection\",\"sequence\":15,\"tick\":10,\"selectionType\":\"faction\",\"units\":[],\"faction\":2,\"typeId\":null}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders order applied stream record json`() {
+        val json =
+            renderOrderAppliedStreamRecordJson(
+                sequence = 16L,
+                tick = 11,
+                orderType = "attack",
+                units = intArrayOf(3, 4, 5),
+                target = 9,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"orderApplied\",\"sequence\":16,\"tick\":11,\"orderType\":\"attack\",\"units\":[3,4,5],\"target\":9,\"x\":null,\"y\":null}",
             json
         )
     }

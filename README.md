@@ -122,6 +122,7 @@ Other flags:
   Issued commands are also emitted as `command` records.
   Script-driven selection changes emit `selection` records before commands for that tick.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
+  Applied move and attack orders emit `orderApplied` records after selector resolution.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.

@@ -202,6 +202,18 @@ data class SelectionStreamRecord(
     val typeId: String? = null
 )
 
+@Serializable
+data class OrderAppliedStreamRecord(
+    val recordType: String = "orderApplied",
+    val sequence: Long,
+    val tick: Int,
+    val orderType: String,
+    val units: IntArray,
+    val target: Int? = null,
+    val x: Float? = null,
+    val y: Float? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -504,6 +516,29 @@ fun renderSelectionStreamRecordJson(
             units = units,
             faction = faction,
             typeId = typeId
+        )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderOrderAppliedStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    orderType: String,
+    units: IntArray,
+    target: Int? = null,
+    x: Float? = null,
+    y: Float? = null,
+    pretty: Boolean = false
+): String {
+    val record =
+        OrderAppliedStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            orderType = orderType,
+            units = units,
+            target = target,
+            x = x,
+            y = y
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

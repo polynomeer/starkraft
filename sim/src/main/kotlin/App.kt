@@ -8,6 +8,7 @@ import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
+import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -1427,6 +1428,8 @@ fun issue(
     }
     when (cmd) {
         is Command.Move -> {
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "move", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
             if (cmd.units.size == 1 && cmd.units[0] == 0) {
                 for (id in world.orders.keys) {
                     val actual = resolveLabelId(id, labelIdMap)
@@ -1440,6 +1443,8 @@ fun issue(
             }
         }
         is Command.MoveFaction -> {
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "move", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
             for ((id, tag) in world.tags) {
                 if (tag.faction == cmd.faction) {
                     world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
@@ -1447,6 +1452,8 @@ fun issue(
             }
         }
         is Command.MoveType -> {
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "move", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
             for ((id, tag) in world.tags) {
                 if (tag.typeId == cmd.typeId) {
                     world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
@@ -1456,6 +1463,8 @@ fun issue(
 
         is Command.Attack -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "attack", applied, target, null, null, snapshotOutPath, streamSequence)
             if (cmd.units.size == 1 && cmd.units[0] == 0) {
                 for (id in world.orders.keys) {
                     val actual = resolveLabelId(id, labelIdMap)
@@ -1470,6 +1479,8 @@ fun issue(
         }
         is Command.AttackFaction -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "attack", applied, target, null, null, snapshotOutPath, streamSequence)
             for ((id, tag) in world.tags) {
                 if (tag.faction == cmd.faction) {
                     world.orders[id]?.items?.addLast(Order.Attack(target))
@@ -1478,6 +1489,8 @@ fun issue(
         }
         is Command.AttackType -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "attack", applied, target, null, null, snapshotOutPath, streamSequence)
             for ((id, tag) in world.tags) {
                 if (tag.typeId == cmd.typeId) {
                     world.orders[id]?.items?.addLast(Order.Attack(target))
@@ -1532,4 +1545,68 @@ fun issue(
 private fun resolveLabelId(id: Int, labelIdMap: Map<Int, Int>): Int {
     if (id >= 0) return id
     return labelIdMap[id] ?: error("Unknown label id '$id' (spawn missing?)")
+}
+
+private fun collectDirectTargets(cmdUnits: IntArray, world: World, labelIdMap: Map<Int, Int>): IntArray {
+    if (cmdUnits.size == 1 && cmdUnits[0] == 0) {
+        val ids = IntArray(world.orders.size)
+        var count = 0
+        for (id in world.orders.keys) {
+            ids[count++] = resolveLabelId(id, labelIdMap)
+        }
+        return if (count == ids.size) ids else ids.copyOf(count)
+    }
+    val ids = IntArray(cmdUnits.size)
+    for (i in cmdUnits.indices) {
+        ids[i] = resolveLabelId(cmdUnits[i], labelIdMap)
+    }
+    return ids
+}
+
+private fun collectFactionTargets(faction: Int, world: World): IntArray {
+    val ids = IntArray(world.tags.size)
+    var count = 0
+    for ((id, tag) in world.tags) {
+        if (tag.faction == faction) {
+            ids[count++] = id
+        }
+    }
+    return if (count == ids.size) ids else ids.copyOf(count)
+}
+
+private fun collectTypeTargets(typeId: String, world: World): IntArray {
+    val ids = IntArray(world.tags.size)
+    var count = 0
+    for ((id, tag) in world.tags) {
+        if (tag.typeId == typeId) {
+            ids[count++] = id
+        }
+    }
+    return if (count == ids.size) ids else ids.copyOf(count)
+}
+
+private fun emitOrderAppliedRecord(
+    tick: Int,
+    orderType: String,
+    units: IntArray,
+    target: Int?,
+    x: Float?,
+    y: Float?,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderOrderAppliedStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            orderType = orderType,
+            units = units,
+            target = target,
+            x = x,
+            y = y,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
 }
