@@ -99,6 +99,7 @@ fun main(args: Array<String>) {
     val printEntities = hasFlag(args, "--printEntities")
     val printOrders = hasFlag(args, "--printOrders")
     val labelDump = hasFlag(args, "--labelDump")
+    val replayStats = hasFlag(args, "--replayStats")
     val replayDumpPath = parseReplayDumpPath(args)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
@@ -217,6 +218,10 @@ fun main(args: Array<String>) {
 
     if (labelDump) {
         printLabelMappings(labelMap, labelIdMap)
+    }
+
+    if (replayStats && commandsByTick.isNotEmpty()) {
+        printCommandStats(commandsByTick)
     }
 
     if (replayOutPath != null) {
@@ -602,6 +607,29 @@ private fun printLabelMappings(labelMap: Map<String, Int>, labelIdMap: Map<Int, 
     for ((labelId, id) in remaining.entries.sortedBy { it.key }) {
         println("labelId=$labelId -> $id")
     }
+}
+
+private fun printCommandStats(commandsByTick: Array<ArrayList<Command>>) {
+    var total = 0
+    var spawns = 0
+    var moves = 0
+    var attacks = 0
+    println("command stats:")
+    for (tick in commandsByTick.indices) {
+        val count = commandsByTick[tick].size
+        if (count > 0) {
+            println("tick=$tick commands=$count")
+            total += count
+        }
+        for (cmd in commandsByTick[tick]) {
+            when (cmd) {
+                is Command.Move, is Command.MoveFaction, is Command.MoveType -> moves++
+                is Command.Attack, is Command.AttackFaction, is Command.AttackType -> attacks++
+                is Command.Spawn -> spawns++
+            }
+        }
+    }
+    println("total=$total spawns=$spawns moves=$moves attacks=$attacks")
 }
 
 fun issue(
