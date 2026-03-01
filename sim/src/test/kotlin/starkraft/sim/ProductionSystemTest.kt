@@ -9,6 +9,7 @@ import starkraft.sim.ecs.BuildingPlacementSystem
 import starkraft.sim.ecs.BuildingProductionSystem
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
+import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.ResourceSystem
 import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
@@ -31,7 +32,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)
@@ -59,6 +60,10 @@ class ProductionSystemTest {
         val marines = world.tags.values.count { it.typeId == "Marine" }
         assertEquals(1, marines)
         assertEquals(0, world.productionQueues.size)
+        val marineId = world.tags.entries.first { it.value.typeId == "Marine" }.key
+        val move = world.orders[marineId]?.items?.firstOrNull() as? Order.Move
+        assertEquals(11.0f, move?.tx)
+        assertEquals(7.0f, move?.ty)
     }
 
     @Test
@@ -250,7 +255,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)

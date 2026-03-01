@@ -8,6 +8,8 @@
       "footprintHeight": 2,
       "placementClearance": 1,
       "productionQueueLimit": 3,
+      "rallyOffsetX": 4.0,
+      "rallyOffsetY": 0.0,
       "mineralCost": 100,
       "gasCost": 0
     }

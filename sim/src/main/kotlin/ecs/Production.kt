@@ -115,6 +115,7 @@ class BuildingProductionSystem(
                 weapon
             )
             world.visions[unitId] = Vision(6f)
+            enqueueRallyOrder(id, unitId)
             recordEvent(EVENT_COMPLETE, id, job.typeId, 0, unitId)
             queue.items.removeFirst()
             if (queue.items.isEmpty()) {
@@ -149,6 +150,19 @@ class BuildingProductionSystem(
             }
         }
         return null
+    }
+
+    private fun enqueueRallyOrder(buildingId: Int, unitId: Int) {
+        val buildingType = world.tags[buildingId]?.typeId ?: return
+        val rally = data.buildSpec(buildingType) ?: return
+        if (rally.rallyOffsetX == 0f && rally.rallyOffsetY == 0f) return
+        val buildingTransform = world.transforms[buildingId] ?: return
+        world.orders[unitId]?.items?.addLast(
+            Order.Move(
+                buildingTransform.x + rally.rallyOffsetX,
+                buildingTransform.y + rally.rallyOffsetY
+            )
+        )
     }
 
     private fun recordEvent(kind: Byte, buildingId: Int, typeId: String, remainingTicks: Int, spawnedId: Int) {

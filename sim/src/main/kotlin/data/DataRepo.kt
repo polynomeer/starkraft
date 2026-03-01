@@ -10,6 +10,8 @@ data class BuildSpec(
     val footprintHeight: Int,
     val placementClearance: Int,
     val productionQueueLimit: Int,
+    val rallyOffsetX: Float,
+    val rallyOffsetY: Float,
     val mineralCost: Int,
     val gasCost: Int
 )
@@ -48,6 +50,8 @@ class DataRepo(
             footprintHeight = building.footprintHeight,
             placementClearance = building.placementClearance,
             productionQueueLimit = building.productionQueueLimit,
+            rallyOffsetX = building.rallyOffsetX,
+            rallyOffsetY = building.rallyOffsetY,
             mineralCost = building.mineralCost,
             gasCost = building.gasCost
         )
