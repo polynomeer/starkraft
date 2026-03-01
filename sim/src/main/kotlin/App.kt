@@ -244,6 +244,7 @@ fun main(args: Array<String>) {
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
+        validateBuildCommands(commandsByTick, data)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
@@ -1195,6 +1196,32 @@ private fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: 
                 } catch (_: NoSuchElementException) {
                     error("Unknown unit typeId '${c.typeId}' in spawn at tick $tick")
                 }
+            }
+        }
+    }
+}
+
+internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            if (c !is Command.Build) continue
+            val spec = data.buildSpec(c.typeId)
+            val width = if (c.width > 0) c.width else (spec?.footprintWidth ?: 0)
+            val height = if (c.height > 0) c.height else (spec?.footprintHeight ?: 0)
+            val hp = if (c.hp > 0) c.hp else (spec?.hp ?: 0)
+            if (spec == null && (c.width <= 0 || c.height <= 0 || c.hp <= 0)) {
+                error(
+                    "Unknown building typeId '${c.typeId}' in build at tick $tick " +
+                        "(missing defaults for width/height/hp)"
+                )
+            }
+            if (width <= 0 || height <= 0 || hp <= 0) {
+                error(
+                    "Invalid build definition for '${c.typeId}' at tick $tick " +
+                        "(resolved width=$width height=$height hp=$hp)"
+                )
             }
         }
     }

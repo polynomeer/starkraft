@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import starkraft.sim.data.DataRepo
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Files
@@ -182,6 +183,53 @@ class AppTest {
         val resolved = resolvePathFromBase("sim/scripts/sample.script", simDir)
 
         assertEquals(script, resolved)
+    }
+
+    @Test
+    fun `script validation rejects build with unknown type and missing defaults`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Build(0, 1, "MissingDepot", 4, 4, 0, 0, 0, 0, 0, 0)
+                )
+            )
+        val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateBuildCommands(commandsByTick, data)
+            }
+
+        assertEquals(
+            "Unknown building typeId 'MissingDepot' in build at tick 0 (missing defaults for width/height/hp)",
+            ex.message
+        )
+    }
+
+    @Test
+    fun `script validation rejects build with invalid resolved footprint`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Build(0, 1, "Depot", 4, 4, 0, 0, 0, 0, 0, 0)
+                )
+            )
+        val data =
+            DataRepo(
+                """{"list":[]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Depot","hp":0,"armor":1,"footprintWidth":2,"footprintHeight":0,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+            )
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateBuildCommands(commandsByTick, data)
+            }
+
+        assertEquals(
+            "Invalid build definition for 'Depot' at tick 0 (resolved width=2 height=0 hp=0)",
+            ex.message
+        )
     }
 
     @Test

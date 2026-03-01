@@ -125,6 +125,7 @@ Other flags:
 - `--script <path>` run a command script
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script commands without running
+- Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
 - `--spawnScript <path>` run a spawn-only script before other commands
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
