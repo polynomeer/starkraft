@@ -1,5 +1,16 @@
 package starkraft.sim.ecs
 
+enum class BuildFailureReason {
+    INVALID_FOOTPRINT,
+    INVALID_PLACEMENT,
+    INSUFFICIENT_RESOURCES
+}
+
+data class BuildPlacementResult(
+    val entityId: EntityId? = null,
+    val failure: BuildFailureReason? = null
+)
+
 class BuildingPlacementSystem(
     private val world: World,
     private val map: MapGrid,
@@ -30,8 +41,26 @@ class BuildingPlacementSystem(
         mineralCost: Int = 0,
         gasCost: Int = 0
     ): EntityId? {
-        if (!canPlace(tileX, tileY, width, height)) return null
-        if (resources != null && !resources.spend(faction, mineralCost, gasCost)) return null
+        return placeResult(faction, typeId, tileX, tileY, width, height, hp, armor, mineralCost, gasCost).entityId
+    }
+
+    fun placeResult(
+        faction: Int,
+        typeId: String,
+        tileX: Int,
+        tileY: Int,
+        width: Int,
+        height: Int,
+        hp: Int,
+        armor: Int = 0,
+        mineralCost: Int = 0,
+        gasCost: Int = 0
+    ): BuildPlacementResult {
+        if (width <= 0 || height <= 0 || hp <= 0) return BuildPlacementResult(failure = BuildFailureReason.INVALID_FOOTPRINT)
+        if (!canPlace(tileX, tileY, width, height)) return BuildPlacementResult(failure = BuildFailureReason.INVALID_PLACEMENT)
+        if (resources != null && !resources.spend(faction, mineralCost, gasCost)) {
+            return BuildPlacementResult(failure = BuildFailureReason.INSUFFICIENT_RESOURCES)
+        }
         for (y in tileY until tileY + height) {
             for (x in tileX until tileX + width) {
                 occ.addStatic(x, y)
@@ -41,7 +70,7 @@ class BuildingPlacementSystem(
         val centerY = tileY.toFloat() + height.toFloat() * 0.5f
         val id = world.spawn(Transform(centerX, centerY), UnitTag(faction, typeId), Health(hp, hp, armor), w = null)
         world.footprints[id] = BuildingFootprint(tileX, tileY, width, height)
-        return id
+        return BuildPlacementResult(entityId = id)
     }
 
     fun remove(id: EntityId, reason: String = "buildingRemoved"): Boolean {

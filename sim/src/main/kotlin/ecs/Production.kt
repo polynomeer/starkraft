@@ -2,6 +2,14 @@ package starkraft.sim.ecs
 
 import starkraft.sim.data.DataRepo
 
+enum class TrainFailureReason {
+    MISSING_BUILDING,
+    INVALID_UNIT,
+    INVALID_BUILD_TIME,
+    INSUFFICIENT_RESOURCES,
+    QUEUE_FULL
+}
+
 class BuildingProductionSystem(
     private val world: World,
     private val map: MapGrid,
@@ -24,24 +32,33 @@ class BuildingProductionSystem(
     }
 
     fun enqueue(buildingId: EntityId, typeId: String, buildTicks: Int, mineralCost: Int = 0, gasCost: Int = 0): Boolean {
-        if (!world.footprints.containsKey(buildingId)) return false
-        if (buildTicks <= 0) return false
-        data.unit(typeId)
+        return enqueueResult(buildingId, typeId, buildTicks, mineralCost, gasCost) == null
+    }
+
+    fun enqueueResult(
+        buildingId: EntityId,
+        typeId: String,
+        buildTicks: Int,
+        mineralCost: Int = 0,
+        gasCost: Int = 0
+    ): TrainFailureReason? {
+        if (!world.footprints.containsKey(buildingId)) return TrainFailureReason.MISSING_BUILDING
+        if (buildTicks <= 0) return TrainFailureReason.INVALID_BUILD_TIME
+        try {
+            data.unit(typeId)
+        } catch (_: NoSuchElementException) {
+            return TrainFailureReason.INVALID_UNIT
+        }
+        val queue = world.productionQueues[buildingId]
+        if (queue != null && queue.items.size >= maxQueueSize) return TrainFailureReason.QUEUE_FULL
         if (resources != null) {
-            val faction = world.tags[buildingId]?.faction ?: return false
-            if (!resources.spend(faction, mineralCost, gasCost)) return false
+            val faction = world.tags[buildingId]?.faction ?: return TrainFailureReason.MISSING_BUILDING
+            if (!resources.spend(faction, mineralCost, gasCost)) return TrainFailureReason.INSUFFICIENT_RESOURCES
         }
-        val queue = world.productionQueues.getOrPut(buildingId) { ProductionQueue() }
-        if (queue.items.size >= maxQueueSize) {
-            if (resources != null) {
-                val faction = world.tags[buildingId]?.faction ?: return false
-                resources.refund(faction, mineralCost, gasCost)
-            }
-            return false
-        }
-        queue.items.addLast(ProductionJob(typeId, buildTicks, mineralCost, gasCost))
+        val actualQueue = queue ?: ProductionQueue().also { world.productionQueues[buildingId] = it }
+        actualQueue.items.addLast(ProductionJob(typeId, buildTicks, mineralCost, gasCost))
         recordEvent(EVENT_ENQUEUE, buildingId, typeId, buildTicks, 0)
-        return true
+        return null
     }
 
     fun cancelLast(buildingId: EntityId): Boolean {

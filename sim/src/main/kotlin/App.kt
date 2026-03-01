@@ -14,6 +14,7 @@ import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
+import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
@@ -705,6 +706,7 @@ private fun emitProductionRecord(
             when (production.eventKind(i)) {
                 BuildingProductionSystem.EVENT_ENQUEUE -> "enqueue"
                 BuildingProductionSystem.EVENT_COMPLETE -> "complete"
+                BuildingProductionSystem.EVENT_CANCEL -> "cancel"
                 else -> "progress"
             }
         val spawnedId = production.eventSpawnedId(i).takeIf { it != 0 }
@@ -723,6 +725,36 @@ private fun emitProductionRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitCommandFailureRecord(
+    tick: Int,
+    commandType: String,
+    reason: String,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?,
+    faction: Int? = null,
+    buildingId: Int? = null,
+    typeId: String? = null,
+    tileX: Int? = null,
+    tileY: Int? = null
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderCommandFailureStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            commandType = commandType,
+            reason = reason,
+            faction = faction,
+            buildingId = buildingId,
+            typeId = typeId,
+            tileX = tileX,
+            tileY = tileY,
             pretty = false
         ),
         snapshotOutPath
@@ -1021,6 +1053,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                             "buildTicks=${c.buildTicks} minerals=${c.mineralCost} gas=${c.gasCost}"
                     )
                 }
+                is Command.CancelTrain -> {
+                    println("tick=$tick cancelTrain building=${c.buildingId}")
+                }
             }
         }
     }
@@ -1087,6 +1122,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in train at tick $tick")
                     }
                 }
+                is Command.CancelTrain -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in cancelTrain at tick $tick")
+                    }
+                }
             }
         }
     }
@@ -1135,6 +1175,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.Train -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in train at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.CancelTrain -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in cancelTrain at tick $tick (spawn/build first)")
                     }
                 }
             }
@@ -1357,6 +1402,7 @@ internal fun buildCommandStats(
                 is Command.Spawn -> tickSpawns++
                 is Command.Build -> Unit
                 is Command.Train -> Unit
+                is Command.CancelTrain -> Unit
             }
         }
         if (count > 0) {
@@ -1422,6 +1468,7 @@ internal fun buildCommandStats(
                 is Command.Spawn -> spawns++
                 is Command.Build -> Unit
                 is Command.Train -> Unit
+                is Command.CancelTrain -> Unit
             }
         }
     }
@@ -1749,9 +1796,22 @@ fun issue(
             val armor = if (cmd.armor > 0) cmd.armor else (def?.armor ?: 0)
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (def?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (def?.gasCost ?: 0)
-            require(width > 0 && height > 0 && hp > 0) { "Build requires footprint and hp for type '${cmd.typeId}'" }
-            val id =
-                placement.place(
+            if (width <= 0 || height <= 0 || hp <= 0) {
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "build",
+                    reason = "invalidDefinition",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    tileX = cmd.tileX,
+                    tileY = cmd.tileY
+                )
+                return
+            }
+            val result =
+                placement.placeResult(
                     faction = cmd.faction,
                     typeId = cmd.typeId,
                     tileX = cmd.tileX,
@@ -1762,7 +1822,28 @@ fun issue(
                     armor = armor,
                     mineralCost = mineralCost,
                     gasCost = gasCost
-                ) ?: return
+                )
+            val id = result.entityId
+            if (id == null) {
+                val reason =
+                    when (result.failure) {
+                        BuildFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
+                        BuildFailureReason.INVALID_FOOTPRINT -> "invalidFootprint"
+                        else -> "invalidPlacement"
+                    }
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "build",
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    tileX = cmd.tileX,
+                    tileY = cmd.tileY
+                )
+                return
+            }
             if (cmd.label != null) {
                 labelMap[cmd.label] = id
             }
@@ -1792,14 +1873,43 @@ fun issue(
             val productionSystem = production ?: error("Train requires BuildingProductionSystem")
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
             val repo = data ?: error("Train requires DataRepo")
-            val def = repo.unit(cmd.typeId)
-            productionSystem.enqueue(
+            val def =
+                try {
+                    repo.unit(cmd.typeId)
+                } catch (_: NoSuchElementException) {
+                    null
+                }
+            val failure = productionSystem.enqueueResult(
                 buildingId = buildingId,
                 typeId = cmd.typeId,
-                buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else def.buildTicks,
-                mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else def.mineralCost,
-                gasCost = if (cmd.gasCost > 0) cmd.gasCost else def.gasCost
+                buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else (def?.buildTicks ?: 0),
+                mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (def?.mineralCost ?: 0),
+                gasCost = if (cmd.gasCost > 0) cmd.gasCost else (def?.gasCost ?: 0)
             )
+            if (failure != null) {
+                val reason =
+                    when (failure) {
+                        TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
+                        TrainFailureReason.INVALID_UNIT -> "invalidUnit"
+                        TrainFailureReason.INVALID_BUILD_TIME -> "invalidBuildTime"
+                        TrainFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
+                        TrainFailureReason.QUEUE_FULL -> "queueFull"
+                    }
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "train",
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId,
+                    typeId = cmd.typeId
+                )
+            }
+        }
+        is Command.CancelTrain -> {
+            val productionSystem = production ?: error("CancelTrain requires BuildingProductionSystem")
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            productionSystem.cancelLast(buildingId)
         }
     }
 }

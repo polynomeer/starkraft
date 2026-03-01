@@ -372,6 +372,20 @@ data class ProductionStreamRecord(
     val events: List<ProductionEventRecord>
 )
 
+@Serializable
+data class CommandFailureStreamRecord(
+    val recordType: String = "commandFailure",
+    val sequence: Long,
+    val tick: Int,
+    val commandType: String,
+    val reason: String,
+    val faction: Int? = null,
+    val buildingId: Int? = null,
+    val typeId: String? = null,
+    val tileX: Int? = null,
+    val tileY: Int? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -862,6 +876,33 @@ fun renderProductionStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ProductionStreamRecord(sequence = sequence, tick = tick, events = events)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderCommandFailureStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    commandType: String,
+    reason: String,
+    faction: Int? = null,
+    buildingId: Int? = null,
+    typeId: String? = null,
+    tileX: Int? = null,
+    tileY: Int? = null,
+    pretty: Boolean = false
+): String {
+    val record =
+        CommandFailureStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            commandType = commandType,
+            reason = reason,
+            faction = faction,
+            buildingId = buildingId,
+            typeId = typeId,
+            tileX = tileX,
+            tileY = tileY
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

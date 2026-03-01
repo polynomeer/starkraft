@@ -144,6 +144,7 @@ Other flags:
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Combat ticks also emit `damage` records for health-bar style UI updates.
   Production activity emits `production` records for enqueue/progress/complete events.
+  Invalid build/train commands emit `commandFailure` records with deterministic reasons.
   Streams end with a `sessionStats` aggregate record before `sessionEnd`.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
