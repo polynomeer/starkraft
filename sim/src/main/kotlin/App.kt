@@ -11,7 +11,11 @@ import starkraft.sim.net.Command
 import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayIO
+import starkraft.sim.replay.ReplayMetadata
 import starkraft.sim.replay.ReplayRecorder
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Random
@@ -100,6 +104,7 @@ fun main(args: Array<String>) {
     val printOrders = hasFlag(args, "--printOrders")
     val labelDump = hasFlag(args, "--labelDump")
     val replayStats = hasFlag(args, "--replayStats")
+    val replayStatsJson = hasFlag(args, "--replayStatsJson")
     val replayDumpPath = parseReplayDumpPath(args)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
@@ -225,14 +230,14 @@ fun main(args: Array<String>) {
         printLabelMappings(labelMap, labelIdMap)
     }
 
-    if (replayStats && commandsByTick.isNotEmpty()) {
-        if (replayMeta != null) {
-            println(
-                "replay metadata: schema=${replayMeta.schema} seed=${replayMeta.seed} " +
-                    "replayHash=${replayMeta.replayHash}"
-            )
+    if ((replayStats || replayStatsJson) && commandsByTick.isNotEmpty()) {
+        val stats = buildCommandStats(commandsByTick, replayMeta)
+        if (replayStats) {
+            printCommandStats(stats)
         }
-        printCommandStats(commandsByTick)
+        if (replayStatsJson) {
+            println(statsJson.encodeToString(stats))
+        }
     }
 
     if (replayOutPath != null) {
@@ -620,16 +625,53 @@ private fun printLabelMappings(labelMap: Map<String, Int>, labelIdMap: Map<Int, 
     }
 }
 
-private fun printCommandStats(commandsByTick: Array<ArrayList<Command>>) {
+private val statsJson = Json {
+    prettyPrint = true
+    encodeDefaults = true
+}
+
+@Serializable
+private data class CommandStats(
+    val metadata: CommandStatsMetadata? = null,
+    val ticks: List<CommandTickCount>,
+    val totals: CommandTotals
+)
+
+@Serializable
+private data class CommandStatsMetadata(
+    val schema: Int,
+    val replayHash: Long? = null,
+    val seed: Long? = null,
+    val legacy: Boolean
+)
+
+@Serializable
+private data class CommandTickCount(
+    val tick: Int,
+    val commands: Int
+)
+
+@Serializable
+private data class CommandTotals(
+    val total: Int,
+    val spawns: Int,
+    val moves: Int,
+    val attacks: Int
+)
+
+private fun buildCommandStats(
+    commandsByTick: Array<ArrayList<Command>>,
+    replayMeta: ReplayMetadata?
+): CommandStats {
     var total = 0
     var spawns = 0
     var moves = 0
     var attacks = 0
-    println("command stats:")
+    val ticks = ArrayList<CommandTickCount>()
     for (tick in commandsByTick.indices) {
         val count = commandsByTick[tick].size
         if (count > 0) {
-            println("tick=$tick commands=$count")
+            ticks.add(CommandTickCount(tick, count))
             total += count
         }
         for (cmd in commandsByTick[tick]) {
@@ -640,7 +682,34 @@ private fun printCommandStats(commandsByTick: Array<ArrayList<Command>>) {
             }
         }
     }
-    println("total=$total spawns=$spawns moves=$moves attacks=$attacks")
+    return CommandStats(
+        metadata =
+            replayMeta?.let {
+                CommandStatsMetadata(
+                    schema = it.schema,
+                    replayHash = it.replayHash,
+                    seed = it.seed,
+                    legacy = it.legacy
+                )
+            },
+        ticks = ticks,
+        totals = CommandTotals(total, spawns, moves, attacks)
+    )
+}
+
+private fun printCommandStats(stats: CommandStats) {
+    println("command stats:")
+    val meta = stats.metadata
+    if (meta != null) {
+        println("replay metadata: schema=${meta.schema} seed=${meta.seed} replayHash=${meta.replayHash}")
+    }
+    for (tick in stats.ticks) {
+        println("tick=${tick.tick} commands=${tick.commands}")
+    }
+    println(
+        "total=${stats.totals.total} spawns=${stats.totals.spawns} " +
+            "moves=${stats.totals.moves} attacks=${stats.totals.attacks}"
+    )
 }
 
 fun issue(
