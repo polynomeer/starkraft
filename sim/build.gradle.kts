@@ -43,3 +43,10 @@ tasks.register<JavaExec>("pathfindingBenchmark") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.bench.PathfindingMicroBenchmark")
 }
+
+tasks.register<JavaExec>("consumeSnapshotStream") {
+    group = "application"
+    description = "Consume a snapshot NDJSON stream and print a summary"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.client.SnapshotStreamConsumerKt")
+}

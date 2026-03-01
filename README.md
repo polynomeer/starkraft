@@ -137,6 +137,9 @@ Other flags:
   Snapshot cadence also emits compact `tickSummary` records for fast per-tick client consumption.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
+- Example consumer:
+  `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft.ndjson"`
+  This reads the NDJSON stream and prints record counts plus session/hash metadata.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
