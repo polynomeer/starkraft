@@ -117,7 +117,7 @@ Other flags:
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
-- `--snapshotOut <path>` write snapshot JSON lines to an NDJSON file instead of stdout
+- `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes

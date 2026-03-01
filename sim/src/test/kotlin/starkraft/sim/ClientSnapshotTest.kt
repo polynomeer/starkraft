@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
@@ -93,9 +94,36 @@ class ClientSnapshotTest {
         val path = Files.createTempFile("starkraft-snapshot", ".ndjson")
         Files.deleteIfExists(path)
 
-        emitSnapshotLine("{\"tick\":1}", path)
-        emitSnapshotLine("{\"tick\":2}", path)
+        emitSnapshotLine("{\"recordType\":\"snapshot\",\"tick\":1,\"snapshot\":{\"tick\":1}}", path)
+        emitSnapshotLine("{\"recordType\":\"snapshot\",\"tick\":2,\"snapshot\":{\"tick\":2}}", path)
 
-        assertEquals("{\"tick\":1}\n{\"tick\":2}\n", Files.readString(path))
+        assertEquals(
+            "{\"recordType\":\"snapshot\",\"tick\":1,\"snapshot\":{\"tick\":1}}\n" +
+                "{\"recordType\":\"snapshot\",\"tick\":2,\"snapshot\":{\"tick\":2}}\n",
+            Files.readString(path)
+        )
+    }
+
+    @Test
+    fun `renders snapshot stream record json`() {
+        val world = World()
+        val map = MapGrid(8, 8)
+        val fog = FogGrid(8, 8, 1f)
+        world.spawn(Transform(1f, 1f), UnitTag(1, "Marine"), Health(45, 45), WeaponRef("Gauss"))
+
+        val snapshot = buildClientSnapshot(
+            world = world,
+            map = map,
+            tick = 3,
+            mapId = "demo-map",
+            buildVersion = "test-build",
+            seed = null,
+            fogByFaction = mapOf(1 to fog)
+        )
+
+        val json = renderSnapshotStreamRecordJson(snapshot, pretty = false)
+
+        assertTrue(json.startsWith("{\"recordType\":\"snapshot\",\"tick\":3,"))
+        assertTrue(json.contains("\"snapshot\":{\"tick\":3"))
     }
 }

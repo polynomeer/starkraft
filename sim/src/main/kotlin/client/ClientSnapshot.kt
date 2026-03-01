@@ -55,6 +55,13 @@ data class EntitySnapshot(
     val pathRemainingNodes: Int = 0
 )
 
+@Serializable
+data class SnapshotStreamRecord(
+    val recordType: String = "snapshot",
+    val tick: Int,
+    val snapshot: ClientSnapshot
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -114,6 +121,11 @@ fun buildClientSnapshot(
 
 fun renderClientSnapshotJson(snapshot: ClientSnapshot, pretty: Boolean = true): String {
     return if (pretty) snapshotJsonPretty.encodeToString(snapshot) else snapshotJsonCompact.encodeToString(snapshot)
+}
+
+fun renderSnapshotStreamRecordJson(snapshot: ClientSnapshot, pretty: Boolean = false): String {
+    val record = SnapshotStreamRecord(tick = snapshot.tick, snapshot = snapshot)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
 private fun Order.toSnapshotLabel(): String {

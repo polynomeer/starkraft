@@ -2,6 +2,7 @@ package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
@@ -455,7 +456,11 @@ private fun emitClientSnapshot(
         seed = seed,
         fogByFaction = mapOf(1 to fog1, 2 to fog2)
     )
-    emitSnapshotLine(renderClientSnapshotJson(snapshot, pretty = !compactJson), snapshotOutPath)
+    if (snapshotOutPath == null) {
+        emitSnapshotLine(renderClientSnapshotJson(snapshot, pretty = !compactJson), null)
+    } else {
+        emitSnapshotLine(renderSnapshotStreamRecordJson(snapshot, pretty = false), snapshotOutPath)
+    }
 }
 
 internal fun shouldEmitSnapshotAtTick(tick: Int, every: Int): Boolean {
