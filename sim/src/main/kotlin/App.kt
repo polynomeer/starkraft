@@ -1,5 +1,7 @@
 package starkraft.sim
 
+import starkraft.sim.client.buildClientSnapshot
+import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
@@ -110,6 +112,7 @@ fun main(args: Array<String>) {
     val replayStats = hasFlag(args, "--replayStats")
     val replayStatsJson = hasFlag(args, "--replayStatsJson")
     val replayMetaJson = hasFlag(args, "--replayMetaJson")
+    val snapshotJson = hasFlag(args, "--snapshotJson")
     val compactJson = hasFlag(args, "--compactJson")
     val replayDumpPath = parseReplayDumpPath(args)
     val resolvedReplayPath = replayPath?.let(::resolvePath)
@@ -266,6 +269,19 @@ fun main(args: Array<String>) {
         if (replayStatsJson) {
             println(renderCommandStatsJson(stats, pretty = !compactJson))
         }
+    }
+
+    if (snapshotJson) {
+        val snapshot = buildClientSnapshot(
+            world = world,
+            map = map,
+            tick = tick,
+            mapId = DEMO_MAP_ID,
+            buildVersion = BUILD_VERSION,
+            seed = seed,
+            fogByFaction = mapOf(1 to fog1, 2 to fog2)
+        )
+        println(renderClientSnapshotJson(snapshot, pretty = !compactJson))
     }
 
     if (replayOutPath != null) {
