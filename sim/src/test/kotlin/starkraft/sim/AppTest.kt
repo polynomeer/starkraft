@@ -12,14 +12,16 @@ class AppTest {
     fun `warns on replay compatibility mismatch`() {
         val warnings =
             replayCompatibilityWarnings(
-                ReplayMetadata(
-                    schema = 1,
-                    replayHash = 10L,
-                    seed = 5L,
-                    mapId = "other-map",
-                    buildVersion = "0.9.0",
-                    legacy = false
-                )
+                    ReplayMetadata(
+                        schema = 1,
+                        replayHash = 10L,
+                        seed = 5L,
+                        mapId = "other-map",
+                        buildVersion = "0.9.0",
+                        eventCount = 2,
+                        fileSizeBytes = 128,
+                        legacy = false
+                    )
             )
 
         assertEquals(
@@ -36,27 +38,31 @@ class AppTest {
         assertEquals(
             emptyList<String>(),
             replayCompatibilityWarnings(
-                ReplayMetadata(
-                    schema = 1,
-                    replayHash = 10L,
-                    seed = 5L,
-                    mapId = "demo-32x32-obstacles",
-                    buildVersion = "1.0-SNAPSHOT",
-                    legacy = false
-                )
+                    ReplayMetadata(
+                        schema = 1,
+                        replayHash = 10L,
+                        seed = 5L,
+                        mapId = "demo-32x32-obstacles",
+                        buildVersion = "1.0-SNAPSHOT",
+                        eventCount = 2,
+                        fileSizeBytes = 128,
+                        legacy = false
+                    )
             )
         )
         assertEquals(
             emptyList<String>(),
             replayCompatibilityWarnings(
-                ReplayMetadata(
-                    schema = 0,
-                    replayHash = null,
-                    seed = null,
-                    mapId = null,
-                    buildVersion = "0.9.0",
-                    legacy = true
-                )
+                    ReplayMetadata(
+                        schema = 0,
+                        replayHash = null,
+                        seed = null,
+                        mapId = null,
+                        buildVersion = "0.9.0",
+                        eventCount = 0,
+                        fileSizeBytes = 0,
+                        legacy = true
+                    )
             )
         )
     }
@@ -72,6 +78,8 @@ class AppTest {
                         seed = 5L,
                         mapId = "other-map",
                         buildVersion = "0.9.0",
+                        eventCount = 2,
+                        fileSizeBytes = 128,
                         legacy = false
                     ),
                     strict = true
@@ -150,6 +158,8 @@ class AppTest {
                         seed = 42L,
                         mapId = "other-map",
                         buildVersion = "0.9.0",
+                        eventCount = 5,
+                        fileSizeBytes = 256,
                         legacy = false
                     ),
                 replayPath = "/tmp/demo.replay.json",
@@ -171,6 +181,8 @@ class AppTest {
         assertEquals(42L, report.metadata?.seed)
         assertEquals("other-map", report.metadata?.mapId)
         assertEquals("0.9.0", report.metadata?.buildVersion)
+        assertEquals(5, report.metadata?.eventCount)
+        assertEquals(256L, report.metadata?.fileSizeBytes)
         assertTrue(report.warnings.isNotEmpty())
     }
 
@@ -185,6 +197,8 @@ class AppTest {
                         seed = 42L,
                         mapId = "demo-32x32-obstacles",
                         buildVersion = "1.0-SNAPSHOT",
+                        eventCount = 1,
+                        fileSizeBytes = 64,
                         legacy = false
                     )
             )
@@ -196,6 +210,8 @@ class AppTest {
         assertEquals(false, report.strictReplayMeta)
         assertEquals(false, report.strictReplayHash)
         assertEquals(1, report.metadata?.schema)
+        assertEquals(1, report.metadata?.eventCount)
+        assertEquals(64L, report.metadata?.fileSizeBytes)
         assertEquals(emptyList<String>(), report.warnings)
     }
 }

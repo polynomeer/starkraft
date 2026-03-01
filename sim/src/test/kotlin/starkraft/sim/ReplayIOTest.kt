@@ -57,6 +57,8 @@ class ReplayIOTest {
         assertEquals(77L, meta.seed)
         assertEquals("demo-map", meta.mapId)
         assertEquals("test-build", meta.buildVersion)
+        assertEquals(1, meta.eventCount)
+        assertTrue(meta.fileSizeBytes > 0)
         assertTrue(meta.replayHash != null)
         assertEquals(false, meta.legacy)
     }

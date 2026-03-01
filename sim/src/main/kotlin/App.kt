@@ -683,6 +683,8 @@ internal data class CommandStatsMetadata(
     val seed: Long? = null,
     val mapId: String? = null,
     val buildVersion: String? = null,
+    val eventCount: Int = 0,
+    val fileSizeBytes: Long = 0,
     val legacy: Boolean
 )
 
@@ -861,6 +863,8 @@ internal fun buildCommandStats(
                     seed = it.seed,
                     mapId = it.mapId,
                     buildVersion = it.buildVersion,
+                    eventCount = it.eventCount,
+                    fileSizeBytes = it.fileSizeBytes,
                     legacy = it.legacy
                 )
             },
@@ -910,6 +914,8 @@ internal fun buildReplayMetaReport(
                     seed = it.seed,
                     mapId = it.mapId,
                     buildVersion = it.buildVersion,
+                    eventCount = it.eventCount,
+                    fileSizeBytes = it.fileSizeBytes,
                     legacy = it.legacy
                 )
             },
@@ -927,7 +933,7 @@ private fun printCommandStats(stats: CommandStats) {
         println(
             "replay metadata: schema=${meta.schema} seed=${meta.seed} " +
                 "mapId=${meta.mapId} buildVersion=${meta.buildVersion} " +
-                "replayHash=${meta.replayHash}"
+                "replayHash=${meta.replayHash} eventCount=${meta.eventCount} fileSizeBytes=${meta.fileSizeBytes}"
         )
     }
     for (tick in stats.ticks) {

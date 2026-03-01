@@ -61,13 +61,17 @@ object ReplayIO {
 
     fun inspect(path: Path): ReplayMetadata {
         val payload = Files.readString(path)
+        val fileSizeBytes = Files.size(path)
         if (payload.trimStart().startsWith("[")) {
+            val events = json.decodeFromString<List<ReplayEvent>>(payload)
             return ReplayMetadata(
                 schema = 0,
                 replayHash = null,
                 seed = null,
                 mapId = null,
                 buildVersion = null,
+                eventCount = events.size,
+                fileSizeBytes = fileSizeBytes,
                 legacy = true
             )
         }
@@ -78,6 +82,8 @@ object ReplayIO {
             seed = container.seed,
             mapId = container.mapId,
             buildVersion = container.buildVersion,
+            eventCount = container.events.size,
+            fileSizeBytes = fileSizeBytes,
             legacy = container.schema == 0
         )
     }
@@ -89,6 +95,8 @@ data class ReplayMetadata(
     val seed: Long?,
     val mapId: String?,
     val buildVersion: String?,
+    val eventCount: Int,
+    val fileSizeBytes: Long,
     val legacy: Boolean
 )
 
