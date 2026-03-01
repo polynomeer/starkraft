@@ -97,6 +97,7 @@ fun main(args: Array<String>) {
     val spawnScriptPath = parseSpawnScriptPath(args)
     val recordPath = parseRecordPath(args)
     val replayOutPath = parseReplayOutPath(args)
+    val snapshotOutPath = parseSnapshotOutPath(args)
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
     val snapshotEvery = parseSnapshotEvery(args)
@@ -117,8 +118,12 @@ fun main(args: Array<String>) {
     val compactJson = hasFlag(args, "--compactJson")
     val replayDumpPath = parseReplayDumpPath(args)
     val resolvedReplayPath = replayPath?.let(::resolvePath)
+    val resolvedSnapshotOutPath = snapshotOutPath?.let(::resolvePath)
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
+    if (resolvedSnapshotOutPath != null) {
+        Files.deleteIfExists(resolvedSnapshotOutPath)
+    }
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
@@ -210,7 +215,7 @@ fun main(args: Array<String>) {
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
-            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson)
+            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath)
         }
 
         if (tick % 25 == 0) {
@@ -277,7 +282,7 @@ fun main(args: Array<String>) {
     }
 
     if (snapshotJson) {
-        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson)
+        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath)
     }
 
     if (replayOutPath != null) {
@@ -321,6 +326,17 @@ private fun parseReplayOutPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--replayOut" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--replayOut=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseSnapshotOutPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--snapshotOut" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--snapshotOut=")) return a.substringAfter("=")
         i++
     }
     return null
@@ -427,7 +443,8 @@ private fun emitClientSnapshot(
     fog2: FogGrid,
     tick: Int,
     seed: Long?,
-    compactJson: Boolean
+    compactJson: Boolean,
+    snapshotOutPath: java.nio.file.Path? = null
 ) {
     val snapshot = buildClientSnapshot(
         world = world,
@@ -438,12 +455,27 @@ private fun emitClientSnapshot(
         seed = seed,
         fogByFaction = mapOf(1 to fog1, 2 to fog2)
     )
-    println(renderClientSnapshotJson(snapshot, pretty = !compactJson))
+    emitSnapshotLine(renderClientSnapshotJson(snapshot, pretty = !compactJson), snapshotOutPath)
 }
 
 internal fun shouldEmitSnapshotAtTick(tick: Int, every: Int): Boolean {
     if (every <= 0) return false
     return tick % every == 0
+}
+
+internal fun emitSnapshotLine(snapshotJson: String, snapshotOutPath: java.nio.file.Path?) {
+    if (snapshotOutPath == null) {
+        println(snapshotJson)
+        return
+    }
+    val parent = snapshotOutPath.parent
+    if (parent != null) Files.createDirectories(parent)
+    Files.writeString(
+        snapshotOutPath,
+        snapshotJson + "\n",
+        java.nio.file.StandardOpenOption.CREATE,
+        java.nio.file.StandardOpenOption.APPEND
+    )
 }
 
 private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {

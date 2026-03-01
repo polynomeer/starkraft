@@ -14,6 +14,7 @@ import starkraft.sim.ecs.Vision
 import starkraft.sim.ecs.WeaponRef
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.services.FogGrid
+import java.nio.file.Files
 
 class ClientSnapshotTest {
     @Test
@@ -85,5 +86,16 @@ class ClientSnapshotTest {
         assertEquals(true, shouldEmitSnapshotAtTick(5, 5))
         assertEquals(false, shouldEmitSnapshotAtTick(6, 5))
         assertEquals(false, shouldEmitSnapshotAtTick(5, 0))
+    }
+
+    @Test
+    fun `writes snapshot lines to ndjson file`() {
+        val path = Files.createTempFile("starkraft-snapshot", ".ndjson")
+        Files.deleteIfExists(path)
+
+        emitSnapshotLine("{\"tick\":1}", path)
+        emitSnapshotLine("{\"tick\":2}", path)
+
+        assertEquals("{\"tick\":1}\n{\"tick\":2}\n", Files.readString(path))
     }
 }
