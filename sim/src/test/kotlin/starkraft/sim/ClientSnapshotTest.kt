@@ -77,4 +77,13 @@ class ClientSnapshotTest {
         assertTrue(json.startsWith("{\"tick\":1,"))
         assertTrue(json.contains("\"entities\":[{\"id\":"))
     }
+
+    @Test
+    fun `emits snapshot ticks on configured cadence`() {
+        assertEquals(true, shouldEmitSnapshotAtTick(0, 5))
+        assertEquals(false, shouldEmitSnapshotAtTick(1, 5))
+        assertEquals(true, shouldEmitSnapshotAtTick(5, 5))
+        assertEquals(false, shouldEmitSnapshotAtTick(6, 5))
+        assertEquals(false, shouldEmitSnapshotAtTick(5, 0))
+    }
 }

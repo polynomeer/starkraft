@@ -99,6 +99,7 @@ fun main(args: Array<String>) {
     val replayOutPath = parseReplayOutPath(args)
     val tickLimit = parseTickLimit(args)
     val replayTicks = parseReplayTicks(args)
+    val snapshotEvery = parseSnapshotEvery(args)
     val noSleep = hasFlag(args, "--noSleep")
     val scriptValidate = hasFlag(args, "--scriptValidate")
     val scriptDryRun = hasFlag(args, "--scriptDryRun")
@@ -208,6 +209,10 @@ fun main(args: Array<String>) {
         combat.tick()
         visionSys.tick()
 
+        if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
+            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson)
+        }
+
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
@@ -272,16 +277,7 @@ fun main(args: Array<String>) {
     }
 
     if (snapshotJson) {
-        val snapshot = buildClientSnapshot(
-            world = world,
-            map = map,
-            tick = tick,
-            mapId = DEMO_MAP_ID,
-            buildVersion = BUILD_VERSION,
-            seed = seed,
-            fogByFaction = mapOf(1 to fog1, 2 to fog2)
-        )
-        println(renderClientSnapshotJson(snapshot, pretty = !compactJson))
+        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson)
     }
 
     if (replayOutPath != null) {
@@ -374,6 +370,17 @@ private fun parseTickLimit(args: Array<String>): Int? {
     return null
 }
 
+private fun parseSnapshotEvery(args: Array<String>): Int? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--snapshotEvery" && i + 1 < args.size) return args[i + 1].toInt()
+        if (a.startsWith("--snapshotEvery=")) return a.substringAfter("=").toInt()
+        i++
+    }
+    return null
+}
+
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
 
@@ -411,6 +418,32 @@ private fun loadReplayCommands(pathStr: String, strictHash: Boolean): Array<Arra
         byTick[c.tick].add(c)
     }
     return byTick
+}
+
+private fun emitClientSnapshot(
+    world: World,
+    map: MapGrid,
+    fog1: FogGrid,
+    fog2: FogGrid,
+    tick: Int,
+    seed: Long?,
+    compactJson: Boolean
+) {
+    val snapshot = buildClientSnapshot(
+        world = world,
+        map = map,
+        tick = tick,
+        mapId = DEMO_MAP_ID,
+        buildVersion = BUILD_VERSION,
+        seed = seed,
+        fogByFaction = mapOf(1 to fog1, 2 to fog2)
+    )
+    println(renderClientSnapshotJson(snapshot, pretty = !compactJson))
+}
+
+internal fun shouldEmitSnapshotAtTick(tick: Int, every: Int): Boolean {
+    if (every <= 0) return false
+    return tick % every == 0
 }
 
 private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
