@@ -58,11 +58,17 @@ class PathfindingSystem(
     private val queue: PathRequestQueue,
     private val nodesBudgetPerTick: Int
 ) {
+    private var assignedEntityIds = IntArray(16)
+    private var assignedLengths = IntArray(16)
+    private var assignedGoalXs = IntArray(16)
+    private var assignedGoalYs = IntArray(16)
     var lastTickRequests: Int = 0
         private set
     var lastTickSolved: Int = 0
         private set
     var lastTickAvgPathLen: Float = 0f
+        private set
+    var lastTickAssignedCount: Int = 0
         private set
 
     fun tick() {
@@ -70,6 +76,7 @@ class PathfindingSystem(
         var newCount = 0
         var solved = 0
         var totalLen = 0
+        lastTickAssignedCount = 0
         lastTickRequests = queue.count
 
         for (i in 0 until queue.count) {
@@ -94,6 +101,7 @@ class PathfindingSystem(
                 val old = world.pathFollows[id]
                 if (old != null) pool.recycle(old.nodes)
                 world.pathFollows[id] = PathFollow(out, len, 0)
+                recordAssigned(id, len, gx, gy)
                 solved++
                 totalLen += len
             } else {
@@ -106,5 +114,29 @@ class PathfindingSystem(
         queue.reset(newCount)
         lastTickSolved = solved
         lastTickAvgPathLen = if (solved > 0) totalLen.toFloat() / solved.toFloat() else 0f
+    }
+
+    fun assignedEntityId(index: Int): Int = assignedEntityIds[index]
+
+    fun assignedLength(index: Int): Int = assignedLengths[index]
+
+    fun assignedGoalX(index: Int): Int = assignedGoalXs[index]
+
+    fun assignedGoalY(index: Int): Int = assignedGoalYs[index]
+
+    private fun recordAssigned(entityId: Int, length: Int, goalX: Int, goalY: Int) {
+        val index = lastTickAssignedCount
+        if (index >= assignedEntityIds.size) {
+            val nextSize = assignedEntityIds.size * 2
+            assignedEntityIds = assignedEntityIds.copyOf(nextSize)
+            assignedLengths = assignedLengths.copyOf(nextSize)
+            assignedGoalXs = assignedGoalXs.copyOf(nextSize)
+            assignedGoalYs = assignedGoalYs.copyOf(nextSize)
+        }
+        assignedEntityIds[index] = entityId
+        assignedLengths[index] = length
+        assignedGoalXs[index] = goalX
+        assignedGoalYs[index] = goalY
+        lastTickAssignedCount = index + 1
     }
 }

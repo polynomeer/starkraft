@@ -4,6 +4,7 @@ import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
 import starkraft.sim.client.OrderQueueEntityRecord
+import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
@@ -11,6 +12,7 @@ import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
 import starkraft.sim.client.renderOrderQueueStreamRecordJson
+import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -248,6 +250,7 @@ fun main(args: Array<String>) {
 
         occupancy.tick()
         pathing.tick()
+        emitPathAssignedRecord(pathing, tick, resolvedSnapshotOutPath, streamSequence)
         movement.tick()
         combat.tick()
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
@@ -1638,6 +1641,35 @@ private fun emitOrderQueueRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             orderType = orderType,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitPathAssignedRecord(
+    pathing: PathfindingSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || pathing.lastTickAssignedCount == 0) return
+    val entities = ArrayList<PathAssignedEventRecord>(pathing.lastTickAssignedCount)
+    for (i in 0 until pathing.lastTickAssignedCount) {
+        entities.add(
+            PathAssignedEventRecord(
+                entityId = pathing.assignedEntityId(i),
+                pathLength = pathing.assignedLength(i),
+                goalX = pathing.assignedGoalX(i),
+                goalY = pathing.assignedGoalY(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderPathAssignedStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
             entities = entities,
             pretty = false
         ),

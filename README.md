@@ -124,6 +124,7 @@ Other flags:
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Applied move and attack orders emit `orderApplied` records after selector resolution.
   Those order applications also emit `orderQueue` records with the resulting queue sizes.
+  Successful path solves emit `pathAssigned` records when units receive new waypoint lists.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
