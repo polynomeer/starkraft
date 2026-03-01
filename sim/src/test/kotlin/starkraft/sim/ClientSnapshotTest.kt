@@ -231,7 +231,7 @@ class ClientSnapshotTest {
             renderMetricsStreamRecordJson(
                 sequence = 10L,
                 tick = 4,
-                factions = listOf(MetricsFactionRecord(1, 5, 20), MetricsFactionRecord(2, 4, 18)),
+                factions = listOf(MetricsFactionRecord(1, 5, 20, 150, 25), MetricsFactionRecord(2, 4, 18, 80, 10)),
                 pathRequests = 3,
                 pathSolved = 2,
                 pathQueueSize = 7,
@@ -243,7 +243,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"metrics\",\"sequence\":10,\"tick\":4,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20},{\"faction\":2,\"alive\":4,\"visibleTiles\":18}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
+            "{\"recordType\":\"metrics\",\"sequence\":10,\"tick\":4,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20,\"minerals\":150,\"gas\":25},{\"faction\":2,\"alive\":4,\"visibleTiles\":18,\"minerals\":80,\"gas\":10}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
             json
         )
     }

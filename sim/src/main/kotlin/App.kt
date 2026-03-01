@@ -749,8 +749,20 @@ private fun emitMetricsRecord(
             tick = tick,
             factions =
                 listOf(
-                    starkraft.sim.client.MetricsFactionRecord(1, alive1, fog1.visibleCount()),
-                    starkraft.sim.client.MetricsFactionRecord(2, alive2, fog2.visibleCount())
+                    starkraft.sim.client.MetricsFactionRecord(
+                        1,
+                        alive1,
+                        fog1.visibleCount(),
+                        world.stockpiles[1]?.minerals ?: 0,
+                        world.stockpiles[1]?.gas ?: 0
+                    ),
+                    starkraft.sim.client.MetricsFactionRecord(
+                        2,
+                        alive2,
+                        fog2.visibleCount(),
+                        world.stockpiles[2]?.minerals ?: 0,
+                        world.stockpiles[2]?.gas ?: 0
+                    )
                 ),
             pathRequests = pathing.lastTickRequests,
             pathSolved = pathing.lastTickSolved,

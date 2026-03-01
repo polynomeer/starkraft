@@ -113,7 +113,9 @@ data class CommandStreamRecord(
 data class MetricsFactionRecord(
     val faction: Int,
     val alive: Int,
-    val visibleTiles: Int
+    val visibleTiles: Int,
+    val minerals: Int,
+    val gas: Int
 )
 
 @Serializable
