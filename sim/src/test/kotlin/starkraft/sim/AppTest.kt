@@ -1,6 +1,7 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import starkraft.sim.net.Command
@@ -116,5 +117,27 @@ class AppTest {
         assertEquals(2, stats.totals.selectors.direct)
         assertEquals(1, stats.totals.selectors.faction)
         assertEquals(1, stats.totals.selectors.type)
+    }
+
+    @Test
+    fun `builds replay metadata report with warnings`() {
+        val report =
+            buildReplayMetaReport(
+                ReplayMetadata(
+                    schema = 1,
+                    replayHash = 12L,
+                    seed = 42L,
+                    mapId = "other-map",
+                    buildVersion = "0.9.0",
+                    legacy = false
+                )
+            )
+
+        assertEquals(1, report.metadata?.schema)
+        assertEquals(12L, report.metadata?.replayHash)
+        assertEquals(42L, report.metadata?.seed)
+        assertEquals("other-map", report.metadata?.mapId)
+        assertEquals("0.9.0", report.metadata?.buildVersion)
+        assertTrue(report.warnings.isNotEmpty())
     }
 }

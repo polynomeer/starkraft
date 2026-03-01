@@ -109,6 +109,7 @@ fun main(args: Array<String>) {
     val labelDump = hasFlag(args, "--labelDump")
     val replayStats = hasFlag(args, "--replayStats")
     val replayStatsJson = hasFlag(args, "--replayStatsJson")
+    val replayMetaJson = hasFlag(args, "--replayMetaJson")
     val replayDumpPath = parseReplayDumpPath(args)
     val replayMeta =
         if (replayPath != null) ReplayIO.inspect(resolvePath(replayPath)) else null
@@ -143,6 +144,10 @@ fun main(args: Array<String>) {
                 "seed=${replayMeta?.seed} mapId=${replayMeta?.mapId} " +
                 "buildVersion=${replayMeta?.buildVersion} replayHash=${replayMeta?.replayHash}"
         )
+        return
+    }
+    if (replayMetaJson && replayPath != null) {
+        println(statsJson.encodeToString(buildReplayMetaReport(replayMeta)))
         return
     }
 
@@ -647,6 +652,12 @@ internal data class CommandStats(
 )
 
 @Serializable
+internal data class ReplayMetaReport(
+    val metadata: CommandStatsMetadata? = null,
+    val warnings: List<String> = emptyList()
+)
+
+@Serializable
 internal data class CommandStatsMetadata(
     val schema: Int,
     val replayHash: Long? = null,
@@ -747,6 +758,23 @@ internal fun buildCommandStats(
             attacks = attacks,
             selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type)
         )
+    )
+}
+
+internal fun buildReplayMetaReport(replayMeta: ReplayMetadata?): ReplayMetaReport {
+    return ReplayMetaReport(
+        metadata =
+            replayMeta?.let {
+                CommandStatsMetadata(
+                    schema = it.schema,
+                    replayHash = it.replayHash,
+                    seed = it.seed,
+                    mapId = it.mapId,
+                    buildVersion = it.buildVersion,
+                    legacy = it.legacy
+                )
+            },
+        warnings = replayCompatibilityWarnings(replayMeta)
     )
 }
 
