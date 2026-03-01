@@ -14,6 +14,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
@@ -236,6 +237,34 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"despawn\",\"sequence\":12,\"tick\":7,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders tick summary stream record json`() {
+        val json =
+            renderTickSummaryStreamRecordJson(
+                sequence = 13L,
+                tick = 8,
+                aliveTotal = 7,
+                visibleTilesFaction1 = 20,
+                visibleTilesFaction2 = 18,
+                pathRequests = 3,
+                pathSolved = 2,
+                pathQueueSize = 6,
+                avgPathLength = 5.5f,
+                replans = 2,
+                replansBlocked = 1,
+                replansStuck = 1,
+                attacks = 4,
+                kills = 1,
+                despawns = 1,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1}",
             json
         )
     }

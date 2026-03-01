@@ -123,6 +123,7 @@ Other flags:
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
+  Snapshot cadence also emits compact `tickSummary` records for fast per-tick client consumption.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run

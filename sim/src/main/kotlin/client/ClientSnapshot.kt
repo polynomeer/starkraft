@@ -156,6 +156,26 @@ data class DespawnStreamRecord(
     val entities: List<DespawnEventRecord>
 )
 
+@Serializable
+data class TickSummaryStreamRecord(
+    val recordType: String = "tickSummary",
+    val sequence: Long,
+    val tick: Int,
+    val aliveTotal: Int,
+    val visibleTilesFaction1: Int,
+    val visibleTilesFaction2: Int,
+    val pathRequests: Int,
+    val pathSolved: Int,
+    val pathQueueSize: Int,
+    val avgPathLength: Float,
+    val replans: Int,
+    val replansBlocked: Int,
+    val replansStuck: Int,
+    val attacks: Int,
+    val kills: Int,
+    val despawns: Int
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -370,6 +390,45 @@ fun renderDespawnStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = DespawnStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderTickSummaryStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    aliveTotal: Int,
+    visibleTilesFaction1: Int,
+    visibleTilesFaction2: Int,
+    pathRequests: Int,
+    pathSolved: Int,
+    pathQueueSize: Int,
+    avgPathLength: Float,
+    replans: Int,
+    replansBlocked: Int,
+    replansStuck: Int,
+    attacks: Int,
+    kills: Int,
+    despawns: Int,
+    pretty: Boolean = false
+): String {
+    val record =
+        TickSummaryStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            aliveTotal = aliveTotal,
+            visibleTilesFaction1 = visibleTilesFaction1,
+            visibleTilesFaction2 = visibleTilesFaction2,
+            pathRequests = pathRequests,
+            pathSolved = pathSolved,
+            pathQueueSize = pathQueueSize,
+            avgPathLength = avgPathLength,
+            replans = replans,
+            replansBlocked = replansBlocked,
+            replansStuck = replansStuck,
+            attacks = attacks,
+            kills = kills,
+            despawns = despawns
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

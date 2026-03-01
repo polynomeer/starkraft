@@ -11,6 +11,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
 import starkraft.sim.ecs.services.FogGrid
@@ -241,6 +242,7 @@ fun main(args: Array<String>) {
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
+            emitTickSummaryRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, combat, resolvedSnapshotOutPath, streamSequence)
             emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
         }
 
@@ -616,6 +618,48 @@ private fun emitDespawnRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitTickSummaryRecord(
+    world: World,
+    fog1: FogGrid,
+    fog2: FogGrid,
+    tick: Int,
+    pathing: PathfindingSystem,
+    pathQueue: PathRequestQueue,
+    movement: MovementSystem,
+    combat: CombatSystem,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    var aliveTotal = 0
+    val alive = world.aliveSnapshot
+    for (i in 0 until alive.count) {
+        val id = alive.ids[i]
+        if ((world.healths[id]?.hp ?: 0) > 0) aliveTotal++
+    }
+    emitSnapshotLine(
+        renderTickSummaryStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            aliveTotal = aliveTotal,
+            visibleTilesFaction1 = fog1.visibleCount(),
+            visibleTilesFaction2 = fog2.visibleCount(),
+            pathRequests = pathing.lastTickRequests,
+            pathSolved = pathing.lastTickSolved,
+            pathQueueSize = pathQueue.size,
+            avgPathLength = pathing.lastTickAvgPathLen,
+            replans = movement.lastTickReplans,
+            replansBlocked = movement.lastTickReplansBlocked,
+            replansStuck = movement.lastTickReplansStuck,
+            attacks = combat.lastTickAttacks,
+            kills = combat.lastTickKills,
+            despawns = world.removedEventCount,
             pretty = false
         ),
         snapshotOutPath
