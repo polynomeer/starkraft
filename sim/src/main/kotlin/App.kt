@@ -111,8 +111,9 @@ fun main(args: Array<String>) {
     val replayStatsJson = hasFlag(args, "--replayStatsJson")
     val replayMetaJson = hasFlag(args, "--replayMetaJson")
     val replayDumpPath = parseReplayDumpPath(args)
+    val resolvedReplayPath = replayPath?.let(::resolvePath)
     val replayMeta =
-        if (replayPath != null) ReplayIO.inspect(resolvePath(replayPath)) else null
+        if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
@@ -147,7 +148,16 @@ fun main(args: Array<String>) {
         return
     }
     if (replayMetaJson && replayPath != null) {
-        println(statsJson.encodeToString(buildReplayMetaReport(replayMeta)))
+        println(
+            statsJson.encodeToString(
+                buildReplayMetaReport(
+                    replayMeta = replayMeta,
+                    replayPath = resolvedReplayPath?.toAbsolutePath()?.normalize()?.toString(),
+                    strictReplayMeta = strictReplayMeta,
+                    strictReplayHash = strictReplayHash
+                )
+            )
+        )
         return
     }
 
@@ -653,6 +663,9 @@ internal data class CommandStats(
 
 @Serializable
 internal data class ReplayMetaReport(
+    val replayPath: String? = null,
+    val strictReplayMeta: Boolean = false,
+    val strictReplayHash: Boolean = false,
     val metadata: CommandStatsMetadata? = null,
     val warnings: List<String> = emptyList()
 )
@@ -790,8 +803,16 @@ internal fun buildCommandStats(
     )
 }
 
-internal fun buildReplayMetaReport(replayMeta: ReplayMetadata?): ReplayMetaReport {
+internal fun buildReplayMetaReport(
+    replayMeta: ReplayMetadata?,
+    replayPath: String? = null,
+    strictReplayMeta: Boolean = false,
+    strictReplayHash: Boolean = false
+): ReplayMetaReport {
     return ReplayMetaReport(
+        replayPath = replayPath,
+        strictReplayMeta = strictReplayMeta,
+        strictReplayHash = strictReplayHash,
         metadata =
             replayMeta?.let {
                 CommandStatsMetadata(

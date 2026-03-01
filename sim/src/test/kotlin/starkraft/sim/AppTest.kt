@@ -129,21 +129,50 @@ class AppTest {
     fun `builds replay metadata report with warnings`() {
         val report =
             buildReplayMetaReport(
-                ReplayMetadata(
-                    schema = 1,
-                    replayHash = 12L,
-                    seed = 42L,
-                    mapId = "other-map",
-                    buildVersion = "0.9.0",
-                    legacy = false
-                )
+                replayMeta =
+                    ReplayMetadata(
+                        schema = 1,
+                        replayHash = 12L,
+                        seed = 42L,
+                        mapId = "other-map",
+                        buildVersion = "0.9.0",
+                        legacy = false
+                    ),
+                replayPath = "/tmp/demo.replay.json",
+                strictReplayMeta = true,
+                strictReplayHash = true
             )
 
+        assertEquals("/tmp/demo.replay.json", report.replayPath)
+        assertEquals(true, report.strictReplayMeta)
+        assertEquals(true, report.strictReplayHash)
         assertEquals(1, report.metadata?.schema)
         assertEquals(12L, report.metadata?.replayHash)
         assertEquals(42L, report.metadata?.seed)
         assertEquals("other-map", report.metadata?.mapId)
         assertEquals("0.9.0", report.metadata?.buildVersion)
         assertTrue(report.warnings.isNotEmpty())
+    }
+
+    @Test
+    fun `builds replay metadata report defaults without context`() {
+        val report =
+            buildReplayMetaReport(
+                replayMeta =
+                    ReplayMetadata(
+                        schema = 1,
+                        replayHash = 12L,
+                        seed = 42L,
+                        mapId = "demo-32x32-obstacles",
+                        buildVersion = "1.0-SNAPSHOT",
+                        legacy = false
+                    )
+            )
+
+        assertEquals(null, report.replayPath)
+        assertEquals(false, report.strictReplayMeta)
+        assertEquals(false, report.strictReplayHash)
+        assertEquals(1, report.metadata?.schema)
+        assertEquals(emptyList<String>(), report.warnings)
     }
 }
