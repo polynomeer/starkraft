@@ -227,6 +227,12 @@ fun main(args: Array<String>) {
     var totalAttacks = 0
     var totalKills = 0
     var totalDespawns = 0
+    var totalBuilds = 0
+    var totalBuildFailures = 0
+    var totalTrainsQueued = 0
+    var totalTrainsCompleted = 0
+    var totalTrainsCancelled = 0
+    var totalTrainFailures = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -284,6 +290,8 @@ fun main(args: Array<String>) {
     }
     var tick = 0
     while (tick < totalTicks) {
+        val commandOutcomeCounters = CommandOutcomeCounters()
+        var tickTrainsCompleted = 0
         world.clearRemovedEvents()
         production.clearTickEvents()
         alive.tick()
@@ -310,12 +318,27 @@ fun main(args: Array<String>) {
             }
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence, buildings, production)
+                issue(
+                    cmds[i],
+                    world,
+                    recorder,
+                    data,
+                    labelMap,
+                    labelIdMap,
+                    resolvedSnapshotOutPath,
+                    streamSequence,
+                    buildings,
+                    production,
+                    commandOutcomeCounters
+                )
             }
         }
 
         occupancy.tick()
         production.tick()
+        for (i in 0 until production.lastTickEventCount) {
+            if (production.eventKind(i) == BuildingProductionSystem.EVENT_COMPLETE) tickTrainsCompleted++
+        }
         emitProductionRecord(production, tick, resolvedSnapshotOutPath, streamSequence)
         pathing.tick()
         emitPathAssignedRecord(pathing, tick, resolvedSnapshotOutPath, streamSequence)
@@ -334,11 +357,30 @@ fun main(args: Array<String>) {
         totalAttacks += combat.lastTickAttacks
         totalKills += combat.lastTickKills
         totalDespawns += world.removedEventCount
+        totalBuilds += commandOutcomeCounters.builds
+        totalBuildFailures += commandOutcomeCounters.buildFailures
+        totalTrainsQueued += commandOutcomeCounters.trainsQueued
+        totalTrainsCompleted += tickTrainsCompleted
+        totalTrainsCancelled += commandOutcomeCounters.trainsCancelled
+        totalTrainFailures += commandOutcomeCounters.trainFailures
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
-            emitTickSummaryRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, combat, resolvedSnapshotOutPath, streamSequence)
+            emitTickSummaryRecord(
+                world,
+                fog1,
+                fog2,
+                tick,
+                pathing,
+                pathQueue,
+                movement,
+                combat,
+                commandOutcomeCounters,
+                tickTrainsCompleted,
+                resolvedSnapshotOutPath,
+                streamSequence
+            )
             emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
         }
 
@@ -428,6 +470,12 @@ fun main(args: Array<String>) {
                 attacks = totalAttacks,
                 kills = totalKills,
                 despawns = totalDespawns,
+                builds = totalBuilds,
+                buildFailures = totalBuildFailures,
+                trainsQueued = totalTrainsQueued,
+                trainsCompleted = totalTrainsCompleted,
+                trainsCancelled = totalTrainsCancelled,
+                trainFailures = totalTrainFailures,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
                 finalVisibleTilesFaction2 = fog2.visibleCount(),
                 finalWorldHash = finalWorldHash,
@@ -849,6 +897,8 @@ private fun emitTickSummaryRecord(
     pathQueue: PathRequestQueue,
     movement: MovementSystem,
     combat: CombatSystem,
+    commandOutcomeCounters: CommandOutcomeCounters,
+    tickTrainsCompleted: Int,
     snapshotOutPath: java.nio.file.Path?,
     streamSequence: LongArray?
 ) {
@@ -876,6 +926,12 @@ private fun emitTickSummaryRecord(
             attacks = combat.lastTickAttacks,
             kills = combat.lastTickKills,
             despawns = world.removedEventCount,
+            builds = commandOutcomeCounters.builds,
+            buildFailures = commandOutcomeCounters.buildFailures,
+            trainsQueued = commandOutcomeCounters.trainsQueued,
+            trainsCompleted = tickTrainsCompleted,
+            trainsCancelled = commandOutcomeCounters.trainsCancelled,
+            trainFailures = commandOutcomeCounters.trainFailures,
             pretty = false
         ),
         snapshotOutPath
@@ -1661,6 +1717,14 @@ internal fun currentRuntimeMetadataLine(seed: Long?): String {
     return "runtime metadata: mapId=$DEMO_MAP_ID buildVersion=$BUILD_VERSION seed=$seed"
 }
 
+data class CommandOutcomeCounters(
+    var builds: Int = 0,
+    var buildFailures: Int = 0,
+    var trainsQueued: Int = 0,
+    var trainsCancelled: Int = 0,
+    var trainFailures: Int = 0
+)
+
 fun issue(
     cmd: Command,
     world: World,
@@ -1671,7 +1735,8 @@ fun issue(
     snapshotOutPath: java.nio.file.Path? = null,
     streamSequence: LongArray? = null,
     buildings: BuildingPlacementSystem? = null,
-    production: BuildingProductionSystem? = null
+    production: BuildingProductionSystem? = null,
+    outcomeCounters: CommandOutcomeCounters? = null
 ) {
     recorder.onCommand(cmd)
     if (snapshotOutPath != null && streamSequence != null) {
@@ -1810,6 +1875,7 @@ fun issue(
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             if (width <= 0 || height <= 0 || hp <= 0) {
+                if (outcomeCounters != null) outcomeCounters.buildFailures++
                 emitCommandFailureRecord(
                     tick = cmd.tick,
                     commandType = "build",
@@ -1838,6 +1904,7 @@ fun issue(
                 )
             val id = result.entityId
             if (id == null) {
+                if (outcomeCounters != null) outcomeCounters.buildFailures++
                 val reason =
                     when (result.failure) {
                         BuildFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
@@ -1857,6 +1924,7 @@ fun issue(
                 )
                 return
             }
+            if (outcomeCounters != null) outcomeCounters.builds++
             if (cmd.label != null) {
                 labelMap[cmd.label] = id
             }
@@ -1895,6 +1963,7 @@ fun issue(
                 gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             )
             if (failure != null) {
+                if (outcomeCounters != null) outcomeCounters.trainFailures++
                 val reason =
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
@@ -1913,12 +1982,26 @@ fun issue(
                     buildingId = buildingId,
                     typeId = cmd.typeId
                 )
+            } else {
+                if (outcomeCounters != null) outcomeCounters.trainsQueued++
             }
         }
         is Command.CancelTrain -> {
             val productionSystem = production ?: error("CancelTrain requires BuildingProductionSystem")
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
-            productionSystem.cancelLast(buildingId)
+            if (productionSystem.cancelLast(buildingId)) {
+                if (outcomeCounters != null) outcomeCounters.trainsCancelled++
+            } else {
+                if (outcomeCounters != null) outcomeCounters.trainFailures++
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "cancelTrain",
+                    reason = "nothingToCancel",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId
+                )
+            }
         }
     }
 }

@@ -176,7 +176,13 @@ data class TickSummaryStreamRecord(
     val replansStuck: Int,
     val attacks: Int,
     val kills: Int,
-    val despawns: Int
+    val despawns: Int,
+    val builds: Int,
+    val buildFailures: Int,
+    val trainsQueued: Int,
+    val trainsCompleted: Int,
+    val trainsCancelled: Int,
+    val trainFailures: Int
 )
 
 @Serializable
@@ -349,6 +355,12 @@ data class SessionStatsStreamRecord(
     val attacks: Int,
     val kills: Int,
     val despawns: Int,
+    val builds: Int,
+    val buildFailures: Int,
+    val trainsQueued: Int,
+    val trainsCompleted: Int,
+    val trainsCancelled: Int,
+    val trainFailures: Int,
     val finalVisibleTilesFaction1: Int,
     val finalVisibleTilesFaction2: Int,
     val finalWorldHash: Long,
@@ -648,6 +660,12 @@ fun renderTickSummaryStreamRecordJson(
     attacks: Int,
     kills: Int,
     despawns: Int,
+    builds: Int,
+    buildFailures: Int,
+    trainsQueued: Int,
+    trainsCompleted: Int,
+    trainsCancelled: Int,
+    trainFailures: Int,
     pretty: Boolean = false
 ): String {
     val record =
@@ -666,7 +684,13 @@ fun renderTickSummaryStreamRecordJson(
             replansStuck = replansStuck,
             attacks = attacks,
             kills = kills,
-            despawns = despawns
+            despawns = despawns,
+            builds = builds,
+            buildFailures = buildFailures,
+            trainsQueued = trainsQueued,
+            trainsCompleted = trainsCompleted,
+            trainsCancelled = trainsCancelled,
+            trainFailures = trainFailures
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
@@ -843,6 +867,12 @@ fun renderSessionStatsStreamRecordJson(
     attacks: Int,
     kills: Int,
     despawns: Int,
+    builds: Int,
+    buildFailures: Int,
+    trainsQueued: Int,
+    trainsCompleted: Int,
+    trainsCancelled: Int,
+    trainFailures: Int,
     finalVisibleTilesFaction1: Int,
     finalVisibleTilesFaction2: Int,
     finalWorldHash: Long,
@@ -861,6 +891,12 @@ fun renderSessionStatsStreamRecordJson(
             attacks = attacks,
             kills = kills,
             despawns = despawns,
+            builds = builds,
+            buildFailures = buildFailures,
+            trainsQueued = trainsQueued,
+            trainsCompleted = trainsCompleted,
+            trainsCancelled = trainsCancelled,
+            trainFailures = trainFailures,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
             finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
             finalWorldHash = finalWorldHash,

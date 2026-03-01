@@ -288,11 +288,17 @@ class ClientSnapshotTest {
                 attacks = 4,
                 kills = 1,
                 despawns = 1,
+                builds = 1,
+                buildFailures = 0,
+                trainsQueued = 2,
+                trainsCompleted = 1,
+                trainsCancelled = 0,
+                trainFailures = 1,
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1}",
+            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildFailures\":0,\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":0,\"trainFailures\":1}",
             json
         )
     }
@@ -485,6 +491,12 @@ class ClientSnapshotTest {
                 attacks = 80,
                 kills = 14,
                 despawns = 14,
+                builds = 3,
+                buildFailures = 1,
+                trainsQueued = 8,
+                trainsCompleted = 6,
+                trainsCancelled = 1,
+                trainFailures = 2,
                 finalVisibleTilesFaction1 = 220,
                 finalVisibleTilesFaction2 = 198,
                 finalWorldHash = 123456789L,
@@ -493,7 +505,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
+            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"builds\":3,\"buildFailures\":1,\"trainsQueued\":8,\"trainsCompleted\":6,\"trainsCancelled\":1,\"trainFailures\":2,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
             json
         )
     }
