@@ -111,7 +111,7 @@ Other flags:
 - `--replayValidateOnly` load/validate replay and exit
 - `--replayStats` print command counts by tick and type, including selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`
 - `--replayStatsJson` print replay stats as JSON, including selector split totals and action breakdowns
-- `--replayMetaJson` print only replay metadata, resolved replay path, strict-mode flags, and compatibility warnings as JSON
+- `--replayMetaJson` print replay metadata plus current runtime map/build context, resolved replay path, strict-mode flags, and compatibility warnings as JSON
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
