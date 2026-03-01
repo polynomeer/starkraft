@@ -155,6 +155,7 @@ fun main(args: Array<String>) {
                     replayPath = resolvedReplayPath?.toAbsolutePath()?.normalize()?.toString(),
                     currentMapId = DEMO_MAP_ID,
                     currentBuildVersion = BUILD_VERSION,
+                    currentSeed = seed,
                     strictReplayMeta = strictReplayMeta,
                     strictReplayHash = strictReplayHash
                 )
@@ -668,6 +669,7 @@ internal data class ReplayMetaReport(
     val replayPath: String? = null,
     val currentMapId: String? = null,
     val currentBuildVersion: String? = null,
+    val currentSeed: Long? = null,
     val strictReplayMeta: Boolean = false,
     val strictReplayHash: Boolean = false,
     val metadata: CommandStatsMetadata? = null,
@@ -812,6 +814,7 @@ internal fun buildReplayMetaReport(
     replayPath: String? = null,
     currentMapId: String? = null,
     currentBuildVersion: String? = null,
+    currentSeed: Long? = null,
     strictReplayMeta: Boolean = false,
     strictReplayHash: Boolean = false
 ): ReplayMetaReport {
@@ -819,6 +822,7 @@ internal fun buildReplayMetaReport(
         replayPath = replayPath,
         currentMapId = currentMapId,
         currentBuildVersion = currentBuildVersion,
+        currentSeed = currentSeed,
         strictReplayMeta = strictReplayMeta,
         strictReplayHash = strictReplayHash,
         metadata =

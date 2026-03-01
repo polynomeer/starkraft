@@ -141,6 +141,7 @@ class AppTest {
                 replayPath = "/tmp/demo.replay.json",
                 currentMapId = "demo-32x32-obstacles",
                 currentBuildVersion = "1.0-SNAPSHOT",
+                currentSeed = 99L,
                 strictReplayMeta = true,
                 strictReplayHash = true
             )
@@ -148,6 +149,7 @@ class AppTest {
         assertEquals("/tmp/demo.replay.json", report.replayPath)
         assertEquals("demo-32x32-obstacles", report.currentMapId)
         assertEquals("1.0-SNAPSHOT", report.currentBuildVersion)
+        assertEquals(99L, report.currentSeed)
         assertEquals(true, report.strictReplayMeta)
         assertEquals(true, report.strictReplayHash)
         assertEquals(1, report.metadata?.schema)
@@ -176,6 +178,7 @@ class AppTest {
         assertEquals(null, report.replayPath)
         assertEquals(null, report.currentMapId)
         assertEquals(null, report.currentBuildVersion)
+        assertEquals(null, report.currentSeed)
         assertEquals(false, report.strictReplayMeta)
         assertEquals(false, report.strictReplayHash)
         assertEquals(1, report.metadata?.schema)
