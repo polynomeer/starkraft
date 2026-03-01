@@ -9,6 +9,11 @@ data class UnitDef(
     val armor: Int = 0,
     val speed: Float = 0.06f,
     val weaponId: String? = null,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0,
+    val buildTicks: Int = 0,
+    val footprintWidth: Int = 0,
+    val footprintHeight: Int = 0,
 )
 
 @Serializable

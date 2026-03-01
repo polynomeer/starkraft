@@ -107,8 +107,9 @@ Script syntax:
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
-- `build [@label] <faction> <typeId> <tileX> <tileY> <width> <height> <hp> [armor] [minerals] [gas]` place a building footprint
-- `train <buildingId|@label> <typeId> <buildTicks> [minerals] [gas]` enqueue unit production on a building
+- `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
+- `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
+- If optional build/train values are omitted or `0`, the sim falls back to values from unit data defs when available
 
 Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically

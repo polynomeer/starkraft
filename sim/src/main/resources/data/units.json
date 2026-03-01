@@ -4,21 +4,37 @@
       "id": "Worker",
       "hp": 40,
       "armor": 0,
-      "speed": 0.07
+      "speed": 0.07,
+      "mineralCost": 50,
+      "buildTicks": 50
+    },
+    {
+      "id": "Depot",
+      "hp": 400,
+      "armor": 1,
+      "speed": 0.0,
+      "mineralCost": 100,
+      "buildTicks": 120,
+      "footprintWidth": 2,
+      "footprintHeight": 2
     },
     {
       "id": "Marine",
       "hp": 45,
       "armor": 0,
       "speed": 0.065,
-      "weaponId": "Gauss"
+      "weaponId": "Gauss",
+      "mineralCost": 50,
+      "buildTicks": 75
     },
     {
       "id": "Zergling",
       "hp": 35,
       "armor": 0,
       "speed": 0.08,
-      "weaponId": "Claw"
+      "weaponId": "Claw",
+      "mineralCost": 25,
+      "buildTicks": 55
     }
   ]
 }

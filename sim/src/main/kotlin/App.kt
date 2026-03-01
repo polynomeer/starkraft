@@ -97,9 +97,14 @@ fun main(args: Array<String>) {
     resources.set(faction = 1, minerals = 500, gas = 0)
     resources.set(faction = 2, minerals = 500, gas = 0)
     val depotId =
-        buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400, mineralCost = 100)
+        buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400, mineralCost = data.unit("Depot").mineralCost)
     if (depotId != null) {
-        production.enqueue(depotId, typeId = "Marine", buildTicks = 75, mineralCost = 50)
+        production.enqueue(
+            depotId,
+            typeId = "Marine",
+            buildTicks = data.unit("Marine").buildTicks,
+            mineralCost = data.unit("Marine").mineralCost
+        )
     }
 
     val seed = parseSeed(args)
@@ -1731,18 +1736,32 @@ fun issue(
         }
         is Command.Build -> {
             val placement = buildings ?: error("Build requires BuildingPlacementSystem")
+            val repo = data ?: error("Build requires DataRepo")
+            val def =
+                try {
+                    repo.unit(cmd.typeId)
+                } catch (_: NoSuchElementException) {
+                    null
+                }
+            val width = if (cmd.width > 0) cmd.width else (def?.footprintWidth ?: 0)
+            val height = if (cmd.height > 0) cmd.height else (def?.footprintHeight ?: 0)
+            val hp = if (cmd.hp > 0) cmd.hp else (def?.hp ?: 0)
+            val armor = if (cmd.armor > 0) cmd.armor else (def?.armor ?: 0)
+            val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (def?.mineralCost ?: 0)
+            val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (def?.gasCost ?: 0)
+            require(width > 0 && height > 0 && hp > 0) { "Build requires footprint and hp for type '${cmd.typeId}'" }
             val id =
                 placement.place(
                     faction = cmd.faction,
                     typeId = cmd.typeId,
                     tileX = cmd.tileX,
                     tileY = cmd.tileY,
-                    width = cmd.width,
-                    height = cmd.height,
-                    hp = cmd.hp,
-                    armor = cmd.armor,
-                    mineralCost = cmd.mineralCost,
-                    gasCost = cmd.gasCost
+                    width = width,
+                    height = height,
+                    hp = hp,
+                    armor = armor,
+                    mineralCost = mineralCost,
+                    gasCost = gasCost
                 ) ?: return
             if (cmd.label != null) {
                 labelMap[cmd.label] = id
@@ -1772,12 +1791,14 @@ fun issue(
         is Command.Train -> {
             val productionSystem = production ?: error("Train requires BuildingProductionSystem")
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            val repo = data ?: error("Train requires DataRepo")
+            val def = repo.unit(cmd.typeId)
             productionSystem.enqueue(
                 buildingId = buildingId,
                 typeId = cmd.typeId,
-                buildTicks = cmd.buildTicks,
-                mineralCost = cmd.mineralCost,
-                gasCost = cmd.gasCost
+                buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else def.buildTicks,
+                mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else def.mineralCost,
+                gasCost = if (cmd.gasCost > 0) cmd.gasCost else def.gasCost
             )
         }
     }

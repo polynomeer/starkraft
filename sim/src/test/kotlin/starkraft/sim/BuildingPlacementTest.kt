@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.BuildingPlacementSystem
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
@@ -84,11 +85,17 @@ class BuildingPlacementTest {
         val resources = ResourceSystem(world)
         val buildings = BuildingPlacementSystem(world, map, occ, resources)
         resources.set(faction = 1, minerals = 150, gas = 0)
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Depot","hp":400,"armor":0,"speed":0.0,"mineralCost":100,"footprintWidth":2,"footprintHeight":2}]}""",
+                """{"list":[]}"""
+            )
 
         issue(
             Command.Build(0, 1, "Depot", 8, 8, 2, 2, 400, 0, 100, 0),
             world,
             NullRecorder(),
+            data = data,
             buildings = buildings
         )
 

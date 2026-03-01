@@ -68,4 +68,22 @@ class ScriptRunnerTest {
         assertEquals(Command.Build(0, 1, "Depot", 4, 4, 2, 2, 400, 0, 100, 0, "depot", -1), program.commands[0])
         assertEquals(Command.Train(1, -1, "Marine", 75, 50, 0), program.commands[1])
     }
+
+    @Test
+    fun `parses build and train commands with data defaults`() {
+        val path = Files.createTempFile("starkraft-default-build-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 2
+            build @depot 1 Depot 10 10
+            train @depot Marine
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(Command.Build(2, 1, "Depot", 10, 10, 0, 0, 0, 0, 0, 0, "depot", -1), program.commands[0])
+        assertEquals(Command.Train(2, -1, "Marine", 0, 0, 0), program.commands[1])
+    }
 }

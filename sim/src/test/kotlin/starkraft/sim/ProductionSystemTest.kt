@@ -107,7 +107,8 @@ class ProductionSystemTest {
         val occ = OccupancyGrid(16, 16)
         val resources = ResourceSystem(world)
         val buildings = BuildingPlacementSystem(world, map, occ, resources)
-        val production = BuildingProductionSystem(world, map, occ, testData(), resources)
+        val data = testDataWithDepot()
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
         val labels = HashMap<String, Int>()
         val labelIds = HashMap<Int, Int>()
         resources.set(1, 300, 0)
@@ -116,6 +117,7 @@ class ProductionSystemTest {
             Command.Build(0, 1, "Depot", 6, 6, 2, 2, 400, 0, 100, 0, "depot", -1),
             world,
             NullRecorder(),
+            data = data,
             labelMap = labels,
             labelIdMap = labelIds,
             buildings = buildings
@@ -124,6 +126,7 @@ class ProductionSystemTest {
             Command.Train(1, -1, "Marine", 2, 50, 0),
             world,
             NullRecorder(),
+            data = data,
             labelMap = labels,
             labelIdMap = labelIds,
             production = production
@@ -131,5 +134,59 @@ class ProductionSystemTest {
 
         assertEquals(1, world.productionQueues.size)
         assertEquals(150, world.stockpiles[1]?.minerals)
+    }
+
+    @Test
+    fun `build and train commands can resolve defaults from data`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data = testDataWithDepot()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        val labels = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
+        resources.set(1, 300, 0)
+
+        issue(
+            Command.Build(0, 1, "Depot", 6, 6, 0, 0, 0, 0, 0, 0, "depot", -1),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds,
+            buildings = buildings
+        )
+        issue(
+            Command.Train(1, -1, "Marine", 0, 0, 0),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds,
+            production = production
+        )
+
+        assertEquals(1, world.footprints.size)
+        assertEquals(1, world.productionQueues.size)
+        assertEquals(150, world.stockpiles[1]?.minerals)
+    }
+
+    private fun testDataWithDepot(): DataRepo {
+        val units =
+            """
+            {"list":[
+              {"id":"Depot","hp":400,"armor":1,"speed":0.0,"mineralCost":100,"buildTicks":120,"footprintWidth":2,"footprintHeight":2},
+              {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75}
+            ]}
+            """.trimIndent()
+        val weapons =
+            """
+            {"list":[
+              {"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}
+            ]}
+            """.trimIndent()
+        return DataRepo(units, weapons)
     }
 }
