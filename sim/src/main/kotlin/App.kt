@@ -77,7 +77,8 @@ fun main(args: Array<String>) {
     val pathQueue = PathRequestQueue(256, 50)
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
-    val buildings = BuildingPlacementSystem(world, map, occ)
+    val resources = ResourceSystem(world)
+    val buildings = BuildingPlacementSystem(world, map, occ, resources)
     val occupancy = OccupancySystem(world, occ)
     val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
@@ -90,7 +91,9 @@ fun main(args: Array<String>) {
     for (x in 6..24) map.setBlocked(x, 14, true)
     for (y in 6..14) map.setBlocked(12, y, true)
     for (x in 18..22) for (y in 18..22) map.setCost(x, y, 3f)
-    buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400)
+    resources.set(faction = 1, minerals = 500, gas = 0)
+    resources.set(faction = 2, minerals = 500, gas = 0)
+    buildings.place(faction = 1, typeId = "Depot", tileX = 24, tileY = 4, width = 2, height = 2, hp = 400, mineralCost = 100)
 
     val seed = parseSeed(args)
     val rng = if (seed != null) Random(seed) else null
@@ -310,7 +313,7 @@ fun main(args: Array<String>) {
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
-                    "buildings=${world.footprints.size} " +
+                    "buildings=${world.footprints.size} minerals: t1=${world.stockpiles[1]?.minerals ?: 0} t2=${world.stockpiles[2]?.minerals ?: 0} " +
                     "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} avgLen=${"%.2f".format(pathing.lastTickAvgPathLen)} " +
                     "replans=${movement.lastTickReplans} " +
                     "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}"

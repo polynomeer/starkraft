@@ -25,6 +25,8 @@ data class RepathCooldown(var ticks: Int = 0)
 
 data class BuildingFootprint(val tileX: Int, val tileY: Int, val width: Int, val height: Int)
 
+data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)
+
 data class StuckTracker(
     var lastX: Float = 0f,
     var lastY: Float = 0f,

@@ -62,13 +62,18 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Keep building behavior in its own system and avoid branching in movement.
    - `BuildingPlacementSystem` now covers headless placement/removal for rectangular footprints.
 
-13. **Unit Behaviors**
-    - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
-      move + attack decisions at the order layer.
+13. **Resources**
+   - Keep faction stockpiles in deterministic sim state.
+   - Apply spending at placement / production time, not lazily.
+   - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
 
-14. **Networking / Replay**
-    - Keep commands deterministic and serializable.
-    - Use replay as the canonical regression tool for simulation changes.
+14. **Unit Behaviors**
+   - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
+     move + attack decisions at the order layer.
+
+15. **Networking / Replay**
+   - Keep commands deterministic and serializable.
+   - Use replay as the canonical regression tool for simulation changes.
 
 ### System Order (Recommended)
 1. `AliveSystem`

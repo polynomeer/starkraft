@@ -3,11 +3,13 @@ package starkraft.sim
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.ecs.BuildingPlacementSystem
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
+import starkraft.sim.ecs.ResourceSystem
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.path.Pathfinder
 
@@ -53,5 +55,22 @@ class BuildingPlacementTest {
             val y = node / map.width
             assertFalse(x in 6..7 && y in 6..7, "path should not cross building footprint")
         }
+    }
+
+    @Test
+    fun `building placement spends resources and fails when unaffordable`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        resources.set(faction = 1, minerals = 125, gas = 0)
+
+        val first = buildings.place(faction = 1, typeId = "Depot", tileX = 2, tileY = 2, width = 2, height = 2, hp = 400, mineralCost = 100)
+        val second = buildings.place(faction = 1, typeId = "Depot", tileX = 6, tileY = 2, width = 2, height = 2, hp = 400, mineralCost = 100)
+
+        assertNotNull(first)
+        assertNull(second)
+        assertEquals(25, world.stockpiles[1]?.minerals)
     }
 }

@@ -12,6 +12,7 @@ class World {
     val repathCooldowns = mutableMapOf<EntityId, RepathCooldown>()
     val footprints = mutableMapOf<EntityId, BuildingFootprint>()
     val stucks = mutableMapOf<EntityId, StuckTracker>()
+    val stockpiles = mutableMapOf<Int, ResourceStockpile>()
 
     val index = FactionIndex(this) // NEW
     val aliveSnapshot = AliveSnapshot(IntArray(64), 0)

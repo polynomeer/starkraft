@@ -3,7 +3,8 @@ package starkraft.sim.ecs
 class BuildingPlacementSystem(
     private val world: World,
     private val map: MapGrid,
-    private val occ: OccupancyGrid
+    private val occ: OccupancyGrid,
+    private val resources: ResourceSystem? = null
 ) {
     fun canPlace(tileX: Int, tileY: Int, width: Int, height: Int): Boolean {
         if (width <= 0 || height <= 0) return false
@@ -25,9 +26,12 @@ class BuildingPlacementSystem(
         width: Int,
         height: Int,
         hp: Int,
-        armor: Int = 0
+        armor: Int = 0,
+        mineralCost: Int = 0,
+        gasCost: Int = 0
     ): EntityId? {
         if (!canPlace(tileX, tileY, width, height)) return null
+        if (resources != null && !resources.spend(faction, mineralCost, gasCost)) return null
         for (y in tileY until tileY + height) {
             for (x in tileX until tileX + width) {
                 occ.addStatic(x, y)
