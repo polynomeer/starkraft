@@ -102,6 +102,67 @@ class AppTest {
     }
 
     @Test
+    fun `renders compact command outcome log suffix`() {
+        val counters =
+            CommandOutcomeCounters(
+                builds = 1,
+                buildFailures = 2,
+                buildFailureReasons =
+                    BuildFailureCounterSet(
+                        invalidPlacement = 1,
+                        insufficientResources = 1
+                    ),
+                trainsQueued = 3,
+                trainsCancelled = 1,
+                trainFailures = 2,
+                trainFailureReasons =
+                    TrainFailureCounterSet(
+                        queueFull = 1,
+                        incompatibleProducer = 1
+                    )
+            )
+
+        assertEquals(
+            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1]",
+            renderCommandOutcomeLogSuffix(counters, trainsCompleted = 2)
+        )
+    }
+
+    @Test
+    fun `renders aggregate command outcome summary`() {
+        assertEquals(
+            "command outcomes: builds=2 buildFails=1[invalidDefinition=1] train=q4/c3/x1 trainFails=2[missingBuilding=1,nothingToCancel=1]",
+            renderAggregateOutcomeSummary(
+                totalBuilds = 2,
+                totalBuildFailures = 1,
+                totalBuildFailureReasons = BuildFailureCounterSet(invalidDefinition = 1),
+                totalTrainsQueued = 4,
+                totalTrainsCompleted = 3,
+                totalTrainsCancelled = 1,
+                totalTrainFailures = 2,
+                totalTrainFailureReasons = TrainFailureCounterSet(missingBuilding = 1, nothingToCancel = 1)
+            )
+        )
+    }
+
+    @Test
+    fun `omits aggregate command outcome summary when empty`() {
+        assertEquals(
+            null,
+            renderAggregateOutcomeSummary(
+                totalBuilds = 0,
+                totalBuildFailures = 0,
+                totalBuildFailureReasons = BuildFailureCounterSet(),
+                totalTrainsQueued = 0,
+                totalTrainsCompleted = 0,
+                totalTrainsCancelled = 0,
+                totalTrainFailures = 0,
+                totalTrainFailureReasons = TrainFailureCounterSet()
+            )
+        )
+    }
+
+    @Test
     fun `builds selector split command totals`() {
         val commandsByTick =
             arrayOf(

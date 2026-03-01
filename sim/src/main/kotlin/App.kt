@@ -397,13 +397,14 @@ fun main(args: Array<String>) {
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
+            val outcomeSuffix = renderCommandOutcomeLogSuffix(commandOutcomeCounters, tickTrainsCompleted)
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
                     "buildings=${world.footprints.size} prodQueues=${world.productionQueues.size} " +
                     "minerals: t1=${world.stockpiles[1]?.minerals ?: 0} t2=${world.stockpiles[2]?.minerals ?: 0} " +
                     "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} avgLen=${"%.2f".format(pathing.lastTickAvgPathLen)} " +
                     "replans=${movement.lastTickReplans} " +
-                    "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}"
+                    "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}$outcomeSuffix"
             )
         }
         tick++
@@ -436,6 +437,20 @@ fun main(args: Array<String>) {
         val source = if (replayPath != null) "replay" else "script"
         println("$source hash=$finalReplayHash world hash=$finalWorldHash")
         println(currentRuntimeMetadataLine(seed))
+    }
+    val finalOutcomeSummary =
+        renderAggregateOutcomeSummary(
+            totalBuilds,
+            totalBuildFailures,
+            totalBuildFailureReasons,
+            totalTrainsQueued,
+            totalTrainsCompleted,
+            totalTrainsCancelled,
+            totalTrainFailures,
+            totalTrainFailureReasons
+        )
+    if (finalOutcomeSummary != null) {
+        println(finalOutcomeSummary)
     }
 
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
@@ -1730,6 +1745,75 @@ internal fun requireReplayCompatibility(meta: ReplayMetadata?, strict: Boolean) 
 internal fun currentRuntimeMetadataLine(seed: Long?): String {
     return "runtime metadata: mapId=$DEMO_MAP_ID buildVersion=$BUILD_VERSION seed=$seed"
 }
+
+internal fun renderCommandOutcomeLogSuffix(
+    counters: CommandOutcomeCounters,
+    trainsCompleted: Int
+): String {
+    val parts = ArrayList<String>(4)
+    if (counters.builds > 0) parts.add("builds=${counters.builds}")
+    if (counters.buildFailures > 0) {
+        parts.add("buildFails=${counters.buildFailures}[${formatBuildFailureReasons(counters.buildFailureReasons)}]")
+    }
+    if (counters.trainsQueued > 0 || trainsCompleted > 0 || counters.trainsCancelled > 0) {
+        parts.add("train=q${counters.trainsQueued}/c$trainsCompleted/x${counters.trainsCancelled}")
+    }
+    if (counters.trainFailures > 0) {
+        parts.add("trainFails=${counters.trainFailures}[${formatTrainFailureReasons(counters.trainFailureReasons)}]")
+    }
+    return if (parts.isEmpty()) "" else "  " + parts.joinToString(" ")
+}
+
+internal fun renderAggregateOutcomeSummary(
+    totalBuilds: Int,
+    totalBuildFailures: Int,
+    totalBuildFailureReasons: BuildFailureCounterSet,
+    totalTrainsQueued: Int,
+    totalTrainsCompleted: Int,
+    totalTrainsCancelled: Int,
+    totalTrainFailures: Int,
+    totalTrainFailureReasons: TrainFailureCounterSet
+): String? {
+    if (
+        totalBuilds == 0 &&
+        totalBuildFailures == 0 &&
+        totalTrainsQueued == 0 &&
+        totalTrainsCompleted == 0 &&
+        totalTrainsCancelled == 0 &&
+        totalTrainFailures == 0
+    ) {
+        return null
+    }
+    val parts = ArrayList<String>(4)
+    parts.add("builds=$totalBuilds")
+    if (totalBuildFailures > 0) {
+        parts.add("buildFails=$totalBuildFailures[${formatBuildFailureReasons(totalBuildFailureReasons)}]")
+    }
+    parts.add("train=q$totalTrainsQueued/c$totalTrainsCompleted/x$totalTrainsCancelled")
+    if (totalTrainFailures > 0) {
+        parts.add("trainFails=$totalTrainFailures[${formatTrainFailureReasons(totalTrainFailureReasons)}]")
+    }
+    return "command outcomes: " + parts.joinToString(" ")
+}
+
+internal fun formatBuildFailureReasons(reasons: BuildFailureCounterSet): String =
+    listOfNotNull(
+        reasons.invalidDefinition.takeIf { it > 0 }?.let { "invalidDefinition=$it" },
+        reasons.invalidFootprint.takeIf { it > 0 }?.let { "invalidFootprint=$it" },
+        reasons.invalidPlacement.takeIf { it > 0 }?.let { "invalidPlacement=$it" },
+        reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" }
+    ).joinToString(",")
+
+internal fun formatTrainFailureReasons(reasons: TrainFailureCounterSet): String =
+    listOfNotNull(
+        reasons.missingBuilding.takeIf { it > 0 }?.let { "missingBuilding=$it" },
+        reasons.invalidUnit.takeIf { it > 0 }?.let { "invalidUnit=$it" },
+        reasons.invalidBuildTime.takeIf { it > 0 }?.let { "invalidBuildTime=$it" },
+        reasons.incompatibleProducer.takeIf { it > 0 }?.let { "incompatibleProducer=$it" },
+        reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" },
+        reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" },
+        reasons.nothingToCancel.takeIf { it > 0 }?.let { "nothingToCancel=$it" }
+    ).joinToString(",")
 
 data class CommandOutcomeCounters(
     var builds: Int = 0,
