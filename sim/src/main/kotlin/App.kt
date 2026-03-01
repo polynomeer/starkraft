@@ -111,6 +111,8 @@ fun main(args: Array<String>) {
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
+    val replayMeta =
+        if (replayPath != null) ReplayIO.inspect(resolvePath(replayPath)) else null
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -125,7 +127,10 @@ fun main(args: Array<String>) {
         return
     }
     if (replayValidateOnly && replayPath != null) {
-        println("replay validation ok: $replayPath")
+        println(
+            "replay validation ok: $replayPath schema=${replayMeta?.schema} " +
+                "seed=${replayMeta?.seed} replayHash=${replayMeta?.replayHash}"
+        )
         return
     }
 
@@ -221,6 +226,12 @@ fun main(args: Array<String>) {
     }
 
     if (replayStats && commandsByTick.isNotEmpty()) {
+        if (replayMeta != null) {
+            println(
+                "replay metadata: schema=${replayMeta.schema} seed=${replayMeta.seed} " +
+                    "replayHash=${replayMeta.replayHash}"
+            )
+        }
         printCommandStats(commandsByTick)
     }
 

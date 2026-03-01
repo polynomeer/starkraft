@@ -48,7 +48,28 @@ object ReplayIO {
             cmds
         }
     }
+
+    fun inspect(path: Path): ReplayMetadata {
+        val payload = Files.readString(path)
+        if (payload.trimStart().startsWith("[")) {
+            return ReplayMetadata(schema = 0, replayHash = null, seed = null, legacy = true)
+        }
+        val container = json.decodeFromString<ReplayContainer>(payload)
+        return ReplayMetadata(
+            schema = container.schema,
+            replayHash = if (container.schema == 0) null else container.replayHash,
+            seed = container.seed,
+            legacy = container.schema == 0
+        )
+    }
 }
+
+data class ReplayMetadata(
+    val schema: Int,
+    val replayHash: Long?,
+    val seed: Long?,
+    val legacy: Boolean
+)
 
 @Serializable
 private data class ReplayContainer(

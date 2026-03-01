@@ -44,6 +44,18 @@ class ReplayIOTest {
         assertEquals("alpha", spawn.label)
         assertEquals(-1, spawn.labelId)
     }
+
+    @Test
+    fun inspectsReplayMetadata() {
+        val tmp = Files.createTempFile("starkraft-replay", ".json")
+        val cmds = listOf(Command.Move(0, intArrayOf(1), 2f, 3f))
+        ReplayIO.save(tmp, cmds, seed = 77L)
+        val meta = ReplayIO.inspect(tmp)
+        assertEquals(1, meta.schema)
+        assertEquals(77L, meta.seed)
+        assertTrue(meta.replayHash != null)
+        assertEquals(false, meta.legacy)
+    }
 }
 
 private fun assertCommandsEqual(a: Command, b: Command) {
