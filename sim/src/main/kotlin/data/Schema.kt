@@ -29,4 +29,18 @@ data class WeaponDef(
 data class UnitDefs(val list: List<UnitDef>)
 
 @Serializable
+data class BuildingDef(
+    val id: String,
+    val hp: Int,
+    val armor: Int = 0,
+    val footprintWidth: Int,
+    val footprintHeight: Int,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0
+)
+
+@Serializable
+data class BuildingDefs(val list: List<BuildingDef>)
+
+@Serializable
 data class WeaponDefs(val list: List<WeaponDef>)

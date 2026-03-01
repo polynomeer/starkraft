@@ -20,25 +20,32 @@ data class TrainSpec(
     val producerTypes: List<String>
 )
 
-class DataRepo(unitsJson: String, weaponsJson: String) {
+class DataRepo(
+    private val unitsJson: String,
+    private val weaponsJson: String,
+    private val buildingsJson: String? = null
+) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
-    private val units = json.decodeFromString(UnitDefs.serializer(), unitsJson).list.associateBy { it.id }
-    private val weapons = json.decodeFromString(WeaponDefs.serializer(), weaponsJson).list.associateBy { it.id }
+    private val units = json.decodeFromString(UnitDefs.serializer(), this.unitsJson).list.associateBy { it.id }
+    private val weapons = json.decodeFromString(WeaponDefs.serializer(), this.weaponsJson).list.associateBy { it.id }
+    private val buildings =
+        this.buildingsJson
+            ?.let { json.decodeFromString(BuildingDefs.serializer(), it).list.associateBy { def -> def.id } }
+            ?: emptyMap()
 
     fun unit(id: String) = units.getValue(id)
     fun weapon(id: String) = weapons.getValue(id)
 
     fun buildSpec(id: String): BuildSpec? {
-        val unit = units[id] ?: return null
-        if (unit.footprintWidth <= 0 || unit.footprintHeight <= 0) return null
+        val building = buildings[id] ?: return null
         return BuildSpec(
-            typeId = unit.id,
-            hp = unit.hp,
-            armor = unit.armor,
-            footprintWidth = unit.footprintWidth,
-            footprintHeight = unit.footprintHeight,
-            mineralCost = unit.mineralCost,
-            gasCost = unit.gasCost
+            typeId = building.id,
+            hp = building.hp,
+            armor = building.armor,
+            footprintWidth = building.footprintWidth,
+            footprintHeight = building.footprintHeight,
+            mineralCost = building.mineralCost,
+            gasCost = building.gasCost
         )
     }
 

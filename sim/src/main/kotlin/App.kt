@@ -67,10 +67,13 @@ fun main(args: Array<String>) {
         ?: error("Resource '/data/units.json' not found. Ensure it exists in the resources directory.")
     val weaponsResource = object {}.javaClass.getResource("/data/weapons.json")
         ?: error("Resource '/data/weapons.json' not found. Ensure it exists in the resources directory.")
+    val buildingsResource = object {}.javaClass.getResource("/data/buildings.json")
+        ?: error("Resource '/data/buildings.json' not found. Ensure it exists in the resources directory.")
 
     val unitsJson = unitsResource.readText()
     val weaponsJson = weaponsResource.readText()
-    val data = DataRepo(unitsJson, weaponsJson)
+    val buildingsJson = buildingsResource.readText()
+    val data = DataRepo(unitsJson, weaponsJson, buildingsJson)
 
     val world = World()
     val map = MapGrid(32, 32)

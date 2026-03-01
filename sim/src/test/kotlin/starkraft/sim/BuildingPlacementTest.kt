@@ -87,8 +87,9 @@ class BuildingPlacementTest {
         resources.set(faction = 1, minerals = 150, gas = 0)
         val data =
             DataRepo(
-                """{"list":[{"id":"Depot","hp":400,"armor":0,"speed":0.0,"mineralCost":100,"footprintWidth":2,"footprintHeight":2}]}""",
-                """{"list":[]}"""
+                """{"list":[]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Depot","hp":400,"armor":0,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}]}"""
             )
 
         issue(

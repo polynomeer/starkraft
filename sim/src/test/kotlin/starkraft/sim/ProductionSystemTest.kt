@@ -19,7 +19,7 @@ class ProductionSystemTest {
         val units =
             """
             {"list":[
-              {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss"}
+              {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","producerTypes":["Depot"]}
             ]}
             """.trimIndent()
         val weapons =
@@ -28,7 +28,13 @@ class ProductionSystemTest {
               {"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}
             ]}
             """.trimIndent()
-        return DataRepo(units, weapons)
+        val buildings =
+            """
+            {"list":[
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}
+            ]}
+            """.trimIndent()
+        return DataRepo(units, weapons, buildings)
     }
 
     @Test
@@ -232,7 +238,6 @@ class ProductionSystemTest {
         val units =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"speed":0.0,"mineralCost":100,"buildTicks":120,"footprintWidth":2,"footprintHeight":2},
               {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}
             ]}
             """.trimIndent()
@@ -242,6 +247,12 @@ class ProductionSystemTest {
               {"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}
             ]}
             """.trimIndent()
-        return DataRepo(units, weapons)
+        val buildings =
+            """
+            {"list":[
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}
+            ]}
+            """.trimIndent()
+        return DataRepo(units, weapons, buildings)
     }
 }

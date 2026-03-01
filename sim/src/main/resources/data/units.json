@@ -10,16 +10,6 @@
       "producerTypes": ["Depot"]
     },
     {
-      "id": "Depot",
-      "hp": 400,
-      "armor": 1,
-      "speed": 0.0,
-      "mineralCost": 100,
-      "buildTicks": 120,
-      "footprintWidth": 2,
-      "footprintHeight": 2
-    },
-    {
       "id": "Marine",
       "hp": 45,
       "armor": 0,
