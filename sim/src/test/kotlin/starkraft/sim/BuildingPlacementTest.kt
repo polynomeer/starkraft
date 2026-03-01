@@ -89,7 +89,7 @@ class BuildingPlacementTest {
             DataRepo(
                 """{"list":[]}""",
                 """{"list":[]}""",
-                """{"list":[{"id":"Depot","hp":400,"armor":0,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","hp":400,"armor":0,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}]}"""
             )
 
         issue(
@@ -103,5 +103,21 @@ class BuildingPlacementTest {
         assertEquals(1, world.footprints.size)
         assertTrue(occ.isBlocked(8, 8))
         assertEquals(50, world.stockpiles[1]?.minerals)
+    }
+
+    @Test
+    fun `building clearance prevents adjacent placement`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+
+        val first = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, clearance = 1)
+        val second = buildings.place(faction = 1, typeId = "Depot", tileX = 6, tileY = 4, width = 2, height = 2, hp = 400, clearance = 1)
+        val third = buildings.place(faction = 1, typeId = "Depot", tileX = 7, tileY = 4, width = 2, height = 2, hp = 400, clearance = 1)
+
+        assertNotNull(first)
+        assertNull(second)
+        assertNotNull(third)
     }
 }

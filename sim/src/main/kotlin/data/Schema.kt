@@ -35,6 +35,7 @@ data class BuildingDef(
     val armor: Int = 0,
     val footprintWidth: Int,
     val footprintHeight: Int,
+    val placementClearance: Int = 0,
     val mineralCost: Int = 0,
     val gasCost: Int = 0
 )

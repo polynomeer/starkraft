@@ -17,10 +17,14 @@ class BuildingPlacementSystem(
     private val occ: OccupancyGrid,
     private val resources: ResourceSystem? = null
 ) {
-    fun canPlace(tileX: Int, tileY: Int, width: Int, height: Int): Boolean {
+    fun canPlace(tileX: Int, tileY: Int, width: Int, height: Int, clearance: Int = 0): Boolean {
         if (width <= 0 || height <= 0) return false
-        for (y in tileY until tileY + height) {
-            for (x in tileX until tileX + width) {
+        val minX = tileX - clearance
+        val minY = tileY - clearance
+        val maxX = tileX + width + clearance - 1
+        val maxY = tileY + height + clearance - 1
+        for (y in minY..maxY) {
+            for (x in minX..maxX) {
                 if (!map.inBounds(x, y)) return false
                 if (!map.isPassable(x, y)) return false
                 if (occ.isBlocked(x, y)) return false
@@ -37,11 +41,12 @@ class BuildingPlacementSystem(
         width: Int,
         height: Int,
         hp: Int,
+        clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
         gasCost: Int = 0
     ): EntityId? {
-        return placeResult(faction, typeId, tileX, tileY, width, height, hp, armor, mineralCost, gasCost).entityId
+        return placeResult(faction, typeId, tileX, tileY, width, height, hp, clearance, armor, mineralCost, gasCost).entityId
     }
 
     fun placeResult(
@@ -52,12 +57,13 @@ class BuildingPlacementSystem(
         width: Int,
         height: Int,
         hp: Int,
+        clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
         gasCost: Int = 0
     ): BuildPlacementResult {
         if (width <= 0 || height <= 0 || hp <= 0) return BuildPlacementResult(failure = BuildFailureReason.INVALID_FOOTPRINT)
-        if (!canPlace(tileX, tileY, width, height)) return BuildPlacementResult(failure = BuildFailureReason.INVALID_PLACEMENT)
+        if (!canPlace(tileX, tileY, width, height, clearance)) return BuildPlacementResult(failure = BuildFailureReason.INVALID_PLACEMENT)
         if (resources != null && !resources.spend(faction, mineralCost, gasCost)) {
             return BuildPlacementResult(failure = BuildFailureReason.INSUFFICIENT_RESOURCES)
         }

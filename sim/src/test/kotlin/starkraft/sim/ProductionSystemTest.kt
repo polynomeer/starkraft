@@ -31,7 +31,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)
@@ -250,7 +250,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)

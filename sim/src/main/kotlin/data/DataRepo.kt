@@ -8,6 +8,7 @@ data class BuildSpec(
     val armor: Int,
     val footprintWidth: Int,
     val footprintHeight: Int,
+    val placementClearance: Int,
     val mineralCost: Int,
     val gasCost: Int
 )
@@ -44,6 +45,7 @@ class DataRepo(
             armor = building.armor,
             footprintWidth = building.footprintWidth,
             footprintHeight = building.footprintHeight,
+            placementClearance = building.placementClearance,
             mineralCost = building.mineralCost,
             gasCost = building.gasCost
         )

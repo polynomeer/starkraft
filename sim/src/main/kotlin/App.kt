@@ -113,6 +113,7 @@ fun main(args: Array<String>) {
                 width = depotBuild.footprintWidth,
                 height = depotBuild.footprintHeight,
                 hp = depotBuild.hp,
+                clearance = depotBuild.placementClearance,
                 armor = depotBuild.armor,
                 mineralCost = depotBuild.mineralCost,
                 gasCost = depotBuild.gasCost
@@ -1942,6 +1943,7 @@ fun issue(
             val armor = if (cmd.armor > 0) cmd.armor else (spec?.armor ?: 0)
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
+            val clearance = spec?.placementClearance ?: 0
             if (width <= 0 || height <= 0 || hp <= 0) {
                 if (outcomeCounters != null) {
                     outcomeCounters.buildFailures++
@@ -1969,6 +1971,7 @@ fun issue(
                     width = width,
                     height = height,
                     hp = hp,
+                    clearance = clearance,
                     armor = armor,
                     mineralCost = mineralCost,
                     gasCost = gasCost
@@ -2017,8 +2020,8 @@ fun issue(
                         entityId = id,
                         faction = cmd.faction,
                         typeId = cmd.typeId,
-                        x = cmd.tileX.toFloat() + cmd.width.toFloat() * 0.5f,
-                        y = cmd.tileY.toFloat() + cmd.height.toFloat() * 0.5f,
+                        x = cmd.tileX.toFloat() + width.toFloat() * 0.5f,
+                        y = cmd.tileY.toFloat() + height.toFloat() * 0.5f,
                         vision = null,
                         label = null,
                         labelId = null,

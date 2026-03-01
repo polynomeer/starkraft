@@ -61,6 +61,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Add building placement/removal that updates `OccupancyGrid` (static counts).
    - Keep building behavior in its own system and avoid branching in movement.
    - `BuildingPlacementSystem` now covers headless placement/removal for rectangular footprints.
+   - Placement clearance is data-driven in building defs, so spacing rules stay deterministic.
 
 13. **Resources**
    - Keep faction stockpiles in deterministic sim state.
@@ -113,6 +114,7 @@ Script syntax:
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
+- Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 
 Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically
