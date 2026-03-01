@@ -27,6 +27,7 @@ import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
+import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -457,6 +458,33 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"damage\",\"sequence\":23,\"tick\":17,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders session stats stream record json`() {
+        val json =
+            renderSessionStatsStreamRecordJson(
+                sequence = 24L,
+                ticks = 1500,
+                pathRequests = 120,
+                pathSolved = 110,
+                replans = 30,
+                replansBlocked = 12,
+                replansStuck = 5,
+                attacks = 80,
+                kills = 14,
+                despawns = 14,
+                finalVisibleTilesFaction1 = 220,
+                finalVisibleTilesFaction2 = 198,
+                finalWorldHash = 123456789L,
+                finalReplayHash = 987654321L,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
             json
         )
     }

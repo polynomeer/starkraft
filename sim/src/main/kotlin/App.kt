@@ -27,6 +27,7 @@ import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
+import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
@@ -182,6 +183,14 @@ fun main(args: Array<String>) {
     val selectionEventsByTick = mergeSelectionEvents(spawnProgram.selectionEventsByTick, baseProgram.selectionEventsByTick)
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
+    var totalPathRequests = 0
+    var totalPathSolved = 0
+    var totalReplans = 0
+    var totalReplansBlocked = 0
+    var totalReplansStuck = 0
+    var totalAttacks = 0
+    var totalKills = 0
+    var totalDespawns = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -278,6 +287,14 @@ fun main(args: Array<String>) {
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitDespawnRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
         visionSys.tick()
+        totalPathRequests += pathing.lastTickRequests
+        totalPathSolved += pathing.lastTickSolved
+        totalReplans += movement.lastTickReplans
+        totalReplansBlocked += movement.lastTickReplansBlocked
+        totalReplansStuck += movement.lastTickReplansStuck
+        totalAttacks += combat.lastTickAttacks
+        totalKills += combat.lastTickKills
+        totalDespawns += world.removedEventCount
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -358,6 +375,26 @@ fun main(args: Array<String>) {
         emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
+        emitSnapshotLine(
+            renderSessionStatsStreamRecordJson(
+                sequence = nextStreamSequence(streamSequence),
+                ticks = tick,
+                pathRequests = totalPathRequests,
+                pathSolved = totalPathSolved,
+                replans = totalReplans,
+                replansBlocked = totalReplansBlocked,
+                replansStuck = totalReplansStuck,
+                attacks = totalAttacks,
+                kills = totalKills,
+                despawns = totalDespawns,
+                finalVisibleTilesFaction1 = fog1.visibleCount(),
+                finalVisibleTilesFaction2 = fog2.visibleCount(),
+                finalWorldHash = finalWorldHash,
+                finalReplayHash = finalReplayHash,
+                pretty = false
+            ),
+            resolvedSnapshotOutPath
+        )
         emitSnapshotLine(
             renderSnapshotSessionEndJson(
                 sequence = nextStreamSequence(streamSequence),

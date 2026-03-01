@@ -333,6 +333,25 @@ data class DamageStreamRecord(
     val events: List<DamageEventRecord>
 )
 
+@Serializable
+data class SessionStatsStreamRecord(
+    val recordType: String = "sessionStats",
+    val sequence: Long,
+    val ticks: Int,
+    val pathRequests: Int,
+    val pathSolved: Int,
+    val replans: Int,
+    val replansBlocked: Int,
+    val replansStuck: Int,
+    val attacks: Int,
+    val kills: Int,
+    val despawns: Int,
+    val finalVisibleTilesFaction1: Int,
+    val finalVisibleTilesFaction2: Int,
+    val finalWorldHash: Long,
+    val finalReplayHash: Long? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -747,6 +766,43 @@ fun renderDamageStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = DamageStreamRecord(sequence = sequence, tick = tick, events = events)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderSessionStatsStreamRecordJson(
+    sequence: Long,
+    ticks: Int,
+    pathRequests: Int,
+    pathSolved: Int,
+    replans: Int,
+    replansBlocked: Int,
+    replansStuck: Int,
+    attacks: Int,
+    kills: Int,
+    despawns: Int,
+    finalVisibleTilesFaction1: Int,
+    finalVisibleTilesFaction2: Int,
+    finalWorldHash: Long,
+    finalReplayHash: Long?,
+    pretty: Boolean = false
+): String {
+    val record =
+        SessionStatsStreamRecord(
+            sequence = sequence,
+            ticks = ticks,
+            pathRequests = pathRequests,
+            pathSolved = pathSolved,
+            replans = replans,
+            replansBlocked = replansBlocked,
+            replansStuck = replansStuck,
+            attacks = attacks,
+            kills = kills,
+            despawns = despawns,
+            finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
+            finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
+            finalWorldHash = finalWorldHash,
+            finalReplayHash = finalReplayHash
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

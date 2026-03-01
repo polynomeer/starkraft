@@ -130,6 +130,7 @@ Other flags:
   Static blocker changes emit `occupancy` records with tile-level blocked/unblocked deltas.
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Combat ticks also emit `damage` records for health-bar style UI updates.
+  Streams end with a `sessionStats` aggregate record before `sessionEnd`.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
   Snapshot cadence also emits `metrics` records with alive counts, visibility, pathing, and replan telemetry.
