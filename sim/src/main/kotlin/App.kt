@@ -689,7 +689,12 @@ internal data class CommandStatsMetadata(
 @Serializable
 internal data class CommandTickCount(
     val tick: Int,
-    val commands: Int
+    val commands: Int,
+    val spawns: Int,
+    val moves: Int,
+    val attacks: Int,
+    val selectors: CommandSelectorTotals,
+    val breakdown: CommandActionBreakdown
 )
 
 @Serializable
@@ -734,12 +739,84 @@ internal fun buildCommandStats(
     var attackType = 0
     val ticks = ArrayList<CommandTickCount>()
     for (tick in commandsByTick.indices) {
-        val count = commandsByTick[tick].size
+        val tickCommands = commandsByTick[tick]
+        val count = tickCommands.size
+        var tickSpawns = 0
+        var tickMoves = 0
+        var tickAttacks = 0
+        var tickDirect = 0
+        var tickFaction = 0
+        var tickType = 0
+        var tickMoveDirect = 0
+        var tickMoveFaction = 0
+        var tickMoveType = 0
+        var tickAttackDirect = 0
+        var tickAttackFaction = 0
+        var tickAttackType = 0
+        for (cmd in tickCommands) {
+            when (cmd) {
+                is Command.Move -> {
+                    tickMoves++
+                    tickDirect++
+                    tickMoveDirect++
+                }
+                is Command.MoveFaction -> {
+                    tickMoves++
+                    tickFaction++
+                    tickMoveFaction++
+                }
+                is Command.MoveType -> {
+                    tickMoves++
+                    tickType++
+                    tickMoveType++
+                }
+                is Command.Attack -> {
+                    tickAttacks++
+                    tickDirect++
+                    tickAttackDirect++
+                }
+                is Command.AttackFaction -> {
+                    tickAttacks++
+                    tickFaction++
+                    tickAttackFaction++
+                }
+                is Command.AttackType -> {
+                    tickAttacks++
+                    tickType++
+                    tickAttackType++
+                }
+                is Command.Spawn -> tickSpawns++
+            }
+        }
         if (count > 0) {
-            ticks.add(CommandTickCount(tick, count))
+            ticks.add(
+                CommandTickCount(
+                    tick = tick,
+                    commands = count,
+                    spawns = tickSpawns,
+                    moves = tickMoves,
+                    attacks = tickAttacks,
+                    selectors = CommandSelectorTotals(direct = tickDirect, faction = tickFaction, type = tickType),
+                    breakdown =
+                        CommandActionBreakdown(
+                            move =
+                                CommandSelectorTotals(
+                                    direct = tickMoveDirect,
+                                    faction = tickMoveFaction,
+                                    type = tickMoveType
+                                ),
+                            attack =
+                                CommandSelectorTotals(
+                                    direct = tickAttackDirect,
+                                    faction = tickAttackFaction,
+                                    type = tickAttackType
+                                )
+                        )
+                )
+            )
             total += count
         }
-        for (cmd in commandsByTick[tick]) {
+        for (cmd in tickCommands) {
             when (cmd) {
                 is Command.Move -> {
                     moves++
@@ -854,7 +931,13 @@ private fun printCommandStats(stats: CommandStats) {
         )
     }
     for (tick in stats.ticks) {
-        println("tick=${tick.tick} commands=${tick.commands}")
+        println(
+            "tick=${tick.tick} commands=${tick.commands} spawns=${tick.spawns} " +
+                "moves=${tick.moves} attacks=${tick.attacks} " +
+                "selectors=${tick.selectors.direct}/${tick.selectors.faction}/${tick.selectors.type} " +
+                "move=${tick.breakdown.move.direct}/${tick.breakdown.move.faction}/${tick.breakdown.move.type} " +
+                "attack=${tick.breakdown.attack.direct}/${tick.breakdown.attack.faction}/${tick.breakdown.attack.type}"
+        )
     }
     println(
         "total=${stats.totals.total} spawns=${stats.totals.spawns} " +
