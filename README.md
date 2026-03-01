@@ -150,6 +150,7 @@ Other flags:
   Rally overrides emit `rally` records when producer rally points change.
   Invalid rally commands also emit `rallyFailure` records with deterministic reasons.
   Producer-related train failures also emit `producerFailure` records with building/type context.
+  Invalid build commands also emit `buildFailure` records with faction/type/tile context.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Applied move and attack orders emit `orderApplied` records after selector resolution.
   Those order applications also emit `orderQueue` records with the resulting queue sizes.

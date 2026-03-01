@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.BuildFailureCounts
 import starkraft.sim.client.buildClientSnapshot
+import starkraft.sim.client.renderBuildFailureStreamRecordJson
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
@@ -456,6 +457,26 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"producerFailure\",\"sequence\":19,\"tick\":13,\"buildingId\":41,\"producerTypeId\":\"Depot\",\"typeId\":\"Marine\",\"reason\":\"incompatibleProducer\"}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders build failure stream record json`() {
+        val json =
+            renderBuildFailureStreamRecordJson(
+                sequence = 20L,
+                tick = 13,
+                faction = 1,
+                typeId = "Depot",
+                tileX = 9,
+                tileY = 10,
+                reason = "invalidPlacement",
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"buildFailure\",\"sequence\":20,\"tick\":13,\"faction\":1,\"typeId\":\"Depot\",\"tileX\":9,\"tileY\":10,\"reason\":\"invalidPlacement\"}",
             json
         )
     }

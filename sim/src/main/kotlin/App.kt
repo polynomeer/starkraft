@@ -14,6 +14,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderBuildFailureStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
@@ -894,6 +895,32 @@ private fun emitCommandFailureRecord(
             typeId = typeId,
             tileX = tileX,
             tileY = tileY,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitBuildFailureRecord(
+    tick: Int,
+    faction: Int,
+    typeId: String,
+    tileX: Int,
+    tileY: Int,
+    reason: String,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderBuildFailureStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            faction = faction,
+            typeId = typeId,
+            tileX = tileX,
+            tileY = tileY,
+            reason = reason,
             pretty = false
         ),
         snapshotOutPath
@@ -2239,6 +2266,16 @@ fun issue(
                     tileX = cmd.tileX,
                     tileY = cmd.tileY
                 )
+                emitBuildFailureRecord(
+                    tick = cmd.tick,
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    tileX = cmd.tileX,
+                    tileY = cmd.tileY,
+                    reason = "invalidDefinition",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence
+                )
                 return
             }
             val result =
@@ -2281,6 +2318,16 @@ fun issue(
                     typeId = cmd.typeId,
                     tileX = cmd.tileX,
                     tileY = cmd.tileY
+                )
+                emitBuildFailureRecord(
+                    tick = cmd.tick,
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    tileX = cmd.tileX,
+                    tileY = cmd.tileY,
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence
                 )
                 return
             }
