@@ -1,6 +1,8 @@
 package starkraft.sim
 
 import starkraft.sim.client.buildClientSnapshot
+import starkraft.sim.client.CombatEventRecord
+import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
@@ -230,6 +232,7 @@ fun main(args: Array<String>) {
         pathing.tick()
         movement.tick()
         combat.tick()
+        emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         visionSys.tick()
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
@@ -548,6 +551,38 @@ private fun emitMetricsRecord(
             replans = movement.lastTickReplans,
             replansBlocked = movement.lastTickReplansBlocked,
             replansStuck = movement.lastTickReplansStuck,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitCombatRecord(
+    combat: CombatSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || combat.lastTickEventCount == 0) return
+    val events = ArrayList<CombatEventRecord>(combat.lastTickEventCount)
+    for (i in 0 until combat.lastTickEventCount) {
+        events.add(
+            CombatEventRecord(
+                attackerId = combat.eventAttacker(i),
+                targetId = combat.eventTarget(i),
+                damage = combat.eventDamage(i),
+                targetHp = combat.eventTargetHp(i),
+                killed = combat.eventKilled(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderCombatStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            attacks = combat.lastTickAttacks,
+            kills = combat.lastTickKills,
+            events = events,
             pretty = false
         ),
         snapshotOutPath

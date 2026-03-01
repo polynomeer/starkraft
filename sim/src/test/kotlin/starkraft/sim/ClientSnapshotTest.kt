@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
+import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
+import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -190,6 +192,28 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"metrics\",\"sequence\":10,\"tick\":4,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20},{\"faction\":2,\"alive\":4,\"visibleTiles\":18}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders combat stream record json`() {
+        val json =
+            renderCombatStreamRecordJson(
+                sequence = 11L,
+                tick = 6,
+                attacks = 2,
+                kills = 1,
+                events =
+                    listOf(
+                        CombatEventRecord(attackerId = 3, targetId = 8, damage = 6, targetHp = 12, killed = false),
+                        CombatEventRecord(attackerId = 4, targetId = 9, damage = 9, targetHp = -1, killed = true)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"combat\",\"sequence\":11,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }

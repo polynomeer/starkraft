@@ -121,6 +121,25 @@ data class MetricsStreamRecord(
     val replansStuck: Int
 )
 
+@Serializable
+data class CombatEventRecord(
+    val attackerId: Int,
+    val targetId: Int,
+    val damage: Int,
+    val targetHp: Int,
+    val killed: Boolean
+)
+
+@Serializable
+data class CombatStreamRecord(
+    val recordType: String = "combat",
+    val sequence: Long,
+    val tick: Int,
+    val attacks: Int,
+    val kills: Int,
+    val events: List<CombatEventRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -305,6 +324,25 @@ fun renderMetricsStreamRecordJson(
             replans = replans,
             replansBlocked = replansBlocked,
             replansStuck = replansStuck
+        )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderCombatStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    attacks: Int,
+    kills: Int,
+    events: List<CombatEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record =
+        CombatStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            attacks = attacks,
+            kills = kills,
+            events = events
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

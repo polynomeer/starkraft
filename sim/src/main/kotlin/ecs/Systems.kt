@@ -133,8 +133,22 @@ class MovementSystem(
 class CombatSystem(private val world: World, private val data: DataRepo) {
     private val enemyLists = mutableMapOf<Int, EnemyList>()
     private val emptyIds = IntArray(0)
+    private var eventAttackers = IntArray(16)
+    private var eventTargets = IntArray(16)
+    private var eventDamage = IntArray(16)
+    private var eventTargetHp = IntArray(16)
+    private var eventKilled = BooleanArray(16)
+    var lastTickEventCount = 0
+        private set
+    var lastTickAttacks = 0
+        private set
+    var lastTickKills = 0
+        private set
 
     fun tick() {
+        lastTickEventCount = 0
+        lastTickAttacks = 0
+        lastTickKills = 0
         // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
         val enemiesCache: Map<Int, EnemyList> = buildEnemyCache()
 
@@ -178,10 +192,22 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
                 val dmg = kotlin.math.max(0, def.damage - targetHp.armor)
                 targetHp.hp -= dmg
                 w.cooldownTicks = def.cooldownTicks
-                if (targetHp.hp <= 0) world.remove(best)
+                val killed = targetHp.hp <= 0
+                recordEvent(id, best, dmg, targetHp.hp, killed)
+                if (killed) world.remove(best)
             }
         }
     }
+
+    fun eventAttacker(index: Int): Int = eventAttackers[index]
+
+    fun eventTarget(index: Int): Int = eventTargets[index]
+
+    fun eventDamage(index: Int): Int = eventDamage[index]
+
+    fun eventTargetHp(index: Int): Int = eventTargetHp[index]
+
+    fun eventKilled(index: Int): Boolean = eventKilled[index]
 
     private fun buildEnemyCache(): Map<Int, EnemyList> {
         val factions = world.tags.values.asSequence().map { it.faction }.toSet()
@@ -201,6 +227,26 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             cache[f] = list
         }
         return cache
+    }
+
+    private fun recordEvent(attacker: Int, target: Int, damage: Int, targetHp: Int, killed: Boolean) {
+        val index = lastTickEventCount
+        if (index >= eventAttackers.size) {
+            val nextSize = eventAttackers.size * 2
+            eventAttackers = eventAttackers.copyOf(nextSize)
+            eventTargets = eventTargets.copyOf(nextSize)
+            eventDamage = eventDamage.copyOf(nextSize)
+            eventTargetHp = eventTargetHp.copyOf(nextSize)
+            eventKilled = eventKilled.copyOf(nextSize)
+        }
+        eventAttackers[index] = attacker
+        eventTargets[index] = target
+        eventDamage[index] = damage
+        eventTargetHp[index] = targetHp
+        eventKilled[index] = killed
+        lastTickEventCount = index + 1
+        lastTickAttacks++
+        if (killed) lastTickKills++
     }
 }
 
