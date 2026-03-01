@@ -11,6 +11,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.data.DataRepo
@@ -149,14 +150,17 @@ fun main(args: Array<String>) {
         )
     }
     requireReplayCompatibility(replayMeta, strictReplayMeta)
-    val baseCommands: Array<ArrayList<Command>> = when {
-        replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
-        scriptPath != null -> loadScriptCommands(scriptPath)
-        else -> arrayOf()
+    val baseProgram: LoadedProgram = when {
+        replayPath != null -> LoadedProgram(loadReplayCommands(replayPath, strictReplayHash), emptyArray())
+        scriptPath != null -> loadScriptProgram(scriptPath)
+        else -> LoadedProgram(arrayOf(), emptyArray())
     }
-    val spawnCommands: Array<ArrayList<Command>> =
-        if (spawnScriptPath != null) loadSpawnScriptCommands(spawnScriptPath) else arrayOf()
+    val spawnProgram: LoadedProgram =
+        if (spawnScriptPath != null) loadSpawnScriptProgram(spawnScriptPath) else LoadedProgram(arrayOf(), emptyArray())
+    val baseCommands = baseProgram.commandsByTick
+    val spawnCommands = spawnProgram.commandsByTick
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
+    val selectionEventsByTick = mergeSelectionEvents(spawnProgram.selectionEventsByTick, baseProgram.selectionEventsByTick)
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
 
@@ -227,6 +231,12 @@ fun main(args: Array<String>) {
             println("tick=$tick  remove static blockers at y=10 (x=14..20)")
         }
         if (tick < commandsByTick.size) {
+            if (tick < selectionEventsByTick.size) {
+                val selections = selectionEventsByTick[tick]
+                for (i in 0 until selections.size) {
+                    emitSelectionRecord(selections[i], tick, resolvedSnapshotOutPath, streamSequence)
+                }
+            }
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
                 issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence)
@@ -683,17 +693,33 @@ internal fun emitSnapshotLine(snapshotJson: String, snapshotOutPath: java.nio.fi
 }
 
 private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
+    return loadScriptProgram(pathStr).commandsByTick
+}
+
+private data class LoadedProgram(
+    val commandsByTick: Array<ArrayList<Command>>,
+    val selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>
+)
+
+private fun loadScriptProgram(pathStr: String): LoadedProgram {
     val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Script file not found: $pathStr")
-    val cmds = ScriptRunner.load(path)
-    if (cmds.isEmpty()) return arrayOf()
+    val program = ScriptRunner.loadProgram(path)
+    val cmds = program.commands
+    val selectionEvents = program.selections
+    if (cmds.isEmpty() && selectionEvents.isEmpty()) return LoadedProgram(arrayOf(), emptyArray())
     var maxTick = 0
     for (c in cmds) if (c.tick > maxTick) maxTick = c.tick
+    for (event in selectionEvents) if (event.tick > maxTick) maxTick = event.tick
     val byTick = Array(maxTick + 1) { ArrayList<Command>() }
+    val selectionByTick = Array(maxTick + 1) { ArrayList<ScriptRunner.SelectionEvent>() }
     for (c in cmds) {
         byTick[c.tick].add(c)
     }
-    return byTick
+    for (event in selectionEvents) {
+        selectionByTick[event.tick].add(event)
+    }
+    return LoadedProgram(byTick, selectionByTick)
 }
 
 private fun resolvePath(pathStr: String): java.nio.file.Path {
@@ -705,7 +731,13 @@ private fun resolvePath(pathStr: String): java.nio.file.Path {
 }
 
 private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> {
-    val all = loadScriptCommands(pathStr)
+    return loadSpawnScriptProgram(pathStr).commandsByTick
+}
+
+private fun loadSpawnScriptProgram(pathStr: String): LoadedProgram {
+    val program = loadScriptProgram(pathStr)
+    val all = program.commandsByTick
+    val selections = program.selectionEventsByTick
     for (tick in all.indices) {
         val cmds = all[tick]
         val it = cmds.iterator()
@@ -714,7 +746,7 @@ private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> 
             if (c !is Command.Spawn) it.remove()
         }
     }
-    return all
+    return LoadedProgram(all, selections)
 }
 
 private fun mergeCommands(
@@ -730,6 +762,65 @@ private fun mergeCommands(
         if (i < second.size) merged[i].addAll(second[i])
     }
     return merged
+}
+
+private fun mergeSelectionEvents(
+    first: Array<ArrayList<ScriptRunner.SelectionEvent>>,
+    second: Array<ArrayList<ScriptRunner.SelectionEvent>>
+): Array<ArrayList<ScriptRunner.SelectionEvent>> {
+    if (first.isEmpty()) return second
+    if (second.isEmpty()) return first
+    val size = maxOf(first.size, second.size)
+    val merged = Array(size) { ArrayList<ScriptRunner.SelectionEvent>() }
+    for (i in 0 until size) {
+        if (i < first.size) merged[i].addAll(first[i])
+        if (i < second.size) merged[i].addAll(second[i])
+    }
+    return merged
+}
+
+private fun emitSelectionRecord(
+    event: ScriptRunner.SelectionEvent,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val json =
+        when (val selection = event.selection) {
+            is ScriptRunner.Selection.Units ->
+                renderSelectionStreamRecordJson(
+                    sequence = nextStreamSequence(streamSequence),
+                    tick = tick,
+                    selectionType = "units",
+                    units = selection.ids,
+                    pretty = false
+                )
+            is ScriptRunner.Selection.All ->
+                renderSelectionStreamRecordJson(
+                    sequence = nextStreamSequence(streamSequence),
+                    tick = tick,
+                    selectionType = "all",
+                    pretty = false
+                )
+            is ScriptRunner.Selection.Faction ->
+                renderSelectionStreamRecordJson(
+                    sequence = nextStreamSequence(streamSequence),
+                    tick = tick,
+                    selectionType = "faction",
+                    faction = selection.id,
+                    pretty = false
+                )
+            is ScriptRunner.Selection.Type ->
+                renderSelectionStreamRecordJson(
+                    sequence = nextStreamSequence(streamSequence),
+                    tick = tick,
+                    selectionType = "type",
+                    typeId = selection.typeId,
+                    pretty = false
+                )
+        }
+    emitSnapshotLine(json, snapshotOutPath)
 }
 
 private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {

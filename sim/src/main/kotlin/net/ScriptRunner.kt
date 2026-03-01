@@ -9,20 +9,35 @@ object ScriptRunner {
         return map.getOrPut(label) { next() }
     }
 
-    private sealed interface Selection {
+    sealed interface Selection {
         data class Units(val ids: IntArray) : Selection
         data object All : Selection
         data class Faction(val id: Int) : Selection
         data class Type(val typeId: String) : Selection
     }
 
+    data class SelectionEvent(
+        val tick: Int,
+        val selection: Selection
+    )
+
+    data class ScriptProgram(
+        val commands: List<Command>,
+        val selections: List<SelectionEvent>
+    )
+
     fun load(path: Path): List<Command> {
+        return loadProgram(path).commands
+    }
+
+    fun loadProgram(path: Path): ScriptProgram {
         val lines = Files.readAllLines(path)
         var tick = 0
         var selection: Selection? = null
         val labelIds = HashMap<String, Int>()
         var nextLabelId = -1
         val out = ArrayList<Command>(lines.size)
+        val selections = ArrayList<SelectionEvent>()
 
         for ((idx, raw) in lines.withIndex()) {
             val line = raw.trim()
@@ -49,17 +64,21 @@ object ScriptRunner {
                         }
                     }
                     selection = Selection.Units(selected.toIntArray())
+                    selections.add(SelectionEvent(tick, selection))
                 }
                 "selectAll" -> {
                     selection = Selection.All
+                    selections.add(SelectionEvent(tick, selection))
                 }
                 "selectFaction" -> {
                     require(parts.size == 2) { "selectFaction <id>" }
                     selection = Selection.Faction(parts[1].toInt())
+                    selections.add(SelectionEvent(tick, selection))
                 }
                 "selectType" -> {
                     require(parts.size == 2) { "selectType <typeId>" }
                     selection = Selection.Type(parts[1])
+                    selections.add(SelectionEvent(tick, selection))
                 }
                 "move" -> {
                     require(parts.size == 3) { "move <x> <y>" }
@@ -104,7 +123,7 @@ object ScriptRunner {
                 error("Script error at line ${idx + 1} token '$token': $msg")
             }
         }
-        return out
+        return ScriptProgram(commands = out, selections = selections)
     }
 
     private fun moveCommand(tick: Int, selection: Selection, x: Float, y: Float): Command {

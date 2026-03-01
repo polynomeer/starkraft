@@ -191,6 +191,17 @@ data class SpawnStreamRecord(
     val labelId: Int? = null
 )
 
+@Serializable
+data class SelectionStreamRecord(
+    val recordType: String = "selection",
+    val sequence: Long,
+    val tick: Int,
+    val selectionType: String,
+    val units: IntArray = intArrayOf(),
+    val faction: Int? = null,
+    val typeId: String? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -472,6 +483,27 @@ fun renderSpawnStreamRecordJson(
             vision = vision,
             label = label,
             labelId = labelId
+        )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderSelectionStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    selectionType: String,
+    units: IntArray = intArrayOf(),
+    faction: Int? = null,
+    typeId: String? = null,
+    pretty: Boolean = false
+): String {
+    val record =
+        SelectionStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            selectionType = selectionType,
+            units = units,
+            faction = faction,
+            typeId = typeId
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

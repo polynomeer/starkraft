@@ -11,6 +11,7 @@ import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
+import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -289,6 +290,23 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"spawn\",\"sequence\":14,\"tick\":9,\"entityId\":21,\"faction\":1,\"typeId\":\"Marine\",\"x\":3.0,\"y\":4.0,\"vision\":7.0,\"label\":\"alpha\",\"labelId\":-1}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders selection stream record json`() {
+        val json =
+            renderSelectionStreamRecordJson(
+                sequence = 15L,
+                tick = 10,
+                selectionType = "faction",
+                faction = 2,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"selection\",\"sequence\":15,\"tick\":10,\"selectionType\":\"faction\",\"units\":[],\"faction\":2,\"typeId\":null}",
             json
         )
     }

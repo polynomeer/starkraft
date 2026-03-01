@@ -120,6 +120,7 @@ Other flags:
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
   Issued commands are also emitted as `command` records.
+  Script-driven selection changes emit `selection` records before commands for that tick.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Combat ticks emit `combat` records with attack and kill events.
   Entity removals emit `despawn` records with ids, types, factions, and reasons.
