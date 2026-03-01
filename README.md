@@ -109,8 +109,8 @@ Other flags:
 - `--spawnScript <path>` run a spawn-only script before other commands
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
-- `--replayStats` print command counts by tick and type, including selector split (`direct`, `faction`, `type`)
-- `--replayStatsJson` print replay stats as JSON, including selector split totals
+- `--replayStats` print command counts by tick and type, including selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`
+- `--replayStatsJson` print replay stats as JSON, including selector split totals and action breakdowns
 - `--replayMetaJson` print only replay metadata and compatibility warnings as JSON
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches

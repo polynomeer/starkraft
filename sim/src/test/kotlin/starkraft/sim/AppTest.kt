@@ -117,6 +117,12 @@ class AppTest {
         assertEquals(2, stats.totals.selectors.direct)
         assertEquals(1, stats.totals.selectors.faction)
         assertEquals(1, stats.totals.selectors.type)
+        assertEquals(1, stats.totals.breakdown.move.direct)
+        assertEquals(0, stats.totals.breakdown.move.faction)
+        assertEquals(1, stats.totals.breakdown.move.type)
+        assertEquals(1, stats.totals.breakdown.attack.direct)
+        assertEquals(1, stats.totals.breakdown.attack.faction)
+        assertEquals(0, stats.totals.breakdown.attack.type)
     }
 
     @Test

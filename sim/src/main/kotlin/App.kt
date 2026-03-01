@@ -679,7 +679,8 @@ internal data class CommandTotals(
     val spawns: Int,
     val moves: Int,
     val attacks: Int,
-    val selectors: CommandSelectorTotals
+    val selectors: CommandSelectorTotals,
+    val breakdown: CommandActionBreakdown
 )
 
 @Serializable
@@ -687,6 +688,12 @@ internal data class CommandSelectorTotals(
     val direct: Int,
     val faction: Int,
     val type: Int
+)
+
+@Serializable
+internal data class CommandActionBreakdown(
+    val move: CommandSelectorTotals,
+    val attack: CommandSelectorTotals
 )
 
 internal fun buildCommandStats(
@@ -700,6 +707,12 @@ internal fun buildCommandStats(
     var direct = 0
     var faction = 0
     var type = 0
+    var moveDirect = 0
+    var moveFaction = 0
+    var moveType = 0
+    var attackDirect = 0
+    var attackFaction = 0
+    var attackType = 0
     val ticks = ArrayList<CommandTickCount>()
     for (tick in commandsByTick.indices) {
         val count = commandsByTick[tick].size
@@ -712,26 +725,32 @@ internal fun buildCommandStats(
                 is Command.Move -> {
                     moves++
                     direct++
+                    moveDirect++
                 }
                 is Command.MoveFaction -> {
                     moves++
                     faction++
+                    moveFaction++
                 }
                 is Command.MoveType -> {
                     moves++
                     type++
+                    moveType++
                 }
                 is Command.Attack -> {
                     attacks++
                     direct++
+                    attackDirect++
                 }
                 is Command.AttackFaction -> {
                     attacks++
                     faction++
+                    attackFaction++
                 }
                 is Command.AttackType -> {
                     attacks++
                     type++
+                    attackType++
                 }
                 is Command.Spawn -> spawns++
             }
@@ -756,7 +775,17 @@ internal fun buildCommandStats(
             spawns = spawns,
             moves = moves,
             attacks = attacks,
-            selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type)
+            selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type),
+            breakdown =
+                CommandActionBreakdown(
+                    move = CommandSelectorTotals(direct = moveDirect, faction = moveFaction, type = moveType),
+                    attack =
+                        CommandSelectorTotals(
+                            direct = attackDirect,
+                            faction = attackFaction,
+                            type = attackType
+                        )
+                )
         )
     )
 }
@@ -801,6 +830,14 @@ private fun printCommandStats(stats: CommandStats) {
     println(
         "selectors: direct=${stats.totals.selectors.direct} " +
             "faction=${stats.totals.selectors.faction} type=${stats.totals.selectors.type}"
+    )
+    println(
+        "move selectors: direct=${stats.totals.breakdown.move.direct} " +
+            "faction=${stats.totals.breakdown.move.faction} type=${stats.totals.breakdown.move.type}"
+    )
+    println(
+        "attack selectors: direct=${stats.totals.breakdown.attack.direct} " +
+            "faction=${stats.totals.breakdown.attack.faction} type=${stats.totals.breakdown.attack.type}"
     )
 }
 
