@@ -3,12 +3,14 @@ package starkraft.sim
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
+import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
+import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -1441,6 +1443,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
         }
         is Command.MoveFaction -> {
             val applied = collectFactionTargets(cmd.faction, world)
@@ -1450,6 +1453,7 @@ fun issue(
                     world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
         }
         is Command.MoveType -> {
             val applied = collectTypeTargets(cmd.typeId, world)
@@ -1459,6 +1463,7 @@ fun issue(
                     world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
         }
 
         is Command.Attack -> {
@@ -1476,6 +1481,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Attack(target))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
         }
         is Command.AttackFaction -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -1486,6 +1492,7 @@ fun issue(
                     world.orders[id]?.items?.addLast(Order.Attack(target))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
         }
         is Command.AttackType -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -1496,6 +1503,7 @@ fun issue(
                     world.orders[id]?.items?.addLast(Order.Attack(target))
                 }
             }
+            emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
         }
 
         is Command.Spawn -> {
@@ -1605,6 +1613,32 @@ private fun emitOrderAppliedRecord(
             target = target,
             x = x,
             y = y,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitOrderQueueRecord(
+    tick: Int,
+    orderType: String,
+    units: IntArray,
+    world: World,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val entities = ArrayList<OrderQueueEntityRecord>(units.size)
+    for (i in units.indices) {
+        val id = units[i]
+        entities.add(OrderQueueEntityRecord(entityId = id, queueSize = world.orders[id]?.items?.size ?: 0))
+    }
+    emitSnapshotLine(
+        renderOrderQueueStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            orderType = orderType,
+            entities = entities,
             pretty = false
         ),
         snapshotOutPath

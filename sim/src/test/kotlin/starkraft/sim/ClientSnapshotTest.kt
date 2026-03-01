@@ -6,12 +6,14 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DespawnEventRecord
+import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
+import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
@@ -326,6 +328,23 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"orderApplied\",\"sequence\":16,\"tick\":11,\"orderType\":\"attack\",\"units\":[3,4,5],\"target\":9,\"x\":null,\"y\":null}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders order queue stream record json`() {
+        val json =
+            renderOrderQueueStreamRecordJson(
+                sequence = 17L,
+                tick = 12,
+                orderType = "move",
+                entities = listOf(OrderQueueEntityRecord(3, 2), OrderQueueEntityRecord(4, 1)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"orderQueue\",\"sequence\":17,\"tick\":12,\"orderType\":\"move\",\"entities\":[{\"entityId\":3,\"queueSize\":2},{\"entityId\":4,\"queueSize\":1}]}",
             json
         )
     }

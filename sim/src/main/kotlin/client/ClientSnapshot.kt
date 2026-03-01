@@ -214,6 +214,21 @@ data class OrderAppliedStreamRecord(
     val y: Float? = null
 )
 
+@Serializable
+data class OrderQueueEntityRecord(
+    val entityId: Int,
+    val queueSize: Int
+)
+
+@Serializable
+data class OrderQueueStreamRecord(
+    val recordType: String = "orderQueue",
+    val sequence: Long,
+    val tick: Int,
+    val orderType: String,
+    val entities: List<OrderQueueEntityRecord>
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -539,6 +554,23 @@ fun renderOrderAppliedStreamRecordJson(
             target = target,
             x = x,
             y = y
+        )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderOrderQueueStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    orderType: String,
+    entities: List<OrderQueueEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record =
+        OrderQueueStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            orderType = orderType,
+            entities = entities
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
