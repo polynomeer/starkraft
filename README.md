@@ -68,6 +68,8 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
 
 14. **Unit Behaviors**
+   - `BuildingProductionSystem` now supports deterministic per-building production queues.
+   - Spawn completed units onto free tiles around building footprints.
    - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
      move + attack decisions at the order layer.
 
