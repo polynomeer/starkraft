@@ -7,6 +7,8 @@
       "footprintWidth": 2,
       "footprintHeight": 2,
       "placementClearance": 1,
+      "supportsTraining": true,
+      "supportsRally": true,
       "productionQueueLimit": 3,
       "rallyOffsetX": 4.0,
       "rallyOffsetY": 0.0,

@@ -51,10 +51,14 @@ class BuildingProductionSystem(
                 return TrainFailureReason.INVALID_UNIT
             }
         val buildingType = world.tags[buildingId]?.typeId ?: return TrainFailureReason.MISSING_BUILDING
+        val buildingSpec = data.buildSpec(buildingType) ?: return TrainFailureReason.MISSING_BUILDING
+        if (!buildingSpec.supportsTraining) {
+            return TrainFailureReason.INCOMPATIBLE_PRODUCER
+        }
         if (unit.producerTypes.isNotEmpty() && !unit.producerTypes.contains(buildingType)) {
             return TrainFailureReason.INCOMPATIBLE_PRODUCER
         }
-        val queueLimit = data.buildSpec(buildingType)?.productionQueueLimit ?: 5
+        val queueLimit = buildingSpec.productionQueueLimit
         val queue = world.productionQueues[buildingId]
         if (queue != null && queue.items.size >= queueLimit) return TrainFailureReason.QUEUE_FULL
         if (resources != null) {
@@ -160,6 +164,7 @@ class BuildingProductionSystem(
         }
         val buildingType = world.tags[buildingId]?.typeId ?: return
         val rally = data.buildSpec(buildingType) ?: return
+        if (!rally.supportsRally) return
         if (rally.rallyOffsetX == 0f && rally.rallyOffsetY == 0f) return
         val buildingTransform = world.transforms[buildingId] ?: return
         world.orders[unitId]?.items?.addLast(Order.Move(buildingTransform.x + rally.rallyOffsetX, buildingTransform.y + rally.rallyOffsetY))

@@ -218,7 +218,7 @@ class AppTest {
             DataRepo(
                 """{"list":[]}""",
                 """{"list":[]}""",
-                """{"list":[{"id":"Depot","hp":0,"armor":1,"footprintWidth":2,"footprintHeight":0,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","hp":0,"armor":1,"footprintWidth":2,"footprintHeight":0,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
             )
 
         val ex =
@@ -267,8 +267,8 @@ class AppTest {
                 """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}]}""",
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
                 """{"list":[
-                    {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
-                    {"id":"Factory","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+                    {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+                    {"id":"Factory","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
                 ]}"""
             )
 
@@ -299,7 +299,7 @@ class AppTest {
             DataRepo(
                 """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}]}""",
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
-                """{"list":[{"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
             )
 
         val ex =
@@ -327,10 +327,34 @@ class AppTest {
             DataRepo(
                 """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}]}""",
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
-                """{"list":[{"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
             )
 
         validateTrainCommands(commandsByTick, data)
+    }
+
+    @Test
+    fun `script validation rejects producer without training support`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf(
+                    Command.Build(0, 1, "Tower", 4, 4, 2, 2, 300, 0, 100, 0, "tower", -1),
+                    Command.Train(0, -1, "Marine", 0, 0, 0)
+                )
+            )
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Tower"]}]}""",
+                """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
+                """{"list":[{"id":"Tower","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+            )
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateTrainCommands(commandsByTick, data)
+            }
+
+        assertEquals("Producer 'Tower' does not support training at tick 0", ex.message)
     }
 
     @Test

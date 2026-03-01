@@ -32,7 +32,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)
@@ -235,6 +235,64 @@ class ProductionSystemTest {
     }
 
     @Test
+    fun `producer without training support rejects enqueue`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Tower"]}]}""",
+                """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
+                """{"list":[{"id":"Tower","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+            )
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 500, 0)
+        val buildingId = buildings.place(1, "Tower", 6, 6, 2, 2, 300, mineralCost = 100)!!
+
+        assertFalse(production.enqueue(buildingId, "Marine", 5, mineralCost = 50))
+    }
+
+    @Test
+    fun `producer without rally support ignores rally override`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data =
+            DataRepo(
+                """{"list":[]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Tower","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}]}"""
+            )
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val labels = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
+        resources.set(1, 500, 0)
+
+        issue(
+            Command.Build(0, 1, "Tower", 6, 6, 2, 2, 300, 0, 100, 0, "tower", -1),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds,
+            buildings = buildings
+        )
+        issue(
+            Command.Rally(0, -1, 15f, 16f),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds
+        )
+
+        assertEquals(null, world.rallyPoints[labels["tower"]])
+    }
+
+    @Test
     fun `build and train commands can resolve defaults from data`() {
         val world = World()
         val map = MapGrid(16, 16)
@@ -304,7 +362,7 @@ class ProductionSystemTest {
         val buildings =
             """
             {"list":[
-              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+              {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
         return DataRepo(units, weapons, buildings)

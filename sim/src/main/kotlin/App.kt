@@ -1304,6 +1304,10 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                     }
                     if (c.buildingId < 0) {
                         val buildingType = labeledBuildingTypes[c.buildingId]
+                        val buildingSpec = buildingType?.let { data.buildSpec(it) }
+                        if (buildingType != null && buildingSpec != null && !buildingSpec.supportsTraining) {
+                            error("Producer '$buildingType' does not support training at tick $tick")
+                        }
                         if (buildingType != null && spec != null && spec.producerTypes.isNotEmpty() && !spec.producerTypes.contains(buildingType)) {
                             error(
                                 "Incompatible producer '$buildingType' for '${c.typeId}' in train at tick $tick " +
@@ -2377,6 +2381,19 @@ fun issue(
                     tick = cmd.tick,
                     commandType = "rally",
                     reason = "missingBuilding",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId
+                )
+                return
+            }
+            val buildingType = world.tags[buildingId]?.typeId
+            val buildingSpec = buildingType?.let { data?.buildSpec(it) }
+            if (buildingSpec != null && !buildingSpec.supportsRally) {
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "rally",
+                    reason = "unsupportedRally",
                     snapshotOutPath = snapshotOutPath,
                     streamSequence = streamSequence,
                     buildingId = buildingId

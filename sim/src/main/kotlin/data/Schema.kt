@@ -36,6 +36,8 @@ data class BuildingDef(
     val footprintWidth: Int,
     val footprintHeight: Int,
     val placementClearance: Int = 0,
+    val supportsTraining: Boolean = false,
+    val supportsRally: Boolean = false,
     val productionQueueLimit: Int = 5,
     val rallyOffsetX: Float = 0f,
     val rallyOffsetY: Float = 0f,

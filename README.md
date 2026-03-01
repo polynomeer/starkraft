@@ -75,6 +75,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Training compatibility is data-driven via allowed producer building type ids.
    - Producer queue limits are data-driven in building defs rather than hardcoded in the system.
    - Producer building defs can also supply default rally offsets for newly trained units.
+   - Producer capabilities such as training and rally override are explicit in building defs.
    - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
      move + attack decisions at the order layer.
 

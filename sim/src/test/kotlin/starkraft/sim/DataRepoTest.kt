@@ -18,7 +18,7 @@ class DataRepoTest {
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
                 """
                 {"list":[
-                  {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+                  {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
                 ]}
                 """.trimIndent()
             )
@@ -29,6 +29,8 @@ class DataRepoTest {
         assertEquals(2, build?.footprintWidth)
         assertEquals(2, build?.footprintHeight)
         assertEquals(1, build?.placementClearance)
+        assertEquals(true, build?.supportsTraining)
+        assertEquals(true, build?.supportsRally)
         assertEquals(3, build?.productionQueueLimit)
         assertEquals(4f, build?.rallyOffsetX)
         assertEquals(0f, build?.rallyOffsetY)
