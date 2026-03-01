@@ -102,6 +102,7 @@ Script syntax:
 
 Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically
+  Recorded into replay metadata when saving replay files.
 - `--script <path>` run a command script
 - `--scriptDryRun` parse, validate, and print script commands without running
 - `--spawnScript <path>` run a spawn-only script before other commands

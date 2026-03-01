@@ -20,10 +20,11 @@ class ReplayIOTest {
             Command.AttackType(14, "Zergling", 3),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1)
         )
-        ReplayIO.save(tmp, cmds)
+        ReplayIO.save(tmp, cmds, seed = 1234L)
         val loaded = ReplayIO.load(tmp)
         val payload = Files.readString(tmp)
         assertTrue(payload.contains("\"replayHash\""))
+        assertTrue(payload.contains("\"seed\":1234"))
         assertEquals(cmds.size, loaded.size)
         for (i in cmds.indices) {
             assertCommandsEqual(cmds[i], loaded[i])

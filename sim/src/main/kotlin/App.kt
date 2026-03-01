@@ -184,7 +184,7 @@ fun main(args: Array<String>) {
 
     if (recordPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(recordPath), recorded)
+        ReplayIO.save(Paths.get(recordPath), recorded, seed)
         println("replay saved: $recordPath")
     }
 
@@ -226,13 +226,13 @@ fun main(args: Array<String>) {
 
     if (replayOutPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayOutPath), recorded)
+        ReplayIO.save(Paths.get(replayOutPath), recorded, seed)
         println("replay out saved: $replayOutPath")
     }
 
     if (replayDumpPath != null && scriptPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayDumpPath), recorded)
+        ReplayIO.save(Paths.get(replayDumpPath), recorded, seed)
         println("replay dump saved: $replayDumpPath")
     }
 }
