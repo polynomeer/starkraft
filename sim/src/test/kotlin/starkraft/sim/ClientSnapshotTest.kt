@@ -40,6 +40,8 @@ import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
+import starkraft.sim.ecs.ProductionJob
+import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.Vision
@@ -62,6 +64,7 @@ class ClientSnapshotTest {
         world.visions[idB] = Vision(7f)
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
         world.orders[idB]?.items?.addLast(Order.Move(9f, 9f))
+        world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
 
@@ -83,6 +86,9 @@ class ClientSnapshotTest {
         val entitiesById = snapshot.entities.associateBy { it.id }
         assertEquals("Attack", entitiesById[idA]?.activeOrder)
         assertEquals("Move", entitiesById[idB]?.activeOrder)
+        assertEquals(2, entitiesById[idB]?.productionQueueSize)
+        assertEquals("Marine", entitiesById[idB]?.activeProductionType)
+        assertEquals(12, entitiesById[idB]?.activeProductionRemainingTicks)
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })
         assertTrue(snapshot.factions[0].visibleTiles > 0)
         assertTrue(snapshot.factions[1].visibleTiles > 0)

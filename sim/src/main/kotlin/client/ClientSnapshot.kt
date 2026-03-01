@@ -53,7 +53,10 @@ data class EntitySnapshot(
     val visionRange: Float? = null,
     val orderQueueSize: Int = 0,
     val activeOrder: String? = null,
-    val pathRemainingNodes: Int = 0
+    val pathRemainingNodes: Int = 0,
+    val productionQueueSize: Int = 0,
+    val activeProductionType: String? = null,
+    val activeProductionRemainingTicks: Int = 0
 )
 
 @Serializable
@@ -389,6 +392,7 @@ fun buildClientSnapshot(
         val vision = world.visions[id]
         val orders = world.orders[id]?.items
         val path = world.pathFollows[id]
+        val production = world.productionQueues[id]?.items
         entities.add(
             EntitySnapshot(
                 id = id,
@@ -405,7 +409,10 @@ fun buildClientSnapshot(
                 visionRange = vision?.range,
                 orderQueueSize = orders?.size ?: 0,
                 activeOrder = orders?.firstOrNull()?.toSnapshotLabel(),
-                pathRemainingNodes = path?.let { it.length - it.index } ?: 0
+                pathRemainingNodes = path?.let { it.length - it.index } ?: 0,
+                productionQueueSize = production?.size ?: 0,
+                activeProductionType = production?.firstOrNull()?.typeId,
+                activeProductionRemainingTicks = production?.firstOrNull()?.remainingTicks ?: 0
             )
         )
     }
