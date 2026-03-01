@@ -923,6 +923,8 @@ internal fun buildReplayMetaReport(
     )
 }
 
+internal fun renderCommandStatsJson(stats: CommandStats): String = statsJson.encodeToString(stats)
+
 private fun printCommandStats(stats: CommandStats) {
     println("command stats:")
     for (warning in stats.warnings) {

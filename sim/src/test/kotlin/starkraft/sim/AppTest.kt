@@ -148,6 +148,78 @@ class AppTest {
     }
 
     @Test
+    fun `renders command stats json golden shape`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Move(0, intArrayOf(1), 4f, 5f),
+                    Command.Spawn(0, 1, "Marine", 2f, 3f)
+                )
+            )
+
+        val json = renderCommandStatsJson(buildCommandStats(commandsByTick, replayMeta = null))
+
+        assertEquals(
+            """
+            {
+                "metadata": null,
+                "warnings": [],
+                "ticks": [
+                    {
+                        "tick": 0,
+                        "commands": 2,
+                        "spawns": 1,
+                        "moves": 1,
+                        "attacks": 0,
+                        "selectors": {
+                            "direct": 1,
+                            "faction": 0,
+                            "type": 0
+                        },
+                        "breakdown": {
+                            "move": {
+                                "direct": 1,
+                                "faction": 0,
+                                "type": 0
+                            },
+                            "attack": {
+                                "direct": 0,
+                                "faction": 0,
+                                "type": 0
+                            }
+                        }
+                    }
+                ],
+                "totals": {
+                    "total": 2,
+                    "spawns": 1,
+                    "moves": 1,
+                    "attacks": 0,
+                    "selectors": {
+                        "direct": 1,
+                        "faction": 0,
+                        "type": 0
+                    },
+                    "breakdown": {
+                        "move": {
+                            "direct": 1,
+                            "faction": 0,
+                            "type": 0
+                        },
+                        "attack": {
+                            "direct": 0,
+                            "faction": 0,
+                            "type": 0
+                        }
+                    }
+                }
+            }
+            """.trimIndent(),
+            json
+        )
+    }
+
+    @Test
     fun `builds replay metadata report with warnings`() {
         val report =
             buildReplayMetaReport(
