@@ -233,6 +233,57 @@ class AppTest {
     }
 
     @Test
+    fun `script validation rejects train with unknown type and missing defaults`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Train(0, -1, "MissingMarine", 0, 0, 0)
+                )
+            )
+        val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateTrainCommands(commandsByTick, data)
+            }
+
+        assertEquals(
+            "Unknown unit typeId 'MissingMarine' in train at tick 0 (missing default buildTicks)",
+            ex.message
+        )
+    }
+
+    @Test
+    fun `script validation rejects incompatible labeled producer for train`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.Build(0, 1, "Factory", 4, 4, 2, 2, 400, 0, 100, 0, "factory", -2),
+                    Command.Train(0, -2, "Marine", 0, 0, 0)
+                )
+            )
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}]}""",
+                """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
+                """{"list":[
+                    {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+                    {"id":"Factory","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+                ]}"""
+            )
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateTrainCommands(commandsByTick, data)
+            }
+
+        assertEquals(
+            "Incompatible producer 'Factory' for 'Marine' in train at tick 0 (allowed=Depot)",
+            ex.message
+        )
+    }
+
+    @Test
     fun `builds selector split command totals`() {
         val commandsByTick =
             arrayOf(

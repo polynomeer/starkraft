@@ -245,6 +245,7 @@ fun main(args: Array<String>) {
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
         validateBuildCommands(commandsByTick, data)
+        validateTrainCommands(commandsByTick, data)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
@@ -1222,6 +1223,42 @@ internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, da
                     "Invalid build definition for '${c.typeId}' at tick $tick " +
                         "(resolved width=$width height=$height hp=$hp)"
                 )
+            }
+        }
+    }
+}
+
+internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+    val labeledBuildingTypes = HashMap<Int, String>()
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            val c = cmds[i]
+            when (c) {
+                is Command.Build -> {
+                    val labelId = c.labelId
+                    if (labelId != null) labeledBuildingTypes[labelId] = c.typeId
+                }
+                is Command.Train -> {
+                    val spec = data.trainSpec(c.typeId)
+                    val buildTicks = if (c.buildTicks > 0) c.buildTicks else (spec?.buildTicks ?: 0)
+                    if (spec == null && c.buildTicks <= 0) {
+                        error("Unknown unit typeId '${c.typeId}' in train at tick $tick (missing default buildTicks)")
+                    }
+                    if (buildTicks <= 0) {
+                        error("Invalid train definition for '${c.typeId}' at tick $tick (resolved buildTicks=$buildTicks)")
+                    }
+                    if (c.buildingId < 0) {
+                        val buildingType = labeledBuildingTypes[c.buildingId]
+                        if (buildingType != null && spec != null && spec.producerTypes.isNotEmpty() && !spec.producerTypes.contains(buildingType)) {
+                            error(
+                                "Incompatible producer '$buildingType' for '${c.typeId}' in train at tick $tick " +
+                                    "(allowed=${spec.producerTypes.joinToString(",")})"
+                            )
+                        }
+                    }
+                }
+                else -> Unit
             }
         }
     }
