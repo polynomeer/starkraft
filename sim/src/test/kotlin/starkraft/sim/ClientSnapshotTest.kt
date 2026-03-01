@@ -31,6 +31,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
@@ -436,6 +437,25 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"rallyFailure\",\"sequence\":18,\"tick\":12,\"buildingId\":41,\"reason\":\"unsupportedRally\"}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders producer failure stream record json`() {
+        val json =
+            renderProducerFailureStreamRecordJson(
+                sequence = 19L,
+                tick = 13,
+                buildingId = 41,
+                producerTypeId = "Depot",
+                typeId = "Marine",
+                reason = "incompatibleProducer",
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"producerFailure\",\"sequence\":19,\"tick\":13,\"buildingId\":41,\"producerTypeId\":\"Depot\",\"typeId\":\"Marine\",\"reason\":\"incompatibleProducer\"}",
             json
         )
     }

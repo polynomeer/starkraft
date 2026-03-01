@@ -280,6 +280,17 @@ data class RallyFailureStreamRecord(
 )
 
 @Serializable
+data class ProducerFailureStreamRecord(
+    val recordType: String = "producerFailure",
+    val sequence: Long,
+    val tick: Int,
+    val buildingId: Int? = null,
+    val producerTypeId: String? = null,
+    val typeId: String? = null,
+    val reason: String
+)
+
+@Serializable
 data class OrderAppliedStreamRecord(
     val recordType: String = "orderApplied",
     val sequence: Long,
@@ -908,6 +919,27 @@ fun renderRallyFailureStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = RallyFailureStreamRecord(sequence = sequence, tick = tick, buildingId = buildingId, reason = reason)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderProducerFailureStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    reason: String,
+    buildingId: Int? = null,
+    producerTypeId: String? = null,
+    typeId: String? = null,
+    pretty: Boolean = false
+): String {
+    val record =
+        ProducerFailureStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            buildingId = buildingId,
+            producerTypeId = producerTypeId,
+            typeId = typeId,
+            reason = reason
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

@@ -26,6 +26,7 @@ import starkraft.sim.client.renderOrderQueueStreamRecordJson
 import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
+import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -2342,6 +2343,7 @@ fun issue(
                         TrainFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
                         TrainFailureReason.QUEUE_FULL -> "queueFull"
                     }
+                val producerTypeId = world.tags[buildingId]?.typeId
                 emitCommandFailureRecord(
                     tick = cmd.tick,
                     commandType = "train",
@@ -2351,6 +2353,20 @@ fun issue(
                     buildingId = buildingId,
                     typeId = cmd.typeId
                 )
+                if (
+                    failure == TrainFailureReason.MISSING_BUILDING ||
+                    failure == TrainFailureReason.INCOMPATIBLE_PRODUCER
+                ) {
+                    emitProducerFailureRecord(
+                        tick = cmd.tick,
+                        reason = reason,
+                        snapshotOutPath = snapshotOutPath,
+                        streamSequence = streamSequence,
+                        buildingId = buildingId,
+                        producerTypeId = producerTypeId,
+                        typeId = cmd.typeId
+                    )
+                }
             } else {
                 if (outcomeCounters != null) outcomeCounters.trainsQueued++
             }
@@ -2540,6 +2556,30 @@ private fun emitRallyFailureRecord(
             tick = tick,
             reason = reason,
             buildingId = buildingId,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitProducerFailureRecord(
+    tick: Int,
+    reason: String,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?,
+    buildingId: Int? = null,
+    producerTypeId: String? = null,
+    typeId: String? = null
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderProducerFailureStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            reason = reason,
+            buildingId = buildingId,
+            producerTypeId = producerTypeId,
+            typeId = typeId,
             pretty = false
         ),
         snapshotOutPath

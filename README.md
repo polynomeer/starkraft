@@ -149,6 +149,7 @@ Other flags:
   Script-driven selection changes emit `selection` records before commands for that tick.
   Rally overrides emit `rally` records when producer rally points change.
   Invalid rally commands also emit `rallyFailure` records with deterministic reasons.
+  Producer-related train failures also emit `producerFailure` records with building/type context.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Applied move and attack orders emit `orderApplied` records after selector resolution.
   Those order applications also emit `orderQueue` records with the resulting queue sizes.
