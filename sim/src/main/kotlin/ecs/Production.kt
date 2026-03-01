@@ -6,6 +6,7 @@ enum class TrainFailureReason {
     MISSING_BUILDING,
     INVALID_UNIT,
     INVALID_BUILD_TIME,
+    INCOMPATIBLE_PRODUCER,
     INSUFFICIENT_RESOURCES,
     QUEUE_FULL
 }
@@ -44,10 +45,15 @@ class BuildingProductionSystem(
     ): TrainFailureReason? {
         if (!world.footprints.containsKey(buildingId)) return TrainFailureReason.MISSING_BUILDING
         if (buildTicks <= 0) return TrainFailureReason.INVALID_BUILD_TIME
-        try {
-            data.unit(typeId)
-        } catch (_: NoSuchElementException) {
-            return TrainFailureReason.INVALID_UNIT
+        val unit =
+            try {
+                data.unit(typeId)
+            } catch (_: NoSuchElementException) {
+                return TrainFailureReason.INVALID_UNIT
+            }
+        val buildingType = world.tags[buildingId]?.typeId ?: return TrainFailureReason.MISSING_BUILDING
+        if (unit.producerTypes.isNotEmpty() && !unit.producerTypes.contains(buildingType)) {
+            return TrainFailureReason.INCOMPATIBLE_PRODUCER
         }
         val queue = world.productionQueues[buildingId]
         if (queue != null && queue.items.size >= maxQueueSize) return TrainFailureReason.QUEUE_FULL

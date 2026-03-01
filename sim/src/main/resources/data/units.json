@@ -6,7 +6,8 @@
       "armor": 0,
       "speed": 0.07,
       "mineralCost": 50,
-      "buildTicks": 50
+      "buildTicks": 50,
+      "producerTypes": ["Depot"]
     },
     {
       "id": "Depot",
@@ -25,7 +26,8 @@
       "speed": 0.065,
       "weaponId": "Gauss",
       "mineralCost": 50,
-      "buildTicks": 75
+      "buildTicks": 75,
+      "producerTypes": ["Depot"]
     },
     {
       "id": "Zergling",
@@ -34,7 +36,8 @@
       "speed": 0.08,
       "weaponId": "Claw",
       "mineralCost": 25,
-      "buildTicks": 55
+      "buildTicks": 55,
+      "producerTypes": ["Depot"]
     }
   ]
 }

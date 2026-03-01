@@ -14,6 +14,7 @@ data class UnitDef(
     val buildTicks: Int = 0,
     val footprintWidth: Int = 0,
     val footprintHeight: Int = 0,
+    val producerTypes: List<String> = emptyList(),
 )
 
 @Serializable

@@ -1900,6 +1900,7 @@ fun issue(
                         TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
                         TrainFailureReason.INVALID_UNIT -> "invalidUnit"
                         TrainFailureReason.INVALID_BUILD_TIME -> "invalidBuildTime"
+                        TrainFailureReason.INCOMPATIBLE_PRODUCER -> "incompatibleProducer"
                         TrainFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
                         TrainFailureReason.QUEUE_FULL -> "queueFull"
                     }

@@ -16,7 +16,8 @@ data class TrainSpec(
     val typeId: String,
     val buildTicks: Int,
     val mineralCost: Int,
-    val gasCost: Int
+    val gasCost: Int,
+    val producerTypes: List<String>
 )
 
 class DataRepo(unitsJson: String, weaponsJson: String) {
@@ -48,7 +49,8 @@ class DataRepo(unitsJson: String, weaponsJson: String) {
             typeId = unit.id,
             buildTicks = unit.buildTicks,
             mineralCost = unit.mineralCost,
-            gasCost = unit.gasCost
+            gasCost = unit.gasCost,
+            producerTypes = unit.producerTypes
         )
     }
 }

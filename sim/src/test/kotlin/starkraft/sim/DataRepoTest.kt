@@ -13,7 +13,7 @@ class DataRepoTest {
                 """
                 {"list":[
                   {"id":"Depot","hp":400,"armor":1,"speed":0.0,"mineralCost":100,"gasCost":0,"buildTicks":120,"footprintWidth":2,"footprintHeight":2},
-                  {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"gasCost":0,"buildTicks":75}
+                  {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"gasCost":0,"buildTicks":75,"producerTypes":["Depot"]}
                 ]}
                 """.trimIndent(),
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}"""
@@ -27,6 +27,7 @@ class DataRepoTest {
         assertEquals(400, build?.hp)
         assertEquals(75, train?.buildTicks)
         assertEquals(50, train?.mineralCost)
+        assertEquals(listOf("Depot"), train?.producerTypes)
     }
 
     @Test

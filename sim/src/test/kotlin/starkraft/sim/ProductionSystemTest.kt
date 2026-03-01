@@ -211,12 +211,29 @@ class ProductionSystemTest {
         assertEquals(150, world.stockpiles[1]?.minerals)
     }
 
+    @Test
+    fun `production enqueue rejects incompatible producer type`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data = testDataWithDepot()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 500, 0)
+        val factoryId = buildings.place(1, "Factory", 6, 6, 2, 2, 500, mineralCost = 100)!!
+
+        assertFalse(production.enqueue(factoryId, "Marine", 5, mineralCost = 50))
+        assertEquals(400, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.productionQueues.size)
+    }
+
     private fun testDataWithDepot(): DataRepo {
         val units =
             """
             {"list":[
               {"id":"Depot","hp":400,"armor":1,"speed":0.0,"mineralCost":100,"buildTicks":120,"footprintWidth":2,"footprintHeight":2},
-              {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75}
+              {"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"]}
             ]}
             """.trimIndent()
         val weapons =
