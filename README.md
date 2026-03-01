@@ -115,6 +115,7 @@ Script syntax:
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
+- `rally <buildingId|@label> <x> <y>` override a producer building rally point for future trained units
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 

@@ -605,6 +605,15 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     commandType = "cancelTrain",
                     target = cmd.buildingId
                 )
+            is Command.Rally ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "rally",
+                    target = cmd.buildingId,
+                    x = cmd.x,
+                    y = cmd.y
+                )
         }
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

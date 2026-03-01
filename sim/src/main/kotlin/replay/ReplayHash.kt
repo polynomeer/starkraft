@@ -97,6 +97,13 @@ class ReplayHashRecorder : Recorder {
                 mixInt(cmd.tick)
                 mixInt(cmd.buildingId)
             }
+            is Command.Rally -> {
+                mixInt(7)
+                mixInt(cmd.tick)
+                mixInt(cmd.buildingId)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
         }
     }
 

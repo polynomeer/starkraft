@@ -163,6 +163,16 @@ object ScriptRunner {
                     }
                     out.add(Command.CancelTrain(tick, buildingId))
                 }
+                "rally" -> {
+                    require(parts.size == 4) { "rally <buildingId|@label> <x> <y>" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    out.add(Command.Rally(tick, buildingId, parts[2].toFloat(), parts[3].toFloat()))
+                }
                 else -> error("Unknown command")
             }
             } catch (e: Exception) {

@@ -153,16 +153,16 @@ class BuildingProductionSystem(
     }
 
     private fun enqueueRallyOrder(buildingId: Int, unitId: Int) {
+        val override = world.rallyPoints[buildingId]
+        if (override != null) {
+            world.orders[unitId]?.items?.addLast(Order.Move(override.x, override.y))
+            return
+        }
         val buildingType = world.tags[buildingId]?.typeId ?: return
         val rally = data.buildSpec(buildingType) ?: return
         if (rally.rallyOffsetX == 0f && rally.rallyOffsetY == 0f) return
         val buildingTransform = world.transforms[buildingId] ?: return
-        world.orders[unitId]?.items?.addLast(
-            Order.Move(
-                buildingTransform.x + rally.rallyOffsetX,
-                buildingTransform.y + rally.rallyOffsetY
-            )
-        )
+        world.orders[unitId]?.items?.addLast(Order.Move(buildingTransform.x + rally.rallyOffsetX, buildingTransform.y + rally.rallyOffsetY))
     }
 
     private fun recordEvent(kind: Byte, buildingId: Int, typeId: String, remainingTicks: Int, spawnedId: Int) {

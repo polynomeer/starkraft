@@ -186,6 +186,55 @@ class ProductionSystemTest {
     }
 
     @Test
+    fun `rally command overrides producer default rally point`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val data = testDataWithDepot()
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        val labels = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
+        resources.set(1, 300, 0)
+
+        issue(
+            Command.Build(0, 1, "Depot", 6, 6, 2, 2, 400, 0, 100, 0, "depot", -1),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds,
+            buildings = buildings
+        )
+        issue(
+            Command.Rally(0, -1, 15f, 16f),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds
+        )
+        issue(
+            Command.Train(0, -1, "Marine", 2, 50, 0),
+            world,
+            NullRecorder(),
+            data = data,
+            labelMap = labels,
+            labelIdMap = labelIds,
+            production = production
+        )
+
+        production.tick()
+        production.tick()
+
+        val marineId = world.tags.entries.first { it.value.typeId == "Marine" }.key
+        val move = world.orders[marineId]?.items?.firstOrNull() as? Order.Move
+        assertEquals(15f, move?.tx)
+        assertEquals(16f, move?.ty)
+    }
+
+    @Test
     fun `build and train commands can resolve defaults from data`() {
         val world = World()
         val map = MapGrid(16, 16)

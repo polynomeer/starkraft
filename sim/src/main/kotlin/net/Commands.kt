@@ -48,4 +48,10 @@ sealed interface Command {
         override val tick: Int,
         val buildingId: Int
     ) : Command
+    data class Rally(
+        override val tick: Int,
+        val buildingId: Int,
+        val x: Float,
+        val y: Float
+    ) : Command
 }

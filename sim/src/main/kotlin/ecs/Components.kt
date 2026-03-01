@@ -25,6 +25,8 @@ data class RepathCooldown(var ticks: Int = 0)
 
 data class BuildingFootprint(val tileX: Int, val tileY: Int, val width: Int, val height: Int)
 
+data class RallyPoint(val x: Float, val y: Float)
+
 data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)
 
 data class ProductionJob(

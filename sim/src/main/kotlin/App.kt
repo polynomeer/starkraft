@@ -1181,6 +1181,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     println("tick=$tick cancelTrain building=${c.buildingId}")
                 }
+                is Command.Rally -> {
+                    println("tick=$tick rally building=${c.buildingId} x=${c.x} y=${c.y}")
+                }
             }
         }
     }
@@ -1358,6 +1361,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in cancelTrain at tick $tick")
                     }
                 }
+                is Command.Rally -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in rally at tick $tick")
+                    }
+                }
             }
         }
     }
@@ -1411,6 +1419,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in cancelTrain at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.Rally -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in rally at tick $tick (spawn/build first)")
                     }
                 }
             }
@@ -1634,6 +1647,7 @@ internal fun buildCommandStats(
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
+                is Command.Rally -> Unit
             }
         }
         if (count > 0) {
@@ -1700,6 +1714,7 @@ internal fun buildCommandStats(
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
+                is Command.Rally -> Unit
             }
         }
     }
@@ -2308,6 +2323,21 @@ fun issue(
                     buildingId = buildingId
                 )
             }
+        }
+        is Command.Rally -> {
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            if (!world.footprints.containsKey(buildingId)) {
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "rally",
+                    reason = "missingBuilding",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId
+                )
+                return
+            }
+            world.rallyPoints[buildingId] = RallyPoint(cmd.x, cmd.y)
         }
     }
 }

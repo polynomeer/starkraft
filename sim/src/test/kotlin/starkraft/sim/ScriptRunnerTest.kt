@@ -104,4 +104,22 @@ class ScriptRunnerTest {
 
         assertEquals(Command.CancelTrain(1, -1), program.commands[1])
     }
+
+    @Test
+    fun `parses rally commands`() {
+        val path = Files.createTempFile("starkraft-rally-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 0
+            build @depot 1 Depot 4 4
+            wait 1
+            rally @depot 20 21
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(Command.Rally(1, -1, 20f, 21f), program.commands[1])
+    }
 }
