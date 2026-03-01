@@ -176,6 +176,21 @@ data class TickSummaryStreamRecord(
     val despawns: Int
 )
 
+@Serializable
+data class SpawnStreamRecord(
+    val recordType: String = "spawn",
+    val sequence: Long,
+    val tick: Int,
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val x: Float,
+    val y: Float,
+    val vision: Float? = null,
+    val label: String? = null,
+    val labelId: Int? = null
+)
+
 fun buildClientSnapshot(
     world: World,
     map: MapGrid,
@@ -428,6 +443,35 @@ fun renderTickSummaryStreamRecordJson(
             attacks = attacks,
             kills = kills,
             despawns = despawns
+        )
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderSpawnStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entityId: Int,
+    faction: Int,
+    typeId: String,
+    x: Float,
+    y: Float,
+    vision: Float?,
+    label: String?,
+    labelId: Int?,
+    pretty: Boolean = false
+): String {
+    val record =
+        SpawnStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            entityId = entityId,
+            faction = faction,
+            typeId = typeId,
+            x = x,
+            y = y,
+            vision = vision,
+            label = label,
+            labelId = labelId
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

@@ -14,6 +14,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.ecs.Health
@@ -265,6 +266,29 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders spawn stream record json`() {
+        val json =
+            renderSpawnStreamRecordJson(
+                sequence = 14L,
+                tick = 9,
+                entityId = 21,
+                faction = 1,
+                typeId = "Marine",
+                x = 3f,
+                y = 4f,
+                vision = 7f,
+                label = "alpha",
+                labelId = -1,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"spawn\",\"sequence\":14,\"tick\":9,\"entityId\":21,\"faction\":1,\"typeId\":\"Marine\",\"x\":3.0,\"y\":4.0,\"vision\":7.0,\"label\":\"alpha\",\"labelId\":-1}",
             json
         )
     }

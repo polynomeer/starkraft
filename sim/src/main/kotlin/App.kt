@@ -11,6 +11,7 @@ import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
+import starkraft.sim.client.renderSpawnStreamRecordJson
 import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
@@ -1414,6 +1415,24 @@ fun issue(
             }
             if (cmd.labelId != null) {
                 labelIdMap[cmd.labelId] = id
+            }
+            if (snapshotOutPath != null && streamSequence != null) {
+                emitSnapshotLine(
+                    renderSpawnStreamRecordJson(
+                        sequence = nextStreamSequence(streamSequence),
+                        tick = cmd.tick,
+                        entityId = id,
+                        faction = cmd.faction,
+                        typeId = cmd.typeId,
+                        x = cmd.x,
+                        y = cmd.y,
+                        vision = cmd.vision,
+                        label = cmd.label,
+                        labelId = cmd.labelId,
+                        pretty = false
+                    ),
+                    snapshotOutPath
+                )
             }
         }
     }
