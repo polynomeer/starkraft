@@ -128,7 +128,15 @@ private data class ReplayEvent(
     val typeId: String? = null,
     val vision: Float? = null,
     val label: String? = null,
-    val labelId: Int? = null
+    val labelId: Int? = null,
+    val tileX: Int? = null,
+    val tileY: Int? = null,
+    val width: Int? = null,
+    val height: Int? = null,
+    val hp: Int? = null,
+    val armor: Int? = null,
+    val mineralCost: Int? = null,
+    val gasCost: Int? = null
 ) {
     fun toCommand(): Command {
         return when (type) {
@@ -139,6 +147,20 @@ private data class ReplayEvent(
             "attackFaction" -> Command.AttackFaction(tick, faction ?: 0, target ?: 0)
             "attackType" -> Command.AttackType(tick, typeId ?: "", target ?: 0)
             "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
+            "build" ->
+                Command.Build(
+                    tick = tick,
+                    faction = faction ?: 0,
+                    typeId = typeId ?: "",
+                    tileX = tileX ?: 0,
+                    tileY = tileY ?: 0,
+                    width = width ?: 0,
+                    height = height ?: 0,
+                    hp = hp ?: 0,
+                    armor = armor ?: 0,
+                    mineralCost = mineralCost ?: 0,
+                    gasCost = gasCost ?: 0
+                )
             else -> error("Unknown replay event type: $type")
         }
     }
@@ -165,6 +187,21 @@ private data class ReplayEvent(
                         cmd.vision,
                         cmd.label,
                         cmd.labelId
+                    )
+                is Command.Build ->
+                    ReplayEvent(
+                        type = "build",
+                        tick = cmd.tick,
+                        faction = cmd.faction,
+                        typeId = cmd.typeId,
+                        tileX = cmd.tileX,
+                        tileY = cmd.tileY,
+                        width = cmd.width,
+                        height = cmd.height,
+                        hp = cmd.hp,
+                        armor = cmd.armor,
+                        mineralCost = cmd.mineralCost,
+                        gasCost = cmd.gasCost
                     )
             }
         }

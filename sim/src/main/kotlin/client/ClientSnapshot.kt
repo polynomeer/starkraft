@@ -507,6 +507,16 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     label = cmd.label,
                     labelId = cmd.labelId
                 )
+            is Command.Build ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "build",
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    x = cmd.tileX.toFloat(),
+                    y = cmd.tileY.toFloat()
+                )
         }
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

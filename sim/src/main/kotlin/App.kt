@@ -278,7 +278,7 @@ fun main(args: Array<String>) {
             }
             val cmds = commandsByTick[tick]
             for (i in 0 until cmds.size) {
-                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence)
+                issue(cmds[i], world, recorder, data, labelMap, labelIdMap, resolvedSnapshotOutPath, streamSequence, buildings)
             }
         }
 
@@ -954,6 +954,13 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                     val label = c.label?.let { "@$it " } ?: ""
                     println("tick=$tick spawn ${label}faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
                 }
+                is Command.Build -> {
+                    println(
+                        "tick=$tick build faction=${c.faction} type=${c.typeId} " +
+                            "tileX=${c.tileX} tileY=${c.tileY} width=${c.width} height=${c.height} " +
+                            "hp=${c.hp} armor=${c.armor} minerals=${c.mineralCost} gas=${c.gasCost}"
+                    )
+                }
             }
         }
     }
@@ -1014,6 +1021,7 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
                 }
+                is Command.Build -> Unit
             }
         }
     }
@@ -1055,6 +1063,7 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '${c.target}' in attackType at tick $tick (spawn first)")
                     }
                 }
+                is Command.Build -> Unit
             }
         }
     }
@@ -1273,6 +1282,7 @@ internal fun buildCommandStats(
                     tickAttackType++
                 }
                 is Command.Spawn -> tickSpawns++
+                is Command.Build -> Unit
             }
         }
         if (count > 0) {
@@ -1336,6 +1346,7 @@ internal fun buildCommandStats(
                     attackType++
                 }
                 is Command.Spawn -> spawns++
+                is Command.Build -> Unit
             }
         }
     }
@@ -1518,7 +1529,8 @@ fun issue(
     labelMap: MutableMap<String, Int> = mutableMapOf(),
     labelIdMap: MutableMap<Int, Int> = mutableMapOf(),
     snapshotOutPath: java.nio.file.Path? = null,
-    streamSequence: LongArray? = null
+    streamSequence: LongArray? = null,
+    buildings: BuildingPlacementSystem? = null
 ) {
     recorder.onCommand(cmd)
     if (snapshotOutPath != null && streamSequence != null) {
@@ -1640,6 +1652,40 @@ fun issue(
                         vision = cmd.vision,
                         label = cmd.label,
                         labelId = cmd.labelId,
+                        pretty = false
+                    ),
+                    snapshotOutPath
+                )
+            }
+        }
+        is Command.Build -> {
+            val placement = buildings ?: error("Build requires BuildingPlacementSystem")
+            val id =
+                placement.place(
+                    faction = cmd.faction,
+                    typeId = cmd.typeId,
+                    tileX = cmd.tileX,
+                    tileY = cmd.tileY,
+                    width = cmd.width,
+                    height = cmd.height,
+                    hp = cmd.hp,
+                    armor = cmd.armor,
+                    mineralCost = cmd.mineralCost,
+                    gasCost = cmd.gasCost
+                ) ?: return
+            if (snapshotOutPath != null && streamSequence != null) {
+                emitSnapshotLine(
+                    renderSpawnStreamRecordJson(
+                        sequence = nextStreamSequence(streamSequence),
+                        tick = cmd.tick,
+                        entityId = id,
+                        faction = cmd.faction,
+                        typeId = cmd.typeId,
+                        x = cmd.tileX.toFloat() + cmd.width.toFloat() * 0.5f,
+                        y = cmd.tileY.toFloat() + cmd.height.toFloat() * 0.5f,
+                        vision = null,
+                        label = null,
+                        labelId = null,
                         pretty = false
                     ),
                     snapshotOutPath

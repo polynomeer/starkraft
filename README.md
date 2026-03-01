@@ -105,6 +105,7 @@ Script syntax:
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
+- `build <faction> <typeId> <tileX> <tileY> <width> <height> <hp> [armor] [minerals] [gas]` place a building footprint
 
 Other flags:
 - `--seed <n>` jitter initial demo spawns deterministically

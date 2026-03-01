@@ -18,7 +18,8 @@ class ReplayIOTest {
             Command.Attack(10, intArrayOf(2), 7),
             Command.AttackFaction(12, 2, 9),
             Command.AttackType(14, "Zergling", 3),
-            Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1)
+            Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1),
+            Command.Build(25, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0)
         )
         ReplayIO.save(tmp, cmds, seed = 1234L, mapId = "demo-map", buildVersion = "test-build")
         val loaded = ReplayIO.load(tmp)
@@ -115,6 +116,20 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.vision, b.vision)
             assertEquals(a.label, b.label)
             assertEquals(a.labelId, b.labelId)
+        }
+        is Command.Build -> {
+            require(b is Command.Build)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.tileX, b.tileX)
+            assertEquals(a.tileY, b.tileY)
+            assertEquals(a.width, b.width)
+            assertEquals(a.height, b.height)
+            assertEquals(a.hp, b.hp)
+            assertEquals(a.armor, b.armor)
+            assertEquals(a.mineralCost, b.mineralCost)
+            assertEquals(a.gasCost, b.gasCost)
         }
     }
 }

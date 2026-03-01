@@ -12,6 +12,8 @@ import starkraft.sim.ecs.OccupancyGrid
 import starkraft.sim.ecs.ResourceSystem
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.path.Pathfinder
+import starkraft.sim.net.Command
+import starkraft.sim.replay.NullRecorder
 
 class BuildingPlacementTest {
     @Test
@@ -72,5 +74,26 @@ class BuildingPlacementTest {
         assertNotNull(first)
         assertNull(second)
         assertEquals(25, world.stockpiles[1]?.minerals)
+    }
+
+    @Test
+    fun `build command places footprint through issue`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        resources.set(faction = 1, minerals = 150, gas = 0)
+
+        issue(
+            Command.Build(0, 1, "Depot", 8, 8, 2, 2, 400, 0, 100, 0),
+            world,
+            NullRecorder(),
+            buildings = buildings
+        )
+
+        assertEquals(1, world.footprints.size)
+        assertTrue(occ.isBlocked(8, 8))
+        assertEquals(50, world.stockpiles[1]?.minerals)
     }
 }

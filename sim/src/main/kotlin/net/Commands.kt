@@ -21,4 +21,17 @@ sealed interface Command {
         val label: String? = null,
         val labelId: Int? = null
     ) : Command
+    data class Build(
+        override val tick: Int,
+        val faction: Int,
+        val typeId: String,
+        val tileX: Int,
+        val tileY: Int,
+        val width: Int,
+        val height: Int,
+        val hp: Int,
+        val armor: Int = 0,
+        val mineralCost: Int = 0,
+        val gasCost: Int = 0
+    ) : Command
 }

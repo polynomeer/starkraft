@@ -115,6 +115,22 @@ object ScriptRunner {
                     val vision = if (parts.size > idxStart + 4) parts[idxStart + 4].toFloat() else null
                     out.add(Command.Spawn(tick, faction, typeId, x, y, vision, label, labelIdValue))
                 }
+                "build" -> {
+                    require(parts.size in 8..11) {
+                        "build <faction> <typeId> <tileX> <tileY> <width> <height> <hp> [armor] [minerals] [gas]"
+                    }
+                    val faction = parts[1].toInt()
+                    val typeId = parts[2]
+                    val tileX = parts[3].toInt()
+                    val tileY = parts[4].toInt()
+                    val width = parts[5].toInt()
+                    val height = parts[6].toInt()
+                    val hp = parts[7].toInt()
+                    val armor = if (parts.size > 8) parts[8].toInt() else 0
+                    val minerals = if (parts.size > 9) parts[9].toInt() else 0
+                    val gas = if (parts.size > 10) parts[10].toInt() else 0
+                    out.add(Command.Build(tick, faction, typeId, tileX, tileY, width, height, hp, armor, minerals, gas))
+                }
                 else -> error("Unknown command")
             }
             } catch (e: Exception) {
