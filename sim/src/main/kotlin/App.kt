@@ -1013,11 +1013,31 @@ private fun loadScriptProgram(pathStr: String): LoadedProgram {
 }
 
 private fun resolvePath(pathStr: String): java.nio.file.Path {
+    return resolvePathFromBase(pathStr, Paths.get("").toAbsolutePath().normalize())
+}
+
+internal fun resolvePathFromBase(pathStr: String, base: java.nio.file.Path): java.nio.file.Path {
     val p = Paths.get(pathStr)
-    if (p.isAbsolute) return p
-    val base = Paths.get("").toAbsolutePath()
-    val candidate = base.resolve(pathStr)
-    return if (Files.exists(candidate)) candidate else p
+    if (p.isAbsolute) return p.normalize()
+    val direct = base.resolve(pathStr).normalize()
+    if (Files.exists(direct)) return direct
+    val root = findProjectRoot(base)
+    if (root != null) {
+        val rooted = root.resolve(pathStr).normalize()
+        if (Files.exists(rooted)) return rooted
+    }
+    return direct
+}
+
+internal fun findProjectRoot(start: java.nio.file.Path): java.nio.file.Path? {
+    var current: java.nio.file.Path? = start
+    while (current != null) {
+        if (Files.exists(current.resolve("settings.gradle.kts")) || Files.exists(current.resolve("gradlew"))) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
 }
 
 private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> {

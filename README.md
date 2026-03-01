@@ -121,6 +121,7 @@ Other flags:
   Recorded into replay metadata when saving replay files.
   Replay files also store `mapId` and `buildVersion`.
 - `--script <path>` run a command script
+- Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script commands without running
 - `--spawnScript <path>` run a spawn-only script before other commands
 - `--replayOut <path>` save recorded commands after a run

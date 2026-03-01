@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayMetadata
+import java.nio.file.Files
 
 class AppTest {
     @Test
@@ -160,6 +161,27 @@ class AppTest {
                 totalTrainFailureReasons = TrainFailureCounterSet()
             )
         )
+    }
+
+    @Test
+    fun `finds project root from nested sim path`() {
+        val root = Files.createTempDirectory("starkraft-root")
+        Files.writeString(root.resolve("settings.gradle.kts"), "rootProject.name = \"starkraft\"")
+        val nested = Files.createDirectories(root.resolve("sim/build/tmp"))
+
+        assertEquals(root, findProjectRoot(nested))
+    }
+
+    @Test
+    fun `resolves script path relative to project root`() {
+        val root = Files.createTempDirectory("starkraft-root")
+        Files.writeString(root.resolve("settings.gradle.kts"), "rootProject.name = \"starkraft\"")
+        val simDir = Files.createDirectories(root.resolve("sim"))
+        val script = Files.createDirectories(root.resolve("sim/scripts")).resolve("sample.script")
+        Files.writeString(script, "wait 1")
+        val resolved = resolvePathFromBase("sim/scripts/sample.script", simDir)
+
+        assertEquals(script, resolved)
     }
 
     @Test
