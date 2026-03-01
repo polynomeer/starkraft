@@ -112,6 +112,7 @@ Other flags:
 - `--replayStats` print command counts by tick and type
 - `--replayStatsJson` print replay stats as JSON
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
+- `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end

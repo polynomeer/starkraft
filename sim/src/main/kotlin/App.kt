@@ -103,12 +103,16 @@ fun main(args: Array<String>) {
     val replayValidateOnly = hasFlag(args, "--replayValidateOnly")
     val dumpWorldHash = hasFlag(args, "--dumpWorldHash")
     val strictReplayHash = hasFlag(args, "--strictReplayHash")
+    val strictReplayMeta = hasFlag(args, "--strictReplayMeta")
     val printEntities = hasFlag(args, "--printEntities")
     val printOrders = hasFlag(args, "--printOrders")
     val labelDump = hasFlag(args, "--labelDump")
     val replayStats = hasFlag(args, "--replayStats")
     val replayStatsJson = hasFlag(args, "--replayStatsJson")
     val replayDumpPath = parseReplayDumpPath(args)
+    val replayMeta =
+        if (replayPath != null) ReplayIO.inspect(resolvePath(replayPath)) else null
+    requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseCommands: Array<ArrayList<Command>> = when {
         replayPath != null -> loadReplayCommands(replayPath, strictReplayHash)
         scriptPath != null -> loadScriptCommands(scriptPath)
@@ -119,8 +123,6 @@ fun main(args: Array<String>) {
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
-    val replayMeta =
-        if (replayPath != null) ReplayIO.inspect(resolvePath(replayPath)) else null
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -748,6 +750,14 @@ internal fun replayCompatibilityWarnings(meta: ReplayMetadata?): List<String> {
         warnings.add("replay warning: buildVersion=$replayBuild current=$BUILD_VERSION")
     }
     return warnings
+}
+
+internal fun requireReplayCompatibility(meta: ReplayMetadata?, strict: Boolean) {
+    if (!strict) return
+    val warnings = replayCompatibilityWarnings(meta)
+    if (warnings.isNotEmpty()) {
+        error(warnings.joinToString(separator = "\n"))
+    }
 }
 
 fun issue(
