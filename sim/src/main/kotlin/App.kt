@@ -98,6 +98,7 @@ fun main(args: Array<String>) {
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val resources = ResourceSystem(world)
+    val harvest = ResourceHarvestSystem(world, resources)
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
     val production = BuildingProductionSystem(world, map, occ, data, resources)
     val occupancy = OccupancySystem(world, occ)
@@ -174,6 +175,22 @@ fun main(args: Array<String>) {
         world.visions[idB] = Vision(6f)
         team2.add(idB)
     }
+    val mineralNodeId =
+        world.spawn(
+            Transform(4f, 2f),
+            UnitTag(1, "MineralField"),
+            Health(1000, 1000),
+            w = null
+        )
+    world.resourceNodes[mineralNodeId] = ResourceNode(remaining = 250)
+    val workerId =
+        world.spawn(
+            Transform(3.6f, 2f),
+            UnitTag(1, "Worker"),
+            Health(40, 40),
+            w = null
+        )
+    world.harvesters[workerId] = Harvester(targetNodeId = mineralNodeId, harvestPerTick = 2)
 
     val replayPath = parseReplayPath(args)
     val scriptPath = parseScriptPath(args)
@@ -358,6 +375,7 @@ fun main(args: Array<String>) {
             }
         }
 
+        harvest.tick()
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
@@ -425,6 +443,8 @@ fun main(args: Array<String>) {
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
                     "buildings=${world.footprints.size} prodQueues=${world.productionQueues.size} " +
                     "minerals: t1=${world.stockpiles[1]?.minerals ?: 0} t2=${world.stockpiles[2]?.minerals ?: 0} " +
+                    "harvested=${harvest.lastTickHarvestedMinerals}/${harvest.lastTickHarvestedGas} " +
+                    "nodeRemaining=${world.resourceNodes[mineralNodeId]?.remaining ?: 0} " +
                     "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} avgLen=${"%.2f".format(pathing.lastTickAvgPathLen)} " +
                     "replans=${movement.lastTickReplans} " +
                     "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}$outcomeSuffix"

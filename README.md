@@ -67,6 +67,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Keep faction stockpiles in deterministic sim state.
    - Apply spending at placement / production time, not lazily.
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
+   - `ResourceHarvestSystem` now supports deterministic nearby harvesting from fixed resource nodes.
    - `DataRepo.buildSpec(...)` reads dedicated building defs, while `DataRepo.trainSpec(...)` reads trainable unit defs.
    - Unit and building defs now carry explicit `archetype` ids so coarse categories do not have to overload `typeId`.
 

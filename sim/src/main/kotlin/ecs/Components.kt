@@ -35,6 +35,22 @@ data class RallyPoint(val x: Float, val y: Float)
 
 data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)
 
+data class ResourceNode(
+    val kind: String = KIND_MINERALS,
+    var remaining: Int
+) {
+    companion object {
+        const val KIND_MINERALS = "minerals"
+        const val KIND_GAS = "gas"
+    }
+}
+
+data class Harvester(
+    val targetNodeId: EntityId,
+    val harvestPerTick: Int = 1,
+    val range: Float = 1.25f
+)
+
 data class ProductionJob(
     val typeId: String,
     var remainingTicks: Int,

@@ -15,6 +15,8 @@ class World {
     val productionQueues = mutableMapOf<EntityId, ProductionQueue>()
     val stucks = mutableMapOf<EntityId, StuckTracker>()
     val stockpiles = mutableMapOf<Int, ResourceStockpile>()
+    val resourceNodes = mutableMapOf<EntityId, ResourceNode>()
+    val harvesters = mutableMapOf<EntityId, Harvester>()
 
     val index = FactionIndex(this) // NEW
     val aliveSnapshot = AliveSnapshot(IntArray(64), 0)
@@ -66,6 +68,7 @@ class World {
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
         pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); rallyPoints.remove(id); productionQueues.remove(id); stucks.remove(id)
+        resourceNodes.remove(id); harvesters.remove(id)
     }
 
     fun clearRemovedEvents() {
