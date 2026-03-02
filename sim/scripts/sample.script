@@ -30,6 +30,10 @@ select 1 2 3
 attack 6
 
 wait 25
+selectArchetype lightMelee
+attack 1
+
+wait 25
 # Spawn a new unit and command it
 spawn @scout 1 Marine 12 12 7
 select @scout
