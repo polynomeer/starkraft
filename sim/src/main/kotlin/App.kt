@@ -527,6 +527,14 @@ fun main(args: Array<String>) {
                 gasSpent = totalResourceDeltas.gasSpent,
                 mineralsRefunded = totalResourceDeltas.mineralsRefunded,
                 gasRefunded = totalResourceDeltas.gasRefunded,
+                mineralsSpentFaction1 = totalResourceDeltas.mineralsSpentFaction1,
+                mineralsSpentFaction2 = totalResourceDeltas.mineralsSpentFaction2,
+                gasSpentFaction1 = totalResourceDeltas.gasSpentFaction1,
+                gasSpentFaction2 = totalResourceDeltas.gasSpentFaction2,
+                mineralsRefundedFaction1 = totalResourceDeltas.mineralsRefundedFaction1,
+                mineralsRefundedFaction2 = totalResourceDeltas.mineralsRefundedFaction2,
+                gasRefundedFaction1 = totalResourceDeltas.gasRefundedFaction1,
+                gasRefundedFaction2 = totalResourceDeltas.gasRefundedFaction2,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
                 finalVisibleTilesFaction2 = fog2.visibleCount(),
                 finalMineralsFaction1 = world.stockpiles[1]?.minerals ?: 0,
@@ -1135,6 +1143,14 @@ private fun emitTickSummaryRecord(
             gasSpent = tickResourceDeltas.gasSpent,
             mineralsRefunded = tickResourceDeltas.mineralsRefunded,
             gasRefunded = tickResourceDeltas.gasRefunded,
+            mineralsSpentFaction1 = tickResourceDeltas.mineralsSpentFaction1,
+            mineralsSpentFaction2 = tickResourceDeltas.mineralsSpentFaction2,
+            gasSpentFaction1 = tickResourceDeltas.gasSpentFaction1,
+            gasSpentFaction2 = tickResourceDeltas.gasSpentFaction2,
+            mineralsRefundedFaction1 = tickResourceDeltas.mineralsRefundedFaction1,
+            mineralsRefundedFaction2 = tickResourceDeltas.mineralsRefundedFaction2,
+            gasRefundedFaction1 = tickResourceDeltas.gasRefundedFaction1,
+            gasRefundedFaction2 = tickResourceDeltas.gasRefundedFaction2,
             pretty = false
         ),
         snapshotOutPath
@@ -2201,27 +2217,66 @@ data class ResourceDeltaCounterSet(
     var mineralsSpent: Int = 0,
     var gasSpent: Int = 0,
     var mineralsRefunded: Int = 0,
-    var gasRefunded: Int = 0
+    var gasRefunded: Int = 0,
+    var mineralsSpentFaction1: Int = 0,
+    var mineralsSpentFaction2: Int = 0,
+    var gasSpentFaction1: Int = 0,
+    var gasSpentFaction2: Int = 0,
+    var mineralsRefundedFaction1: Int = 0,
+    var mineralsRefundedFaction2: Int = 0,
+    var gasRefundedFaction1: Int = 0,
+    var gasRefundedFaction2: Int = 0
 ) {
     fun add(other: ResourceDeltaCounterSet) {
         mineralsSpent += other.mineralsSpent
         gasSpent += other.gasSpent
         mineralsRefunded += other.mineralsRefunded
         gasRefunded += other.gasRefunded
+        mineralsSpentFaction1 += other.mineralsSpentFaction1
+        mineralsSpentFaction2 += other.mineralsSpentFaction2
+        gasSpentFaction1 += other.gasSpentFaction1
+        gasSpentFaction2 += other.gasSpentFaction2
+        mineralsRefundedFaction1 += other.mineralsRefundedFaction1
+        mineralsRefundedFaction2 += other.mineralsRefundedFaction2
+        gasRefundedFaction1 += other.gasRefundedFaction1
+        gasRefundedFaction2 += other.gasRefundedFaction2
     }
 }
 
 private fun collectResourceDeltaCounters(resources: ResourceSystem): ResourceDeltaCounterSet {
     val counters = ResourceDeltaCounterSet()
     for (i in 0 until resources.lastTickEventCount) {
+        val faction = resources.eventFaction(i)
+        val minerals = resources.eventMinerals(i)
+        val gas = resources.eventGas(i)
         when (resources.eventKind(i)) {
             ResourceSystem.EVENT_REFUND -> {
-                counters.mineralsRefunded += resources.eventMinerals(i)
-                counters.gasRefunded += resources.eventGas(i)
+                counters.mineralsRefunded += minerals
+                counters.gasRefunded += gas
+                when (faction) {
+                    1 -> {
+                        counters.mineralsRefundedFaction1 += minerals
+                        counters.gasRefundedFaction1 += gas
+                    }
+                    2 -> {
+                        counters.mineralsRefundedFaction2 += minerals
+                        counters.gasRefundedFaction2 += gas
+                    }
+                }
             }
             else -> {
-                counters.mineralsSpent += resources.eventMinerals(i)
-                counters.gasSpent += resources.eventGas(i)
+                counters.mineralsSpent += minerals
+                counters.gasSpent += gas
+                when (faction) {
+                    1 -> {
+                        counters.mineralsSpentFaction1 += minerals
+                        counters.gasSpentFaction1 += gas
+                    }
+                    2 -> {
+                        counters.mineralsSpentFaction2 += minerals
+                        counters.gasSpentFaction2 += gas
+                    }
+                }
             }
         }
     }

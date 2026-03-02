@@ -258,7 +258,15 @@ data class TickSummaryStreamRecord(
     val mineralsSpent: Int,
     val gasSpent: Int,
     val mineralsRefunded: Int,
-    val gasRefunded: Int
+    val gasRefunded: Int,
+    val mineralsSpentFaction1: Int,
+    val mineralsSpentFaction2: Int,
+    val gasSpentFaction1: Int,
+    val gasSpentFaction2: Int,
+    val mineralsRefundedFaction1: Int,
+    val mineralsRefundedFaction2: Int,
+    val gasRefundedFaction1: Int,
+    val gasRefundedFaction2: Int
 )
 
 @Serializable
@@ -515,6 +523,14 @@ data class SessionStatsStreamRecord(
     val gasSpent: Int,
     val mineralsRefunded: Int,
     val gasRefunded: Int,
+    val mineralsSpentFaction1: Int,
+    val mineralsSpentFaction2: Int,
+    val gasSpentFaction1: Int,
+    val gasSpentFaction2: Int,
+    val mineralsRefundedFaction1: Int,
+    val mineralsRefundedFaction2: Int,
+    val gasRefundedFaction1: Int,
+    val gasRefundedFaction2: Int,
     val finalVisibleTilesFaction1: Int,
     val finalVisibleTilesFaction2: Int,
     val finalMineralsFaction1: Int,
@@ -895,6 +911,14 @@ fun renderTickSummaryStreamRecordJson(
     gasSpent: Int,
     mineralsRefunded: Int,
     gasRefunded: Int,
+    mineralsSpentFaction1: Int,
+    mineralsSpentFaction2: Int,
+    gasSpentFaction1: Int,
+    gasSpentFaction2: Int,
+    mineralsRefundedFaction1: Int,
+    mineralsRefundedFaction2: Int,
+    gasRefundedFaction1: Int,
+    gasRefundedFaction2: Int,
     pretty: Boolean = false
 ): String {
     val record =
@@ -929,7 +953,15 @@ fun renderTickSummaryStreamRecordJson(
             mineralsSpent = mineralsSpent,
             gasSpent = gasSpent,
             mineralsRefunded = mineralsRefunded,
-            gasRefunded = gasRefunded
+            gasRefunded = gasRefunded,
+            mineralsSpentFaction1 = mineralsSpentFaction1,
+            mineralsSpentFaction2 = mineralsSpentFaction2,
+            gasSpentFaction1 = gasSpentFaction1,
+            gasSpentFaction2 = gasSpentFaction2,
+            mineralsRefundedFaction1 = mineralsRefundedFaction1,
+            mineralsRefundedFaction2 = mineralsRefundedFaction2,
+            gasRefundedFaction1 = gasRefundedFaction1,
+            gasRefundedFaction2 = gasRefundedFaction2
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
@@ -1206,6 +1238,14 @@ fun renderSessionStatsStreamRecordJson(
     gasSpent: Int,
     mineralsRefunded: Int,
     gasRefunded: Int,
+    mineralsSpentFaction1: Int,
+    mineralsSpentFaction2: Int,
+    gasSpentFaction1: Int,
+    gasSpentFaction2: Int,
+    mineralsRefundedFaction1: Int,
+    mineralsRefundedFaction2: Int,
+    gasRefundedFaction1: Int,
+    gasRefundedFaction2: Int,
     finalVisibleTilesFaction1: Int,
     finalVisibleTilesFaction2: Int,
     finalMineralsFaction1: Int,
@@ -1240,6 +1280,14 @@ fun renderSessionStatsStreamRecordJson(
             gasSpent = gasSpent,
             mineralsRefunded = mineralsRefunded,
             gasRefunded = gasRefunded,
+            mineralsSpentFaction1 = mineralsSpentFaction1,
+            mineralsSpentFaction2 = mineralsSpentFaction2,
+            gasSpentFaction1 = gasSpentFaction1,
+            gasSpentFaction2 = gasSpentFaction2,
+            mineralsRefundedFaction1 = mineralsRefundedFaction1,
+            mineralsRefundedFaction2 = mineralsRefundedFaction2,
+            gasRefundedFaction1 = gasRefundedFaction1,
+            gasRefundedFaction2 = gasRefundedFaction2,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
             finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
             finalMineralsFaction1 = finalMineralsFaction1,
