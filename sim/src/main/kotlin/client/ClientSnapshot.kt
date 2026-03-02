@@ -155,6 +155,22 @@ data class EconomyStreamRecord(
 )
 
 @Serializable
+data class ResourceDeltaEventRecord(
+    val faction: Int,
+    val kind: String,
+    val minerals: Int,
+    val gas: Int
+)
+
+@Serializable
+data class ResourceDeltaStreamRecord(
+    val recordType: String = "resourceDelta",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<ResourceDeltaEventRecord>
+)
+
+@Serializable
 data class ProducerStateEntityRecord(
     val entityId: Int,
     val faction: Int,
@@ -787,6 +803,16 @@ fun renderEconomyStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = EconomyStreamRecord(sequence = sequence, tick = tick, factions = factions)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderResourceDeltaStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<ResourceDeltaEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ResourceDeltaStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

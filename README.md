@@ -160,6 +160,7 @@ Other flags:
   Static blocker changes emit `occupancy` records with tile-level blocked/unblocked deltas.
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
+  Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Snapshot cadence also emits `producerState` records with producer capabilities and default rally offsets.
   Combat ticks also emit `damage` records for health-bar style UI updates.
   Production activity emits `production` records for enqueue/progress/complete events.

@@ -18,6 +18,7 @@ import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -37,6 +38,7 @@ import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
+import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -284,10 +286,26 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders resource delta stream record json`() {
+        val json =
+            renderResourceDeltaStreamRecordJson(
+                sequence = 12L,
+                tick = 5,
+                events = listOf(ResourceDeltaEventRecord(1, "spend", 100, 25), ResourceDeltaEventRecord(1, "refund", 50, 0)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"resourceDelta\",\"sequence\":12,\"tick\":5,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":100,\"gas\":25},{\"faction\":1,\"kind\":\"refund\",\"minerals\":50,\"gas\":0}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders producer state stream record json`() {
         val json =
             renderProducerStateStreamRecordJson(
-                sequence = 12L,
+                sequence = 13L,
                 tick = 5,
                 entities =
                     listOf(
@@ -298,7 +316,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"producerState\",\"sequence\":12,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"supportsTraining\":true,\"supportsRally\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
+            "{\"recordType\":\"producerState\",\"sequence\":13,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"supportsTraining\":true,\"supportsRally\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
             json
         )
     }
@@ -307,7 +325,7 @@ class ClientSnapshotTest {
     fun `renders combat stream record json`() {
         val json =
             renderCombatStreamRecordJson(
-                sequence = 13L,
+                sequence = 14L,
                 tick = 6,
                 attacks = 2,
                 kills = 1,
@@ -320,7 +338,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"combat\",\"sequence\":13,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            "{\"recordType\":\"combat\",\"sequence\":14,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }

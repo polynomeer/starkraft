@@ -12,6 +12,7 @@ import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
@@ -32,6 +33,7 @@ import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
+import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -311,6 +313,7 @@ fun main(args: Array<String>) {
         val commandOutcomeCounters = CommandOutcomeCounters()
         var tickTrainsCompleted = 0
         world.clearRemovedEvents()
+        resources.clearTickEvents()
         production.clearTickEvents()
         alive.tick()
         if (tick == 200) {
@@ -352,6 +355,7 @@ fun main(args: Array<String>) {
             }
         }
 
+        emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         occupancy.tick()
         production.tick()
         for (i in 0 until production.lastTickEventCount) {
@@ -833,6 +837,40 @@ private fun emitEconomyRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             factions = factions,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitResourceDeltaRecord(
+    resources: ResourceSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || resources.lastTickEventCount == 0) return
+    val events = ArrayList<ResourceDeltaEventRecord>(resources.lastTickEventCount)
+    for (i in 0 until resources.lastTickEventCount) {
+        val kind =
+            when (resources.eventKind(i)) {
+                ResourceSystem.EVENT_REFUND -> "refund"
+                else -> "spend"
+            }
+        events.add(
+            ResourceDeltaEventRecord(
+                faction = resources.eventFaction(i),
+                kind = kind,
+                minerals = resources.eventMinerals(i),
+                gas = resources.eventGas(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderResourceDeltaStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = events,
             pretty = false
         ),
         snapshotOutPath
