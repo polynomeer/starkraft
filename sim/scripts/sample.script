@@ -21,6 +21,10 @@ wait 25
 selectType Zergling
 move 8 8
 
+wait 25
+selectArchetype infantry
+move 14 14
+
 wait 50
 select 1 2 3
 attack 6
