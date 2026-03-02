@@ -508,7 +508,9 @@ fun main(args: Array<String>) {
             totalHarvestedMinerals,
             totalHarvestedGas,
             totalDepletedNodes,
-            totalChangedResourceNodes
+            totalChangedResourceNodes,
+            world.resourceNodes.values.count { it.remaining > 0 },
+            world.resourceNodes.values.sumOf { it.remaining }
         )
     if (finalOutcomeSummary != null) {
         println(finalOutcomeSummary)
@@ -2440,7 +2442,9 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestedMinerals: Int = 0,
     totalHarvestedGas: Int = 0,
     totalDepletedNodes: Int = 0,
-    totalChangedResourceNodes: Int = 0
+    totalChangedResourceNodes: Int = 0,
+    currentResourceNodeCount: Int = 0,
+    currentResourceNodeRemaining: Int = 0
 ): String? {
     if (
         totalBuilds == 0 &&
@@ -2452,7 +2456,9 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestedMinerals == 0 &&
         totalHarvestedGas == 0 &&
         totalDepletedNodes == 0 &&
-        totalChangedResourceNodes == 0
+        totalChangedResourceNodes == 0 &&
+        currentResourceNodeCount == 0 &&
+        currentResourceNodeRemaining == 0
     ) {
         return null
     }
@@ -2468,7 +2474,8 @@ internal fun renderAggregateOutcomeSummary(
     if (totalHarvestedMinerals > 0 || totalHarvestedGas > 0 || totalDepletedNodes > 0 || totalChangedResourceNodes > 0) {
         parts.add(
             "harvest=${totalHarvestedMinerals}/${totalHarvestedGas} " +
-                "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes"
+                "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes " +
+                "active=$currentResourceNodeCount remaining=$currentResourceNodeRemaining"
         )
     }
     return "command outcomes: " + parts.joinToString(" ")
