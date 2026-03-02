@@ -14,6 +14,14 @@ class ResourceHarvestSystem(
         private set
     var lastTickHarvestedGas: Int = 0
         private set
+    var lastTickHarvestedMineralsFaction1: Int = 0
+        private set
+    var lastTickHarvestedMineralsFaction2: Int = 0
+        private set
+    var lastTickHarvestedGasFaction1: Int = 0
+        private set
+    var lastTickHarvestedGasFaction2: Int = 0
+        private set
     var lastTickDepletedNodes: Int = 0
         private set
 
@@ -21,6 +29,10 @@ class ResourceHarvestSystem(
         lastTickEventCount = 0
         lastTickHarvestedMinerals = 0
         lastTickHarvestedGas = 0
+        lastTickHarvestedMineralsFaction1 = 0
+        lastTickHarvestedMineralsFaction2 = 0
+        lastTickHarvestedGasFaction1 = 0
+        lastTickHarvestedGasFaction2 = 0
         lastTickDepletedNodes = 0
         for ((entityId, harvester) in world.harvesters) {
             val workerTag = world.tags[entityId] ?: continue
@@ -39,10 +51,18 @@ class ResourceHarvestSystem(
                 ResourceNode.KIND_GAS -> {
                     resources.stockpile(workerTag.faction).gas += harvested
                     lastTickHarvestedGas += harvested
+                    when (workerTag.faction) {
+                        1 -> lastTickHarvestedGasFaction1 += harvested
+                        2 -> lastTickHarvestedGasFaction2 += harvested
+                    }
                 }
                 else -> {
                     resources.stockpile(workerTag.faction).minerals += harvested
                     lastTickHarvestedMinerals += harvested
+                    when (workerTag.faction) {
+                        1 -> lastTickHarvestedMineralsFaction1 += harvested
+                        2 -> lastTickHarvestedMineralsFaction2 += harvested
+                    }
                 }
             }
             if (node.remaining == 0) {

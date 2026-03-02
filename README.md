@@ -190,7 +190,7 @@ Other flags:
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
-- Final CLI outcome summaries now include aggregate harvest totals, changed nodes, depletion counts, and current remaining node totals when harvesting occurred
+- Final CLI outcome summaries now include aggregate harvest totals, per-faction harvest splits, changed nodes, depletion counts, and current remaining node totals when harvesting occurred
 - Human CLI logs now include build/train outcome summaries, including failure reasons when they occur
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash

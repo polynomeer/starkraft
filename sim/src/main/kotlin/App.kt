@@ -279,6 +279,10 @@ fun main(args: Array<String>) {
     var totalHarvestedGas = 0
     var totalDepletedNodes = 0
     var totalChangedResourceNodes = 0
+    var totalHarvestedMineralsFaction1 = 0
+    var totalHarvestedMineralsFaction2 = 0
+    var totalHarvestedGasFaction1 = 0
+    var totalHarvestedGasFaction2 = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -424,6 +428,10 @@ fun main(args: Array<String>) {
         totalHarvestedGas += harvest.lastTickHarvestedGas
         totalDepletedNodes += harvest.lastTickDepletedNodes
         totalChangedResourceNodes += harvest.lastTickEventCount
+        totalHarvestedMineralsFaction1 += harvest.lastTickHarvestedMineralsFaction1
+        totalHarvestedMineralsFaction2 += harvest.lastTickHarvestedMineralsFaction2
+        totalHarvestedGasFaction1 += harvest.lastTickHarvestedGasFaction1
+        totalHarvestedGasFaction2 += harvest.lastTickHarvestedGasFaction2
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -509,6 +517,10 @@ fun main(args: Array<String>) {
             totalHarvestedGas,
             totalDepletedNodes,
             totalChangedResourceNodes,
+            totalHarvestedMineralsFaction1,
+            totalHarvestedMineralsFaction2,
+            totalHarvestedGasFaction1,
+            totalHarvestedGasFaction2,
             world.resourceNodes.values.count { it.remaining > 0 },
             world.resourceNodes.values.sumOf { it.remaining }
         )
@@ -2443,6 +2455,10 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestedGas: Int = 0,
     totalDepletedNodes: Int = 0,
     totalChangedResourceNodes: Int = 0,
+    totalHarvestedMineralsFaction1: Int = 0,
+    totalHarvestedMineralsFaction2: Int = 0,
+    totalHarvestedGasFaction1: Int = 0,
+    totalHarvestedGasFaction2: Int = 0,
     currentResourceNodeCount: Int = 0,
     currentResourceNodeRemaining: Int = 0
 ): String? {
@@ -2457,6 +2473,10 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestedGas == 0 &&
         totalDepletedNodes == 0 &&
         totalChangedResourceNodes == 0 &&
+        totalHarvestedMineralsFaction1 == 0 &&
+        totalHarvestedMineralsFaction2 == 0 &&
+        totalHarvestedGasFaction1 == 0 &&
+        totalHarvestedGasFaction2 == 0 &&
         currentResourceNodeCount == 0 &&
         currentResourceNodeRemaining == 0
     ) {
@@ -2474,6 +2494,8 @@ internal fun renderAggregateOutcomeSummary(
     if (totalHarvestedMinerals > 0 || totalHarvestedGas > 0 || totalDepletedNodes > 0 || totalChangedResourceNodes > 0) {
         parts.add(
             "harvest=${totalHarvestedMinerals}/${totalHarvestedGas} " +
+                "f1=${totalHarvestedMineralsFaction1}/${totalHarvestedGasFaction1} " +
+                "f2=${totalHarvestedMineralsFaction2}/${totalHarvestedGasFaction2} " +
                 "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes " +
                 "active=$currentResourceNodeCount remaining=$currentResourceNodeRemaining"
         )

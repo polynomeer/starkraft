@@ -33,6 +33,8 @@ class ResourceHarvestSystemTest {
         assertEquals(7, world.resourceNodes[nodeId]?.remaining)
         assertEquals(3, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
+        assertEquals(3, harvest.lastTickHarvestedMineralsFaction1)
+        assertEquals(0, harvest.lastTickHarvestedMineralsFaction2)
         assertEquals(0, harvest.lastTickDepletedNodes)
         assertEquals(1, harvest.lastTickEventCount)
         assertEquals(nodeId, harvest.eventNodeId(0))
@@ -106,5 +108,27 @@ class ResourceHarvestSystemTest {
         assertEquals(5, harvest.eventHarvested(0))
         assertEquals(5, harvest.eventRemaining(0))
         assertEquals(false, harvest.eventDepleted(0))
+    }
+
+    @Test
+    fun `tracks harvest totals by faction`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val mineralNode = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val gasNode = world.spawn(Transform(7f, 5f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        world.resourceNodes[mineralNode] = ResourceNode(remaining = 10)
+        world.resourceNodes[gasNode] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 10)
+        val worker1 = world.spawn(Transform(5.3f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        val worker2 = world.spawn(Transform(7.2f, 5f), UnitTag(2, "Worker"), Health(40, 40), w = null)
+        world.harvesters[worker1] = Harvester(targetNodeId = mineralNode, harvestPerTick = 2)
+        world.harvesters[worker2] = Harvester(targetNodeId = gasNode, harvestPerTick = 3)
+
+        harvest.tick()
+
+        assertEquals(2, harvest.lastTickHarvestedMineralsFaction1)
+        assertEquals(0, harvest.lastTickHarvestedMineralsFaction2)
+        assertEquals(0, harvest.lastTickHarvestedGasFaction1)
+        assertEquals(3, harvest.lastTickHarvestedGasFaction2)
     }
 }
