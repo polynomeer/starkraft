@@ -15,6 +15,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
+import starkraft.sim.client.ResourceNodeEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
@@ -37,6 +38,7 @@ import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
+import starkraft.sim.client.renderResourceNodeStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -378,6 +380,7 @@ fun main(args: Array<String>) {
         }
 
         harvest.tick()
+        emitResourceNodeRecord(world, harvest, tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
@@ -946,6 +949,43 @@ private fun emitResourceDeltaSummaryRecord(
                         gasRefunded = tickResourceDeltas.gasRefundedFaction2
                     )
                 ),
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitResourceNodeRecord(
+    world: World,
+    harvest: ResourceHarvestSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || harvest.lastTickEventCount == 0) return
+    val nodes = ArrayList<ResourceNodeEventRecord>(harvest.lastTickEventCount)
+    for (i in 0 until harvest.lastTickEventCount) {
+        val nodeId = harvest.eventNodeId(i)
+        val transform = world.transforms[nodeId] ?: continue
+        val tag = world.tags[nodeId] ?: continue
+        nodes.add(
+            ResourceNodeEventRecord(
+                id = nodeId,
+                kind = tag.typeId,
+                x = transform.x,
+                y = transform.y,
+                harvested = harvest.eventHarvested(i),
+                remaining = harvest.eventRemaining(i),
+                depleted = harvest.eventDepleted(i)
+            )
+        )
+    }
+    if (nodes.isEmpty()) return
+    emitSnapshotLine(
+        renderResourceNodeStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            nodes = nodes,
             pretty = false
         ),
         snapshotOutPath

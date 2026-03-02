@@ -34,6 +34,10 @@ class ResourceHarvestSystemTest {
         assertEquals(3, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
         assertEquals(0, harvest.lastTickDepletedNodes)
+        assertEquals(1, harvest.lastTickEventCount)
+        assertEquals(nodeId, harvest.eventNodeId(0))
+        assertEquals(3, harvest.eventHarvested(0))
+        assertEquals(7, harvest.eventRemaining(0))
     }
 
     @Test
@@ -81,5 +85,26 @@ class ResourceHarvestSystemTest {
         assertEquals(Order.Move(6f, 6f), world.orders[workerId]?.items?.firstOrNull())
         assertEquals(11, world.stockpiles[1]?.minerals)
         assertEquals(11, world.resourceNodes[nodeId]?.remaining)
+    }
+
+    @Test
+    fun `aggregates multiple workers on one node into one event`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val nodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 10)
+        val workerA = world.spawn(Transform(5.5f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        val workerB = world.spawn(Transform(5.2f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.harvesters[workerA] = Harvester(targetNodeId = nodeId, harvestPerTick = 2)
+        world.harvesters[workerB] = Harvester(targetNodeId = nodeId, harvestPerTick = 3)
+
+        harvest.tick()
+
+        assertEquals(1, harvest.lastTickEventCount)
+        assertEquals(nodeId, harvest.eventNodeId(0))
+        assertEquals(5, harvest.eventHarvested(0))
+        assertEquals(5, harvest.eventRemaining(0))
+        assertEquals(false, harvest.eventDepleted(0))
     }
 }

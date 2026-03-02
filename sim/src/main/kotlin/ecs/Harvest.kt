@@ -4,6 +4,12 @@ class ResourceHarvestSystem(
     private val world: World,
     private val resources: ResourceSystem
 ) {
+    private var eventNodeIds = IntArray(8)
+    private var eventHarvested = IntArray(8)
+    private var eventRemaining = IntArray(8)
+    private var eventDepleted = BooleanArray(8)
+    var lastTickEventCount: Int = 0
+        private set
     var lastTickHarvestedMinerals: Int = 0
         private set
     var lastTickHarvestedGas: Int = 0
@@ -12,6 +18,7 @@ class ResourceHarvestSystem(
         private set
 
     fun tick() {
+        lastTickEventCount = 0
         lastTickHarvestedMinerals = 0
         lastTickHarvestedGas = 0
         lastTickDepletedNodes = 0
@@ -41,6 +48,38 @@ class ResourceHarvestSystem(
             if (node.remaining == 0) {
                 lastTickDepletedNodes++
             }
+            recordEvent(harvester.targetNodeId, harvested, node.remaining, node.remaining == 0)
         }
+    }
+
+    fun eventNodeId(index: Int): Int = eventNodeIds[index]
+
+    fun eventHarvested(index: Int): Int = eventHarvested[index]
+
+    fun eventRemaining(index: Int): Int = eventRemaining[index]
+
+    fun eventDepleted(index: Int): Boolean = eventDepleted[index]
+
+    private fun recordEvent(nodeId: Int, harvested: Int, remaining: Int, depleted: Boolean) {
+        for (i in 0 until lastTickEventCount) {
+            if (eventNodeIds[i] != nodeId) continue
+            eventHarvested[i] += harvested
+            eventRemaining[i] = remaining
+            eventDepleted[i] = eventDepleted[i] || depleted
+            return
+        }
+        val index = lastTickEventCount
+        if (index >= eventNodeIds.size) {
+            val nextSize = eventNodeIds.size * 2
+            eventNodeIds = eventNodeIds.copyOf(nextSize)
+            eventHarvested = eventHarvested.copyOf(nextSize)
+            eventRemaining = eventRemaining.copyOf(nextSize)
+            eventDepleted = eventDepleted.copyOf(nextSize)
+        }
+        eventNodeIds[index] = nodeId
+        eventHarvested[index] = harvested
+        eventRemaining[index] = remaining
+        eventDepleted[index] = depleted
+        lastTickEventCount = index + 1
     }
 }

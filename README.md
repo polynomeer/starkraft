@@ -165,6 +165,7 @@ Other flags:
   Static blocker changes emit `occupancy` records with tile-level blocked/unblocked deltas.
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
+  Harvest ticks emit `resourceNode` records with per-node harvested amounts, remaining resources, and depletion flags.
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
   Snapshot cadence also emits `producerState` records with producer archetypes, capabilities, and default rally offsets.
@@ -184,7 +185,7 @@ Other flags:
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Example consumer:
   `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft.ndjson"`
-  This reads the NDJSON stream and prints record counts plus session/hash metadata, including economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
+  This reads the NDJSON stream and prints record counts plus session/hash metadata, including resource-node, economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes

@@ -21,6 +21,7 @@ import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
+import starkraft.sim.client.ResourceNodeEventRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -42,6 +43,7 @@ import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
+import starkraft.sim.client.renderResourceNodeStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -679,6 +681,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":250}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders resource node stream record json`() {
+        val json =
+            renderResourceNodeStreamRecordJson(
+                sequence = 22L,
+                tick = 16,
+                nodes = listOf(ResourceNodeEventRecord(9, "MineralField", 6f, 6f, 3, 247, false)),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"resourceNode\",\"sequence\":22,\"tick\":16,\"nodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"harvested\":3,\"remaining\":247,\"depleted\":false}]}",
             json
         )
     }

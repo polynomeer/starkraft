@@ -200,6 +200,25 @@ data class ResourceDeltaSummaryStreamRecord(
 )
 
 @Serializable
+data class ResourceNodeEventRecord(
+    val id: Int,
+    val kind: String,
+    val x: Float,
+    val y: Float,
+    val harvested: Int,
+    val remaining: Int,
+    val depleted: Boolean
+)
+
+@Serializable
+data class ResourceNodeStreamRecord(
+    val recordType: String = "resourceNode",
+    val sequence: Long,
+    val tick: Int,
+    val nodes: List<ResourceNodeEventRecord>
+)
+
+@Serializable
 data class ProducerStateEntityRecord(
     val entityId: Int,
     val faction: Int,
@@ -969,6 +988,16 @@ fun renderResourceDeltaSummaryStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ResourceDeltaSummaryStreamRecord(sequence = sequence, tick = tick, factions = factions)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderResourceNodeStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    nodes: List<ResourceNodeEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ResourceNodeStreamRecord(sequence = sequence, tick = tick, nodes = nodes)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

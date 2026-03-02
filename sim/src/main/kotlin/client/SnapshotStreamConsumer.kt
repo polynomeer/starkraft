@@ -18,6 +18,9 @@ data class SnapshotStreamSummary(
     val seed: Long? = null,
     val worldHash: Long? = null,
     val replayHash: Long? = null,
+    val resourceNodeChangeCount: Int = 0,
+    val resourceNodeHarvestedTotal: Int = 0,
+    val resourceNodeDepletedCount: Int = 0,
     val resourceDeltaEventCount: Int = 0,
     val resourceSpendMinerals: Int = 0,
     val resourceSpendGas: Int = 0,
@@ -71,6 +74,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var seed: Long? = null
     var worldHash: Long? = null
     var replayHash: Long? = null
+    var resourceNodeChangeCount = 0
+    var resourceNodeHarvestedTotal = 0
+    var resourceNodeDepletedCount = 0
     var resourceDeltaEventCount = 0
     var resourceSpendMinerals = 0
     var resourceSpendGas = 0
@@ -169,6 +175,14 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                         resourceSpendMinerals += minerals
                         resourceSpendGas += gas
                     }
+                }
+            }
+            "resourceNode" -> {
+                val nodes = obj.array("nodes")
+                resourceNodeChangeCount += nodes.size
+                for (node in nodes) {
+                    resourceNodeHarvestedTotal += node.int("harvested") ?: 0
+                    if (node.bool("depleted") == true) resourceNodeDepletedCount++
                 }
             }
             "resourceDeltaSummary" -> {
@@ -271,6 +285,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         seed = seed,
         worldHash = worldHash,
         replayHash = replayHash,
+        resourceNodeChangeCount = resourceNodeChangeCount,
+        resourceNodeHarvestedTotal = resourceNodeHarvestedTotal,
+        resourceNodeDepletedCount = resourceNodeDepletedCount,
         resourceDeltaEventCount = resourceDeltaEventCount,
         resourceSpendMinerals = resourceSpendMinerals,
         resourceSpendGas = resourceSpendGas,
@@ -340,6 +357,12 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "${summary.resourceSummaryMineralsRefundedFaction1}/${summary.resourceSummaryGasRefundedFaction1} " +
                 "f2=${summary.resourceSummaryMineralsSpentFaction2}/${summary.resourceSummaryGasSpentFaction2}->" +
                 "${summary.resourceSummaryMineralsRefundedFaction2}/${summary.resourceSummaryGasRefundedFaction2}"
+        )
+    }
+    if (summary.resourceNodeChangeCount > 0 || summary.countsByType["resourceNode"] != null) {
+        lines.add(
+            "resourceNodes: changed=${summary.resourceNodeChangeCount} " +
+                "harvested=${summary.resourceNodeHarvestedTotal} depleted=${summary.resourceNodeDepletedCount}"
         )
     }
     if (summary.producerCount > 0 || summary.countsByType["production"] != null) {
