@@ -21,6 +21,8 @@ data class SnapshotStreamSummary(
     val resourceNodeChangeCount: Int = 0,
     val resourceNodeHarvestedTotal: Int = 0,
     val resourceNodeDepletedCount: Int = 0,
+    val currentResourceNodeCount: Int = 0,
+    val currentResourceNodeRemainingTotal: Int = 0,
     val resourceDeltaEventCount: Int = 0,
     val resourceSpendMinerals: Int = 0,
     val resourceSpendGas: Int = 0,
@@ -77,6 +79,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var resourceNodeChangeCount = 0
     var resourceNodeHarvestedTotal = 0
     var resourceNodeDepletedCount = 0
+    val resourceNodeRemainingById = linkedMapOf<Int, Int>()
     var resourceDeltaEventCount = 0
     var resourceSpendMinerals = 0
     var resourceSpendGas = 0
@@ -133,6 +136,13 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                 buildVersion = obj.string("buildVersion")
                 seed = obj.long("seed")
             }
+            "mapState" -> {
+                val nodes = obj.array("resourceNodes")
+                for (node in nodes) {
+                    val id = node.int("id") ?: continue
+                    resourceNodeRemainingById[id] = node.int("remaining") ?: 0
+                }
+            }
             "sessionStats" -> {
                 worldHash = obj.long("finalWorldHash") ?: worldHash
                 replayHash = obj.long("finalReplayHash") ?: replayHash
@@ -181,8 +191,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                 val nodes = obj.array("nodes")
                 resourceNodeChangeCount += nodes.size
                 for (node in nodes) {
+                    val id = node.int("id") ?: continue
                     resourceNodeHarvestedTotal += node.int("harvested") ?: 0
                     if (node.bool("depleted") == true) resourceNodeDepletedCount++
+                    resourceNodeRemainingById[id] = node.int("remaining") ?: 0
                 }
             }
             "resourceDeltaSummary" -> {
@@ -288,6 +300,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         resourceNodeChangeCount = resourceNodeChangeCount,
         resourceNodeHarvestedTotal = resourceNodeHarvestedTotal,
         resourceNodeDepletedCount = resourceNodeDepletedCount,
+        currentResourceNodeCount = resourceNodeRemainingById.values.count { it > 0 },
+        currentResourceNodeRemainingTotal = resourceNodeRemainingById.values.sum(),
         resourceDeltaEventCount = resourceDeltaEventCount,
         resourceSpendMinerals = resourceSpendMinerals,
         resourceSpendGas = resourceSpendGas,
@@ -362,7 +376,8 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
     if (summary.resourceNodeChangeCount > 0 || summary.countsByType["resourceNode"] != null) {
         lines.add(
             "resourceNodes: changed=${summary.resourceNodeChangeCount} " +
-                "harvested=${summary.resourceNodeHarvestedTotal} depleted=${summary.resourceNodeDepletedCount}"
+                "harvested=${summary.resourceNodeHarvestedTotal} depleted=${summary.resourceNodeDepletedCount} " +
+                "active=${summary.currentResourceNodeCount} remaining=${summary.currentResourceNodeRemainingTotal}"
         )
     }
     if (summary.producerCount > 0 || summary.countsByType["production"] != null) {
