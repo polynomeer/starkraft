@@ -38,7 +38,12 @@ data class SnapshotStreamSummary(
     val productionEnqueueCount: Int = 0,
     val productionProgressCount: Int = 0,
     val productionCompleteCount: Int = 0,
-    val productionCancelCount: Int = 0
+    val productionCancelCount: Int = 0,
+    val combatAttackCount: Int = 0,
+    val combatKillCount: Int = 0,
+    val combatDamageEventCount: Int = 0,
+    val combatTotalDamage: Int = 0,
+    val combatDeathDespawnCount: Int = 0
 )
 
 fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
@@ -70,6 +75,11 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var productionProgressCount = 0
     var productionCompleteCount = 0
     var productionCancelCount = 0
+    var combatAttackCount = 0
+    var combatKillCount = 0
+    var combatDamageEventCount = 0
+    var combatTotalDamage = 0
+    var combatDeathDespawnCount = 0
 
     for (line in lines) {
         if (line.isBlank()) continue
@@ -150,6 +160,23 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "combat" -> {
+                combatAttackCount += obj.int("attacks") ?: 0
+                combatKillCount += obj.int("kills") ?: 0
+            }
+            "damage" -> {
+                val events = obj.array("events")
+                combatDamageEventCount += events.size
+                for (event in events) {
+                    combatTotalDamage += event.int("damage") ?: 0
+                }
+            }
+            "despawn" -> {
+                val entities = obj.array("entities")
+                for (entity in entities) {
+                    if (entity.string("reason") == "death") combatDeathDespawnCount++
+                }
+            }
         }
     }
 
@@ -181,7 +208,12 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         productionEnqueueCount = productionEnqueueCount,
         productionProgressCount = productionProgressCount,
         productionCompleteCount = productionCompleteCount,
-        productionCancelCount = productionCancelCount
+        productionCancelCount = productionCancelCount,
+        combatAttackCount = combatAttackCount,
+        combatKillCount = combatKillCount,
+        combatDamageEventCount = combatDamageEventCount,
+        combatTotalDamage = combatTotalDamage,
+        combatDeathDespawnCount = combatDeathDespawnCount
     )
 }
 
@@ -216,6 +248,18 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "rally=${summary.rallyProducerCount} maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
+    if (
+        summary.combatAttackCount > 0 ||
+        summary.combatDamageEventCount > 0 ||
+        summary.combatDeathDespawnCount > 0 ||
+        summary.countsByType["combat"] != null
+    ) {
+        lines.add(
+            "combat: attacks=${summary.combatAttackCount} kills=${summary.combatKillCount} " +
+                "damageEvents=${summary.combatDamageEventCount} damage=${summary.combatTotalDamage} " +
+                "deathDespawns=${summary.combatDeathDespawnCount}"
         )
     }
     return lines.joinToString(separator = "\n")

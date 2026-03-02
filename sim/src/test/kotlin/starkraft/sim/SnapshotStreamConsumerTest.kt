@@ -20,12 +20,15 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":4,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":10,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
                     "{\"recordType\":\"producerState\",\"sequence\":5,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"Tower\",\"supportsTraining\":false,\"supportsRally\":false,\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
                     "{\"recordType\":\"production\",\"sequence\":6,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":7,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                    "{\"recordType\":\"sessionEnd\",\"sequence\":8,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                    "{\"recordType\":\"combat\",\"sequence\":7,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"damage\",\"sequence\":8,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"despawn\",\"sequence\":9,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":10,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionEnd\",\"sequence\":11,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
 
-        assertEquals(9, summary.totalRecords)
+        assertEquals(12, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["command"])
@@ -33,6 +36,9 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.countsByType["resourceDeltaSummary"])
         assertEquals(1, summary.countsByType["producerState"])
         assertEquals(1, summary.countsByType["production"])
+        assertEquals(1, summary.countsByType["combat"])
+        assertEquals(1, summary.countsByType["damage"])
+        assertEquals(1, summary.countsByType["despawn"])
         assertEquals(1, summary.countsByType["sessionStats"])
         assertEquals(1, summary.countsByType["sessionEnd"])
         assertEquals("demo-map", summary.mapId)
@@ -53,6 +59,11 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.productionProgressCount)
         assertEquals(1, summary.productionCompleteCount)
         assertEquals(1, summary.productionCancelCount)
+        assertEquals(2, summary.combatAttackCount)
+        assertEquals(1, summary.combatKillCount)
+        assertEquals(2, summary.combatDamageEventCount)
+        assertEquals(15, summary.combatTotalDamage)
+        assertEquals(1, summary.combatDeathDespawnCount)
     }
 
     @Test
@@ -67,7 +78,10 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":2,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
                         "{\"recordType\":\"producerState\",\"sequence\":3,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
                         "{\"recordType\":\"production\",\"sequence\":4,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
-                        "{\"recordType\":\"sessionEnd\",\"sequence\":5,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                        "{\"recordType\":\"combat\",\"sequence\":5,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
+                        "{\"recordType\":\"damage\",\"sequence\":6,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                        "{\"recordType\":\"despawn\",\"sequence\":7,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":8,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
             )
@@ -81,5 +95,6 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("f1=50/0->0/0"))
         assertTrue(text.contains("producers: total=1 training=1 rally=1 maxQueue=3"))
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
+        assertTrue(text.contains("combat: attacks=2 kills=1 damageEvents=2 damage=15 deathDespawns=1"))
     }
 }
