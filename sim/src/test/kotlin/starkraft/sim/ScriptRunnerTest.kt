@@ -22,6 +22,8 @@ class ScriptRunnerTest {
             wait 1
             selectArchetype infantry
             move 6 7
+            wait 1
+            harvest 12
             """.trimIndent()
         )
 
@@ -34,8 +36,9 @@ class ScriptRunnerTest {
         assertEquals(ScriptRunner.Selection.Type("Marine"), program.selections[1].selection)
         assertEquals(6, program.selections[2].tick)
         assertEquals(ScriptRunner.Selection.Archetype("infantry"), program.selections[2].selection)
-        assertEquals(3, program.commands.size)
+        assertEquals(4, program.commands.size)
         assertEquals(Command.MoveArchetype(6, "infantry", 6f, 7f), program.commands[2])
+        assertEquals(Command.HarvestArchetype(7, "infantry", 12), program.commands[3])
     }
 
     @Test

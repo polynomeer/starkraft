@@ -781,6 +781,38 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     archetype = cmd.archetype,
                     target = cmd.target
                 )
+            is Command.Harvest ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "harvest",
+                    units = cmd.units,
+                    target = cmd.target
+                )
+            is Command.HarvestFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "harvestFaction",
+                    faction = cmd.faction,
+                    target = cmd.target
+                )
+            is Command.HarvestType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "harvestType",
+                    typeId = cmd.typeId,
+                    target = cmd.target
+                )
+            is Command.HarvestArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "harvestArchetype",
+                    archetype = cmd.archetype,
+                    target = cmd.target
+                )
             is Command.Spawn ->
                 CommandStreamRecord(
                     sequence = sequence,

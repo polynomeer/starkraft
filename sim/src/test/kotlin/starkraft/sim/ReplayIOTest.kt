@@ -20,6 +20,10 @@ class ReplayIOTest {
             Command.AttackFaction(12, 2, 9),
             Command.AttackType(14, "Zergling", 3),
             Command.AttackArchetype(15, "lightMelee", 4),
+            Command.Harvest(16, intArrayOf(1, 2), 99),
+            Command.HarvestFaction(17, 1, 99),
+            Command.HarvestType(18, "Worker", 99),
+            Command.HarvestArchetype(19, "worker", 99),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1),
             Command.Build(25, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0, label = "depot", labelId = -2),
             Command.Train(30, -2, "Marine", 75, 50, 0),
@@ -120,6 +124,30 @@ private fun assertCommandsEqual(a: Command, b: Command) {
         }
         is Command.AttackArchetype -> {
             require(b is Command.AttackArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
+            assertEquals(a.target, b.target)
+        }
+        is Command.Harvest -> {
+            require(b is Command.Harvest)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.target, b.target)
+            assertEquals(a.units.toList(), b.units.toList())
+        }
+        is Command.HarvestFaction -> {
+            require(b is Command.HarvestFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.target, b.target)
+        }
+        is Command.HarvestType -> {
+            require(b is Command.HarvestType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.target, b.target)
+        }
+        is Command.HarvestArchetype -> {
+            require(b is Command.HarvestArchetype)
             assertEquals(a.tick, b.tick)
             assertEquals(a.archetype, b.archetype)
             assertEquals(a.target, b.target)

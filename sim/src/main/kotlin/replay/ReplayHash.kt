@@ -61,6 +61,31 @@ class ReplayHashRecorder : Recorder {
                 for (ch in cmd.archetype) mixInt(ch.code)
                 mixInt(cmd.target)
             }
+            is Command.Harvest -> {
+                mixInt(24)
+                mixInt(cmd.tick)
+                mixInt(cmd.units.size)
+                for (u in cmd.units) mixInt(u)
+                mixInt(cmd.target)
+            }
+            is Command.HarvestFaction -> {
+                mixInt(25)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+                mixInt(cmd.target)
+            }
+            is Command.HarvestType -> {
+                mixInt(26)
+                mixInt(cmd.tick)
+                for (ch in cmd.typeId) mixInt(ch.code)
+                mixInt(cmd.target)
+            }
+            is Command.HarvestArchetype -> {
+                mixInt(27)
+                mixInt(cmd.tick)
+                for (ch in cmd.archetype) mixInt(ch.code)
+                mixInt(cmd.target)
+            }
             is Command.Spawn -> {
                 mixInt(3)
                 mixInt(cmd.tick)

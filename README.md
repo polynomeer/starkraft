@@ -115,6 +115,7 @@ Script syntax:
 - `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
+- `harvest <targetId|@label>` assign selection to harvest from a resource node
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building

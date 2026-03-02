@@ -1420,6 +1420,18 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.AttackArchetype -> {
                     println("tick=$tick attackArchetype archetype=${c.archetype} target=${c.target}")
                 }
+                is Command.Harvest -> {
+                    println("tick=$tick harvest units=${c.units.joinToString(",")} target=${c.target}")
+                }
+                is Command.HarvestFaction -> {
+                    println("tick=$tick harvestFaction faction=${c.faction} target=${c.target}")
+                }
+                is Command.HarvestType -> {
+                    println("tick=$tick harvestType type=${c.typeId} target=${c.target}")
+                }
+                is Command.HarvestArchetype -> {
+                    println("tick=$tick harvestArchetype archetype=${c.archetype} target=${c.target}")
+                }
                 is Command.Spawn -> {
                     val label = c.label?.let { "@$it " } ?: ""
                     println("tick=$tick spawn ${label}faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
@@ -1617,6 +1629,26 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown target id '${c.target}' in attackArchetype at tick $tick")
                     }
                 }
+                is Command.Harvest -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in harvest at tick $tick")
+                    }
+                }
+                is Command.HarvestFaction -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in harvestFaction at tick $tick")
+                    }
+                }
+                is Command.HarvestType -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in harvestType at tick $tick")
+                    }
+                }
+                is Command.HarvestArchetype -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in harvestArchetype at tick $tick")
+                    }
+                }
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
                 }
@@ -1685,6 +1717,29 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.AttackArchetype -> {
                     if (c.target < 0 && !defined.contains(c.target)) {
                         error("Unknown label id '${c.target}' in attackArchetype at tick $tick (spawn first)")
+                    }
+                }
+                is Command.Harvest -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in harvest at tick $tick (spawn first)")
+                    }
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in harvest at tick $tick (spawn first)")
+                    }
+                }
+                is Command.HarvestFaction -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in harvestFaction at tick $tick (spawn first)")
+                    }
+                }
+                is Command.HarvestType -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in harvestType at tick $tick (spawn first)")
+                    }
+                }
+                is Command.HarvestArchetype -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in harvestArchetype at tick $tick (spawn first)")
                     }
                 }
                 is Command.Train -> {
@@ -1941,6 +1996,10 @@ internal fun buildCommandStats(
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Rally -> Unit
+                is Command.Harvest -> Unit
+                is Command.HarvestFaction -> Unit
+                is Command.HarvestType -> Unit
+                is Command.HarvestArchetype -> Unit
             }
         }
         if (count > 0) {
@@ -2020,6 +2079,10 @@ internal fun buildCommandStats(
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Rally -> Unit
+                is Command.Harvest -> Unit
+                is Command.HarvestFaction -> Unit
+                is Command.HarvestType -> Unit
+                is Command.HarvestArchetype -> Unit
             }
         }
     }
@@ -2198,6 +2261,69 @@ internal fun currentRuntimeMetadataLine(seed: Long?): String {
     return "runtime metadata: mapId=$DEMO_MAP_ID buildVersion=$BUILD_VERSION seed=$seed"
 }
 
+data class BuildFailureCounterSet(
+    var invalidDefinition: Int = 0,
+    var invalidFootprint: Int = 0,
+    var invalidPlacement: Int = 0,
+    var insufficientResources: Int = 0
+) {
+    fun add(other: BuildFailureCounterSet) {
+        invalidDefinition += other.invalidDefinition
+        invalidFootprint += other.invalidFootprint
+        invalidPlacement += other.invalidPlacement
+        insufficientResources += other.insufficientResources
+    }
+
+    fun toRecord(): BuildFailureCounts =
+        BuildFailureCounts(
+            invalidDefinition = invalidDefinition,
+            invalidFootprint = invalidFootprint,
+            invalidPlacement = invalidPlacement,
+            insufficientResources = insufficientResources
+        )
+}
+
+data class TrainFailureCounterSet(
+    var missingBuilding: Int = 0,
+    var invalidUnit: Int = 0,
+    var invalidBuildTime: Int = 0,
+    var incompatibleProducer: Int = 0,
+    var insufficientResources: Int = 0,
+    var queueFull: Int = 0,
+    var nothingToCancel: Int = 0
+) {
+    fun add(other: TrainFailureCounterSet) {
+        missingBuilding += other.missingBuilding
+        invalidUnit += other.invalidUnit
+        invalidBuildTime += other.invalidBuildTime
+        incompatibleProducer += other.incompatibleProducer
+        insufficientResources += other.insufficientResources
+        queueFull += other.queueFull
+        nothingToCancel += other.nothingToCancel
+    }
+
+    fun toRecord(): TrainFailureCounts =
+        TrainFailureCounts(
+            missingBuilding = missingBuilding,
+            invalidUnit = invalidUnit,
+            invalidBuildTime = invalidBuildTime,
+            incompatibleProducer = incompatibleProducer,
+            insufficientResources = insufficientResources,
+            queueFull = queueFull,
+            nothingToCancel = nothingToCancel
+        )
+}
+
+data class CommandOutcomeCounters(
+    var builds: Int = 0,
+    var buildFailures: Int = 0,
+    val buildFailureReasons: BuildFailureCounterSet = BuildFailureCounterSet(),
+    var trainsQueued: Int = 0,
+    var trainsCancelled: Int = 0,
+    var trainFailures: Int = 0,
+    val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet()
+)
+
 internal fun renderCommandOutcomeLogSuffix(
     counters: CommandOutcomeCounters,
     trainsCompleted: Int
@@ -2266,69 +2392,6 @@ internal fun formatTrainFailureReasons(reasons: TrainFailureCounterSet): String 
         reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" },
         reasons.nothingToCancel.takeIf { it > 0 }?.let { "nothingToCancel=$it" }
     ).joinToString(",")
-
-data class CommandOutcomeCounters(
-    var builds: Int = 0,
-    var buildFailures: Int = 0,
-    val buildFailureReasons: BuildFailureCounterSet = BuildFailureCounterSet(),
-    var trainsQueued: Int = 0,
-    var trainsCancelled: Int = 0,
-    var trainFailures: Int = 0,
-    val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet()
-)
-
-data class BuildFailureCounterSet(
-    var invalidDefinition: Int = 0,
-    var invalidFootprint: Int = 0,
-    var invalidPlacement: Int = 0,
-    var insufficientResources: Int = 0
-) {
-    fun add(other: BuildFailureCounterSet) {
-        invalidDefinition += other.invalidDefinition
-        invalidFootprint += other.invalidFootprint
-        invalidPlacement += other.invalidPlacement
-        insufficientResources += other.insufficientResources
-    }
-
-    fun toRecord(): BuildFailureCounts =
-        BuildFailureCounts(
-            invalidDefinition = invalidDefinition,
-            invalidFootprint = invalidFootprint,
-            invalidPlacement = invalidPlacement,
-            insufficientResources = insufficientResources
-        )
-}
-
-data class TrainFailureCounterSet(
-    var missingBuilding: Int = 0,
-    var invalidUnit: Int = 0,
-    var invalidBuildTime: Int = 0,
-    var incompatibleProducer: Int = 0,
-    var insufficientResources: Int = 0,
-    var queueFull: Int = 0,
-    var nothingToCancel: Int = 0
-) {
-    fun add(other: TrainFailureCounterSet) {
-        missingBuilding += other.missingBuilding
-        invalidUnit += other.invalidUnit
-        invalidBuildTime += other.invalidBuildTime
-        incompatibleProducer += other.incompatibleProducer
-        insufficientResources += other.insufficientResources
-        queueFull += other.queueFull
-        nothingToCancel += other.nothingToCancel
-    }
-
-    fun toRecord(): TrainFailureCounts =
-        TrainFailureCounts(
-            missingBuilding = missingBuilding,
-            invalidUnit = invalidUnit,
-            invalidBuildTime = invalidBuildTime,
-            incompatibleProducer = incompatibleProducer,
-            insufficientResources = insufficientResources,
-            queueFull = queueFull,
-            nothingToCancel = nothingToCancel
-        )
-}
 
 data class ResourceDeltaCounterSet(
     var mineralsSpent: Int = 0,
@@ -2519,6 +2582,34 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.Harvest -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignHarvesters(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.HarvestFaction -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignHarvesters(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.HarvestType -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignHarvesters(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.HarvestArchetype -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignHarvesters(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
         }
 
         is Command.Spawn -> {
@@ -2858,6 +2949,16 @@ private fun collectArchetypeTargets(archetype: String, world: World, data: DataR
         }
     }
     return if (count == ids.size) ids else ids.copyOf(count)
+}
+
+private fun assignHarvesters(units: IntArray, target: Int, world: World) {
+    val nodeTransform = world.transforms[target] ?: return
+    if (!world.resourceNodes.containsKey(target)) return
+    for (i in units.indices) {
+        val unitId = units[i]
+        world.harvesters[unitId] = Harvester(targetNodeId = target)
+        world.orders[unitId]?.items?.addLast(Order.Move(nodeTransform.x, nodeTransform.y))
+    }
 }
 
 private fun emitOrderAppliedRecord(

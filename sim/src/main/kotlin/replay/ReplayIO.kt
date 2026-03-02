@@ -150,6 +150,10 @@ private data class ReplayEvent(
             "attackFaction" -> Command.AttackFaction(tick, faction ?: 0, target ?: 0)
             "attackType" -> Command.AttackType(tick, typeId ?: "", target ?: 0)
             "attackArchetype" -> Command.AttackArchetype(tick, archetype ?: "", target ?: 0)
+            "harvest" -> Command.Harvest(tick, units, target ?: 0)
+            "harvestFaction" -> Command.HarvestFaction(tick, faction ?: 0, target ?: 0)
+            "harvestType" -> Command.HarvestType(tick, typeId ?: "", target ?: 0)
+            "harvestArchetype" -> Command.HarvestArchetype(tick, archetype ?: "", target ?: 0)
             "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
             "build" ->
                 Command.Build(
@@ -193,6 +197,10 @@ private data class ReplayEvent(
                 is Command.AttackFaction -> ReplayEvent("attackFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.AttackType -> ReplayEvent("attackType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
                 is Command.AttackArchetype -> ReplayEvent("attackArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
+                is Command.Harvest -> ReplayEvent("harvest", cmd.tick, cmd.units, null, null, cmd.target)
+                is Command.HarvestFaction -> ReplayEvent("harvestFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
+                is Command.HarvestType -> ReplayEvent("harvestType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
+                is Command.HarvestArchetype -> ReplayEvent("harvestArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
                 is Command.Spawn ->
                     ReplayEvent(
                         type = "spawn",

@@ -10,6 +10,9 @@ import starkraft.sim.ecs.ResourceSystem
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.World
+import starkraft.sim.ecs.Order
+import starkraft.sim.net.Command
+import starkraft.sim.replay.ReplayHashRecorder
 
 class ResourceHarvestSystemTest {
     @Test
@@ -56,5 +59,26 @@ class ResourceHarvestSystemTest {
         assertEquals(0, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
         assertEquals(0, harvest.lastTickDepletedNodes)
+    }
+
+    @Test
+    fun `harvest command assigns workers to a resource node`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val recorder = ReplayHashRecorder()
+        resources.set(1, minerals = 10, gas = 0)
+
+        val nodeId = world.spawn(Transform(6f, 6f), UnitTag(1, "MineralField"), Health(1000, 1000), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 12)
+        val workerId = world.spawn(Transform(6.4f, 6f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+
+        issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
+        harvest.tick()
+
+        assertEquals(nodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(Order.Move(6f, 6f), world.orders[workerId]?.items?.firstOrNull())
+        assertEquals(11, world.stockpiles[1]?.minerals)
+        assertEquals(11, world.resourceNodes[nodeId]?.remaining)
     }
 }
