@@ -86,6 +86,20 @@ class ReplayHashRecorder : Recorder {
                 for (ch in cmd.archetype) mixInt(ch.code)
                 mixInt(cmd.target)
             }
+            is Command.SpawnNode -> {
+                mixInt(28)
+                mixInt(cmd.tick)
+                for (ch in cmd.kind) mixInt(ch.code)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+                mixInt(cmd.amount)
+                if (cmd.label != null) {
+                    for (ch in cmd.label) mixInt(ch.code)
+                } else {
+                    mixInt(0)
+                }
+                mixInt(cmd.labelId ?: 0)
+            }
             is Command.Spawn -> {
                 mixInt(3)
                 mixInt(cmd.tick)

@@ -132,6 +132,22 @@ object ScriptRunner {
                     val vision = if (parts.size > idxStart + 4) parts[idxStart + 4].toFloat() else null
                     out.add(Command.Spawn(tick, faction, typeId, x, y, vision, label, labelIdValue))
                 }
+                "spawnNode" -> {
+                    require(parts.size in 5..6) { "spawnNode [@label] <kind> <x> <y> <amount>" }
+                    var idxStart = 1
+                    var label: String? = null
+                    var labelIdValue: Int? = null
+                    if (parts[1].startsWith("@")) {
+                        label = parts[1].substring(1)
+                        labelIdValue = labelId(label, labelIds) { nextLabelId-- }
+                        idxStart++
+                    }
+                    val kind = parts[idxStart]
+                    val x = parts[idxStart + 1].toFloat()
+                    val y = parts[idxStart + 2].toFloat()
+                    val amount = parts[idxStart + 3].toInt()
+                    out.add(Command.SpawnNode(tick, kind, x, y, amount, label, labelIdValue))
+                }
                 "build" -> {
                     require(parts.size in 5..12) {
                         "build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]"

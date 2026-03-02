@@ -130,6 +130,7 @@ private data class ReplayEvent(
     val vision: Float? = null,
     val label: String? = null,
     val labelId: Int? = null,
+    val amount: Int? = null,
     val tileX: Int? = null,
     val tileY: Int? = null,
     val width: Int? = null,
@@ -154,6 +155,7 @@ private data class ReplayEvent(
             "harvestFaction" -> Command.HarvestFaction(tick, faction ?: 0, target ?: 0)
             "harvestType" -> Command.HarvestType(tick, typeId ?: "", target ?: 0)
             "harvestArchetype" -> Command.HarvestArchetype(tick, archetype ?: "", target ?: 0)
+            "spawnNode" -> Command.SpawnNode(tick, typeId ?: "", x ?: 0f, y ?: 0f, amount ?: 0, label, labelId)
             "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
             "build" ->
                 Command.Build(
@@ -201,6 +203,17 @@ private data class ReplayEvent(
                 is Command.HarvestFaction -> ReplayEvent("harvestFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.HarvestType -> ReplayEvent("harvestType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
                 is Command.HarvestArchetype -> ReplayEvent("harvestArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
+                is Command.SpawnNode ->
+                    ReplayEvent(
+                        type = "spawnNode",
+                        tick = cmd.tick,
+                        typeId = cmd.kind,
+                        x = cmd.x,
+                        y = cmd.y,
+                        amount = cmd.amount,
+                        label = cmd.label,
+                        labelId = cmd.labelId
+                    )
                 is Command.Spawn ->
                     ReplayEvent(
                         type = "spawn",

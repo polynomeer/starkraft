@@ -813,6 +813,17 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     archetype = cmd.archetype,
                     target = cmd.target
                 )
+            is Command.SpawnNode ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "spawnNode",
+                    typeId = cmd.kind,
+                    x = cmd.x,
+                    y = cmd.y,
+                    label = cmd.label,
+                    labelId = cmd.labelId
+                )
             is Command.Spawn ->
                 CommandStreamRecord(
                     sequence = sequence,

@@ -207,6 +207,24 @@ class AppTest {
     }
 
     @Test
+    fun `script validation rejects unknown spawn node kind`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.SpawnNode(0, "CrystalField", 4f, 4f, 100, "ore", -1)
+                )
+            )
+        val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateSpawnTypes(commandsByTick, data)
+            }
+
+        assertEquals("Unknown resource node kind 'CrystalField' in spawnNode at tick 0", ex.message)
+    }
+
+    @Test
     fun `script validation rejects build with invalid resolved footprint`() {
         val commandsByTick =
             arrayOf(

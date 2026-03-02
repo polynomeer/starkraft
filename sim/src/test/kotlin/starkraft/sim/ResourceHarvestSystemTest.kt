@@ -68,11 +68,12 @@ class ResourceHarvestSystemTest {
         val harvest = ResourceHarvestSystem(world, resources)
         val recorder = ReplayHashRecorder()
         resources.set(1, minerals = 10, gas = 0)
-
-        val nodeId = world.spawn(Transform(6f, 6f), UnitTag(1, "MineralField"), Health(1000, 1000), w = null)
-        world.resourceNodes[nodeId] = ResourceNode(remaining = 12)
         val workerId = world.spawn(Transform(6.4f, 6f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        val labelMap = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
 
+        issue(Command.SpawnNode(0, "MineralField", 6f, 6f, 12, "ore", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
+        val nodeId = labelMap.getValue("ore")
         issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
         harvest.tick()
 

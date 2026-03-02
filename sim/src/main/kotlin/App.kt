@@ -74,6 +74,7 @@ object Time {
 
 private const val DEMO_MAP_ID = "demo-32x32-obstacles"
 private const val BUILD_VERSION = "1.0-SNAPSHOT"
+private val RESOURCE_NODE_KINDS = setOf("MineralField", "GasGeyser")
 
 fun main(args: Array<String>) {
     // Load data resources
@@ -1301,7 +1302,7 @@ private fun loadSpawnScriptProgram(pathStr: String): LoadedProgram {
         val it = cmds.iterator()
         while (it.hasNext()) {
             val c = it.next()
-            if (c !is Command.Spawn) it.remove()
+            if (c !is Command.Spawn && c !is Command.SpawnNode) it.remove()
         }
     }
     return LoadedProgram(all, selections)
@@ -1432,6 +1433,10 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.HarvestArchetype -> {
                     println("tick=$tick harvestArchetype archetype=${c.archetype} target=${c.target}")
                 }
+                is Command.SpawnNode -> {
+                    val label = c.label?.let { "@$it " } ?: ""
+                    println("tick=$tick spawnNode ${label}kind=${c.kind} x=${c.x} y=${c.y} amount=${c.amount}")
+                }
                 is Command.Spawn -> {
                     val label = c.label?.let { "@$it " } ?: ""
                     println("tick=$tick spawn ${label}faction=${c.faction} type=${c.typeId} x=${c.x} y=${c.y} vision=${c.vision}")
@@ -1461,17 +1466,28 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
     }
 }
 
-private fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+internal fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
             val c = cmds[i]
-            if (c is Command.Spawn) {
-                try {
-                    data.unit(c.typeId)
-                } catch (_: NoSuchElementException) {
-                    error("Unknown unit typeId '${c.typeId}' in spawn at tick $tick")
+            when (c) {
+                is Command.Spawn -> {
+                    try {
+                        data.unit(c.typeId)
+                    } catch (_: NoSuchElementException) {
+                        error("Unknown unit typeId '${c.typeId}' in spawn at tick $tick")
+                    }
                 }
+                is Command.SpawnNode -> {
+                    if (!RESOURCE_NODE_KINDS.contains(c.kind)) {
+                        error("Unknown resource node kind '${c.kind}' in spawnNode at tick $tick")
+                    }
+                    if (c.amount <= 0) {
+                        error("Invalid resource node amount '${c.amount}' in spawnNode at tick $tick")
+                    }
+                }
+                else -> Unit
             }
         }
     }
@@ -1649,6 +1665,7 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown target id '${c.target}' in harvestArchetype at tick $tick")
                     }
                 }
+                is Command.SpawnNode -> Unit
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
                 }
@@ -1680,6 +1697,10 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
         for (i in 0 until cmds.size) {
             val c = cmds[i]
             when (c) {
+                is Command.SpawnNode -> {
+                    val labelId = c.labelId
+                    if (labelId != null) defined.add(labelId)
+                }
                 is Command.Spawn -> {
                     val labelId = c.labelId
                     if (labelId != null) defined.add(labelId)
@@ -1992,6 +2013,7 @@ internal fun buildCommandStats(
                     tickAttackArchetype++
                 }
                 is Command.Spawn -> tickSpawns++
+                is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
@@ -2075,6 +2097,7 @@ internal fun buildCommandStats(
                     attackArchetype++
                 }
                 is Command.Spawn -> spawns++
+                is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
@@ -2610,6 +2633,44 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.SpawnNode -> {
+            require(RESOURCE_NODE_KINDS.contains(cmd.kind)) { "Unknown resource node kind '${cmd.kind}' in spawnNode command" }
+            require(cmd.amount > 0) { "Invalid resource node amount '${cmd.amount}' in spawnNode command" }
+            val nodeId =
+                world.spawn(
+                    Transform(cmd.x, cmd.y),
+                    UnitTag(0, cmd.kind),
+                    Health(1000, 1000),
+                    w = null
+                )
+            val resourceKind =
+                if (cmd.kind == "GasGeyser") ResourceNode.KIND_GAS else ResourceNode.KIND_MINERALS
+            world.resourceNodes[nodeId] = ResourceNode(kind = resourceKind, remaining = cmd.amount)
+            if (cmd.label != null) {
+                labelMap[cmd.label] = nodeId
+            }
+            if (cmd.labelId != null) {
+                labelIdMap[cmd.labelId] = nodeId
+            }
+            if (snapshotOutPath != null && streamSequence != null) {
+                emitSnapshotLine(
+                    renderSpawnStreamRecordJson(
+                        sequence = nextStreamSequence(streamSequence),
+                        tick = cmd.tick,
+                        entityId = nodeId,
+                        faction = 0,
+                        typeId = cmd.kind,
+                        x = cmd.x,
+                        y = cmd.y,
+                        vision = null,
+                        label = cmd.label,
+                        labelId = cmd.labelId,
+                        pretty = false
+                    ),
+                    snapshotOutPath
+                )
+            }
         }
 
         is Command.Spawn -> {

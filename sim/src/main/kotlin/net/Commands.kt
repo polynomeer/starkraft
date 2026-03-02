@@ -17,6 +17,15 @@ sealed interface Command {
     data class HarvestFaction(override val tick: Int, val faction: Int, val target: EntityId) : Command
     data class HarvestType(override val tick: Int, val typeId: String, val target: EntityId) : Command
     data class HarvestArchetype(override val tick: Int, val archetype: String, val target: EntityId) : Command
+    data class SpawnNode(
+        override val tick: Int,
+        val kind: String,
+        val x: Float,
+        val y: Float,
+        val amount: Int,
+        val label: String? = null,
+        val labelId: Int? = null
+    ) : Command
     data class Spawn(
         override val tick: Int,
         val faction: Int,

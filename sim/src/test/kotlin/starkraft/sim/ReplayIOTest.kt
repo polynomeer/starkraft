@@ -24,6 +24,7 @@ class ReplayIOTest {
             Command.HarvestFaction(17, 1, 99),
             Command.HarvestType(18, "Worker", 99),
             Command.HarvestArchetype(19, "worker", 99),
+            Command.SpawnNode(19, "MineralField", 6f, 7f, 250, "ore", -3),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1),
             Command.Build(25, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0, label = "depot", labelId = -2),
             Command.Train(30, -2, "Marine", 75, 50, 0),
@@ -160,6 +161,16 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
             assertEquals(a.vision, b.vision)
+            assertEquals(a.label, b.label)
+            assertEquals(a.labelId, b.labelId)
+        }
+        is Command.SpawnNode -> {
+            require(b is Command.SpawnNode)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.kind, b.kind)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+            assertEquals(a.amount, b.amount)
             assertEquals(a.label, b.label)
             assertEquals(a.labelId, b.labelId)
         }
