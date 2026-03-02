@@ -126,6 +126,7 @@ private data class ReplayEvent(
     val target: Int? = null,
     val faction: Int? = null,
     val typeId: String? = null,
+    val archetype: String? = null,
     val vision: Float? = null,
     val label: String? = null,
     val labelId: Int? = null,
@@ -144,9 +145,11 @@ private data class ReplayEvent(
             "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f)
             "moveFaction" -> Command.MoveFaction(tick, faction ?: 0, x ?: 0f, y ?: 0f)
             "moveType" -> Command.MoveType(tick, typeId ?: "", x ?: 0f, y ?: 0f)
+            "moveArchetype" -> Command.MoveArchetype(tick, archetype ?: "", x ?: 0f, y ?: 0f)
             "attack" -> Command.Attack(tick, units, target ?: 0)
             "attackFaction" -> Command.AttackFaction(tick, faction ?: 0, target ?: 0)
             "attackType" -> Command.AttackType(tick, typeId ?: "", target ?: 0)
+            "attackArchetype" -> Command.AttackArchetype(tick, archetype ?: "", target ?: 0)
             "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
             "build" ->
                 Command.Build(
@@ -185,22 +188,23 @@ private data class ReplayEvent(
                 is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null)
                 is Command.MoveFaction -> ReplayEvent("moveFaction", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction)
                 is Command.MoveType -> ReplayEvent("moveType", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, cmd.typeId)
+                is Command.MoveArchetype -> ReplayEvent("moveArchetype", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, null, cmd.archetype)
                 is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
                 is Command.AttackFaction -> ReplayEvent("attackFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.AttackType -> ReplayEvent("attackType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
+                is Command.AttackArchetype -> ReplayEvent("attackArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
                 is Command.Spawn ->
                     ReplayEvent(
-                        "spawn",
-                        cmd.tick,
-                        intArrayOf(),
-                        cmd.x,
-                        cmd.y,
-                        null,
-                        cmd.faction,
-                        cmd.typeId,
-                        cmd.vision,
-                        cmd.label,
-                        cmd.labelId
+                        type = "spawn",
+                        tick = cmd.tick,
+                        units = intArrayOf(),
+                        x = cmd.x,
+                        y = cmd.y,
+                        faction = cmd.faction,
+                        typeId = cmd.typeId,
+                        vision = cmd.vision,
+                        label = cmd.label,
+                        labelId = cmd.labelId
                     )
                 is Command.Build ->
                     ReplayEvent(

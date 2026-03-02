@@ -1357,6 +1357,14 @@ private fun emitSelectionRecord(
                     typeId = selection.typeId,
                     pretty = false
                 )
+            is ScriptRunner.Selection.Archetype ->
+                renderSelectionStreamRecordJson(
+                    sequence = nextStreamSequence(streamSequence),
+                    tick = tick,
+                    selectionType = "archetype",
+                    archetype = selection.archetype,
+                    pretty = false
+                )
         }
     emitSnapshotLine(json, snapshotOutPath)
 }
@@ -1377,6 +1385,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.MoveType -> {
                     println("tick=$tick moveType type=${c.typeId} x=${c.x} y=${c.y}")
                 }
+                is Command.MoveArchetype -> {
+                    println("tick=$tick moveArchetype archetype=${c.archetype} x=${c.x} y=${c.y}")
+                }
                 is Command.Attack -> {
                     println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
                 }
@@ -1385,6 +1396,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 }
                 is Command.AttackType -> {
                     println("tick=$tick attackType type=${c.typeId} target=${c.target}")
+                }
+                is Command.AttackArchetype -> {
+                    println("tick=$tick attackArchetype archetype=${c.archetype} target=${c.target}")
                 }
                 is Command.Spawn -> {
                     val label = c.label?.let { "@$it " } ?: ""
@@ -1567,6 +1581,7 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 }
                 is Command.MoveFaction -> Unit
                 is Command.MoveType -> Unit
+                is Command.MoveArchetype -> Unit
                 is Command.AttackFaction -> {
                     if (c.target >= 0 && !existing.contains(c.target)) {
                         error("Unknown target id '${c.target}' in attackFaction at tick $tick")
@@ -1575,6 +1590,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 is Command.AttackType -> {
                     if (c.target >= 0 && !existing.contains(c.target)) {
                         error("Unknown target id '${c.target}' in attackType at tick $tick")
+                    }
+                }
+                is Command.AttackArchetype -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in attackArchetype at tick $tick")
                     }
                 }
                 is Command.Spawn -> {
@@ -1631,6 +1651,7 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 }
                 is Command.MoveFaction -> Unit
                 is Command.MoveType -> Unit
+                is Command.MoveArchetype -> Unit
                 is Command.AttackFaction -> {
                     if (c.target < 0 && !defined.contains(c.target)) {
                         error("Unknown label id '${c.target}' in attackFaction at tick $tick (spawn first)")
@@ -1639,6 +1660,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.AttackType -> {
                     if (c.target < 0 && !defined.contains(c.target)) {
                         error("Unknown label id '${c.target}' in attackType at tick $tick (spawn first)")
+                    }
+                }
+                is Command.AttackArchetype -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in attackArchetype at tick $tick (spawn first)")
                     }
                 }
                 is Command.Train -> {
@@ -1799,7 +1825,8 @@ internal data class CommandTotals(
 internal data class CommandSelectorTotals(
     val direct: Int,
     val faction: Int,
-    val type: Int
+    val type: Int,
+    val archetype: Int
 )
 
 @Serializable
@@ -1819,12 +1846,15 @@ internal fun buildCommandStats(
     var direct = 0
     var faction = 0
     var type = 0
+    var archetype = 0
     var moveDirect = 0
     var moveFaction = 0
     var moveType = 0
+    var moveArchetype = 0
     var attackDirect = 0
     var attackFaction = 0
     var attackType = 0
+    var attackArchetype = 0
     val ticks = ArrayList<CommandTickCount>()
     for (tick in commandsByTick.indices) {
         val tickCommands = commandsByTick[tick]
@@ -1835,12 +1865,15 @@ internal fun buildCommandStats(
         var tickDirect = 0
         var tickFaction = 0
         var tickType = 0
+        var tickArchetype = 0
         var tickMoveDirect = 0
         var tickMoveFaction = 0
         var tickMoveType = 0
+        var tickMoveArchetype = 0
         var tickAttackDirect = 0
         var tickAttackFaction = 0
         var tickAttackType = 0
+        var tickAttackArchetype = 0
         for (cmd in tickCommands) {
             when (cmd) {
                 is Command.Move -> {
@@ -1858,6 +1891,11 @@ internal fun buildCommandStats(
                     tickType++
                     tickMoveType++
                 }
+                is Command.MoveArchetype -> {
+                    tickMoves++
+                    tickArchetype++
+                    tickMoveArchetype++
+                }
                 is Command.Attack -> {
                     tickAttacks++
                     tickDirect++
@@ -1872,6 +1910,11 @@ internal fun buildCommandStats(
                     tickAttacks++
                     tickType++
                     tickAttackType++
+                }
+                is Command.AttackArchetype -> {
+                    tickAttacks++
+                    tickArchetype++
+                    tickAttackArchetype++
                 }
                 is Command.Spawn -> tickSpawns++
                 is Command.Build -> Unit
@@ -1888,20 +1931,22 @@ internal fun buildCommandStats(
                     spawns = tickSpawns,
                     moves = tickMoves,
                     attacks = tickAttacks,
-                    selectors = CommandSelectorTotals(direct = tickDirect, faction = tickFaction, type = tickType),
+                    selectors = CommandSelectorTotals(direct = tickDirect, faction = tickFaction, type = tickType, archetype = tickArchetype),
                     breakdown =
                         CommandActionBreakdown(
                             move =
                                 CommandSelectorTotals(
                                     direct = tickMoveDirect,
                                     faction = tickMoveFaction,
-                                    type = tickMoveType
+                                    type = tickMoveType,
+                                    archetype = tickMoveArchetype
                                 ),
                             attack =
                                 CommandSelectorTotals(
                                     direct = tickAttackDirect,
                                     faction = tickAttackFaction,
-                                    type = tickAttackType
+                                    type = tickAttackType,
+                                    archetype = tickAttackArchetype
                                 )
                         )
                 )
@@ -1925,6 +1970,11 @@ internal fun buildCommandStats(
                     type++
                     moveType++
                 }
+                is Command.MoveArchetype -> {
+                    moves++
+                    archetype++
+                    moveArchetype++
+                }
                 is Command.Attack -> {
                     attacks++
                     direct++
@@ -1939,6 +1989,11 @@ internal fun buildCommandStats(
                     attacks++
                     type++
                     attackType++
+                }
+                is Command.AttackArchetype -> {
+                    attacks++
+                    archetype++
+                    attackArchetype++
                 }
                 is Command.Spawn -> spawns++
                 is Command.Build -> Unit
@@ -1969,15 +2024,16 @@ internal fun buildCommandStats(
             spawns = spawns,
             moves = moves,
             attacks = attacks,
-            selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type),
+            selectors = CommandSelectorTotals(direct = direct, faction = faction, type = type, archetype = archetype),
             breakdown =
                 CommandActionBreakdown(
-                    move = CommandSelectorTotals(direct = moveDirect, faction = moveFaction, type = moveType),
+                    move = CommandSelectorTotals(direct = moveDirect, faction = moveFaction, type = moveType, archetype = moveArchetype),
                     attack =
                         CommandSelectorTotals(
                             direct = attackDirect,
                             faction = attackFaction,
-                            type = attackType
+                            type = attackType,
+                            archetype = attackArchetype
                         )
                 )
         )
@@ -2062,15 +2118,18 @@ internal fun renderCommandStatsText(stats: CommandStats): String {
     )
     lines.add(
         "selectors: direct=${stats.totals.selectors.direct} " +
-            "faction=${stats.totals.selectors.faction} type=${stats.totals.selectors.type}"
+            "faction=${stats.totals.selectors.faction} type=${stats.totals.selectors.type} " +
+            "archetype=${stats.totals.selectors.archetype}"
     )
     lines.add(
         "move selectors: direct=${stats.totals.breakdown.move.direct} " +
-            "faction=${stats.totals.breakdown.move.faction} type=${stats.totals.breakdown.move.type}"
+            "faction=${stats.totals.breakdown.move.faction} type=${stats.totals.breakdown.move.type} " +
+            "archetype=${stats.totals.breakdown.move.archetype}"
     )
     lines.add(
         "attack selectors: direct=${stats.totals.breakdown.attack.direct} " +
-            "faction=${stats.totals.breakdown.attack.faction} type=${stats.totals.breakdown.attack.type}"
+            "faction=${stats.totals.breakdown.attack.faction} type=${stats.totals.breakdown.attack.type} " +
+            "archetype=${stats.totals.breakdown.attack.archetype}"
     )
     return lines.joinToString(separator = "\n")
 }
@@ -2078,9 +2137,9 @@ internal fun renderCommandStatsText(stats: CommandStats): String {
 private fun formatTickStatsLine(tick: CommandTickCount): String {
     return "tick=${tick.tick} commands=${tick.commands} spawns=${tick.spawns} " +
         "moves=${tick.moves} attacks=${tick.attacks} " +
-        "selectors=${tick.selectors.direct}/${tick.selectors.faction}/${tick.selectors.type} " +
-        "move=${tick.breakdown.move.direct}/${tick.breakdown.move.faction}/${tick.breakdown.move.type} " +
-        "attack=${tick.breakdown.attack.direct}/${tick.breakdown.attack.faction}/${tick.breakdown.attack.type}"
+        "selectors=${tick.selectors.direct}/${tick.selectors.faction}/${tick.selectors.type}/${tick.selectors.archetype} " +
+        "move=${tick.breakdown.move.direct}/${tick.breakdown.move.faction}/${tick.breakdown.move.type}/${tick.breakdown.move.archetype} " +
+        "attack=${tick.breakdown.attack.direct}/${tick.breakdown.attack.faction}/${tick.breakdown.attack.type}/${tick.breakdown.attack.archetype}"
 }
 
 private fun printCommandStats(stats: CommandStats) {
@@ -2378,6 +2437,17 @@ fun issue(
             }
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
         }
+        is Command.MoveArchetype -> {
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "move", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                val tagArchetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+                if (tagArchetype == cmd.archetype) {
+                    world.orders[id]?.items?.addLast(Order.Move(cmd.x, cmd.y))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
+        }
 
         is Command.Attack -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -2413,6 +2483,18 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "attack", applied, target, null, null, snapshotOutPath, streamSequence)
             for ((id, tag) in world.tags) {
                 if (tag.typeId == cmd.typeId) {
+                    world.orders[id]?.items?.addLast(Order.Attack(target))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+        }
+        is Command.AttackArchetype -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "attack", applied, target, null, null, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                val tagArchetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+                if (tagArchetype == cmd.archetype) {
                     world.orders[id]?.items?.addLast(Order.Attack(target))
                 }
             }
@@ -2740,6 +2822,18 @@ private fun collectTypeTargets(typeId: String, world: World): IntArray {
     var count = 0
     for ((id, tag) in world.tags) {
         if (tag.typeId == typeId) {
+            ids[count++] = id
+        }
+    }
+    return if (count == ids.size) ids else ids.copyOf(count)
+}
+
+private fun collectArchetypeTargets(archetype: String, world: World, data: DataRepo?): IntArray {
+    val ids = IntArray(world.tags.size)
+    var count = 0
+    for ((id, tag) in world.tags) {
+        val tagArchetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+        if (tagArchetype == archetype) {
             ids[count++] = id
         }
     }

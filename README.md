@@ -111,6 +111,7 @@ Script syntax:
 - `selectAll` select all units
 - `selectFaction <id>` select units by faction at execution time
 - `selectType <typeId>` select units by type at execution time
+- `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit

@@ -19,17 +19,23 @@ class ScriptRunnerTest {
             wait 2
             selectType Marine
             attack 9
+            wait 1
+            selectArchetype infantry
+            move 6 7
             """.trimIndent()
         )
 
         val program = ScriptRunner.loadProgram(path)
 
-        assertEquals(2, program.selections.size)
+        assertEquals(3, program.selections.size)
         assertEquals(3, program.selections[0].tick)
         assertEquals(ScriptRunner.Selection.Faction(2), program.selections[0].selection)
         assertEquals(5, program.selections[1].tick)
         assertEquals(ScriptRunner.Selection.Type("Marine"), program.selections[1].selection)
-        assertEquals(2, program.commands.size)
+        assertEquals(6, program.selections[2].tick)
+        assertEquals(ScriptRunner.Selection.Archetype("infantry"), program.selections[2].selection)
+        assertEquals(3, program.commands.size)
+        assertEquals(Command.MoveArchetype(6, "infantry", 6f, 7f), program.commands[2])
     }
 
     @Test

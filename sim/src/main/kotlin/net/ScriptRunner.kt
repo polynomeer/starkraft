@@ -14,6 +14,7 @@ object ScriptRunner {
         data object All : Selection
         data class Faction(val id: Int) : Selection
         data class Type(val typeId: String) : Selection
+        data class Archetype(val archetype: String) : Selection
     }
 
     data class SelectionEvent(
@@ -78,6 +79,11 @@ object ScriptRunner {
                 "selectType" -> {
                     require(parts.size == 2) { "selectType <typeId>" }
                     selection = Selection.Type(parts[1])
+                    selections.add(SelectionEvent(tick, selection))
+                }
+                "selectArchetype" -> {
+                    require(parts.size == 2) { "selectArchetype <id>" }
+                    selection = Selection.Archetype(parts[1])
                     selections.add(SelectionEvent(tick, selection))
                 }
                 "move" -> {
@@ -190,6 +196,7 @@ object ScriptRunner {
             is Selection.All -> Command.Move(tick, ALL_UNITS, x, y)
             is Selection.Faction -> Command.MoveFaction(tick, selection.id, x, y)
             is Selection.Type -> Command.MoveType(tick, selection.typeId, x, y)
+            is Selection.Archetype -> Command.MoveArchetype(tick, selection.archetype, x, y)
         }
     }
 
@@ -199,6 +206,7 @@ object ScriptRunner {
             is Selection.All -> Command.Attack(tick, ALL_UNITS, target)
             is Selection.Faction -> Command.AttackFaction(tick, selection.id, target)
             is Selection.Type -> Command.AttackType(tick, selection.typeId, target)
+            is Selection.Archetype -> Command.AttackArchetype(tick, selection.archetype, target)
         }
     }
 }

@@ -43,6 +43,8 @@ class DataRepo(
 
     fun unit(id: String) = units.getValue(id)
     fun weapon(id: String) = weapons.getValue(id)
+    fun unitArchetype(id: String): String? = units[id]?.archetype
+    fun buildingArchetype(id: String): String? = buildings[id]?.archetype
 
     fun buildSpec(id: String): BuildSpec? {
         val building = buildings[id] ?: return null

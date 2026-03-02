@@ -108,6 +108,7 @@ data class CommandStreamRecord(
     val units: IntArray = intArrayOf(),
     val faction: Int? = null,
     val typeId: String? = null,
+    val archetype: String? = null,
     val target: Int? = null,
     val x: Float? = null,
     val y: Float? = null,
@@ -330,7 +331,8 @@ data class SelectionStreamRecord(
     val selectionType: String,
     val units: IntArray = intArrayOf(),
     val faction: Int? = null,
-    val typeId: String? = null
+    val typeId: String? = null,
+    val archetype: String? = null
 )
 
 @Serializable
@@ -617,12 +619,13 @@ fun buildClientSnapshot(
         val rally = world.rallyPoints[id]
         val buildSpec = data?.buildSpec(tag.typeId)
         val trainSpec = data?.trainSpec(tag.typeId)
+        val archetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
         entities.add(
             EntitySnapshot(
                 id = id,
                 faction = tag.faction,
                 typeId = tag.typeId,
-                archetype = buildSpec?.archetype ?: trainSpec?.archetype,
+                archetype = archetype ?: buildSpec?.archetype ?: trainSpec?.archetype,
                 x = transform.x,
                 y = transform.y,
                 dir = transform.dir,
@@ -737,6 +740,15 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     x = cmd.x,
                     y = cmd.y
                 )
+            is Command.MoveArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "moveArchetype",
+                    archetype = cmd.archetype,
+                    x = cmd.x,
+                    y = cmd.y
+                )
             is Command.Attack ->
                 CommandStreamRecord(
                     sequence = sequence,
@@ -759,6 +771,14 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     tick = cmd.tick,
                     commandType = "attackType",
                     typeId = cmd.typeId,
+                    target = cmd.target
+                )
+            is Command.AttackArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackArchetype",
+                    archetype = cmd.archetype,
                     target = cmd.target
                 )
             is Command.Spawn ->
@@ -1033,6 +1053,7 @@ fun renderSelectionStreamRecordJson(
     units: IntArray = intArrayOf(),
     faction: Int? = null,
     typeId: String? = null,
+    archetype: String? = null,
     pretty: Boolean = false
 ): String {
     val record =
@@ -1042,7 +1063,8 @@ fun renderSelectionStreamRecordJson(
             selectionType = selectionType,
             units = units,
             faction = faction,
-            typeId = typeId
+            typeId = typeId,
+            archetype = archetype
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

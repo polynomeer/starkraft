@@ -367,7 +367,7 @@ class AppTest {
                 ),
                 arrayListOf<Command>(
                     Command.MoveType(1, "Marine", 7f, 8f),
-                    Command.Attack(1, intArrayOf(3), 10),
+                    Command.AttackArchetype(1, "infantry", 10),
                     Command.Spawn(1, 1, "Marine", 2f, 3f)
                 )
             )
@@ -389,18 +389,24 @@ class AppTest {
         assertEquals(1, stats.ticks[1].spawns)
         assertEquals(1, stats.ticks[1].moves)
         assertEquals(1, stats.ticks[1].attacks)
-        assertEquals(1, stats.ticks[1].selectors.direct)
+        assertEquals(0, stats.ticks[1].selectors.direct)
         assertEquals(0, stats.ticks[1].selectors.faction)
         assertEquals(1, stats.ticks[1].selectors.type)
-        assertEquals(2, stats.totals.selectors.direct)
+        assertEquals(1, stats.ticks[1].selectors.archetype)
+        assertEquals(1, stats.ticks[0].selectors.direct)
+        assertEquals(0, stats.ticks[0].selectors.archetype)
+        assertEquals(1, stats.totals.selectors.direct)
         assertEquals(1, stats.totals.selectors.faction)
         assertEquals(1, stats.totals.selectors.type)
+        assertEquals(1, stats.totals.selectors.archetype)
         assertEquals(1, stats.totals.breakdown.move.direct)
         assertEquals(0, stats.totals.breakdown.move.faction)
         assertEquals(1, stats.totals.breakdown.move.type)
-        assertEquals(1, stats.totals.breakdown.attack.direct)
+        assertEquals(0, stats.totals.breakdown.move.archetype)
+        assertEquals(0, stats.totals.breakdown.attack.direct)
         assertEquals(1, stats.totals.breakdown.attack.faction)
         assertEquals(0, stats.totals.breakdown.attack.type)
+        assertEquals(1, stats.totals.breakdown.attack.archetype)
     }
 
     @Test
@@ -430,18 +436,21 @@ class AppTest {
                         "selectors": {
                             "direct": 1,
                             "faction": 0,
-                            "type": 0
+                            "type": 0,
+                            "archetype": 0
                         },
                         "breakdown": {
                             "move": {
                                 "direct": 1,
                                 "faction": 0,
-                                "type": 0
+                                "type": 0,
+                                "archetype": 0
                             },
                             "attack": {
                                 "direct": 0,
                                 "faction": 0,
-                                "type": 0
+                                "type": 0,
+                                "archetype": 0
                             }
                         }
                     }
@@ -454,18 +463,21 @@ class AppTest {
                     "selectors": {
                         "direct": 1,
                         "faction": 0,
-                        "type": 0
+                        "type": 0,
+                        "archetype": 0
                     },
                     "breakdown": {
                         "move": {
                             "direct": 1,
                             "faction": 0,
-                            "type": 0
+                            "type": 0,
+                            "archetype": 0
                         },
                         "attack": {
                             "direct": 0,
                             "faction": 0,
-                            "type": 0
+                            "type": 0,
+                            "archetype": 0
                         }
                     }
                 }

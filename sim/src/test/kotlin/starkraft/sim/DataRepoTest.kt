@@ -40,6 +40,8 @@ class DataRepoTest {
         assertEquals(75, train?.buildTicks)
         assertEquals(50, train?.mineralCost)
         assertEquals(listOf("Depot"), train?.producerTypes)
+        assertEquals("producer", repo.buildingArchetype("Depot"))
+        assertEquals("infantry", repo.unitArchetype("Marine"))
     }
 
     @Test

@@ -15,9 +15,11 @@ class ReplayIOTest {
             Command.Move(0, intArrayOf(1, 2, 3), 5.5f, 6.5f),
             Command.MoveFaction(5, 1, 8f, 9f),
             Command.MoveType(7, "Marine", 4f, 5f),
+            Command.MoveArchetype(8, "infantry", 6f, 7f),
             Command.Attack(10, intArrayOf(2), 7),
             Command.AttackFaction(12, 2, 9),
             Command.AttackType(14, "Zergling", 3),
+            Command.AttackArchetype(15, "lightMelee", 4),
             Command.Spawn(20, 1, "Marine", 3f, 4f, 6f, label = "alpha", labelId = -1),
             Command.Build(25, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0, label = "depot", labelId = -2),
             Command.Train(30, -2, "Marine", 75, 50, 0),
@@ -97,6 +99,13 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
         }
+        is Command.MoveArchetype -> {
+            require(b is Command.MoveArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
         is Command.AttackFaction -> {
             require(b is Command.AttackFaction)
             assertEquals(a.tick, b.tick)
@@ -107,6 +116,12 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             require(b is Command.AttackType)
             assertEquals(a.tick, b.tick)
             assertEquals(a.typeId, b.typeId)
+            assertEquals(a.target, b.target)
+        }
+        is Command.AttackArchetype -> {
+            require(b is Command.AttackArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
             assertEquals(a.target, b.target)
         }
         is Command.Spawn -> {
