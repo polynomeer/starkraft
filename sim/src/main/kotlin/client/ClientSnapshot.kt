@@ -29,7 +29,8 @@ data class ClientSnapshot(
     val mapWidth: Int,
     val mapHeight: Int,
     val factions: List<FactionSnapshot>,
-    val entities: List<EntitySnapshot>
+    val entities: List<EntitySnapshot>,
+    val resourceNodes: List<ResourceNodeSnapshot> = emptyList()
 )
 
 @Serializable
@@ -71,6 +72,15 @@ data class EntitySnapshot(
     val defaultRallyOffsetY: Float? = null,
     val rallyX: Float? = null,
     val rallyY: Float? = null
+)
+
+@Serializable
+data class ResourceNodeSnapshot(
+    val id: Int,
+    val kind: String,
+    val x: Float,
+    val y: Float,
+    val remaining: Int
 )
 
 @Serializable
@@ -476,6 +486,15 @@ data class MapCostTileRecord(
 )
 
 @Serializable
+data class MapResourceNodeRecord(
+    val id: Int,
+    val kind: String,
+    val x: Float,
+    val y: Float,
+    val remaining: Int
+)
+
+@Serializable
 data class MapStateStreamRecord(
     val recordType: String = "mapState",
     val sequence: Long,
@@ -483,7 +502,8 @@ data class MapStateStreamRecord(
     val height: Int,
     val blockedTiles: List<MapBlockedTileRecord>,
     val weightedTiles: List<MapCostTileRecord>,
-    val staticOccupancyTiles: List<MapBlockedTileRecord>
+    val staticOccupancyTiles: List<MapBlockedTileRecord>,
+    val resourceNodes: List<MapResourceNodeRecord> = emptyList()
 )
 
 @Serializable
@@ -606,6 +626,7 @@ fun buildClientSnapshot(
     val entities = ArrayList<EntitySnapshot>(world.transforms.size)
     val ids = world.transforms.keys.sorted()
     for (id in ids) {
+        if (world.resourceNodes.containsKey(id)) continue
         val transform = world.transforms[id] ?: continue
         val tag = world.tags[id] ?: continue
         val health = world.healths[id] ?: continue
@@ -667,6 +688,22 @@ fun buildClientSnapshot(
             )
         )
     }
+    val resourceNodes = ArrayList<ResourceNodeSnapshot>(world.resourceNodes.size)
+    val resourceIds = world.resourceNodes.keys.sorted()
+    for (id in resourceIds) {
+        val node = world.resourceNodes[id] ?: continue
+        val transform = world.transforms[id] ?: continue
+        val tag = world.tags[id] ?: continue
+        resourceNodes.add(
+            ResourceNodeSnapshot(
+                id = id,
+                kind = tag.typeId,
+                x = transform.x,
+                y = transform.y,
+                remaining = node.remaining
+            )
+        )
+    }
     return ClientSnapshot(
         tick = tick,
         mapId = mapId,
@@ -675,7 +712,8 @@ fun buildClientSnapshot(
         mapWidth = map.width,
         mapHeight = map.height,
         factions = factions,
-        entities = entities
+        entities = entities,
+        resourceNodes = resourceNodes
     )
 }
 
@@ -1277,6 +1315,7 @@ fun renderMapStateStreamRecordJson(
     blockedTiles: List<MapBlockedTileRecord>,
     weightedTiles: List<MapCostTileRecord>,
     staticOccupancyTiles: List<MapBlockedTileRecord>,
+    resourceNodes: List<MapResourceNodeRecord> = emptyList(),
     pretty: Boolean = false
 ): String {
     val record =
@@ -1286,7 +1325,8 @@ fun renderMapStateStreamRecordJson(
             height = height,
             blockedTiles = blockedTiles,
             weightedTiles = weightedTiles,
-            staticOccupancyTiles = staticOccupancyTiles
+            staticOccupancyTiles = staticOccupancyTiles,
+            resourceNodes = resourceNodes
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

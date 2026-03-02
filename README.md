@@ -145,11 +145,11 @@ Other flags:
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
-- Snapshots expose faction minerals/gas plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, and current rally point when present
+- Snapshots expose faction minerals/gas, resource nodes with remaining amounts, plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, and current rally point when present
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
-  They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, and current static occupancy.
+  They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, current static occupancy, and resource nodes.
   Issued commands are also emitted as `command` records.
   Script-driven selection changes emit `selection` records before commands for that tick.
   Rally overrides emit `rally` records when producer rally points change.

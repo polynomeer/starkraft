@@ -9,6 +9,7 @@ import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
+import starkraft.sim.client.MapResourceNodeRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
@@ -239,7 +240,7 @@ fun main(args: Array<String>) {
             ),
             resolvedSnapshotOutPath
         )
-        emitMapStateRecord(map, occ, resolvedSnapshotOutPath, streamSequence)
+        emitMapStateRecord(world, map, occ, resolvedSnapshotOutPath, streamSequence)
     }
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseProgram: LoadedProgram = when {
@@ -3241,6 +3242,7 @@ private fun emitOccupancyChangeRecord(
 }
 
 private fun emitMapStateRecord(
+    world: World,
     map: MapGrid,
     occ: OccupancyGrid,
     snapshotOutPath: java.nio.file.Path?,
@@ -3250,6 +3252,7 @@ private fun emitMapStateRecord(
     val blockedTiles = ArrayList<MapBlockedTileRecord>()
     val weightedTiles = ArrayList<MapCostTileRecord>()
     val staticOccupancyTiles = ArrayList<MapBlockedTileRecord>()
+    val resourceNodes = ArrayList<MapResourceNodeRecord>(world.resourceNodes.size)
     for (y in 0 until map.height) {
         for (x in 0 until map.width) {
             if (map.isBlocked(x, y)) {
@@ -3264,6 +3267,21 @@ private fun emitMapStateRecord(
             }
         }
     }
+    val resourceIds = world.resourceNodes.keys.sorted()
+    for (id in resourceIds) {
+        val node = world.resourceNodes[id] ?: continue
+        val transform = world.transforms[id] ?: continue
+        val tag = world.tags[id] ?: continue
+        resourceNodes.add(
+            MapResourceNodeRecord(
+                id = id,
+                kind = tag.typeId,
+                x = transform.x,
+                y = transform.y,
+                remaining = node.remaining
+            )
+        )
+    }
     emitSnapshotLine(
         renderMapStateStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
@@ -3272,6 +3290,7 @@ private fun emitMapStateRecord(
             blockedTiles = blockedTiles,
             weightedTiles = weightedTiles,
             staticOccupancyTiles = staticOccupancyTiles,
+            resourceNodes = resourceNodes,
             pretty = false
         ),
         snapshotOutPath

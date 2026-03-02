@@ -14,6 +14,7 @@ import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
+import starkraft.sim.client.MapResourceNodeRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
@@ -61,6 +62,7 @@ import starkraft.sim.ecs.BuildingFootprint
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.RallyPoint
+import starkraft.sim.ecs.ResourceNode
 import starkraft.sim.ecs.ResourceStockpile
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
@@ -89,6 +91,8 @@ class ClientSnapshotTest {
         world.rallyPoints[idB] = RallyPoint(10f, 11f)
         world.stockpiles[1] = ResourceStockpile(150, 25)
         world.stockpiles[2] = ResourceStockpile(80, 10)
+        val nodeId = world.spawn(Transform(6f, 6f, 0f), UnitTag(0, "MineralField"), Health(1000, 1000, 0), null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 250)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
         val data =
@@ -118,6 +122,10 @@ class ClientSnapshotTest {
         assertEquals("Attack", entitiesById[idA]?.activeOrder)
         assertEquals("Move", entitiesById[idB]?.activeOrder)
         assertEquals("lightMelee", entitiesById[idA]?.archetype)
+        assertEquals(1, snapshot.resourceNodes.size)
+        assertEquals(nodeId, snapshot.resourceNodes.first().id)
+        assertEquals("MineralField", snapshot.resourceNodes.first().kind)
+        assertEquals(250, snapshot.resourceNodes.first().remaining)
         assertEquals("producer", entitiesById[idB]?.archetype)
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
@@ -665,11 +673,12 @@ class ClientSnapshotTest {
                 blockedTiles = listOf(MapBlockedTileRecord(6, 14), MapBlockedTileRecord(12, 6)),
                 weightedTiles = listOf(MapCostTileRecord(18, 18, 3f)),
                 staticOccupancyTiles = emptyList(),
+                resourceNodes = listOf(MapResourceNodeRecord(9, "MineralField", 6f, 6f, 250)),
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[]}",
+            "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":250}]}",
             json
         )
     }
