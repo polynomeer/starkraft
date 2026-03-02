@@ -13,6 +13,7 @@ import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
+import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
@@ -34,6 +35,7 @@ import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
+import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
 import starkraft.sim.client.renderSnapshotSessionStartJson
 import starkraft.sim.client.renderSnapshotStreamRecordJson
@@ -358,6 +360,7 @@ fun main(args: Array<String>) {
 
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
+        emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
         occupancy.tick()
         production.tick()
         for (i in 0 until production.lastTickEventCount) {
@@ -887,6 +890,40 @@ private fun emitResourceDeltaRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitResourceDeltaSummaryRecord(
+    tickResourceDeltas: ResourceDeltaCounterSet,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    emitSnapshotLine(
+        renderResourceDeltaSummaryStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            factions =
+                listOf(
+                    ResourceDeltaSummaryFactionRecord(
+                        faction = 1,
+                        mineralsSpent = tickResourceDeltas.mineralsSpentFaction1,
+                        gasSpent = tickResourceDeltas.gasSpentFaction1,
+                        mineralsRefunded = tickResourceDeltas.mineralsRefundedFaction1,
+                        gasRefunded = tickResourceDeltas.gasRefundedFaction1
+                    ),
+                    ResourceDeltaSummaryFactionRecord(
+                        faction = 2,
+                        mineralsSpent = tickResourceDeltas.mineralsSpentFaction2,
+                        gasSpent = tickResourceDeltas.gasSpentFaction2,
+                        mineralsRefunded = tickResourceDeltas.mineralsRefundedFaction2,
+                        gasRefunded = tickResourceDeltas.gasRefundedFaction2
+                    )
+                ),
             pretty = false
         ),
         snapshotOutPath

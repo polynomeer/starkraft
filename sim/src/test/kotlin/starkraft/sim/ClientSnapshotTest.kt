@@ -19,6 +19,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
+import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
@@ -39,6 +40,7 @@ import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
+import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderSelectionStreamRecordJson
 import starkraft.sim.client.renderSessionStatsStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -302,10 +304,30 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders resource delta summary stream record json`() {
+        val json =
+            renderResourceDeltaSummaryStreamRecordJson(
+                sequence = 13L,
+                tick = 5,
+                factions =
+                    listOf(
+                        ResourceDeltaSummaryFactionRecord(1, 100, 25, 50, 0),
+                        ResourceDeltaSummaryFactionRecord(2, 0, 0, 0, 0)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":13,\"tick\":5,\"factions\":[{\"faction\":1,\"mineralsSpent\":100,\"gasSpent\":25,\"mineralsRefunded\":50,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders producer state stream record json`() {
         val json =
             renderProducerStateStreamRecordJson(
-                sequence = 13L,
+                sequence = 14L,
                 tick = 5,
                 entities =
                     listOf(
@@ -316,7 +338,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"producerState\",\"sequence\":13,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"supportsTraining\":true,\"supportsRally\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
+            "{\"recordType\":\"producerState\",\"sequence\":14,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"supportsTraining\":true,\"supportsRally\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
             json
         )
     }
@@ -325,7 +347,7 @@ class ClientSnapshotTest {
     fun `renders combat stream record json`() {
         val json =
             renderCombatStreamRecordJson(
-                sequence = 14L,
+                sequence = 15L,
                 tick = 6,
                 attacks = 2,
                 kills = 1,
@@ -338,7 +360,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"combat\",\"sequence\":14,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            "{\"recordType\":\"combat\",\"sequence\":15,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }
