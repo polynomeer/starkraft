@@ -43,7 +43,13 @@ data class SnapshotStreamSummary(
     val combatKillCount: Int = 0,
     val combatDamageEventCount: Int = 0,
     val combatTotalDamage: Int = 0,
-    val combatDeathDespawnCount: Int = 0
+    val combatDeathDespawnCount: Int = 0,
+    val pathRequestCount: Int = 0,
+    val pathSolvedCount: Int = 0,
+    val pathReplanCount: Int = 0,
+    val pathAssignedCount: Int = 0,
+    val pathProgressCount: Int = 0,
+    val pathCompletedCount: Int = 0
 )
 
 fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
@@ -80,6 +86,12 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var combatDamageEventCount = 0
     var combatTotalDamage = 0
     var combatDeathDespawnCount = 0
+    var pathRequestCount = 0
+    var pathSolvedCount = 0
+    var pathReplanCount = 0
+    var pathAssignedCount = 0
+    var pathProgressCount = 0
+    var pathCompletedCount = 0
 
     for (line in lines) {
         if (line.isBlank()) continue
@@ -160,6 +172,21 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "metrics" -> {
+                pathRequestCount += obj.int("pathRequests") ?: 0
+                pathSolvedCount += obj.int("pathSolved") ?: 0
+                pathReplanCount += obj.int("replans") ?: 0
+            }
+            "pathAssigned" -> {
+                pathAssignedCount += obj.array("entities").size
+            }
+            "pathProgress" -> {
+                val entities = obj.array("entities")
+                pathProgressCount += entities.size
+                for (entity in entities) {
+                    if (entity.bool("completed") == true) pathCompletedCount++
+                }
+            }
             "combat" -> {
                 combatAttackCount += obj.int("attacks") ?: 0
                 combatKillCount += obj.int("kills") ?: 0
@@ -213,7 +240,13 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         combatKillCount = combatKillCount,
         combatDamageEventCount = combatDamageEventCount,
         combatTotalDamage = combatTotalDamage,
-        combatDeathDespawnCount = combatDeathDespawnCount
+        combatDeathDespawnCount = combatDeathDespawnCount,
+        pathRequestCount = pathRequestCount,
+        pathSolvedCount = pathSolvedCount,
+        pathReplanCount = pathReplanCount,
+        pathAssignedCount = pathAssignedCount,
+        pathProgressCount = pathProgressCount,
+        pathCompletedCount = pathCompletedCount
     )
 }
 
@@ -260,6 +293,18 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
             "combat: attacks=${summary.combatAttackCount} kills=${summary.combatKillCount} " +
                 "damageEvents=${summary.combatDamageEventCount} damage=${summary.combatTotalDamage} " +
                 "deathDespawns=${summary.combatDeathDespawnCount}"
+        )
+    }
+    if (
+        summary.pathRequestCount > 0 ||
+        summary.pathAssignedCount > 0 ||
+        summary.pathProgressCount > 0 ||
+        summary.countsByType["metrics"] != null
+    ) {
+        lines.add(
+            "pathing: req=${summary.pathRequestCount} solved=${summary.pathSolvedCount} " +
+                "replans=${summary.pathReplanCount} assigned=${summary.pathAssignedCount} " +
+                "progress=${summary.pathProgressCount} completed=${summary.pathCompletedCount}"
         )
     }
     return lines.joinToString(separator = "\n")
