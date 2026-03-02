@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UnitDef(
     val id: String,
+    val archetype: String = "genericUnit",
     val hp: Int,
     val armor: Int = 0,
     val speed: Float = 0.06f,
@@ -31,6 +32,7 @@ data class UnitDefs(val list: List<UnitDef>)
 @Serializable
 data class BuildingDef(
     val id: String,
+    val archetype: String = "genericBuilding",
     val hp: Int,
     val armor: Int = 0,
     val footprintWidth: Int,

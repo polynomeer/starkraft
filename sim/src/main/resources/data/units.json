@@ -2,6 +2,7 @@
   "list": [
     {
       "id": "Worker",
+      "archetype": "worker",
       "hp": 40,
       "armor": 0,
       "speed": 0.07,
@@ -11,6 +12,7 @@
     },
     {
       "id": "Marine",
+      "archetype": "infantry",
       "hp": 45,
       "armor": 0,
       "speed": 0.065,
@@ -21,6 +23,7 @@
     },
     {
       "id": "Zergling",
+      "archetype": "lightMelee",
       "hp": 35,
       "armor": 0,
       "speed": 0.08,

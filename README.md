@@ -68,6 +68,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Apply spending at placement / production time, not lazily.
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
    - `DataRepo.buildSpec(...)` reads dedicated building defs, while `DataRepo.trainSpec(...)` reads trainable unit defs.
+   - Unit and building defs now carry explicit `archetype` ids so coarse categories do not have to overload `typeId`.
 
 14. **Unit Behaviors**
    - `BuildingProductionSystem` now supports deterministic per-building production queues.

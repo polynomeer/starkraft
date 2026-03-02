@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 
 data class BuildSpec(
     val typeId: String,
+    val archetype: String,
     val hp: Int,
     val armor: Int,
     val footprintWidth: Int,
@@ -20,6 +21,7 @@ data class BuildSpec(
 
 data class TrainSpec(
     val typeId: String,
+    val archetype: String,
     val buildTicks: Int,
     val mineralCost: Int,
     val gasCost: Int,
@@ -46,6 +48,7 @@ class DataRepo(
         val building = buildings[id] ?: return null
         return BuildSpec(
             typeId = building.id,
+            archetype = building.archetype,
             hp = building.hp,
             armor = building.armor,
             footprintWidth = building.footprintWidth,
@@ -66,6 +69,7 @@ class DataRepo(
         if (unit.buildTicks <= 0) return null
         return TrainSpec(
             typeId = unit.id,
+            archetype = unit.archetype,
             buildTicks = unit.buildTicks,
             mineralCost = unit.mineralCost,
             gasCost = unit.gasCost,

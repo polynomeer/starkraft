@@ -2,6 +2,7 @@
   "list": [
     {
       "id": "Depot",
+      "archetype": "producer",
       "hp": 400,
       "armor": 1,
       "footprintWidth": 2,
