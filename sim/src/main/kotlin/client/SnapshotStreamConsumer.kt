@@ -30,7 +30,15 @@ data class SnapshotStreamSummary(
     val resourceSummaryMineralsRefundedFaction1: Int = 0,
     val resourceSummaryMineralsRefundedFaction2: Int = 0,
     val resourceSummaryGasRefundedFaction1: Int = 0,
-    val resourceSummaryGasRefundedFaction2: Int = 0
+    val resourceSummaryGasRefundedFaction2: Int = 0,
+    val producerCount: Int = 0,
+    val trainingProducerCount: Int = 0,
+    val rallyProducerCount: Int = 0,
+    val maxProducerQueueLimit: Int = 0,
+    val productionEnqueueCount: Int = 0,
+    val productionProgressCount: Int = 0,
+    val productionCompleteCount: Int = 0,
+    val productionCancelCount: Int = 0
 )
 
 fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
@@ -54,6 +62,14 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var resourceSummaryMineralsRefundedFaction2 = 0
     var resourceSummaryGasRefundedFaction1 = 0
     var resourceSummaryGasRefundedFaction2 = 0
+    var producerCount = 0
+    var trainingProducerCount = 0
+    var rallyProducerCount = 0
+    var maxProducerQueueLimit = 0
+    var productionEnqueueCount = 0
+    var productionProgressCount = 0
+    var productionCompleteCount = 0
+    var productionCancelCount = 0
 
     for (line in lines) {
         if (line.isBlank()) continue
@@ -110,6 +126,30 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "producerState" -> {
+                val entities = obj.array("entities")
+                producerCount = entities.size
+                trainingProducerCount = 0
+                rallyProducerCount = 0
+                maxProducerQueueLimit = 0
+                for (entity in entities) {
+                    if (entity.bool("supportsTraining") == true) trainingProducerCount++
+                    if (entity.bool("supportsRally") == true) rallyProducerCount++
+                    val limit = entity.int("productionQueueLimit") ?: 0
+                    if (limit > maxProducerQueueLimit) maxProducerQueueLimit = limit
+                }
+            }
+            "production" -> {
+                val events = obj.array("events")
+                for (event in events) {
+                    when (event.string("kind")) {
+                        "enqueue" -> productionEnqueueCount++
+                        "complete" -> productionCompleteCount++
+                        "cancel" -> productionCancelCount++
+                        else -> productionProgressCount++
+                    }
+                }
+            }
         }
     }
 
@@ -133,7 +173,15 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         resourceSummaryMineralsRefundedFaction1 = resourceSummaryMineralsRefundedFaction1,
         resourceSummaryMineralsRefundedFaction2 = resourceSummaryMineralsRefundedFaction2,
         resourceSummaryGasRefundedFaction1 = resourceSummaryGasRefundedFaction1,
-        resourceSummaryGasRefundedFaction2 = resourceSummaryGasRefundedFaction2
+        resourceSummaryGasRefundedFaction2 = resourceSummaryGasRefundedFaction2,
+        producerCount = producerCount,
+        trainingProducerCount = trainingProducerCount,
+        rallyProducerCount = rallyProducerCount,
+        maxProducerQueueLimit = maxProducerQueueLimit,
+        productionEnqueueCount = productionEnqueueCount,
+        productionProgressCount = productionProgressCount,
+        productionCompleteCount = productionCompleteCount,
+        productionCancelCount = productionCancelCount
     )
 }
 
@@ -162,6 +210,14 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "${summary.resourceSummaryMineralsRefundedFaction2}/${summary.resourceSummaryGasRefundedFaction2}"
         )
     }
+    if (summary.producerCount > 0 || summary.countsByType["production"] != null) {
+        lines.add(
+            "producers: total=${summary.producerCount} training=${summary.trainingProducerCount} " +
+                "rally=${summary.rallyProducerCount} maxQueue=${summary.maxProducerQueueLimit} " +
+                "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
+                "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
     return lines.joinToString(separator = "\n")
 }
 
@@ -183,6 +239,9 @@ private fun JsonObject.long(key: String): Long? =
 
 private fun JsonObject.int(key: String): Int? =
     this[key]?.toString()?.toIntOrNull()
+
+private fun JsonObject.bool(key: String): Boolean? =
+    this[key]?.toString()?.toBooleanStrictOrNull()
 
 private fun JsonObject.array(key: String): List<JsonObject> =
     this[key]

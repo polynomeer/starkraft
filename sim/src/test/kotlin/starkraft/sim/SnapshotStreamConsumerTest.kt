@@ -18,17 +18,21 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"command\",\"sequence\":2,\"tick\":0,\"commandType\":\"move\",\"units\":[1],\"faction\":null,\"typeId\":null,\"target\":null,\"x\":2.0,\"y\":3.0,\"vision\":null,\"label\":null,\"labelId\":null}",
                     "{\"recordType\":\"resourceDelta\",\"sequence\":3,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0},{\"faction\":1,\"kind\":\"refund\",\"minerals\":10,\"gas\":0}]}",
                     "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":4,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":10,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":5,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                    "{\"recordType\":\"sessionEnd\",\"sequence\":6,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                    "{\"recordType\":\"producerState\",\"sequence\":5,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"Tower\",\"supportsTraining\":false,\"supportsRally\":false,\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
+                    "{\"recordType\":\"production\",\"sequence\":6,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":7,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionEnd\",\"sequence\":8,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
 
-        assertEquals(7, summary.totalRecords)
+        assertEquals(9, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["command"])
         assertEquals(1, summary.countsByType["resourceDelta"])
         assertEquals(1, summary.countsByType["resourceDeltaSummary"])
+        assertEquals(1, summary.countsByType["producerState"])
+        assertEquals(1, summary.countsByType["production"])
         assertEquals(1, summary.countsByType["sessionStats"])
         assertEquals(1, summary.countsByType["sessionEnd"])
         assertEquals("demo-map", summary.mapId)
@@ -41,6 +45,14 @@ class SnapshotStreamConsumerTest {
         assertEquals(10, summary.resourceRefundMinerals)
         assertEquals(50, summary.resourceSummaryMineralsSpentFaction1)
         assertEquals(10, summary.resourceSummaryMineralsRefundedFaction1)
+        assertEquals(2, summary.producerCount)
+        assertEquals(1, summary.trainingProducerCount)
+        assertEquals(1, summary.rallyProducerCount)
+        assertEquals(3, summary.maxProducerQueueLimit)
+        assertEquals(1, summary.productionEnqueueCount)
+        assertEquals(1, summary.productionProgressCount)
+        assertEquals(1, summary.productionCompleteCount)
+        assertEquals(1, summary.productionCancelCount)
     }
 
     @Test
@@ -53,7 +65,9 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"sessionStart\",\"sequence\":0,\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
                         "{\"recordType\":\"resourceDelta\",\"sequence\":1,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0}]}",
                         "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":2,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
-                        "{\"recordType\":\"sessionEnd\",\"sequence\":3,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                        "{\"recordType\":\"producerState\",\"sequence\":3,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
+                        "{\"recordType\":\"production\",\"sequence\":4,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":5,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
             )
@@ -65,5 +79,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("replayHash=456"))
         assertTrue(text.contains("economy: events=1 spend=50/0 refund=0/0"))
         assertTrue(text.contains("f1=50/0->0/0"))
+        assertTrue(text.contains("producers: total=1 training=1 rally=1 maxQueue=3"))
+        assertTrue(text.contains("prod=e1/p0/c0/x0"))
     }
 }
