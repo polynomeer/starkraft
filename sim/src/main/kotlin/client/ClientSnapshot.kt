@@ -315,7 +315,11 @@ data class TickSummaryStreamRecord(
     val mineralsRefundedFaction1: Int,
     val mineralsRefundedFaction2: Int,
     val gasRefundedFaction1: Int,
-    val gasRefundedFaction2: Int
+    val gasRefundedFaction2: Int,
+    val harvestedMinerals: Int,
+    val harvestedGas: Int,
+    val depletedNodes: Int,
+    val changedResourceNodes: Int
 )
 
 @Serializable
@@ -591,6 +595,10 @@ data class SessionStatsStreamRecord(
     val mineralsRefundedFaction2: Int,
     val gasRefundedFaction1: Int,
     val gasRefundedFaction2: Int,
+    val harvestedMinerals: Int,
+    val harvestedGas: Int,
+    val depletedNodes: Int,
+    val changedResourceNodes: Int,
     val finalVisibleTilesFaction1: Int,
     val finalVisibleTilesFaction2: Int,
     val finalMineralsFaction1: Int,
@@ -1080,6 +1088,10 @@ fun renderTickSummaryStreamRecordJson(
     mineralsRefundedFaction2: Int,
     gasRefundedFaction1: Int,
     gasRefundedFaction2: Int,
+    harvestedMinerals: Int,
+    harvestedGas: Int,
+    depletedNodes: Int,
+    changedResourceNodes: Int,
     pretty: Boolean = false
 ): String {
     val record =
@@ -1122,7 +1134,11 @@ fun renderTickSummaryStreamRecordJson(
             mineralsRefundedFaction1 = mineralsRefundedFaction1,
             mineralsRefundedFaction2 = mineralsRefundedFaction2,
             gasRefundedFaction1 = gasRefundedFaction1,
-            gasRefundedFaction2 = gasRefundedFaction2
+            gasRefundedFaction2 = gasRefundedFaction2,
+            harvestedMinerals = harvestedMinerals,
+            harvestedGas = harvestedGas,
+            depletedNodes = depletedNodes,
+            changedResourceNodes = changedResourceNodes
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
@@ -1411,6 +1427,10 @@ fun renderSessionStatsStreamRecordJson(
     mineralsRefundedFaction2: Int,
     gasRefundedFaction1: Int,
     gasRefundedFaction2: Int,
+    harvestedMinerals: Int,
+    harvestedGas: Int,
+    depletedNodes: Int,
+    changedResourceNodes: Int,
     finalVisibleTilesFaction1: Int,
     finalVisibleTilesFaction2: Int,
     finalMineralsFaction1: Int,
@@ -1453,6 +1473,10 @@ fun renderSessionStatsStreamRecordJson(
             mineralsRefundedFaction2 = mineralsRefundedFaction2,
             gasRefundedFaction1 = gasRefundedFaction1,
             gasRefundedFaction2 = gasRefundedFaction2,
+            harvestedMinerals = harvestedMinerals,
+            harvestedGas = harvestedGas,
+            depletedNodes = depletedNodes,
+            changedResourceNodes = changedResourceNodes,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
             finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
             finalMineralsFaction1 = finalMineralsFaction1,

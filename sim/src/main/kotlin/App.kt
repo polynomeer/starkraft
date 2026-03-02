@@ -275,6 +275,10 @@ fun main(args: Array<String>) {
     var totalTrainFailures = 0
     val totalTrainFailureReasons = TrainFailureCounterSet()
     val totalResourceDeltas = ResourceDeltaCounterSet()
+    var totalHarvestedMinerals = 0
+    var totalHarvestedGas = 0
+    var totalDepletedNodes = 0
+    var totalChangedResourceNodes = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -416,6 +420,10 @@ fun main(args: Array<String>) {
         totalTrainFailures += commandOutcomeCounters.trainFailures
         totalTrainFailureReasons.add(commandOutcomeCounters.trainFailureReasons)
         totalResourceDeltas.add(tickResourceDeltas)
+        totalHarvestedMinerals += harvest.lastTickHarvestedMinerals
+        totalHarvestedGas += harvest.lastTickHarvestedGas
+        totalDepletedNodes += harvest.lastTickDepletedNodes
+        totalChangedResourceNodes += harvest.lastTickEventCount
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -434,6 +442,7 @@ fun main(args: Array<String>) {
                 commandOutcomeCounters,
                 tickTrainsCompleted,
                 tickResourceDeltas,
+                harvest,
                 resolvedSnapshotOutPath,
                 streamSequence
             )
@@ -563,6 +572,10 @@ fun main(args: Array<String>) {
                 mineralsRefundedFaction2 = totalResourceDeltas.mineralsRefundedFaction2,
                 gasRefundedFaction1 = totalResourceDeltas.gasRefundedFaction1,
                 gasRefundedFaction2 = totalResourceDeltas.gasRefundedFaction2,
+                harvestedMinerals = totalHarvestedMinerals,
+                harvestedGas = totalHarvestedGas,
+                depletedNodes = totalDepletedNodes,
+                changedResourceNodes = totalChangedResourceNodes,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
                 finalVisibleTilesFaction2 = fog2.visibleCount(),
                 finalMineralsFaction1 = world.stockpiles[1]?.minerals ?: 0,
@@ -1200,6 +1213,7 @@ private fun emitTickSummaryRecord(
     commandOutcomeCounters: CommandOutcomeCounters,
     tickTrainsCompleted: Int,
     tickResourceDeltas: ResourceDeltaCounterSet,
+    harvest: ResourceHarvestSystem,
     snapshotOutPath: java.nio.file.Path?,
     streamSequence: LongArray?
 ) {
@@ -1251,6 +1265,10 @@ private fun emitTickSummaryRecord(
             mineralsRefundedFaction2 = tickResourceDeltas.mineralsRefundedFaction2,
             gasRefundedFaction1 = tickResourceDeltas.gasRefundedFaction1,
             gasRefundedFaction2 = tickResourceDeltas.gasRefundedFaction2,
+            harvestedMinerals = harvest.lastTickHarvestedMinerals,
+            harvestedGas = harvest.lastTickHarvestedGas,
+            depletedNodes = harvest.lastTickDepletedNodes,
+            changedResourceNodes = harvest.lastTickEventCount,
             pretty = false
         ),
         snapshotOutPath
