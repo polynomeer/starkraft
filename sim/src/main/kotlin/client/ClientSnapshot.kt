@@ -254,7 +254,11 @@ data class TickSummaryStreamRecord(
     val trainsCompleted: Int,
     val trainsCancelled: Int,
     val trainFailures: Int,
-    val trainFailureReasons: TrainFailureCounts
+    val trainFailureReasons: TrainFailureCounts,
+    val mineralsSpent: Int,
+    val gasSpent: Int,
+    val mineralsRefunded: Int,
+    val gasRefunded: Int
 )
 
 @Serializable
@@ -507,6 +511,10 @@ data class SessionStatsStreamRecord(
     val trainsCancelled: Int,
     val trainFailures: Int,
     val trainFailureReasons: TrainFailureCounts,
+    val mineralsSpent: Int,
+    val gasSpent: Int,
+    val mineralsRefunded: Int,
+    val gasRefunded: Int,
     val finalVisibleTilesFaction1: Int,
     val finalVisibleTilesFaction2: Int,
     val finalMineralsFaction1: Int,
@@ -883,6 +891,10 @@ fun renderTickSummaryStreamRecordJson(
     trainsCancelled: Int,
     trainFailures: Int,
     trainFailureReasons: TrainFailureCounts,
+    mineralsSpent: Int,
+    gasSpent: Int,
+    mineralsRefunded: Int,
+    gasRefunded: Int,
     pretty: Boolean = false
 ): String {
     val record =
@@ -913,7 +925,11 @@ fun renderTickSummaryStreamRecordJson(
             trainsCompleted = trainsCompleted,
             trainsCancelled = trainsCancelled,
             trainFailures = trainFailures,
-            trainFailureReasons = trainFailureReasons
+            trainFailureReasons = trainFailureReasons,
+            mineralsSpent = mineralsSpent,
+            gasSpent = gasSpent,
+            mineralsRefunded = mineralsRefunded,
+            gasRefunded = gasRefunded
         )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
@@ -1186,6 +1202,10 @@ fun renderSessionStatsStreamRecordJson(
     trainsCancelled: Int,
     trainFailures: Int,
     trainFailureReasons: TrainFailureCounts,
+    mineralsSpent: Int,
+    gasSpent: Int,
+    mineralsRefunded: Int,
+    gasRefunded: Int,
     finalVisibleTilesFaction1: Int,
     finalVisibleTilesFaction2: Int,
     finalMineralsFaction1: Int,
@@ -1216,6 +1236,10 @@ fun renderSessionStatsStreamRecordJson(
             trainsCancelled = trainsCancelled,
             trainFailures = trainFailures,
             trainFailureReasons = trainFailureReasons,
+            mineralsSpent = mineralsSpent,
+            gasSpent = gasSpent,
+            mineralsRefunded = mineralsRefunded,
+            gasRefunded = gasRefunded,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
             finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
             finalMineralsFaction1 = finalMineralsFaction1,

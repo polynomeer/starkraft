@@ -251,6 +251,7 @@ fun main(args: Array<String>) {
     var totalTrainsCancelled = 0
     var totalTrainFailures = 0
     val totalTrainFailureReasons = TrainFailureCounterSet()
+    val totalResourceDeltas = ResourceDeltaCounterSet()
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -356,6 +357,7 @@ fun main(args: Array<String>) {
         }
 
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
+        val tickResourceDeltas = collectResourceDeltaCounters(resources)
         occupancy.tick()
         production.tick()
         for (i in 0 until production.lastTickEventCount) {
@@ -387,6 +389,7 @@ fun main(args: Array<String>) {
         totalTrainsCancelled += commandOutcomeCounters.trainsCancelled
         totalTrainFailures += commandOutcomeCounters.trainFailures
         totalTrainFailureReasons.add(commandOutcomeCounters.trainFailureReasons)
+        totalResourceDeltas.add(tickResourceDeltas)
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -404,6 +407,7 @@ fun main(args: Array<String>) {
                 combat,
                 commandOutcomeCounters,
                 tickTrainsCompleted,
+                tickResourceDeltas,
                 resolvedSnapshotOutPath,
                 streamSequence
             )
@@ -519,6 +523,10 @@ fun main(args: Array<String>) {
                 trainsCancelled = totalTrainsCancelled,
                 trainFailures = totalTrainFailures,
                 trainFailureReasons = totalTrainFailureReasons.toRecord(),
+                mineralsSpent = totalResourceDeltas.mineralsSpent,
+                gasSpent = totalResourceDeltas.gasSpent,
+                mineralsRefunded = totalResourceDeltas.mineralsRefunded,
+                gasRefunded = totalResourceDeltas.gasRefunded,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
                 finalVisibleTilesFaction2 = fog2.visibleCount(),
                 finalMineralsFaction1 = world.stockpiles[1]?.minerals ?: 0,
@@ -1083,6 +1091,7 @@ private fun emitTickSummaryRecord(
     combat: CombatSystem,
     commandOutcomeCounters: CommandOutcomeCounters,
     tickTrainsCompleted: Int,
+    tickResourceDeltas: ResourceDeltaCounterSet,
     snapshotOutPath: java.nio.file.Path?,
     streamSequence: LongArray?
 ) {
@@ -1122,6 +1131,10 @@ private fun emitTickSummaryRecord(
             trainsCancelled = commandOutcomeCounters.trainsCancelled,
             trainFailures = commandOutcomeCounters.trainFailures,
             trainFailureReasons = commandOutcomeCounters.trainFailureReasons.toRecord(),
+            mineralsSpent = tickResourceDeltas.mineralsSpent,
+            gasSpent = tickResourceDeltas.gasSpent,
+            mineralsRefunded = tickResourceDeltas.mineralsRefunded,
+            gasRefunded = tickResourceDeltas.gasRefunded,
             pretty = false
         ),
         snapshotOutPath
@@ -2182,6 +2195,37 @@ data class TrainFailureCounterSet(
             queueFull = queueFull,
             nothingToCancel = nothingToCancel
         )
+}
+
+data class ResourceDeltaCounterSet(
+    var mineralsSpent: Int = 0,
+    var gasSpent: Int = 0,
+    var mineralsRefunded: Int = 0,
+    var gasRefunded: Int = 0
+) {
+    fun add(other: ResourceDeltaCounterSet) {
+        mineralsSpent += other.mineralsSpent
+        gasSpent += other.gasSpent
+        mineralsRefunded += other.mineralsRefunded
+        gasRefunded += other.gasRefunded
+    }
+}
+
+private fun collectResourceDeltaCounters(resources: ResourceSystem): ResourceDeltaCounterSet {
+    val counters = ResourceDeltaCounterSet()
+    for (i in 0 until resources.lastTickEventCount) {
+        when (resources.eventKind(i)) {
+            ResourceSystem.EVENT_REFUND -> {
+                counters.mineralsRefunded += resources.eventMinerals(i)
+                counters.gasRefunded += resources.eventGas(i)
+            }
+            else -> {
+                counters.mineralsSpent += resources.eventMinerals(i)
+                counters.gasSpent += resources.eventGas(i)
+            }
+        }
+    }
+    return counters
 }
 
 fun issue(
