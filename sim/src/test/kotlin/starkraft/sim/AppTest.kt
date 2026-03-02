@@ -148,6 +148,27 @@ class AppTest {
     }
 
     @Test
+    fun `renders aggregate harvest summary`() {
+        assertEquals(
+            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 nodes=6 depleted=1",
+            renderAggregateOutcomeSummary(
+                totalBuilds = 0,
+                totalBuildFailures = 0,
+                totalBuildFailureReasons = BuildFailureCounterSet(),
+                totalTrainsQueued = 0,
+                totalTrainsCompleted = 0,
+                totalTrainsCancelled = 0,
+                totalTrainFailures = 0,
+                totalTrainFailureReasons = TrainFailureCounterSet(),
+                totalHarvestedMinerals = 9,
+                totalHarvestedGas = 2,
+                totalDepletedNodes = 1,
+                totalChangedResourceNodes = 6
+            )
+        )
+    }
+
+    @Test
     fun `omits aggregate command outcome summary when empty`() {
         assertEquals(
             null,
@@ -159,7 +180,11 @@ class AppTest {
                 totalTrainsCompleted = 0,
                 totalTrainsCancelled = 0,
                 totalTrainFailures = 0,
-                totalTrainFailureReasons = TrainFailureCounterSet()
+                totalTrainFailureReasons = TrainFailureCounterSet(),
+                totalHarvestedMinerals = 0,
+                totalHarvestedGas = 0,
+                totalDepletedNodes = 0,
+                totalChangedResourceNodes = 0
             )
         )
     }

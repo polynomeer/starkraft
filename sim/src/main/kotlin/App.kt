@@ -504,7 +504,11 @@ fun main(args: Array<String>) {
             totalTrainsCompleted,
             totalTrainsCancelled,
             totalTrainFailures,
-            totalTrainFailureReasons
+            totalTrainFailureReasons,
+            totalHarvestedMinerals,
+            totalHarvestedGas,
+            totalDepletedNodes,
+            totalChangedResourceNodes
         )
     if (finalOutcomeSummary != null) {
         println(finalOutcomeSummary)
@@ -2432,7 +2436,11 @@ internal fun renderAggregateOutcomeSummary(
     totalTrainsCompleted: Int,
     totalTrainsCancelled: Int,
     totalTrainFailures: Int,
-    totalTrainFailureReasons: TrainFailureCounterSet
+    totalTrainFailureReasons: TrainFailureCounterSet,
+    totalHarvestedMinerals: Int = 0,
+    totalHarvestedGas: Int = 0,
+    totalDepletedNodes: Int = 0,
+    totalChangedResourceNodes: Int = 0
 ): String? {
     if (
         totalBuilds == 0 &&
@@ -2440,11 +2448,15 @@ internal fun renderAggregateOutcomeSummary(
         totalTrainsQueued == 0 &&
         totalTrainsCompleted == 0 &&
         totalTrainsCancelled == 0 &&
-        totalTrainFailures == 0
+        totalTrainFailures == 0 &&
+        totalHarvestedMinerals == 0 &&
+        totalHarvestedGas == 0 &&
+        totalDepletedNodes == 0 &&
+        totalChangedResourceNodes == 0
     ) {
         return null
     }
-    val parts = ArrayList<String>(4)
+    val parts = ArrayList<String>(5)
     parts.add("builds=$totalBuilds")
     if (totalBuildFailures > 0) {
         parts.add("buildFails=$totalBuildFailures[${formatBuildFailureReasons(totalBuildFailureReasons)}]")
@@ -2452,6 +2464,12 @@ internal fun renderAggregateOutcomeSummary(
     parts.add("train=q$totalTrainsQueued/c$totalTrainsCompleted/x$totalTrainsCancelled")
     if (totalTrainFailures > 0) {
         parts.add("trainFails=$totalTrainFailures[${formatTrainFailureReasons(totalTrainFailureReasons)}]")
+    }
+    if (totalHarvestedMinerals > 0 || totalHarvestedGas > 0 || totalDepletedNodes > 0 || totalChangedResourceNodes > 0) {
+        parts.add(
+            "harvest=${totalHarvestedMinerals}/${totalHarvestedGas} " +
+                "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes"
+        )
     }
     return "command outcomes: " + parts.joinToString(" ")
 }
