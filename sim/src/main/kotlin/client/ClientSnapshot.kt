@@ -66,6 +66,8 @@ data class EntitySnapshot(
     val supportsTraining: Boolean? = null,
     val supportsRally: Boolean? = null,
     val productionQueueLimit: Int? = null,
+    val defaultRallyOffsetX: Float? = null,
+    val defaultRallyOffsetY: Float? = null,
     val rallyX: Float? = null,
     val rallyY: Float? = null
 )
@@ -561,6 +563,8 @@ fun buildClientSnapshot(
                 supportsTraining = buildSpec?.supportsTraining,
                 supportsRally = buildSpec?.supportsRally,
                 productionQueueLimit = buildSpec?.productionQueueLimit,
+                defaultRallyOffsetX = buildSpec?.rallyOffsetX,
+                defaultRallyOffsetY = buildSpec?.rallyOffsetY,
                 rallyX = rally?.x,
                 rallyY = rally?.y
             )

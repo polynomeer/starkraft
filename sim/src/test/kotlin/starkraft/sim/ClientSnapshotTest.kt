@@ -120,6 +120,8 @@ class ClientSnapshotTest {
         assertEquals(true, entitiesById[idB]?.supportsTraining)
         assertEquals(true, entitiesById[idB]?.supportsRally)
         assertEquals(4, entitiesById[idB]?.productionQueueLimit)
+        assertEquals(2f, entitiesById[idB]?.defaultRallyOffsetX)
+        assertEquals(1f, entitiesById[idB]?.defaultRallyOffsetY)
         assertEquals(10f, entitiesById[idB]?.rallyX)
         assertEquals(11f, entitiesById[idB]?.rallyY)
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })
