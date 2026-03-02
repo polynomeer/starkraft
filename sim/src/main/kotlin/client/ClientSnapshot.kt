@@ -3,6 +3,7 @@ package starkraft.sim.client
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.World
@@ -62,6 +63,9 @@ data class EntitySnapshot(
     val footprintWidth: Int? = null,
     val footprintHeight: Int? = null,
     val placementClearance: Int? = null,
+    val supportsTraining: Boolean? = null,
+    val supportsRally: Boolean? = null,
+    val productionQueueLimit: Int? = null,
     val rallyX: Float? = null,
     val rallyY: Float? = null
 )
@@ -513,6 +517,7 @@ fun buildClientSnapshot(
     mapId: String,
     buildVersion: String,
     seed: Long?,
+    data: DataRepo? = null,
     fogByFaction: Map<Int, FogGrid>
 ): ClientSnapshot {
     val entities = ArrayList<EntitySnapshot>(world.transforms.size)
@@ -529,6 +534,7 @@ fun buildClientSnapshot(
         val production = world.productionQueues[id]?.items
         val footprint = world.footprints[id]
         val rally = world.rallyPoints[id]
+        val buildSpec = data?.buildSpec(tag.typeId)
         entities.add(
             EntitySnapshot(
                 id = id,
@@ -552,6 +558,9 @@ fun buildClientSnapshot(
                 footprintWidth = footprint?.width,
                 footprintHeight = footprint?.height,
                 placementClearance = footprint?.clearance,
+                supportsTraining = buildSpec?.supportsTraining,
+                supportsRally = buildSpec?.supportsRally,
+                productionQueueLimit = buildSpec?.productionQueueLimit,
                 rallyX = rally?.x,
                 rallyY = rally?.y
             )

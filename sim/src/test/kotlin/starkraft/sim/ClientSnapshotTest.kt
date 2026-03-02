@@ -47,6 +47,7 @@ import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.client.TrainFailureCounts
+import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
@@ -72,7 +73,7 @@ class ClientSnapshotTest {
         val fog1 = FogGrid(16, 16, 1f)
         val fog2 = FogGrid(16, 16, 1f)
         val idA = world.spawn(Transform(4f, 5f, 0.5f), UnitTag(2, "Zergling"), Health(30, 35, 1), WeaponRef("Claw", 3))
-        val idB = world.spawn(Transform(1f, 2f, 1.5f), UnitTag(1, "Marine"), Health(40, 45, 0), WeaponRef("Gauss", 1))
+        val idB = world.spawn(Transform(1f, 2f, 1.5f), UnitTag(1, "Depot"), Health(40, 45, 0), WeaponRef("Gauss", 1))
         world.visions[idA] = Vision(6f)
         world.visions[idB] = Vision(7f)
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
@@ -84,6 +85,12 @@ class ClientSnapshotTest {
         world.stockpiles[2] = ResourceStockpile(80, 10)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Marine","hp":45}]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Depot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
+            )
 
         val snapshot = buildClientSnapshot(
             world = world,
@@ -92,6 +99,7 @@ class ClientSnapshotTest {
             mapId = "demo-map",
             buildVersion = "test-build",
             seed = 7L,
+            data = data,
             fogByFaction = mapOf(1 to fog1, 2 to fog2)
         )
 
@@ -109,6 +117,9 @@ class ClientSnapshotTest {
         assertEquals(2, entitiesById[idB]?.footprintWidth)
         assertEquals(3, entitiesById[idB]?.footprintHeight)
         assertEquals(1, entitiesById[idB]?.placementClearance)
+        assertEquals(true, entitiesById[idB]?.supportsTraining)
+        assertEquals(true, entitiesById[idB]?.supportsRally)
+        assertEquals(4, entitiesById[idB]?.productionQueueLimit)
         assertEquals(10f, entitiesById[idB]?.rallyX)
         assertEquals(11f, entitiesById[idB]?.rallyY)
         assertEquals(listOf(1, 2), snapshot.factions.map { it.faction })

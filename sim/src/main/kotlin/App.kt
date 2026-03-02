@@ -400,7 +400,7 @@ fun main(args: Array<String>) {
                 resolvedSnapshotOutPath,
                 streamSequence
             )
-            emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
+            emitClientSnapshot(world, map, fog1, fog2, tick, seed, data, compactJson, resolvedSnapshotOutPath, streamSequence)
         }
 
         if (tick % 25 == 0) {
@@ -489,7 +489,7 @@ fun main(args: Array<String>) {
     }
 
     if (snapshotJson) {
-        emitClientSnapshot(world, map, fog1, fog2, tick, seed, compactJson, resolvedSnapshotOutPath, streamSequence)
+        emitClientSnapshot(world, map, fog1, fog2, tick, seed, data, compactJson, resolvedSnapshotOutPath, streamSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
@@ -694,6 +694,7 @@ private fun emitClientSnapshot(
     fog2: FogGrid,
     tick: Int,
     seed: Long?,
+    data: DataRepo,
     compactJson: Boolean,
     snapshotOutPath: java.nio.file.Path? = null,
     streamSequence: LongArray? = null
@@ -705,6 +706,7 @@ private fun emitClientSnapshot(
         mapId = DEMO_MAP_ID,
         buildVersion = BUILD_VERSION,
         seed = seed,
+        data = data,
         fogByFaction = mapOf(1 to fog1, 2 to fog2)
     )
     if (snapshotOutPath == null) {
