@@ -181,7 +181,7 @@ Other flags:
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
 - Example consumer:
   `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft.ndjson"`
-  This reads the NDJSON stream and prints record counts plus session/hash metadata, including economy, producer/production, combat, pathing, and vision summaries when present.
+  This reads the NDJSON stream and prints record counts plus session/hash metadata, including economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes

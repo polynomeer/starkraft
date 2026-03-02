@@ -56,7 +56,11 @@ data class SnapshotStreamSummary(
     val visionVisibleFaction2: Int = 0,
     val visionHiddenFaction2: Int = 0,
     val finalVisibleTilesFaction1: Int? = null,
-    val finalVisibleTilesFaction2: Int? = null
+    val finalVisibleTilesFaction2: Int? = null,
+    val archetypeSelectionCount: Int = 0,
+    val archetypeMoveCommandCount: Int = 0,
+    val archetypeAttackCommandCount: Int = 0,
+    val archetypesUsed: List<String> = emptyList()
 )
 
 fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
@@ -106,6 +110,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var visionHiddenFaction2 = 0
     var finalVisibleTilesFaction1: Int? = null
     var finalVisibleTilesFaction2: Int? = null
+    var archetypeSelectionCount = 0
+    var archetypeMoveCommandCount = 0
+    var archetypeAttackCommandCount = 0
+    val archetypesUsed = linkedSetOf<String>()
 
     for (line in lines) {
         if (line.isBlank()) continue
@@ -128,6 +136,24 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
             "sessionEnd" -> {
                 worldHash = obj.long("worldHash") ?: worldHash
                 replayHash = obj.long("replayHash") ?: replayHash
+            }
+            "selection" -> {
+                if (obj.string("selectionType") == "archetype") {
+                    archetypeSelectionCount++
+                    obj.string("archetype")?.let(archetypesUsed::add)
+                }
+            }
+            "command" -> {
+                when (obj.string("commandType")) {
+                    "moveArchetype" -> {
+                        archetypeMoveCommandCount++
+                        obj.string("archetype")?.let(archetypesUsed::add)
+                    }
+                    "attackArchetype" -> {
+                        archetypeAttackCommandCount++
+                        obj.string("archetype")?.let(archetypesUsed::add)
+                    }
+                }
             }
             "resourceDelta" -> {
                 val events = obj.array("events")
@@ -283,7 +309,11 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         visionVisibleFaction2 = visionVisibleFaction2,
         visionHiddenFaction2 = visionHiddenFaction2,
         finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
-        finalVisibleTilesFaction2 = finalVisibleTilesFaction2
+        finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
+        archetypeSelectionCount = archetypeSelectionCount,
+        archetypeMoveCommandCount = archetypeMoveCommandCount,
+        archetypeAttackCommandCount = archetypeAttackCommandCount,
+        archetypesUsed = archetypesUsed.toList()
     )
 }
 
@@ -350,6 +380,18 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "f1=+${summary.visionVisibleFaction1}/-${summary.visionHiddenFaction1} " +
                 "f2=+${summary.visionVisibleFaction2}/-${summary.visionHiddenFaction2} " +
                 "final=${summary.finalVisibleTilesFaction1}/${summary.finalVisibleTilesFaction2}"
+        )
+    }
+    if (
+        summary.archetypeSelectionCount > 0 ||
+        summary.archetypeMoveCommandCount > 0 ||
+        summary.archetypeAttackCommandCount > 0
+    ) {
+        lines.add(
+            "archetypes: select=${summary.archetypeSelectionCount} " +
+                "move=${summary.archetypeMoveCommandCount} " +
+                "attack=${summary.archetypeAttackCommandCount} " +
+                "ids=${summary.archetypesUsed.joinToString(",")}"
         )
     }
     return lines.joinToString(separator = "\n")
