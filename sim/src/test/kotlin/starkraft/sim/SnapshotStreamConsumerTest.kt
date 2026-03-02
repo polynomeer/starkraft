@@ -23,15 +23,16 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"metrics\",\"sequence\":7,\"tick\":1,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20,\"minerals\":150,\"gas\":25},{\"faction\":2,\"alive\":4,\"visibleTiles\":18,\"minerals\":80,\"gas\":10}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
                     "{\"recordType\":\"pathAssigned\",\"sequence\":8,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28},{\"entityId\":8,\"pathLength\":6,\"goalX\":12,\"goalY\":10}]}",
                     "{\"recordType\":\"pathProgress\",\"sequence\":9,\"tick\":1,\"entities\":[{\"entityId\":7,\"waypointIndex\":3,\"remainingNodes\":5,\"completed\":false},{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
-                    "{\"recordType\":\"combat\",\"sequence\":10,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                    "{\"recordType\":\"damage\",\"sequence\":11,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                    "{\"recordType\":\"despawn\",\"sequence\":12,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":13,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                    "{\"recordType\":\"sessionEnd\",\"sequence\":14,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                    "{\"recordType\":\"vision\",\"sequence\":10,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
+                    "{\"recordType\":\"combat\",\"sequence\":11,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"damage\",\"sequence\":12,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"despawn\",\"sequence\":13,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":14,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionEnd\",\"sequence\":15,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
 
-        assertEquals(15, summary.totalRecords)
+        assertEquals(16, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["command"])
@@ -42,6 +43,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.countsByType["metrics"])
         assertEquals(1, summary.countsByType["pathAssigned"])
         assertEquals(1, summary.countsByType["pathProgress"])
+        assertEquals(1, summary.countsByType["vision"])
         assertEquals(1, summary.countsByType["combat"])
         assertEquals(1, summary.countsByType["damage"])
         assertEquals(1, summary.countsByType["despawn"])
@@ -71,6 +73,13 @@ class SnapshotStreamConsumerTest {
         assertEquals(2, summary.pathAssignedCount)
         assertEquals(2, summary.pathProgressCount)
         assertEquals(1, summary.pathCompletedCount)
+        assertEquals(2, summary.visionChangeCount)
+        assertEquals(1, summary.visionVisibleFaction1)
+        assertEquals(0, summary.visionHiddenFaction1)
+        assertEquals(0, summary.visionVisibleFaction2)
+        assertEquals(1, summary.visionHiddenFaction2)
+        assertEquals(12, summary.finalVisibleTilesFaction1)
+        assertEquals(10, summary.finalVisibleTilesFaction2)
         assertEquals(2, summary.combatAttackCount)
         assertEquals(1, summary.combatKillCount)
         assertEquals(2, summary.combatDamageEventCount)
@@ -93,10 +102,12 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"metrics\",\"sequence\":5,\"tick\":1,\"factions\":[],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
                         "{\"recordType\":\"pathAssigned\",\"sequence\":6,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28}]}",
                         "{\"recordType\":\"pathProgress\",\"sequence\":7,\"tick\":1,\"entities\":[{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
-                        "{\"recordType\":\"combat\",\"sequence\":8,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
-                        "{\"recordType\":\"damage\",\"sequence\":9,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                        "{\"recordType\":\"despawn\",\"sequence\":10,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
-                        "{\"recordType\":\"sessionEnd\",\"sequence\":11,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                        "{\"recordType\":\"vision\",\"sequence\":8,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
+                        "{\"recordType\":\"combat\",\"sequence\":9,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
+                        "{\"recordType\":\"damage\",\"sequence\":10,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                        "{\"recordType\":\"despawn\",\"sequence\":11,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":12,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":13,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
             )
@@ -112,5 +123,6 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
         assertTrue(text.contains("combat: attacks=2 kills=1 damageEvents=2 damage=15 deathDespawns=1"))
         assertTrue(text.contains("pathing: req=3 solved=2 replans=2 assigned=1 progress=1 completed=1"))
+        assertTrue(text.contains("vision: changes=2 f1=+1/-0 f2=+0/-1 final=12/10"))
     }
 }

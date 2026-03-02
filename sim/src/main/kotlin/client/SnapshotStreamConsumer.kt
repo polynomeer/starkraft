@@ -49,7 +49,14 @@ data class SnapshotStreamSummary(
     val pathReplanCount: Int = 0,
     val pathAssignedCount: Int = 0,
     val pathProgressCount: Int = 0,
-    val pathCompletedCount: Int = 0
+    val pathCompletedCount: Int = 0,
+    val visionChangeCount: Int = 0,
+    val visionVisibleFaction1: Int = 0,
+    val visionHiddenFaction1: Int = 0,
+    val visionVisibleFaction2: Int = 0,
+    val visionHiddenFaction2: Int = 0,
+    val finalVisibleTilesFaction1: Int? = null,
+    val finalVisibleTilesFaction2: Int? = null
 )
 
 fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
@@ -92,6 +99,13 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var pathAssignedCount = 0
     var pathProgressCount = 0
     var pathCompletedCount = 0
+    var visionChangeCount = 0
+    var visionVisibleFaction1 = 0
+    var visionHiddenFaction1 = 0
+    var visionVisibleFaction2 = 0
+    var visionHiddenFaction2 = 0
+    var finalVisibleTilesFaction1: Int? = null
+    var finalVisibleTilesFaction2: Int? = null
 
     for (line in lines) {
         if (line.isBlank()) continue
@@ -108,6 +122,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
             "sessionStats" -> {
                 worldHash = obj.long("finalWorldHash") ?: worldHash
                 replayHash = obj.long("finalReplayHash") ?: replayHash
+                finalVisibleTilesFaction1 = obj.int("finalVisibleTilesFaction1") ?: finalVisibleTilesFaction1
+                finalVisibleTilesFaction2 = obj.int("finalVisibleTilesFaction2") ?: finalVisibleTilesFaction2
             }
             "sessionEnd" -> {
                 worldHash = obj.long("worldHash") ?: worldHash
@@ -187,6 +203,20 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     if (entity.bool("completed") == true) pathCompletedCount++
                 }
             }
+            "vision" -> {
+                val changes = obj.array("changes")
+                visionChangeCount += changes.size
+                for (change in changes) {
+                    when (change.int("faction")) {
+                        1 -> {
+                            if (change.bool("visible") == true) visionVisibleFaction1++ else visionHiddenFaction1++
+                        }
+                        2 -> {
+                            if (change.bool("visible") == true) visionVisibleFaction2++ else visionHiddenFaction2++
+                        }
+                    }
+                }
+            }
             "combat" -> {
                 combatAttackCount += obj.int("attacks") ?: 0
                 combatKillCount += obj.int("kills") ?: 0
@@ -246,7 +276,14 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         pathReplanCount = pathReplanCount,
         pathAssignedCount = pathAssignedCount,
         pathProgressCount = pathProgressCount,
-        pathCompletedCount = pathCompletedCount
+        pathCompletedCount = pathCompletedCount,
+        visionChangeCount = visionChangeCount,
+        visionVisibleFaction1 = visionVisibleFaction1,
+        visionHiddenFaction1 = visionHiddenFaction1,
+        visionVisibleFaction2 = visionVisibleFaction2,
+        visionHiddenFaction2 = visionHiddenFaction2,
+        finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
+        finalVisibleTilesFaction2 = finalVisibleTilesFaction2
     )
 }
 
@@ -305,6 +342,14 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
             "pathing: req=${summary.pathRequestCount} solved=${summary.pathSolvedCount} " +
                 "replans=${summary.pathReplanCount} assigned=${summary.pathAssignedCount} " +
                 "progress=${summary.pathProgressCount} completed=${summary.pathCompletedCount}"
+        )
+    }
+    if (summary.visionChangeCount > 0 || summary.countsByType["vision"] != null || summary.finalVisibleTilesFaction1 != null) {
+        lines.add(
+            "vision: changes=${summary.visionChangeCount} " +
+                "f1=+${summary.visionVisibleFaction1}/-${summary.visionHiddenFaction1} " +
+                "f2=+${summary.visionVisibleFaction2}/-${summary.visionHiddenFaction2} " +
+                "final=${summary.finalVisibleTilesFaction1}/${summary.finalVisibleTilesFaction2}"
         )
     }
     return lines.joinToString(separator = "\n")
