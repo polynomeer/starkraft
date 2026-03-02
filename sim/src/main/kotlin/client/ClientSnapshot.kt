@@ -45,6 +45,7 @@ data class EntitySnapshot(
     val id: Int,
     val faction: Int,
     val typeId: String,
+    val archetype: String? = null,
     val x: Float,
     val y: Float,
     val dir: Float,
@@ -192,6 +193,7 @@ data class ProducerStateEntityRecord(
     val entityId: Int,
     val faction: Int,
     val typeId: String,
+    val archetype: String,
     val supportsTraining: Boolean,
     val supportsRally: Boolean,
     val productionQueueLimit: Int,
@@ -614,11 +616,13 @@ fun buildClientSnapshot(
         val footprint = world.footprints[id]
         val rally = world.rallyPoints[id]
         val buildSpec = data?.buildSpec(tag.typeId)
+        val trainSpec = data?.trainSpec(tag.typeId)
         entities.add(
             EntitySnapshot(
                 id = id,
                 faction = tag.faction,
                 typeId = tag.typeId,
+                archetype = buildSpec?.archetype ?: trainSpec?.archetype,
                 x = transform.x,
                 y = transform.y,
                 dir = transform.dir,

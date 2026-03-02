@@ -141,7 +141,7 @@ Other flags:
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
-- Snapshots expose faction minerals/gas plus entity production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, and current rally point when present
+- Snapshots expose faction minerals/gas plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, and current rally point when present
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
@@ -163,7 +163,7 @@ Other flags:
   Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
-  Snapshot cadence also emits `producerState` records with producer capabilities and default rally offsets.
+  Snapshot cadence also emits `producerState` records with producer archetypes, capabilities, and default rally offsets.
   Combat ticks also emit `damage` records for health-bar style UI updates.
   Production activity emits `production` records for enqueue/progress/complete events.
   Invalid build/train commands emit `commandFailure` records with deterministic reasons.

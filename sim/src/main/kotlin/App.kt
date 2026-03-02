@@ -949,6 +949,7 @@ private fun emitProducerStateRecord(
                 entityId = id,
                 faction = tag.faction,
                 typeId = tag.typeId,
+                archetype = spec.archetype,
                 supportsTraining = spec.supportsTraining,
                 supportsRally = spec.supportsRally,
                 productionQueueLimit = spec.productionQueueLimit,
