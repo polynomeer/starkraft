@@ -198,3 +198,6 @@ Other flags:
 
 Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`
+
+Sample harvest script:
+`./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`
