@@ -155,6 +155,26 @@ data class EconomyStreamRecord(
 )
 
 @Serializable
+data class ProducerStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val supportsTraining: Boolean,
+    val supportsRally: Boolean,
+    val productionQueueLimit: Int,
+    val defaultRallyOffsetX: Float,
+    val defaultRallyOffsetY: Float
+)
+
+@Serializable
+data class ProducerStateStreamRecord(
+    val recordType: String = "producerState",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<ProducerStateEntityRecord>
+)
+
+@Serializable
 data class CombatEventRecord(
     val attackerId: Int,
     val targetId: Int,
@@ -767,6 +787,16 @@ fun renderEconomyStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = EconomyStreamRecord(sequence = sequence, tick = tick, factions = factions)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderProducerStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<ProducerStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ProducerStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

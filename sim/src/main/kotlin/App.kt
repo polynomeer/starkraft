@@ -11,6 +11,7 @@ import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
+import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
@@ -28,6 +29,7 @@ import starkraft.sim.client.renderOccupancyChangeStreamRecordJson
 import starkraft.sim.client.renderPathAssignedStreamRecordJson
 import starkraft.sim.client.renderPathProgressStreamRecordJson
 import starkraft.sim.client.renderProducerFailureStreamRecordJson
+import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderSnapshotSessionEndJson
@@ -386,6 +388,7 @@ fun main(args: Array<String>) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
             emitEconomyRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
+            emitProducerStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
                 world,
                 fog1,
@@ -830,6 +833,46 @@ private fun emitEconomyRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             factions = factions,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitProducerStateRecord(
+    world: World,
+    data: DataRepo,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val entities = ArrayList<ProducerStateEntityRecord>()
+    val alive = world.aliveSnapshot
+    for (i in 0 until alive.count) {
+        val id = alive.ids[i]
+        val tag = world.tags[id] ?: continue
+        val spec = data.buildSpec(tag.typeId) ?: continue
+        entities.add(
+            ProducerStateEntityRecord(
+                entityId = id,
+                faction = tag.faction,
+                typeId = tag.typeId,
+                supportsTraining = spec.supportsTraining,
+                supportsRally = spec.supportsRally,
+                productionQueueLimit = spec.productionQueueLimit,
+                defaultRallyOffsetX = spec.rallyOffsetX,
+                defaultRallyOffsetY = spec.rallyOffsetY
+            )
+        )
+    }
+    if (entities.isEmpty()) return
+    entities.sortBy { it.entityId }
+    emitSnapshotLine(
+        renderProducerStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
             pretty = false
         ),
         snapshotOutPath
