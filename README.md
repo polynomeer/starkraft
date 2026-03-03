@@ -195,6 +195,7 @@ Client controls:
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
 Left-click selections are also written as `selectionType="units"` NDJSON records so the input trail includes both client selection changes and commands.
 The HUD shows the latest command ack so input failures surface without reading sim logs.
+The HUD also shows selected unit type counts, so mixed selections are visible without inspecting the stream.
 The NDJSON tail reader and input sink now live in reusable bridge code so a future non-Swing renderer can reuse the same snapshot/input boundary instead of copying file protocol logic.
 Client-side click interpretation is also extracted into reusable controller helpers, so a future renderer can share the same selection and right-click command rules without depending on Swing widgets.
 Snapshot polling, selection retention, ack tracking, and command submission now also live in a renderer-agnostic client session layer, so Swing is reduced to a view adapter over shared client state.

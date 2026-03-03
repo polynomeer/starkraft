@@ -16,6 +16,8 @@ import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
+import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.ResourceNodeSnapshot
@@ -47,18 +49,54 @@ class GraphicalClientTest {
 
     @Test
     fun `builds shared hud lines for pluggable renderers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 15,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
         assertEquals(
             listOf(
                 "tick=15 selected=2",
+                "selection: Marinex2",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
-                tick = 15,
-                selectedCount = 2,
-                ack = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true)
+                snapshot = snapshot,
+                state = ClientSessionState(selectedIds = linkedSetOf(4, 9), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
             )
         )
+    }
+
+    @Test
+    fun `builds selection summary with unit type counts`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 5, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 6, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection: Marinex2 Workerx1", buildSelectionSummary(snapshot, linkedSetOf(4, 5, 6)))
+        assertEquals("selection: none", buildSelectionSummary(snapshot, emptySet()))
     }
 
     @Test

@@ -3,6 +3,7 @@ package starkraft.sim.client
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
+import java.util.LinkedHashMap
 
 internal interface ClientRenderer {
     fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState)
@@ -78,20 +79,36 @@ internal class SwingClientRenderer(
         snapshot: ClientSnapshot
     ) {
         g.color = Color.WHITE
-        val hudLines = buildClientHudLines(snapshot.tick, state.selectedIds.size, state.lastAck)
-        g.drawString(hudLines[0], 12, height - 44)
-        g.drawString(hudLines[1], 12, height - 28)
-        g.drawString(hudLines[2], 12, height - 12)
+        val hudLines = buildClientHudLines(snapshot, state)
+        g.drawString(hudLines[0], 12, height - 60)
+        g.drawString(hudLines[1], 12, height - 44)
+        g.drawString(hudLines[2], 12, height - 28)
+        g.drawString(hudLines[3], 12, height - 12)
     }
 }
 
 internal fun buildClientHudLines(
-    tick: Int,
-    selectedCount: Int,
-    ack: ClientCommandAck?
+    snapshot: ClientSnapshot,
+    state: ClientSessionState
 ): List<String> =
     listOf(
-        "tick=$tick selected=$selectedCount",
-        formatAckStatus(ack),
+        "tick=${snapshot.tick} selected=${state.selectedIds.size}",
+        buildSelectionSummary(snapshot, state.selectedIds),
+        formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
     )
+
+internal fun buildSelectionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection: none"
+    val counts = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        counts[entity.typeId] = (counts[entity.typeId] ?: 0) + 1
+    }
+    if (counts.isEmpty()) return "selection: none"
+    val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
+    return "selection: $summary"
+}
