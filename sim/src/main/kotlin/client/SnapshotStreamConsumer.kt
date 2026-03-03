@@ -44,6 +44,10 @@ data class SnapshotStreamSummary(
     val trainingProducerCount: Int = 0,
     val rallyProducerCount: Int = 0,
     val maxProducerQueueLimit: Int = 0,
+    val harvesterCount: Int = 0,
+    val harvesterGatherCount: Int = 0,
+    val harvesterReturnCount: Int = 0,
+    val harvesterCargoTotal: Int = 0,
     val productionEnqueueCount: Int = 0,
     val productionProgressCount: Int = 0,
     val productionCompleteCount: Int = 0,
@@ -105,6 +109,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var trainingProducerCount = 0
     var rallyProducerCount = 0
     var maxProducerQueueLimit = 0
+    var harvesterCount = 0
+    var harvesterGatherCount = 0
+    var harvesterReturnCount = 0
+    var harvesterCargoTotal = 0
     var productionEnqueueCount = 0
     var productionProgressCount = 0
     var productionCompleteCount = 0
@@ -245,6 +253,20 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     if (limit > maxProducerQueueLimit) maxProducerQueueLimit = limit
                 }
             }
+            "harvesterState" -> {
+                val entities = obj.array("entities")
+                harvesterCount = entities.size
+                harvesterGatherCount = 0
+                harvesterReturnCount = 0
+                harvesterCargoTotal = 0
+                for (entity in entities) {
+                    when (entity.string("phase")) {
+                        "return" -> harvesterReturnCount++
+                        else -> harvesterGatherCount++
+                    }
+                    harvesterCargoTotal += entity.int("cargoAmount") ?: 0
+                }
+            }
             "production" -> {
                 val events = obj.array("events")
                 for (event in events) {
@@ -345,6 +367,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         trainingProducerCount = trainingProducerCount,
         rallyProducerCount = rallyProducerCount,
         maxProducerQueueLimit = maxProducerQueueLimit,
+        harvesterCount = harvesterCount,
+        harvesterGatherCount = harvesterGatherCount,
+        harvesterReturnCount = harvesterReturnCount,
+        harvesterCargoTotal = harvesterCargoTotal,
         productionEnqueueCount = productionEnqueueCount,
         productionProgressCount = productionProgressCount,
         productionCompleteCount = productionCompleteCount,
@@ -415,6 +441,12 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "rally=${summary.rallyProducerCount} maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
+    if (summary.harvesterCount > 0 || summary.countsByType["harvesterState"] != null) {
+        lines.add(
+            "harvesters: total=${summary.harvesterCount} gather=${summary.harvesterGatherCount} " +
+                "return=${summary.harvesterReturnCount} cargo=${summary.harvesterCargoTotal}"
         )
     }
     if (
