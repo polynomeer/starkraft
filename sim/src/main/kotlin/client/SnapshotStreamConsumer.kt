@@ -21,6 +21,10 @@ data class SnapshotStreamSummary(
     val resourceNodeChangeCount: Int = 0,
     val resourceNodeHarvestedTotal: Int = 0,
     val resourceNodeDepletedCount: Int = 0,
+    val resourceNodeHarvestedMineralsFaction1: Int = 0,
+    val resourceNodeHarvestedMineralsFaction2: Int = 0,
+    val resourceNodeHarvestedGasFaction1: Int = 0,
+    val resourceNodeHarvestedGasFaction2: Int = 0,
     val currentResourceNodeCount: Int = 0,
     val currentResourceNodeRemainingTotal: Int = 0,
     val resourceDeltaEventCount: Int = 0,
@@ -79,6 +83,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var resourceNodeChangeCount = 0
     var resourceNodeHarvestedTotal = 0
     var resourceNodeDepletedCount = 0
+    var resourceNodeHarvestedMineralsFaction1 = 0
+    var resourceNodeHarvestedMineralsFaction2 = 0
+    var resourceNodeHarvestedGasFaction1 = 0
+    var resourceNodeHarvestedGasFaction2 = 0
     val resourceNodeRemainingById = linkedMapOf<Int, Int>()
     var resourceDeltaEventCount = 0
     var resourceSpendMinerals = 0
@@ -148,6 +156,14 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                 replayHash = obj.long("finalReplayHash") ?: replayHash
                 finalVisibleTilesFaction1 = obj.int("finalVisibleTilesFaction1") ?: finalVisibleTilesFaction1
                 finalVisibleTilesFaction2 = obj.int("finalVisibleTilesFaction2") ?: finalVisibleTilesFaction2
+                resourceNodeHarvestedMineralsFaction1 =
+                    obj.int("harvestedMineralsFaction1") ?: resourceNodeHarvestedMineralsFaction1
+                resourceNodeHarvestedMineralsFaction2 =
+                    obj.int("harvestedMineralsFaction2") ?: resourceNodeHarvestedMineralsFaction2
+                resourceNodeHarvestedGasFaction1 =
+                    obj.int("harvestedGasFaction1") ?: resourceNodeHarvestedGasFaction1
+                resourceNodeHarvestedGasFaction2 =
+                    obj.int("harvestedGasFaction2") ?: resourceNodeHarvestedGasFaction2
             }
             "sessionEnd" -> {
                 worldHash = obj.long("worldHash") ?: worldHash
@@ -300,6 +316,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         resourceNodeChangeCount = resourceNodeChangeCount,
         resourceNodeHarvestedTotal = resourceNodeHarvestedTotal,
         resourceNodeDepletedCount = resourceNodeDepletedCount,
+        resourceNodeHarvestedMineralsFaction1 = resourceNodeHarvestedMineralsFaction1,
+        resourceNodeHarvestedMineralsFaction2 = resourceNodeHarvestedMineralsFaction2,
+        resourceNodeHarvestedGasFaction1 = resourceNodeHarvestedGasFaction1,
+        resourceNodeHarvestedGasFaction2 = resourceNodeHarvestedGasFaction2,
         currentResourceNodeCount = resourceNodeRemainingById.values.count { it > 0 },
         currentResourceNodeRemainingTotal = resourceNodeRemainingById.values.sum(),
         resourceDeltaEventCount = resourceDeltaEventCount,
@@ -376,7 +396,10 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
     if (summary.resourceNodeChangeCount > 0 || summary.countsByType["resourceNode"] != null) {
         lines.add(
             "resourceNodes: changed=${summary.resourceNodeChangeCount} " +
-                "harvested=${summary.resourceNodeHarvestedTotal} depleted=${summary.resourceNodeDepletedCount} " +
+                "harvested=${summary.resourceNodeHarvestedTotal} " +
+                "f1=${summary.resourceNodeHarvestedMineralsFaction1}/${summary.resourceNodeHarvestedGasFaction1} " +
+                "f2=${summary.resourceNodeHarvestedMineralsFaction2}/${summary.resourceNodeHarvestedGasFaction2} " +
+                "depleted=${summary.resourceNodeDepletedCount} " +
                 "active=${summary.currentResourceNodeCount} remaining=${summary.currentResourceNodeRemainingTotal}"
         )
     }

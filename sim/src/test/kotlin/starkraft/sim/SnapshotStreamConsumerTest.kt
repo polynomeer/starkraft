@@ -29,7 +29,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"combat\",\"sequence\":13,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"damage\",\"sequence\":14,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"despawn\",\"sequence\":15,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":16,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":16,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                     "{\"recordType\":\"sessionEnd\",\"sequence\":17,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
@@ -61,6 +61,10 @@ class SnapshotStreamConsumerTest {
         assertEquals(2, summary.resourceNodeChangeCount)
         assertEquals(5, summary.resourceNodeHarvestedTotal)
         assertEquals(1, summary.resourceNodeDepletedCount)
+        assertEquals(4, summary.resourceNodeHarvestedMineralsFaction1)
+        assertEquals(1, summary.resourceNodeHarvestedMineralsFaction2)
+        assertEquals(0, summary.resourceNodeHarvestedGasFaction1)
+        assertEquals(2, summary.resourceNodeHarvestedGasFaction2)
         assertEquals(2, summary.currentResourceNodeCount)
         assertEquals(347, summary.currentResourceNodeRemainingTotal)
         assertEquals(2, summary.resourceDeltaEventCount)
@@ -123,7 +127,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"combat\",\"sequence\":13,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
                         "{\"recordType\":\"damage\",\"sequence\":14,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                         "{\"recordType\":\"despawn\",\"sequence\":15,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
-                        "{\"recordType\":\"sessionStats\",\"sequence\":16,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":16,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                         "{\"recordType\":\"sessionEnd\",\"sequence\":17,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
@@ -134,7 +138,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("sessionEnd=1"))
         assertTrue(text.contains("worldHash=123"))
         assertTrue(text.contains("replayHash=456"))
-        assertTrue(text.contains("resourceNodes: changed=1 harvested=3 depleted=0 active=2 remaining=347"))
+        assertTrue(text.contains("resourceNodes: changed=1 harvested=3 f1=3/0 f2=0/0 depleted=0 active=2 remaining=347"))
         assertTrue(text.contains("economy: events=1 spend=50/0 refund=0/0"))
         assertTrue(text.contains("f1=50/0->0/0"))
         assertTrue(text.contains("producers: total=1 training=1 rally=1 maxQueue=3"))

@@ -92,7 +92,7 @@ fun main(args: Array<String>) {
     val weaponsJson = weaponsResource.readText()
     val buildingsJson = buildingsResource.readText()
     val data = DataRepo(unitsJson, weaponsJson, buildingsJson)
-
+    
     val world = World()
     val map = MapGrid(32, 32)
     val occ = OccupancyGrid(32, 32)
@@ -592,6 +592,10 @@ fun main(args: Array<String>) {
                 gasRefundedFaction2 = totalResourceDeltas.gasRefundedFaction2,
                 harvestedMinerals = totalHarvestedMinerals,
                 harvestedGas = totalHarvestedGas,
+                harvestedMineralsFaction1 = totalHarvestedMineralsFaction1,
+                harvestedMineralsFaction2 = totalHarvestedMineralsFaction2,
+                harvestedGasFaction1 = totalHarvestedGasFaction1,
+                harvestedGasFaction2 = totalHarvestedGasFaction2,
                 depletedNodes = totalDepletedNodes,
                 changedResourceNodes = totalChangedResourceNodes,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
@@ -1285,6 +1289,10 @@ private fun emitTickSummaryRecord(
             gasRefundedFaction2 = tickResourceDeltas.gasRefundedFaction2,
             harvestedMinerals = harvest.lastTickHarvestedMinerals,
             harvestedGas = harvest.lastTickHarvestedGas,
+            harvestedMineralsFaction1 = harvest.lastTickHarvestedMineralsFaction1,
+            harvestedMineralsFaction2 = harvest.lastTickHarvestedMineralsFaction2,
+            harvestedGasFaction1 = harvest.lastTickHarvestedGasFaction1,
+            harvestedGasFaction2 = harvest.lastTickHarvestedGasFaction2,
             depletedNodes = harvest.lastTickDepletedNodes,
             changedResourceNodes = harvest.lastTickEventCount,
             pretty = false
