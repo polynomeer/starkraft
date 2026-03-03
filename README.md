@@ -193,6 +193,7 @@ Other flags:
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
 - Final CLI outcome summaries now include aggregate harvest totals, per-faction harvest splits, changed nodes, depletion counts, and current remaining node totals when harvesting occurred
 - Depleted resource nodes are removed from the world with despawn reason `resourceDepleted`
+- Workers targeting a depleted node are cleared from harvesting, and their pending move-to-node order is dropped
 - Human CLI logs now include build/train outcome summaries, including failure reasons when they occur
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash

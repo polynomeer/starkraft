@@ -1033,7 +1033,28 @@ internal fun removeDepletedResourceNodes(world: World, harvest: ResourceHarvestS
         if (!harvest.eventDepleted(i)) continue
         val nodeId = harvest.eventNodeId(i)
         if (!world.resourceNodes.containsKey(nodeId)) continue
+        val nodeTransform = world.transforms[nodeId]
+        if (nodeTransform != null) {
+            clearHarvestersForNode(world, nodeId, nodeTransform.x, nodeTransform.y)
+        }
         world.remove(nodeId, "resourceDepleted")
+    }
+}
+
+internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nodeY: Float) {
+    val workerIds = ArrayList<Int>()
+    for ((workerId, harvester) in world.harvesters) {
+        if (harvester.targetNodeId == nodeId) {
+            workerIds.add(workerId)
+        }
+    }
+    for (workerId in workerIds) {
+        world.harvesters.remove(workerId)
+        val queue = world.orders[workerId]?.items ?: continue
+        val first = queue.firstOrNull() as? Order.Move ?: continue
+        if (first.tx == nodeX && first.ty == nodeY) {
+            queue.removeFirst()
+        }
     }
 }
 

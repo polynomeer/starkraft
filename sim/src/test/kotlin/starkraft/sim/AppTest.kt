@@ -229,6 +229,24 @@ class AppTest {
     }
 
     @Test
+    fun `clears harvesters targeting depleted node`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val nodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 1)
+        world.harvesters[workerId] = Harvester(targetNodeId = nodeId)
+        world.orders[workerId]?.items?.addLast(starkraft.sim.ecs.Order.Move(5f, 5f))
+
+        harvest.tick()
+        removeDepletedResourceNodes(world, harvest)
+
+        assertEquals(null, world.harvesters[workerId])
+        assertEquals(null, world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
     fun `finds project root from nested sim path`() {
         val root = Files.createTempDirectory("starkraft-root")
         Files.writeString(root.resolve("settings.gradle.kts"), "rootProject.name = \"starkraft\"")
