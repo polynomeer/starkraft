@@ -122,6 +122,7 @@ Script syntax:
 - `move <x> <y>` move selection
 - `patrol <x> <y>` alternate movement between the current position and the target point
 - `attackMove <x> <y>` move selection while pausing to attack enemies that enter weapon range
+  Attack-move now uses a short leash; if combat drags a unit too far from its destination, the order drops instead of chasing indefinitely.
 - `hold` keep selection in place while still auto-attacking in weapon range
 - `attack <targetId|@label>` attack target
   Attack orders now chase their assigned target through pathfinding until the unit gets into weapon range.

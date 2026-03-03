@@ -21,6 +21,7 @@ class MovementSystem(
 ) {
     private val speed = 0.06f // tiles/tick demo speed
     private val arrivalEps = 0.05f
+    private val attackMoveLeash = 3.0f
     private val repathCooldownTicks = 10
     private val stuckThresholdTicks = 20
     private val stuckDist2 = 0.0001f
@@ -110,6 +111,10 @@ class MovementSystem(
                     val dy = ty - tr.y
                     val dist = hypot(dx, dy)
                     if (o is Order.AttackMove && hasEnemyInRange(id, tr)) {
+                        if (isBeyondAttackMoveLeash(tr, o)) {
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            q.removeFirst()
+                        }
                         continue
                     }
                     if (dist <= arrivalEps) {
@@ -257,6 +262,12 @@ class MovementSystem(
             if (dx * dx + dy * dy <= range2) return true
         }
         return false
+    }
+
+    private fun isBeyondAttackMoveLeash(source: Transform, order: Order.AttackMove): Boolean {
+        val dx = order.tx - source.x
+        val dy = order.ty - source.y
+        return dx * dx + dy * dy > attackMoveLeash * attackMoveLeash
     }
 
     fun progressEntityId(index: Int): Int = progressEntityIds[index]

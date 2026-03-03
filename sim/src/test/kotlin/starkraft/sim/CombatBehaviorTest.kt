@@ -162,6 +162,47 @@ class CombatBehaviorTest {
     }
 
     @Test
+    fun `attack move clears once combat pulls unit beyond leash`() {
+        val data = combatData()
+        val world = World()
+        val map = MapGrid(32, 32)
+        val occ = OccupancyGrid(32, 32)
+        val alive = AliveSystem(world)
+        val occupancy = OccupancySystem(world, occ)
+        val pool = PathPool(map.width * map.height)
+        val queue = PathRequestQueue(64, 64)
+        val pathfinder = Pathfinder(map, occ)
+        val pathing = PathfindingSystem(world, pathfinder, pool, queue, 1024)
+        val movement = MovementSystem(world, map, occ, pool, queue, data)
+        val combat = CombatSystem(world, data)
+
+        val attacker =
+            world.spawn(
+                Transform(2f, 2f),
+                UnitTag(1, "Marine"),
+                Health(45, 45),
+                WeaponRef("Gauss")
+            )
+        world.spawn(
+            Transform(8f, 2f),
+            UnitTag(2, "Zergling"),
+            Health(35, 35),
+            w = null
+        )
+        world.orders[attacker]?.items?.addLast(Order.AttackMove(3f, 2f))
+
+        repeat(160) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+            combat.tick()
+        }
+
+        assertEquals(null, world.orders[attacker]?.items?.firstOrNull())
+    }
+
+    @Test
     fun `auto targeting avoids wasting lethal follow up shots when another target is available`() {
         val data = combatData()
         val world = World()
