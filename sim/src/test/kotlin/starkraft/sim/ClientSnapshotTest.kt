@@ -283,10 +283,10 @@ class ClientSnapshotTest {
 
     @Test
     fun `renders command stream record json`() {
-        val json = renderCommandStreamRecordJson(Command.Move(3, intArrayOf(7, 8), 4f, 5f), sequence = 9L, pretty = false)
+        val json = renderCommandStreamRecordJson(Command.Move(3, intArrayOf(7, 8), 4f, 5f), sequence = 9L, requestId = "cli-1", pretty = false)
 
         assertEquals(
-            "{\"recordType\":\"command\",\"sequence\":9,\"tick\":3,\"commandType\":\"move\",\"units\":[7,8],\"faction\":null,\"typeId\":null,\"archetype\":null,\"target\":null,\"x\":4.0,\"y\":5.0,\"vision\":null,\"label\":null,\"labelId\":null}",
+            "{\"recordType\":\"command\",\"sequence\":9,\"tick\":3,\"commandType\":\"move\",\"requestId\":\"cli-1\",\"units\":[7,8],\"faction\":null,\"typeId\":null,\"archetype\":null,\"target\":null,\"x\":4.0,\"y\":5.0,\"vision\":null,\"label\":null,\"labelId\":null}",
             json
         )
     }
@@ -994,6 +994,7 @@ class ClientSnapshotTest {
                 tick = 19,
                 commandType = "build",
                 requestSequence = 26L,
+                requestId = "cli-2",
                 accepted = false,
                 reason = "missingTech",
                 appliedUnits = null,
@@ -1002,7 +1003,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"commandAck\",\"sequence\":27,\"tick\":19,\"commandType\":\"build\",\"requestSequence\":26,\"accepted\":false,\"reason\":\"missingTech\",\"appliedUnits\":null,\"entityId\":null}",
+            "{\"recordType\":\"commandAck\",\"sequence\":27,\"tick\":19,\"commandType\":\"build\",\"requestSequence\":26,\"requestId\":\"cli-2\",\"accepted\":false,\"reason\":\"missingTech\",\"appliedUnits\":null,\"entityId\":null}",
             json
         )
     }

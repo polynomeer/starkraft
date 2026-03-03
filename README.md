@@ -161,6 +161,7 @@ You can run the sample with:
 NDJSON is also accepted for append-friendly client pipelines, one `selection` or `command` object per line.
 Use `--inputJson -` to read the same JSON or NDJSON payload from stdin.
 `--inputTail` is for append-only files from an external client process; each completed line is picked up on the next sim tick.
+Input `command` records may include an optional `requestId`; the sim copies it into both `command` and `commandAck` stream records so external clients can correlate submissions and results directly.
 
 Minimal graphical client:
 

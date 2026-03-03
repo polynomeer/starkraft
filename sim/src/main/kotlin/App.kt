@@ -80,6 +80,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.IdentityHashMap
 import java.util.Random
 
 object Time {
@@ -271,8 +272,13 @@ fun main(args: Array<String>) {
     val spawnCommands = spawnProgram.commandsByTick
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     val selectionEventsByTick = mergeSelectionEvents(spawnProgram.selectionEventsByTick, baseProgram.selectionEventsByTick)
+    val commandRequestIds = IdentityHashMap<Command, String>().apply {
+        putAll(spawnProgram.commandRequestIds)
+        putAll(baseProgram.commandRequestIds)
+    }
     val liveCommandsByTick = ArrayList<ArrayList<Command>>()
     val liveSelectionEventsByTick = ArrayList<ArrayList<ScriptRunner.SelectionEvent>>()
+    val liveCommandRequestIds = IdentityHashMap<Command, String>()
     val inputTailReader = inputTailPath?.let { InputTailReader.open(resolvePath(it)) }
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
@@ -365,7 +371,7 @@ fun main(args: Array<String>) {
     }
     var tick = 0
     while (tick < totalTicks) {
-        inputTailReader?.poll(liveCommandsByTick, liveSelectionEventsByTick)
+        inputTailReader?.poll(liveCommandsByTick, liveSelectionEventsByTick, liveCommandRequestIds)
         val commandOutcomeCounters = CommandOutcomeCounters()
         var tickTrainsCompleted = 0
         world.clearRemovedEvents()
@@ -390,6 +396,7 @@ fun main(args: Array<String>) {
             tick,
             selectionEventsByTick.asList(),
             commandsByTick.asList(),
+            commandRequestIds,
             world,
             recorder,
             data,
@@ -405,6 +412,7 @@ fun main(args: Array<String>) {
             tick,
             liveSelectionEventsByTick,
             liveCommandsByTick,
+            liveCommandRequestIds,
             world,
             recorder,
             data,
@@ -1700,13 +1708,17 @@ private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
 
 internal data class LoadedProgram(
     val commandsByTick: Array<ArrayList<Command>>,
-    val selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>
+    val selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>,
+    val commandRequestIds: IdentityHashMap<Command, String> = IdentityHashMap()
 )
 
-private fun toLoadedProgram(program: ScriptRunner.ScriptProgram): LoadedProgram {
+private fun toLoadedProgram(
+    program: ScriptRunner.ScriptProgram,
+    commandRequestIds: IdentityHashMap<Command, String> = IdentityHashMap()
+): LoadedProgram {
     val cmds = program.commands
     val selectionEvents = program.selections
-    if (cmds.isEmpty() && selectionEvents.isEmpty()) return LoadedProgram(arrayOf(), emptyArray())
+    if (cmds.isEmpty() && selectionEvents.isEmpty()) return LoadedProgram(arrayOf(), emptyArray(), commandRequestIds)
     var maxTick = 0
     for (c in cmds) if (c.tick > maxTick) maxTick = c.tick
     for (event in selectionEvents) if (event.tick > maxTick) maxTick = event.tick
@@ -1718,7 +1730,7 @@ private fun toLoadedProgram(program: ScriptRunner.ScriptProgram): LoadedProgram 
     for (event in selectionEvents) {
         selectionByTick[event.tick].add(event)
     }
-    return LoadedProgram(byTick, selectionByTick)
+    return LoadedProgram(byTick, selectionByTick, commandRequestIds)
 }
 
 private fun loadScriptProgram(pathStr: String): LoadedProgram {
@@ -1729,11 +1741,13 @@ private fun loadScriptProgram(pathStr: String): LoadedProgram {
 
 private fun loadInputJsonProgram(pathStr: String): LoadedProgram {
     if (pathStr == "-") {
-        return toLoadedProgram(InputJson.loadProgram(generateSequence(::readLine).joinToString("\n")))
+        val program = InputJson.loadLoadedProgram(generateSequence(::readLine).joinToString("\n"))
+        return toLoadedProgram(program.program, program.commandRequestIds)
     }
     val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Input JSON file not found: $pathStr")
-    return toLoadedProgram(InputJson.loadProgram(path))
+    val program = InputJson.loadLoadedProgram(path)
+    return toLoadedProgram(program.program, program.commandRequestIds)
 }
 
 private fun resolvePath(pathStr: String): java.nio.file.Path {
@@ -1817,6 +1831,7 @@ private fun processTickInput(
     tick: Int,
     selectionEventsByTick: List<ArrayList<ScriptRunner.SelectionEvent>>,
     commandsByTick: List<ArrayList<Command>>,
+    commandRequestIds: Map<Command, String>,
     world: World,
     recorder: ReplayRecorder,
     data: DataRepo,
@@ -1848,7 +1863,8 @@ private fun processTickInput(
             streamSequence,
             buildings,
             production,
-            commandOutcomeCounters
+            commandOutcomeCounters,
+            requestId = commandRequestIds[cmds[i]]
         )
     }
 }
@@ -3147,14 +3163,15 @@ fun issue(
     streamSequence: LongArray? = null,
     buildings: BuildingPlacementSystem? = null,
     production: BuildingProductionSystem? = null,
-    outcomeCounters: CommandOutcomeCounters? = null
+    outcomeCounters: CommandOutcomeCounters? = null,
+    requestId: String? = null
 ) {
     recorder.onCommand(cmd)
     var commandSequence: Long? = null
     if (snapshotOutPath != null && streamSequence != null) {
         commandSequence = nextStreamSequence(streamSequence)
         emitSnapshotLine(
-            renderCommandStreamRecordJson(cmd, sequence = commandSequence, pretty = false),
+            renderCommandStreamRecordJson(cmd, sequence = commandSequence, requestId = requestId, pretty = false),
             snapshotOutPath
         )
     }
@@ -3166,6 +3183,7 @@ fun issue(
                 tick = cmd.tick,
                 commandType = commandTypeName(cmd),
                 requestSequence = commandSequence!!,
+                requestId = requestId,
                 accepted = accepted,
                 reason = reason,
                 appliedUnits = appliedUnits,

@@ -22,8 +22,8 @@ class GraphicalClientTest {
     fun `formats command ack status for hud`() {
         assertEquals("last ack: none", formatAckStatus(null))
         assertEquals(
-            "last ack: ok move @12",
-            formatAckStatus(ClientCommandAck(tick = 12, commandType = "move", accepted = true))
+            "last ack: ok move[cli-1] @12",
+            formatAckStatus(ClientCommandAck(tick = 12, commandType = "move", requestId = "cli-1", accepted = true))
         )
         assertEquals(
             "last ack: fail build @13 reason=missingTech",

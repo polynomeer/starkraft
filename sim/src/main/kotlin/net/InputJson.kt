@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.IdentityHashMap
 
 object InputJson {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
@@ -29,6 +30,7 @@ object InputJson {
     data class InputCommandRecord(
         val tick: Int,
         val commandType: String,
+        val requestId: String? = null,
         val units: IntArray = intArrayOf(),
         val faction: Int? = null,
         val typeId: String? = null,
@@ -56,17 +58,33 @@ object InputJson {
 
     sealed interface ParsedRecord {
         data class Selection(val event: ScriptRunner.SelectionEvent) : ParsedRecord
-        data class Command(val command: starkraft.sim.net.Command) : ParsedRecord
+        data class Command(val command: starkraft.sim.net.Command, val requestId: String? = null) : ParsedRecord
     }
+
+    data class LoadedInputProgram(
+        val program: ScriptRunner.ScriptProgram,
+        val commandRequestIds: IdentityHashMap<starkraft.sim.net.Command, String> = IdentityHashMap()
+    )
 
     class StatefulParser {
         private val labelIds = HashMap<String, Int>()
         private var nextLabelId = -1
 
-        fun parseProgram(program: InputProgram): ScriptRunner.ScriptProgram {
+        fun parseProgram(program: InputProgram): LoadedInputProgram {
             val selections = program.selections.map(::toSelectionEvent)
-            val commands = program.commands.map(::toCommand)
-            return ScriptRunner.ScriptProgram(commands, selections)
+            val commands = ArrayList<starkraft.sim.net.Command>(program.commands.size)
+            val commandRequestIds = IdentityHashMap<starkraft.sim.net.Command, String>()
+            for (record in program.commands) {
+                val command = toCommand(record)
+                commands.add(command)
+                if (record.requestId != null) {
+                    commandRequestIds[command] = record.requestId
+                }
+            }
+            return LoadedInputProgram(
+                program = ScriptRunner.ScriptProgram(commands, selections),
+                commandRequestIds = commandRequestIds
+            )
         }
 
         fun parseLine(line: String): ParsedRecord? {
@@ -75,7 +93,10 @@ object InputJson {
             val obj = json.parseToJsonElement(trimmed).jsonObject
             return when {
                 "selectionType" in obj -> ParsedRecord.Selection(toSelectionEvent(json.decodeFromString(InputSelectionRecord.serializer(), trimmed)))
-                "commandType" in obj -> ParsedRecord.Command(toCommand(json.decodeFromString(InputCommandRecord.serializer(), trimmed)))
+                "commandType" in obj -> {
+                    val record = json.decodeFromString(InputCommandRecord.serializer(), trimmed)
+                    ParsedRecord.Command(toCommand(record), record.requestId)
+                }
                 else -> error("unsupported input NDJSON record")
             }
         }
@@ -120,9 +141,15 @@ object InputJson {
             }
     }
 
-    fun loadProgram(path: Path): ScriptRunner.ScriptProgram = loadProgram(Files.readString(path))
+    fun loadProgram(path: Path): ScriptRunner.ScriptProgram = loadLoadedProgram(path).program
 
     fun loadProgram(raw: String): ScriptRunner.ScriptProgram {
+        return loadLoadedProgram(raw).program
+    }
+
+    fun loadLoadedProgram(path: Path): LoadedInputProgram = loadLoadedProgram(Files.readString(path))
+
+    fun loadLoadedProgram(raw: String): LoadedInputProgram {
         val program = parseProgram(raw)
         return StatefulParser().parseProgram(program)
     }
@@ -163,4 +190,3 @@ object InputJson {
         error("$fieldName is required")
     }
 }
-

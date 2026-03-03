@@ -125,6 +125,7 @@ data class CommandStreamRecord(
     val sequence: Long,
     val tick: Int,
     val commandType: String,
+    val requestId: String? = null,
     val units: IntArray = intArrayOf(),
     val faction: Int? = null,
     val typeId: String? = null,
@@ -144,6 +145,7 @@ data class CommandAckStreamRecord(
     val tick: Int,
     val commandType: String,
     val requestSequence: Long,
+    val requestId: String? = null,
     val accepted: Boolean,
     val reason: String? = null,
     val appliedUnits: Int? = null,
@@ -924,7 +926,12 @@ fun renderSnapshotSessionEndJson(
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
-fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean = false): String {
+fun renderCommandStreamRecordJson(
+    cmd: Command,
+    sequence: Long,
+    requestId: String? = null,
+    pretty: Boolean = false
+): String {
     val record =
         when (cmd) {
             is Command.Move ->
@@ -932,6 +939,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "move",
+                    requestId = requestId,
                     units = cmd.units,
                     x = cmd.x,
                     y = cmd.y
@@ -941,6 +949,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "moveFaction",
+                    requestId = requestId,
                     faction = cmd.faction,
                     x = cmd.x,
                     y = cmd.y
@@ -950,6 +959,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "moveType",
+                    requestId = requestId,
                     typeId = cmd.typeId,
                     x = cmd.x,
                     y = cmd.y
@@ -959,6 +969,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "moveArchetype",
+                    requestId = requestId,
                     archetype = cmd.archetype,
                     x = cmd.x,
                     y = cmd.y
@@ -968,6 +979,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "attack",
+                    requestId = requestId,
                     units = cmd.units,
                     target = cmd.target
                 )
@@ -976,6 +988,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "attackFaction",
+                    requestId = requestId,
                     faction = cmd.faction,
                     target = cmd.target
                 )
@@ -984,6 +997,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "attackType",
+                    requestId = requestId,
                     typeId = cmd.typeId,
                     target = cmd.target
                 )
@@ -992,6 +1006,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "attackArchetype",
+                    requestId = requestId,
                     archetype = cmd.archetype,
                     target = cmd.target
                 )
@@ -1000,6 +1015,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "harvest",
+                    requestId = requestId,
                     units = cmd.units,
                     target = cmd.target
                 )
@@ -1008,6 +1024,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "harvestFaction",
+                    requestId = requestId,
                     faction = cmd.faction,
                     target = cmd.target
                 )
@@ -1016,6 +1033,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "harvestType",
+                    requestId = requestId,
                     typeId = cmd.typeId,
                     target = cmd.target
                 )
@@ -1024,6 +1042,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "harvestArchetype",
+                    requestId = requestId,
                     archetype = cmd.archetype,
                     target = cmd.target
                 )
@@ -1032,6 +1051,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "spawnNode",
+                    requestId = requestId,
                     typeId = cmd.kind,
                     x = cmd.x,
                     y = cmd.y,
@@ -1043,6 +1063,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "spawn",
+                    requestId = requestId,
                     faction = cmd.faction,
                     typeId = cmd.typeId,
                     x = cmd.x,
@@ -1056,6 +1077,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "build",
+                    requestId = requestId,
                     faction = cmd.faction,
                     typeId = cmd.typeId,
                     x = cmd.tileX.toFloat(),
@@ -1066,6 +1088,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "train",
+                    requestId = requestId,
                     target = cmd.buildingId,
                     typeId = cmd.typeId
                 )
@@ -1074,6 +1097,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "cancelTrain",
+                    requestId = requestId,
                     target = cmd.buildingId
                 )
             is Command.Rally ->
@@ -1081,6 +1105,7 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     sequence = sequence,
                     tick = cmd.tick,
                     commandType = "rally",
+                    requestId = requestId,
                     target = cmd.buildingId,
                     x = cmd.x,
                     y = cmd.y
@@ -1094,6 +1119,7 @@ fun renderCommandAckStreamRecordJson(
     tick: Int,
     commandType: String,
     requestSequence: Long,
+    requestId: String? = null,
     accepted: Boolean,
     reason: String? = null,
     appliedUnits: Int? = null,
@@ -1106,6 +1132,7 @@ fun renderCommandAckStreamRecordJson(
             tick = tick,
             commandType = commandType,
             requestSequence = requestSequence,
+            requestId = requestId,
             accepted = accepted,
             reason = reason,
             appliedUnits = appliedUnits,

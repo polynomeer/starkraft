@@ -11,7 +11,8 @@ class InputTailReader(path: Path) : Closeable {
 
     fun poll(
         commandsByTick: MutableList<ArrayList<Command>>,
-        selectionsByTick: MutableList<ArrayList<ScriptRunner.SelectionEvent>>
+        selectionsByTick: MutableList<ArrayList<ScriptRunner.SelectionEvent>>,
+        commandRequestIds: MutableMap<Command, String>
     ) {
         while (true) {
             val line = file.readLine() ?: break
@@ -19,6 +20,9 @@ class InputTailReader(path: Path) : Closeable {
                 is InputJson.ParsedRecord.Command -> {
                     ensureCapacity(commandsByTick, record.command.tick)
                     commandsByTick[record.command.tick].add(record.command)
+                    if (record.requestId != null) {
+                        commandRequestIds[record.command] = record.requestId
+                    }
                 }
                 is InputJson.ParsedRecord.Selection -> {
                     ensureCapacity(selectionsByTick, record.event.tick)
@@ -47,4 +51,3 @@ class InputTailReader(path: Path) : Closeable {
         }
     }
 }
-

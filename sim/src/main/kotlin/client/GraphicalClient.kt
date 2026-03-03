@@ -38,6 +38,7 @@ private data class ClientViewState(
 internal data class ClientCommandAck(
     val tick: Int,
     val commandType: String,
+    val requestId: String? = null,
     val accepted: Boolean,
     val reason: String? = null
 )
@@ -70,6 +71,7 @@ private class SnapshotTail(path: Path) {
                         ClientCommandAck(
                             tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
                             commandType = obj["commandType"]?.jsonPrimitive?.content ?: "unknown",
+                            requestId = obj["requestId"]?.let { if (it is JsonNull) null else it.jsonPrimitive.content },
                             accepted = obj["accepted"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false,
                             reason = obj["reason"]?.let { if (it is JsonNull) null else it.jsonPrimitive.content }
                         )
@@ -102,6 +104,7 @@ private class ClientPanel(
     private val commandAppender: CommandAppender
 ) : JPanel() {
     private val tileSize = 20
+    private var nextRequestId = 1L
     private val friendlyColor = Color(0x4B, 0x8B, 0xFF)
     private val enemyColor = Color(0xE0, 0x5A, 0x47)
     private val neutralColor = Color(0xC8, 0xB0, 0x72)
@@ -202,6 +205,7 @@ private class ClientPanel(
                 InputJson.InputCommandRecord(
                     tick = snapshot.tick + 1,
                     commandType = "attack",
+                    requestId = nextRequestId(),
                     units = state.selectedIds.toIntArray(),
                     target = enemy.id
                 )
@@ -214,6 +218,7 @@ private class ClientPanel(
                 InputJson.InputCommandRecord(
                     tick = snapshot.tick + 1,
                     commandType = "harvest",
+                    requestId = nextRequestId(),
                     units = state.selectedIds.toIntArray(),
                     target = node.id
                 )
@@ -224,6 +229,7 @@ private class ClientPanel(
             InputJson.InputCommandRecord(
                 tick = snapshot.tick + 1,
                 commandType = "move",
+                requestId = nextRequestId(),
                 units = state.selectedIds.toIntArray(),
                 x = worldX,
                 y = worldY
@@ -264,6 +270,8 @@ private class ClientPanel(
     }
 
     private fun distance(ax: Float, ay: Float, bx: Float, by: Float): Float = hypot(abs(ax - bx), abs(ay - by))
+
+    private fun nextRequestId(): String = "gc-${nextRequestId++}"
 }
 
 fun main(args: Array<String>) {
@@ -303,6 +311,8 @@ internal fun defaultClientInputPath(snapshotPath: Path): Path =
 internal fun formatAckStatus(ack: ClientCommandAck?): String =
     when {
         ack == null -> "last ack: none"
-        ack.accepted -> "last ack: ok ${ack.commandType} @${ack.tick}"
-        else -> "last ack: fail ${ack.commandType} @${ack.tick} reason=${ack.reason}"
+        ack.accepted -> "last ack: ok ${ack.commandType}${formatRequestIdSuffix(ack)} @${ack.tick}"
+        else -> "last ack: fail ${ack.commandType}${formatRequestIdSuffix(ack)} @${ack.tick} reason=${ack.reason}"
     }
+
+private fun formatRequestIdSuffix(ack: ClientCommandAck): String = ack.requestId?.let { "[$it]" } ?: ""

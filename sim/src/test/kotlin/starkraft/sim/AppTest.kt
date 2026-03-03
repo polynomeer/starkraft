@@ -33,7 +33,8 @@ class AppTest {
             starkraft.sim.replay.NullRecorder(),
             data = data,
             snapshotOutPath = out,
-            streamSequence = seq
+            streamSequence = seq,
+            requestId = "cli-1"
         )
         issue(
             Command.Rally(1, 999, 10f, 11f),
@@ -41,12 +42,13 @@ class AppTest {
             starkraft.sim.replay.NullRecorder(),
             data = data,
             snapshotOutPath = out,
-            streamSequence = seq
+            streamSequence = seq,
+            requestId = "cli-2"
         )
 
         val lines = Files.readAllLines(out)
-        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"move\"") && it.contains("\"accepted\":true") && it.contains("\"appliedUnits\":1") })
-        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"rally\"") && it.contains("\"accepted\":false") && it.contains("\"reason\":\"missingBuilding\"") })
+        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"move\"") && it.contains("\"requestId\":\"cli-1\"") && it.contains("\"accepted\":true") && it.contains("\"appliedUnits\":1") })
+        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"rally\"") && it.contains("\"requestId\":\"cli-2\"") && it.contains("\"accepted\":false") && it.contains("\"reason\":\"missingBuilding\"") })
     }
 
     @Test

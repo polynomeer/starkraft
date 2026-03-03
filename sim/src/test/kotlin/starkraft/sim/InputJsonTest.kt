@@ -85,4 +85,18 @@ class InputJsonTest {
         assertEquals(Command.Build(2, 1, "Depot", 6, 6, 0, 0, 0, 0, 0, 0, "depot", -1), program.commands[1])
         assertEquals(Command.Train(3, -1, "Marine", 0, 0, 0), program.commands[2])
     }
+
+    @Test
+    fun `preserves request ids for client commands`() {
+        val program =
+            InputJson.loadLoadedProgram(
+                """
+            {"tick":0,"commandType":"move","requestId":"cli-1","units":[7],"x":12.0,"y":13.0}
+            {"tick":1,"commandType":"harvest","units":[8],"target":21}
+            """.trimIndent()
+            )
+
+        assertEquals("cli-1", program.commandRequestIds[program.program.commands[0]])
+        assertEquals(null, program.commandRequestIds[program.program.commands[1]])
+    }
 }
