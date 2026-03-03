@@ -40,6 +40,7 @@ data class BuildingDef(
     val placementClearance: Int = 0,
     val supportsTraining: Boolean = false,
     val supportsRally: Boolean = false,
+    val supportsDropoff: Boolean = false,
     val productionQueueLimit: Int = 5,
     val rallyOffsetX: Float = 0f,
     val rallyOffsetY: Float = 0f,

@@ -1176,6 +1176,7 @@ private fun emitProducerStateRecord(
                 archetype = spec.archetype,
                 supportsTraining = spec.supportsTraining,
                 supportsRally = spec.supportsRally,
+                supportsDropoff = spec.supportsDropoff,
                 productionQueueLimit = spec.productionQueueLimit,
                 defaultRallyOffsetX = spec.rallyOffsetX,
                 defaultRallyOffsetY = spec.rallyOffsetY

@@ -207,7 +207,7 @@ class ResourceHarvestSystem(
                 bestAnyId = buildingId
             }
             val buildSpec = data?.buildSpec(tag.typeId)
-            if (buildSpec?.supportsTraining == true && dist < bestProducerDist) {
+            if (buildSpec?.supportsDropoff == true && dist < bestProducerDist) {
                 bestProducerDist = dist
                 bestProducerId = buildingId
             }

@@ -115,7 +115,7 @@ class ClientSnapshotTest {
             DataRepo(
                 """{"list":[{"id":"Marine","archetype":"infantry","hp":45,"buildTicks":75,"producerTypes":["Depot"]},{"id":"Zergling","archetype":"lightMelee","hp":35,"buildTicks":55,"producerTypes":["Depot"]},{"id":"Worker","archetype":"worker","hp":40,"buildTicks":30,"producerTypes":["Depot"]}]}""",
                 """{"list":[]}""",
-                """{"list":[{"id":"Depot","archetype":"producer","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","archetype":"producer","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
             )
 
         val snapshot = buildClientSnapshot(
@@ -157,6 +157,7 @@ class ClientSnapshotTest {
         assertEquals(1, entitiesById[idB]?.placementClearance)
         assertEquals(true, entitiesById[idB]?.supportsTraining)
         assertEquals(true, entitiesById[idB]?.supportsRally)
+        assertEquals(true, entitiesById[idB]?.supportsDropoff)
         assertEquals(4, entitiesById[idB]?.productionQueueLimit)
         assertEquals(2f, entitiesById[idB]?.defaultRallyOffsetX)
         assertEquals(1f, entitiesById[idB]?.defaultRallyOffsetY)
@@ -363,14 +364,14 @@ class ClientSnapshotTest {
                 tick = 5,
                 entities =
                     listOf(
-                        ProducerStateEntityRecord(41, 1, "Depot", "producer", true, true, 4, 2f, 1f),
-                        ProducerStateEntityRecord(42, 2, "Barracks", "producer", true, false, 5, 0f, 0f)
+                        ProducerStateEntityRecord(41, 1, "Depot", "producer", true, true, true, 4, 2f, 1f),
+                        ProducerStateEntityRecord(42, 2, "Barracks", "producer", true, false, false, 5, 0f, 0f)
                     ),
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"producerState\",\"sequence\":14,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
+            "{\"recordType\":\"producerState\",\"sequence\":14,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"productionQueueLimit\":4,\"defaultRallyOffsetX\":2.0,\"defaultRallyOffsetY\":1.0},{\"entityId\":42,\"faction\":2,\"typeId\":\"Barracks\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":false,\"supportsDropoff\":false,\"productionQueueLimit\":5,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
             json
         )
     }

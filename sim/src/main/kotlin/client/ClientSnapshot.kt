@@ -67,6 +67,7 @@ data class EntitySnapshot(
     val placementClearance: Int? = null,
     val supportsTraining: Boolean? = null,
     val supportsRally: Boolean? = null,
+    val supportsDropoff: Boolean? = null,
     val productionQueueLimit: Int? = null,
     val defaultRallyOffsetX: Float? = null,
     val defaultRallyOffsetY: Float? = null,
@@ -269,6 +270,7 @@ data class ProducerStateEntityRecord(
     val archetype: String,
     val supportsTraining: Boolean,
     val supportsRally: Boolean,
+    val supportsDropoff: Boolean,
     val productionQueueLimit: Int,
     val defaultRallyOffsetX: Float,
     val defaultRallyOffsetY: Float
@@ -754,6 +756,7 @@ fun buildClientSnapshot(
                 placementClearance = footprint?.clearance,
                 supportsTraining = buildSpec?.supportsTraining,
                 supportsRally = buildSpec?.supportsRally,
+                supportsDropoff = buildSpec?.supportsDropoff,
                 productionQueueLimit = buildSpec?.productionQueueLimit,
                 defaultRallyOffsetX = buildSpec?.rallyOffsetX,
                 defaultRallyOffsetY = buildSpec?.rallyOffsetY,

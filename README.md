@@ -69,7 +69,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
    - `ResourceHarvestSystem` now supports deterministic nearby harvesting from fixed resource nodes.
    - Harvesters now carry cargo back to the nearest same-faction building footprint before stockpiles increase.
-   - When building defs are available, harvest drop-off prefers producer-capable buildings over other same-faction footprints.
+   - Building defs now carry explicit harvest drop-off capability, so return targets do not have to piggyback on producer training rules.
    - `DataRepo.buildSpec(...)` reads dedicated building defs, while `DataRepo.trainSpec(...)` reads trainable unit defs.
    - Unit and building defs now carry explicit `archetype` ids so coarse categories do not have to overload `typeId`.
 
@@ -148,7 +148,7 @@ Other flags:
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
-- Snapshots expose faction minerals/gas, resource nodes with remaining amounts, plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, current rally point, and harvester cargo/return state when present
+- Snapshots expose faction minerals/gas, resource nodes with remaining amounts, plus entity archetypes, production state, building extents, placement clearance, building capabilities/queue limits, default rally offsets, current rally point, and harvester cargo/return state when present
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
