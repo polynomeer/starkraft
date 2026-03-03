@@ -186,6 +186,7 @@ Left-click selections are also written as `selectionType="units"` NDJSON records
 The HUD shows the latest command ack so input failures surface without reading sim logs.
 The NDJSON tail reader and input sink now live in reusable bridge code so a future non-Swing renderer can reuse the same snapshot/input boundary instead of copying file protocol logic.
 Client-side click interpretation is also extracted into reusable controller helpers, so a future renderer can share the same selection and right-click command rules without depending on Swing widgets.
+Snapshot polling, selection retention, ack tracking, and command submission now also live in a renderer-agnostic client session layer, so Swing is reduced to a view adapter over shared client state.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

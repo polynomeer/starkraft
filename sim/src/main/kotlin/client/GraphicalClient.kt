@@ -12,20 +12,14 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.LinkedHashSet
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
 
-private data class ClientViewState(
-    var snapshot: ClientSnapshot? = null,
-    val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
-    var lastAck: ClientCommandAck? = null
-)
-
 private class ClientPanel(
-    private val state: ClientViewState,
-    private val commandAppender: NdjsonClientInputSink
+    private val session: ClientSession
 ) : JPanel() {
     private val tileSize = 20
     private val requestIds = ClientCommandIds()
@@ -49,7 +43,7 @@ private class ClientPanel(
         super.paintComponent(graphics)
         val g = graphics as Graphics2D
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        val snapshot = state.snapshot ?: run {
+        val snapshot = session.state.snapshot ?: run {
             g.color = Color.WHITE
             g.drawString("waiting for snapshots...", 16, 24)
             return
@@ -95,7 +89,7 @@ private class ClientPanel(
                 }
             val radius = if (entity.footprintWidth != null && entity.footprintHeight != null) 9 else 6
             g.fillOval(px - radius, py - radius, radius * 2, radius * 2)
-            if (entity.id in state.selectedIds) {
+            if (entity.id in session.state.selectedIds) {
                 g.color = selectionColor
                 g.stroke = BasicStroke(2f)
                 g.drawOval(px - radius - 4, py - radius - 4, (radius + 4) * 2, (radius + 4) * 2)
@@ -105,20 +99,20 @@ private class ClientPanel(
 
     private fun drawHud(g: Graphics2D, snapshot: ClientSnapshot) {
         g.color = Color.WHITE
-        g.drawString("tick=${snapshot.tick} selected=${state.selectedIds.size}", 12, height - 44)
-        g.drawString(formatAckStatus(state.lastAck), 12, height - 28)
+        g.drawString("tick=${snapshot.tick} selected=${session.state.selectedIds.size}", 12, height - 44)
+        g.drawString(formatAckStatus(session.state.lastAck), 12, height - 28)
         g.drawString("left: select   shift+left: add/remove   right: move/attack/harvest", 12, height - 12)
     }
 
     private fun handleMouse(e: MouseEvent) {
-        val snapshot = state.snapshot ?: return
+        val snapshot = session.state.snapshot ?: return
         val worldX = e.x.toFloat() / tileSize.toFloat()
         val worldY = e.y.toFloat() / tileSize.toFloat()
         when (
             val intent =
                 buildClientIntent(
                     snapshot = snapshot,
-                    selectedIds = state.selectedIds,
+                    selectedIds = session.state.selectedIds,
                     worldX = worldX,
                     worldY = worldY,
                     leftClick = SwingUtilities.isLeftMouseButton(e),
@@ -128,10 +122,10 @@ private class ClientPanel(
                 )
         ) {
             is ClientIntent.Selection -> {
-                commandAppender.append(intent.record)
+                session.append(intent)
                 repaint()
             }
-            is ClientIntent.Command -> commandAppender.append(intent.record)
+            is ClientIntent.Command -> session.append(intent)
             null -> return
         }
     }
@@ -142,10 +136,8 @@ fun main(args: Array<String>) {
     val snapshotPath = Paths.get(args[0]).toAbsolutePath().normalize()
     val inputPath = if (args.size >= 2) Paths.get(args[1]).toAbsolutePath().normalize() else defaultClientInputPath(snapshotPath)
 
-    val state = ClientViewState()
-    val tail = SnapshotTailReader(snapshotPath)
-    val commandAppender = NdjsonClientInputSink(inputPath)
-    val panel = ClientPanel(state, commandAppender)
+    val session = ClientSession(snapshotPath, inputPath)
+    val panel = ClientPanel(session)
 
     val frame = JFrame("Starkraft Client")
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -155,14 +147,7 @@ fun main(args: Array<String>) {
     frame.isVisible = true
 
     Timer(50) {
-        tail.poll()
-        val latest = tail.latestSnapshot ?: return@Timer
-        state.lastAck = tail.latestAck ?: state.lastAck
-        if (state.snapshot?.tick != latest.tick) {
-            state.snapshot = latest
-            state.selectedIds.retainAll(latest.entities.mapTo(HashSet()) { it.id })
-            panel.repaint()
-        } else if (tail.latestAck != null) {
+        if (session.poll()) {
             panel.repaint()
         }
     }.start()
