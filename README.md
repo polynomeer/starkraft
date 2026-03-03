@@ -171,6 +171,7 @@ Other flags:
   Harvest ticks emit `resourceNode` records with per-node harvested amounts, remaining resources, and depletion flags.
   Harvest ticks also emit `harvestCycle` records for worker pickup/deposit completions.
   Snapshot cadence also emits `harvesterState` records with worker gather/return phase, cargo, node target, and return building target.
+  Resource depletion retargeting emits `harvesterRetarget` records when workers are reassigned to a fallback node.
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
   Snapshot cadence also emits `producerState` records with producer archetypes, capabilities, drop-off resource compatibility, and default rally offsets.

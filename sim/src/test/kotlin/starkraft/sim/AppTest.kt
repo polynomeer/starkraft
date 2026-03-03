@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.Health
+import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.ResourceHarvestSystem
 import starkraft.sim.ecs.ResourceNode
 import starkraft.sim.ecs.ResourceSystem
@@ -311,6 +312,34 @@ class AppTest {
 
         assertEquals(richFallbackNodeId, world.harvesters[workerId]?.targetNodeId)
         assertEquals(starkraft.sim.ecs.Order.Move(7f, 5f), world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
+    fun `records harvester retarget events during depletion cleanup`() {
+        drainPendingHarvesterRetargetEvents()
+        val world = World()
+        val depletedNodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val fallbackNodeId = world.spawn(Transform(7f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[depletedNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 0)
+        world.resourceNodes[fallbackNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 20)
+        world.harvesters[workerId] =
+            Harvester(
+                targetNodeId = depletedNodeId,
+                cargoKind = ResourceNode.KIND_MINERALS,
+                cargoAmount = 1,
+                returnTargetId = 1
+            )
+        world.orders[workerId]?.items?.addLast(Order.Move(5f, 5f))
+
+        clearHarvestersForNode(world, depletedNodeId, 5f, 5f)
+
+        val events = drainPendingHarvesterRetargetEvents()
+        assertEquals(1, events.size)
+        assertEquals(workerId, events[0].workerId)
+        assertEquals(depletedNodeId, events[0].fromNodeId)
+        assertEquals(fallbackNodeId, events[0].toNodeId)
+        assertEquals(ResourceNode.KIND_MINERALS, events[0].resourceKind)
     }
 
     @Test

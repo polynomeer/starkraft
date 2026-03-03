@@ -266,6 +266,22 @@ data class HarvesterStateStreamRecord(
 )
 
 @Serializable
+data class HarvesterRetargetEventRecord(
+    val workerId: Int,
+    val fromNodeId: Int,
+    val toNodeId: Int,
+    val resourceKind: String
+)
+
+@Serializable
+data class HarvesterRetargetStreamRecord(
+    val recordType: String = "harvesterRetarget",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<HarvesterRetargetEventRecord>
+)
+
+@Serializable
 data class ProducerStateEntityRecord(
     val entityId: Int,
     val faction: Int,
@@ -1138,6 +1154,16 @@ fun renderHarvesterStateStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = HarvesterStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderHarvesterRetargetStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<HarvesterRetargetEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = HarvesterRetargetStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

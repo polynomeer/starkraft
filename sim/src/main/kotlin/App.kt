@@ -12,6 +12,7 @@ import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.MapResourceNodeRecord
 import starkraft.sim.client.DropoffStateEntityRecord
 import starkraft.sim.client.HarvestCycleEventRecord
+import starkraft.sim.client.HarvesterRetargetEventRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
@@ -30,6 +31,7 @@ import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderDropoffStateStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderHarvestCycleStreamRecordJson
+import starkraft.sim.client.renderHarvesterRetargetStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
@@ -83,6 +85,7 @@ object Time {
 
 private const val DEMO_MAP_ID = "demo-32x32-obstacles"
 private const val BUILD_VERSION = "1.0-SNAPSHOT"
+private val pendingHarvesterRetargetEvents = ArrayList<HarvesterRetargetEventRecord>()
 private val RESOURCE_NODE_KINDS = setOf("MineralField", "GasGeyser")
 
 fun main(args: Array<String>) {
@@ -401,6 +404,7 @@ fun main(args: Array<String>) {
         emitHarvestCycleRecord(harvest, tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceNodeRecord(world, harvest, tick, resolvedSnapshotOutPath, streamSequence)
         removeDepletedResourceNodes(world, harvest)
+        emitHarvesterRetargetRecord(tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
@@ -1113,6 +1117,28 @@ private fun emitHarvestCycleRecord(
     )
 }
 
+private fun emitHarvesterRetargetRecord(
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (pendingHarvesterRetargetEvents.isEmpty()) return
+    if (snapshotOutPath == null || streamSequence == null) {
+        pendingHarvesterRetargetEvents.clear()
+        return
+    }
+    emitSnapshotLine(
+        renderHarvesterRetargetStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = pendingHarvesterRetargetEvents.toList(),
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+    pendingHarvesterRetargetEvents.clear()
+}
+
 internal fun removeDepletedResourceNodes(world: World, harvest: ResourceHarvestSystem) {
     for (i in 0 until harvest.lastTickEventCount) {
         if (!harvest.eventDepleted(i)) continue
@@ -1144,6 +1170,16 @@ internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nod
         val nextNodeId = findNearestHarvestNode(world, workerId, depletedKind, excludeNodeId = nodeId)
         if (harvester.cargoAmount > 0) {
             harvester.targetNodeId = nextNodeId ?: -1
+            if (nextNodeId != null) {
+                pendingHarvesterRetargetEvents.add(
+                    HarvesterRetargetEventRecord(
+                        workerId = workerId,
+                        fromNodeId = nodeId,
+                        toNodeId = nextNodeId,
+                        resourceKind = depletedKind ?: ResourceNode.KIND_MINERALS
+                    )
+                )
+            }
             if (harvester.returnTargetId < 0 && nextNodeId != null) {
                 val nextTransform = world.transforms[nextNodeId] ?: continue
                 queue?.addFirst(Order.Move(nextTransform.x, nextTransform.y))
@@ -1154,10 +1190,23 @@ internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nod
             val nextTransform = world.transforms[nextNodeId] ?: continue
             harvester.targetNodeId = nextNodeId
             queue?.addFirst(Order.Move(nextTransform.x, nextTransform.y))
+            pendingHarvesterRetargetEvents.add(
+                HarvesterRetargetEventRecord(
+                    workerId = workerId,
+                    fromNodeId = nodeId,
+                    toNodeId = nextNodeId,
+                    resourceKind = depletedKind ?: ResourceNode.KIND_MINERALS
+                )
+            )
         } else {
             world.harvesters.remove(workerId)
         }
     }
+}
+
+internal fun drainPendingHarvesterRetargetEvents(): List<HarvesterRetargetEventRecord> {
+    if (pendingHarvesterRetargetEvents.isEmpty()) return emptyList()
+    return pendingHarvesterRetargetEvents.toList().also { pendingHarvesterRetargetEvents.clear() }
 }
 
 internal fun findNearestHarvestNode(

@@ -21,6 +21,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
+import starkraft.sim.client.HarvesterRetargetEventRecord
 import starkraft.sim.client.HarvestCycleEventRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
@@ -35,6 +36,7 @@ import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderDropoffStateStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
+import starkraft.sim.client.renderHarvesterRetargetStreamRecordJson
 import starkraft.sim.client.renderHarvestCycleStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
@@ -426,6 +428,22 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"harvesterState\",\"sequence\":16,\"tick\":5,\"entities\":[{\"entityId\":51,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":41}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders harvester retarget stream record json`() {
+        val json =
+            renderHarvesterRetargetStreamRecordJson(
+                sequence = 17L,
+                tick = 6,
+                events = listOf(HarvesterRetargetEventRecord(workerId = 51, fromNodeId = 9, toNodeId = 12, resourceKind = "minerals")),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"harvesterRetarget\",\"sequence\":17,\"tick\":6,\"events\":[{\"workerId\":51,\"fromNodeId\":9,\"toNodeId\":12,\"resourceKind\":\"minerals\"}]}",
             json
         )
     }
