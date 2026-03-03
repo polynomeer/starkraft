@@ -229,6 +229,15 @@ class ReplayHashRecorder : Recorder {
                 mixInt(cmd.tick)
                 mixInt(cmd.buildingId)
             }
+            is Command.Research -> {
+                mixInt(34)
+                mixInt(cmd.tick)
+                mixInt(cmd.buildingId)
+                for (ch in cmd.techId) mixInt(ch.code)
+                mixInt(cmd.buildTicks)
+                mixInt(cmd.mineralCost)
+                mixInt(cmd.gasCost)
+            }
             is Command.Rally -> {
                 mixInt(7)
                 mixInt(cmd.tick)

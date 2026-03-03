@@ -75,6 +75,15 @@ data class ProductionJob(
 
 data class ProductionQueue(val items: ArrayDeque<ProductionJob> = ArrayDeque())
 
+data class ResearchJob(
+    val techId: String,
+    var remainingTicks: Int,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0
+)
+
+data class ResearchQueue(val items: ArrayDeque<ResearchJob> = ArrayDeque())
+
 data class StuckTracker(
     var lastX: Float = 0f,
     var lastY: Float = 0f,

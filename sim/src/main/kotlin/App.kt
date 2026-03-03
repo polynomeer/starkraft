@@ -102,11 +102,14 @@ fun main(args: Array<String>) {
         ?: error("Resource '/data/weapons.json' not found. Ensure it exists in the resources directory.")
     val buildingsResource = object {}.javaClass.getResource("/data/buildings.json")
         ?: error("Resource '/data/buildings.json' not found. Ensure it exists in the resources directory.")
+    val techsResource = object {}.javaClass.getResource("/data/techs.json")
+        ?: error("Resource '/data/techs.json' not found. Ensure it exists in the resources directory.")
 
     val unitsJson = unitsResource.readText()
     val weaponsJson = weaponsResource.readText()
     val buildingsJson = buildingsResource.readText()
-    val data = DataRepo(unitsJson, weaponsJson, buildingsJson)
+    val techsJson = techsResource.readText()
+    val data = DataRepo(unitsJson, weaponsJson, buildingsJson, techsJson)
     
     val world = World()
     val map = MapGrid(32, 32)
@@ -121,6 +124,7 @@ fun main(args: Array<String>) {
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
     val construction = ConstructionSystem(world)
     val production = BuildingProductionSystem(world, map, occ, data, resources)
+    val research = ResearchSystem(world, data, resources)
     val occupancy = OccupancySystem(world, occ)
     val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
@@ -156,6 +160,16 @@ fun main(args: Array<String>) {
             null
         }
     if (depotId != null) {
+        val startingResearch = data.researchSpec("AdvancedTraining")
+        if (startingResearch != null) {
+            research.enqueueResult(
+                depotId,
+                techId = startingResearch.techId,
+                buildTicks = startingResearch.buildTicks,
+                mineralCost = startingResearch.mineralCost,
+                gasCost = startingResearch.gasCost
+            )
+        }
         val marineTrain = data.trainSpec("Marine")
         production.enqueue(
             depotId,
@@ -321,6 +335,7 @@ fun main(args: Array<String>) {
         validateSpawnTypes(commandsByTick, data)
         validateBuildCommands(commandsByTick, data, world)
         validateTrainCommands(commandsByTick, data, world)
+        validateResearchCommands(commandsByTick, data, world)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
@@ -381,6 +396,7 @@ fun main(args: Array<String>) {
         world.clearRemovedEvents()
         resources.clearTickEvents()
         production.clearTickEvents()
+        research.clearTickEvents()
         alive.tick()
         if (tick == 200) {
             val changes = ArrayList<OccupancyChangeEventRecord>(7)
@@ -410,6 +426,7 @@ fun main(args: Array<String>) {
             streamSequence,
             buildings,
             production,
+            research,
             commandOutcomeCounters
         )
         processTickInput(
@@ -426,6 +443,7 @@ fun main(args: Array<String>) {
             streamSequence,
             buildings,
             production,
+            research,
             commandOutcomeCounters
         )
 
@@ -440,7 +458,12 @@ fun main(args: Array<String>) {
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
         occupancy.tick()
         construction.tick()
+        research.tick()
         production.tick()
+        var tickResearchCompleted = 0
+        for (i in 0 until research.lastTickEventCount) {
+            if (research.eventKind(i) == ResearchSystem.EVENT_COMPLETE) tickResearchCompleted++
+        }
         for (i in 0 until production.lastTickEventCount) {
             if (production.eventKind(i) == BuildingProductionSystem.EVENT_COMPLETE) tickTrainsCompleted++
         }
@@ -534,7 +557,8 @@ fun main(args: Array<String>) {
                 )
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
-                    "buildings=${world.footprints.size} prodQueues=${world.productionQueues.size} " +
+                    "buildings=${world.footprints.size} prodQueues=${world.productionQueues.size} researchQueues=${world.researchQueues.size} " +
+                    "techs: t1=${world.unlockedTechs(1).size} t2=${world.unlockedTechs(2).size} researchDone=$tickResearchCompleted " +
                     "minerals: t1=${world.stockpiles[1]?.minerals ?: 0} t2=${world.stockpiles[2]?.minerals ?: 0} " +
                     "harvested=${harvest.lastTickHarvestedMinerals}/${harvest.lastTickHarvestedGas} " +
                     "nodeRemaining=${world.resourceNodes[mineralNodeId]?.remaining ?: 0} " +
@@ -1887,6 +1911,7 @@ private fun processTickInput(
     streamSequence: LongArray?,
     buildings: BuildingPlacementSystem,
     production: BuildingProductionSystem,
+    research: ResearchSystem,
     commandOutcomeCounters: CommandOutcomeCounters
 ) {
     if (tick < selectionEventsByTick.size) {
@@ -1909,6 +1934,7 @@ private fun processTickInput(
             streamSequence,
             buildings,
             production,
+            research,
             commandOutcomeCounters,
             requestId = commandRequestIds[cmds[i]]
         )
@@ -2072,6 +2098,12 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     println("tick=$tick cancelTrain building=${c.buildingId}")
                 }
+                is Command.Research -> {
+                    println(
+                        "tick=$tick research building=${c.buildingId} tech=${c.techId} " +
+                            "buildTicks=${c.buildTicks} minerals=${c.mineralCost} gas=${c.gasCost}"
+                    )
+                }
                 is Command.Rally -> {
                     println("tick=$tick rally building=${c.buildingId} x=${c.x} y=${c.y}")
                 }
@@ -2112,6 +2144,7 @@ internal fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data:
 
 internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo, world: World = World()) {
     val availableBuildingsByFaction = snapshotFactionBuildings(world)
+    val availableResearchByFaction = snapshotFactionResearch(world)
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
@@ -2140,6 +2173,13 @@ internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, da
                         "(required=${missingTech.joinToString(",")})"
                 )
             }
+            val missingResearch = missingRequiredTypes(availableResearchByFaction[c.faction], spec?.requiredResearchIds)
+            if (missingResearch.isNotEmpty()) {
+                error(
+                    "Missing research for build '${c.typeId}' at tick $tick " +
+                        "(required=${missingResearch.joinToString(",")})"
+                )
+            }
             availableBuildingsByFaction.getOrPut(c.faction, ::HashSet).add(c.typeId)
         }
     }
@@ -2150,6 +2190,7 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
     val labeledBuildingFactions = HashMap<Int, Int>()
     val labeledQueueState = HashMap<Int, ValidationQueueState>()
     val availableBuildingsByFaction = snapshotFactionBuildings(world)
+    val availableResearchByFaction = snapshotFactionResearch(world)
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
@@ -2191,7 +2232,14 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                         if (missingTech.isNotEmpty()) {
                             error(
                                 "Missing tech for train '${c.typeId}' at tick $tick " +
-                                    "(required=${missingTech.joinToString(",")})"
+                                "(required=${missingTech.joinToString(",")})"
+                            )
+                        }
+                        val missingResearch = missingRequiredTypes(buildingFaction?.let(availableResearchByFaction::get), spec?.requiredResearchIds)
+                        if (missingResearch.isNotEmpty()) {
+                            error(
+                                "Missing research for train '${c.typeId}' at tick $tick " +
+                                    "(required=${missingResearch.joinToString(",")})"
                             )
                         }
                         val queueState = labeledQueueState[c.buildingId]
@@ -2212,7 +2260,14 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                         if (missingTech.isNotEmpty()) {
                             error(
                                 "Missing tech for train '${c.typeId}' at tick $tick " +
-                                    "(required=${missingTech.joinToString(",")})"
+                                "(required=${missingTech.joinToString(",")})"
+                            )
+                        }
+                        val missingResearch = missingRequiredTypes(buildingTag?.faction?.let(availableResearchByFaction::get), spec?.requiredResearchIds)
+                        if (missingResearch.isNotEmpty()) {
+                            error(
+                                "Missing research for train '${c.typeId}' at tick $tick " +
+                                    "(required=${missingResearch.joinToString(",")})"
                             )
                         }
                     }
@@ -2229,6 +2284,87 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
     }
 }
 
+internal fun validateResearchCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo, world: World = World()) {
+    val labeledBuildingTypes = HashMap<Int, String>()
+    val labeledBuildingFactions = HashMap<Int, Int>()
+    val labeledQueueState = HashMap<Int, ValidationQueueState>()
+    val availableBuildingsByFaction = snapshotFactionBuildings(world)
+    val availableResearchByFaction = snapshotFactionResearch(world)
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            when (val c = cmds[i]) {
+                is Command.Build -> {
+                    val labelId = c.labelId
+                    if (labelId != null) {
+                        labeledBuildingTypes[labelId] = c.typeId
+                        labeledBuildingFactions[labelId] = c.faction
+                        val queueLimit = data.buildSpec(c.typeId)?.productionQueueLimit ?: 5
+                        labeledQueueState[labelId] = ValidationQueueState(queueLimit)
+                    }
+                    availableBuildingsByFaction.getOrPut(c.faction, ::HashSet).add(c.typeId)
+                }
+                is Command.Research -> {
+                    val spec = data.researchSpec(c.techId)
+                    val buildTicks = if (c.buildTicks > 0) c.buildTicks else (spec?.buildTicks ?: 0)
+                    if (spec == null && c.buildTicks <= 0) {
+                        error("Unknown tech id '${c.techId}' in research at tick $tick (missing default buildTicks)")
+                    }
+                    if (buildTicks <= 0) {
+                        error("Invalid research definition for '${c.techId}' at tick $tick (resolved buildTicks=$buildTicks)")
+                    }
+                    if (c.buildingId < 0) {
+                        val buildingType = labeledBuildingTypes[c.buildingId]
+                        val buildingFaction = labeledBuildingFactions[c.buildingId]
+                        val buildingSpec = buildingType?.let(data::buildSpec)
+                        if (buildingType != null && buildingSpec != null && !buildingSpec.supportsResearch) {
+                            error("Producer '$buildingType' does not support research at tick $tick")
+                        }
+                        if (buildingType != null && spec != null && spec.producerTypes.isNotEmpty() && !spec.producerTypes.contains(buildingType)) {
+                            error(
+                                "Incompatible producer '$buildingType' for research '${c.techId}' at tick $tick " +
+                                    "(allowed=${spec.producerTypes.joinToString(",")})"
+                            )
+                        }
+                        val missingBuildings = missingRequiredTypes(buildingFaction?.let(availableBuildingsByFaction::get), spec?.requiredBuildingTypes)
+                        if (missingBuildings.isNotEmpty()) {
+                            error(
+                                "Missing tech for research '${c.techId}' at tick $tick " +
+                                    "(requiredBuildings=${missingBuildings.joinToString(",")})"
+                            )
+                        }
+                        val missingResearch = missingRequiredTypes(buildingFaction?.let(availableResearchByFaction::get), spec?.requiredResearchIds)
+                        if (missingResearch.isNotEmpty()) {
+                            error(
+                                "Missing research for '${c.techId}' at tick $tick " +
+                                    "(requiredResearch=${missingResearch.joinToString(",")})"
+                            )
+                        }
+                        if (buildingFaction != null && availableResearchByFaction.getOrPut(buildingFaction, ::HashSet).contains(c.techId)) {
+                            error("Research '${c.techId}' already unlocked at tick $tick")
+                        }
+                        val queueState = labeledQueueState[c.buildingId]
+                        if (queueState != null) {
+                            queueState.discardCompleted(tick)
+                            if (queueState.size >= queueState.limit) {
+                                error(
+                                    "Queue limit exceeded for '$buildingType' in research at tick $tick " +
+                                        "(limit=${queueState.limit}, queued=${queueState.size})"
+                                )
+                            }
+                            queueState.enqueue(tick, buildTicks)
+                        }
+                        if (buildingFaction != null) {
+                            availableResearchByFaction.getOrPut(buildingFaction, ::HashSet).add(c.techId)
+                        }
+                    }
+                }
+                else -> Unit
+            }
+        }
+    }
+}
+
 private fun snapshotFactionBuildings(world: World): HashMap<Int, HashSet<String>> {
     val availableBuildingsByFaction = HashMap<Int, HashSet<String>>()
     for (id in world.footprints.keys) {
@@ -2236,6 +2372,14 @@ private fun snapshotFactionBuildings(world: World): HashMap<Int, HashSet<String>
         availableBuildingsByFaction.getOrPut(tag.faction, ::HashSet).add(tag.typeId)
     }
     return availableBuildingsByFaction
+}
+
+private fun snapshotFactionResearch(world: World): HashMap<Int, HashSet<String>> {
+    val availableResearchByFaction = HashMap<Int, HashSet<String>>()
+    for ((faction, techs) in world.unlockedTechsByFaction) {
+        availableResearchByFaction.getOrPut(faction, ::HashSet).addAll(techs)
+    }
+    return availableResearchByFaction
 }
 
 private fun missingRequiredTypes(availableTypes: Set<String>?, requiredTypes: List<String>?): List<String> {
@@ -2373,6 +2517,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in cancelTrain at tick $tick")
                     }
                 }
+                is Command.Research -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in research at tick $tick")
+                    }
+                }
                 is Command.Rally -> {
                     if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
                         error("Unknown building id '${c.buildingId}' in rally at tick $tick")
@@ -2488,6 +2637,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in cancelTrain at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.Research -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in research at tick $tick (spawn/build first)")
                     }
                 }
                 is Command.Rally -> {
@@ -2789,6 +2943,7 @@ internal fun buildCommandStats(
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
+                is Command.Research -> Unit
                 is Command.Rally -> Unit
                 is Command.Harvest -> Unit
                 is Command.HarvestFaction -> Unit
@@ -2925,6 +3080,7 @@ internal fun buildCommandStats(
                 is Command.Build -> Unit
                 is Command.Train -> Unit
                 is Command.CancelTrain -> Unit
+                is Command.Research -> Unit
                 is Command.Rally -> Unit
                 is Command.Harvest -> Unit
                 is Command.HarvestFaction -> Unit
@@ -3410,6 +3566,7 @@ fun issue(
     streamSequence: LongArray? = null,
     buildings: BuildingPlacementSystem? = null,
     production: BuildingProductionSystem? = null,
+    research: ResearchSystem? = null,
     outcomeCounters: CommandOutcomeCounters? = null,
     requestId: String? = null
 ) {
@@ -3834,6 +3991,7 @@ fun issue(
             val buildTicks = spec?.buildTicks ?: 0
             val clearance = spec?.placementClearance ?: 0
             val requiredBuildingTypes = spec?.requiredBuildingTypes ?: emptyList()
+            val requiredResearchIds = spec?.requiredResearchIds ?: emptyList()
             if (width <= 0 || height <= 0 || hp <= 0) {
                 if (outcomeCounters != null) {
                     outcomeCounters.buildFailures++
@@ -3877,7 +4035,8 @@ fun issue(
                     armor = armor,
                     mineralCost = mineralCost,
                     gasCost = gasCost,
-                    requiredBuildingTypes = requiredBuildingTypes
+                    requiredBuildingTypes = requiredBuildingTypes,
+                    requiredResearchIds = requiredResearchIds
                 )
             val id = result.entityId
             if (id == null) {
@@ -4047,6 +4206,45 @@ fun issue(
                 emitCommandAck(false, reason = "nothingToCancel")
             }
         }
+        is Command.Research -> {
+            val researchSystem = research ?: error("Research requires ResearchSystem")
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            val repo = data ?: error("Research requires DataRepo")
+            val spec = repo.researchSpec(cmd.techId)
+            val failure =
+                researchSystem.enqueueResult(
+                    buildingId = buildingId,
+                    techId = cmd.techId,
+                    buildTicks = if (cmd.buildTicks > 0) cmd.buildTicks else (spec?.buildTicks ?: 0),
+                    mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0),
+                    gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
+                )
+            if (failure != null) {
+                val reason =
+                    when (failure) {
+                        ResearchFailureReason.MISSING_BUILDING -> "missingBuilding"
+                        ResearchFailureReason.UNDER_CONSTRUCTION -> "underConstruction"
+                        ResearchFailureReason.INVALID_TECH -> "invalidTech"
+                        ResearchFailureReason.MISSING_TECH -> "missingTech"
+                        ResearchFailureReason.INCOMPATIBLE_PRODUCER -> "incompatibleProducer"
+                        ResearchFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
+                        ResearchFailureReason.ALREADY_UNLOCKED -> "alreadyUnlocked"
+                        ResearchFailureReason.QUEUE_FULL -> "queueFull"
+                    }
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "research",
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId,
+                    typeId = cmd.techId
+                )
+                emitCommandAck(false, reason = reason)
+            } else {
+                emitCommandAck(true)
+            }
+        }
         is Command.Rally -> {
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
             if (!world.footprints.containsKey(buildingId)) {
@@ -4115,6 +4313,7 @@ private fun commandTypeName(cmd: Command): String =
         is Command.Build -> "build"
         is Command.Train -> "train"
         is Command.CancelTrain -> "cancelTrain"
+        is Command.Research -> "research"
         is Command.Rally -> "rally"
     }
 

@@ -196,6 +196,15 @@ private data class ReplayEvent(
                     gasCost = gasCost ?: 0
                 )
             "cancelTrain" -> Command.CancelTrain(tick = tick, buildingId = target ?: 0)
+            "research" ->
+                Command.Research(
+                    tick = tick,
+                    buildingId = target ?: 0,
+                    techId = typeId ?: "",
+                    buildTicks = buildTicks ?: 0,
+                    mineralCost = mineralCost ?: 0,
+                    gasCost = gasCost ?: 0
+                )
             "rally" -> Command.Rally(tick = tick, buildingId = target ?: 0, x = x ?: 0f, y = y ?: 0f)
             else -> error("Unknown replay event type: $type")
         }
@@ -285,6 +294,16 @@ private data class ReplayEvent(
                         type = "cancelTrain",
                         tick = cmd.tick,
                         target = cmd.buildingId
+                    )
+                is Command.Research ->
+                    ReplayEvent(
+                        type = "research",
+                        tick = cmd.tick,
+                        target = cmd.buildingId,
+                        typeId = cmd.techId,
+                        buildTicks = cmd.buildTicks,
+                        mineralCost = cmd.mineralCost,
+                        gasCost = cmd.gasCost
                     )
                 is Command.Rally ->
                     ReplayEvent(

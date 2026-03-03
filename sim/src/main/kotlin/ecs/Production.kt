@@ -65,6 +65,9 @@ class BuildingProductionSystem(
         if (missingRequiredBuildings(world, faction, unit.requiredBuildingTypes).isNotEmpty()) {
             return TrainFailureReason.MISSING_TECH
         }
+        if (missingRequiredResearch(world, faction, unit.requiredResearchIds).isNotEmpty()) {
+            return TrainFailureReason.MISSING_TECH
+        }
         val queueLimit = buildingSpec.productionQueueLimit
         val queue = world.productionQueues[buildingId]
         if (queue != null && queue.items.size >= queueLimit) return TrainFailureReason.QUEUE_FULL

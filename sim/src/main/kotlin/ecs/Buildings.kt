@@ -47,7 +47,8 @@ class BuildingPlacementSystem(
         armor: Int = 0,
         mineralCost: Int = 0,
         gasCost: Int = 0,
-        requiredBuildingTypes: List<String> = emptyList()
+        requiredBuildingTypes: List<String> = emptyList(),
+        requiredResearchIds: List<String> = emptyList()
     ): EntityId? {
         return placeResult(
             faction,
@@ -62,7 +63,8 @@ class BuildingPlacementSystem(
             armor,
             mineralCost,
             gasCost,
-            requiredBuildingTypes
+            requiredBuildingTypes,
+            requiredResearchIds
         ).entityId
     }
 
@@ -79,10 +81,14 @@ class BuildingPlacementSystem(
         armor: Int = 0,
         mineralCost: Int = 0,
         gasCost: Int = 0,
-        requiredBuildingTypes: List<String> = emptyList()
+        requiredBuildingTypes: List<String> = emptyList(),
+        requiredResearchIds: List<String> = emptyList()
     ): BuildPlacementResult {
         if (width <= 0 || height <= 0 || hp <= 0) return BuildPlacementResult(failure = BuildFailureReason.INVALID_FOOTPRINT)
         if (missingRequiredBuildings(world, faction, requiredBuildingTypes).isNotEmpty()) {
+            return BuildPlacementResult(failure = BuildFailureReason.MISSING_TECH)
+        }
+        if (missingRequiredResearch(world, faction, requiredResearchIds).isNotEmpty()) {
             return BuildPlacementResult(failure = BuildFailureReason.MISSING_TECH)
         }
         if (!canPlace(tileX, tileY, width, height, clearance)) return BuildPlacementResult(failure = BuildFailureReason.INVALID_PLACEMENT)

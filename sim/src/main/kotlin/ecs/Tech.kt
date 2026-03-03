@@ -12,3 +12,10 @@ internal fun missingRequiredBuildings(world: World, faction: Int, requiredBuildi
     if (present.isEmpty()) return requiredBuildingTypes
     return requiredBuildingTypes.filterNot(present::contains)
 }
+
+internal fun missingRequiredResearch(world: World, faction: Int, requiredResearchIds: List<String>): List<String> {
+    if (requiredResearchIds.isEmpty()) return emptyList()
+    val unlocked = world.unlockedTechs(faction)
+    if (unlocked.isEmpty()) return requiredResearchIds
+    return requiredResearchIds.filterNot(unlocked::contains)
+}

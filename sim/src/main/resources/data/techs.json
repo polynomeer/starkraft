@@ -1,0 +1,11 @@
+{
+  "list": [
+    {
+      "id": "AdvancedTraining",
+      "buildTicks": 60,
+      "mineralCost": 75,
+      "gasCost": 0,
+      "producerTypes": ["Depot"]
+    }
+  ]
+}

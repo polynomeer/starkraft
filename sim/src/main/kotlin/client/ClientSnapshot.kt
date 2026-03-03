@@ -1240,6 +1240,15 @@ fun renderCommandStreamRecordJson(
                     requestId = requestId,
                     target = cmd.buildingId
                 )
+            is Command.Research ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "research",
+                    requestId = requestId,
+                    target = cmd.buildingId,
+                    typeId = cmd.techId
+                )
             is Command.Rally ->
                 CommandStreamRecord(
                     sequence = sequence,

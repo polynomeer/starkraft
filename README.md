@@ -134,11 +134,14 @@ Script syntax:
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
+- `research <buildingId|@label> <techId> [buildTicks] [minerals] [gas]` enqueue faction tech research on a building
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
 - `rally <buildingId|@label> <x> <y>` override a producer building rally point for future trained units
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
 - Unit and building defs can declare `requiredBuildingTypes`, and both `build` and `train` now fail deterministically with `missingTech` until the faction has those prerequisite buildings
+- Unit, building, and research defs can also declare `requiredResearchIds`, which unlock only after that faction finishes the corresponding research queue
 - `train` also fails with `underConstruction` when the producer building has not finished building yet
+- Building defs can opt into research with `supportsResearch`; tech defs live in `/Users/hammac/Projects/starkraft/sim/src/main/resources/data/techs.json`
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 
 Other flags:

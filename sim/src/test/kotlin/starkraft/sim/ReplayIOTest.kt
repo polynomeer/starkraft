@@ -41,6 +41,7 @@ class ReplayIOTest {
             Command.Build(25, 1, "Depot", 24, 4, 2, 2, 400, 1, 100, 0, label = "depot", labelId = -2),
             Command.Train(30, -2, "Marine", 75, 50, 0),
             Command.CancelTrain(31, -2),
+            Command.Research(31, -2, "AdvancedTraining", 60, 75, 0),
             Command.Rally(32, -2, 20f, 21f)
         )
         ReplayIO.save(tmp, cmds, seed = 1234L, mapId = "demo-map", buildVersion = "test-build")
@@ -292,6 +293,15 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             require(b is Command.CancelTrain)
             assertEquals(a.tick, b.tick)
             assertEquals(a.buildingId, b.buildingId)
+        }
+        is Command.Research -> {
+            require(b is Command.Research)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.buildingId, b.buildingId)
+            assertEquals(a.techId, b.techId)
+            assertEquals(a.buildTicks, b.buildTicks)
+            assertEquals(a.mineralCost, b.mineralCost)
+            assertEquals(a.gasCost, b.gasCost)
         }
         is Command.Rally -> {
             require(b is Command.Rally)

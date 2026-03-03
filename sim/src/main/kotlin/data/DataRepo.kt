@@ -12,6 +12,7 @@ data class BuildSpec(
     val footprintHeight: Int,
     val placementClearance: Int,
     val supportsTraining: Boolean,
+    val supportsResearch: Boolean,
     val supportsRally: Boolean,
     val supportsDropoff: Boolean,
     val dropoffResourceKinds: List<String>,
@@ -20,7 +21,8 @@ data class BuildSpec(
     val rallyOffsetY: Float,
     val mineralCost: Int,
     val gasCost: Int,
-    val requiredBuildingTypes: List<String>
+    val requiredBuildingTypes: List<String>,
+    val requiredResearchIds: List<String>
 )
 
 data class TrainSpec(
@@ -30,13 +32,25 @@ data class TrainSpec(
     val mineralCost: Int,
     val gasCost: Int,
     val producerTypes: List<String>,
-    val requiredBuildingTypes: List<String>
+    val requiredBuildingTypes: List<String>,
+    val requiredResearchIds: List<String>
+)
+
+data class ResearchSpec(
+    val techId: String,
+    val buildTicks: Int,
+    val mineralCost: Int,
+    val gasCost: Int,
+    val producerTypes: List<String>,
+    val requiredBuildingTypes: List<String>,
+    val requiredResearchIds: List<String>
 )
 
 class DataRepo(
     private val unitsJson: String,
     private val weaponsJson: String,
-    private val buildingsJson: String? = null
+    private val buildingsJson: String? = null,
+    private val techsJson: String? = null
 ) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
     private val units = json.decodeFromString(UnitDefs.serializer(), this.unitsJson).list.associateBy { it.id }
@@ -44,6 +58,10 @@ class DataRepo(
     private val buildings =
         this.buildingsJson
             ?.let { json.decodeFromString(BuildingDefs.serializer(), it).list.associateBy { def -> def.id } }
+            ?: emptyMap()
+    private val techs =
+        this.techsJson
+            ?.let { json.decodeFromString(TechDefs.serializer(), it).list.associateBy { def -> def.id } }
             ?: emptyMap()
 
     fun unit(id: String) = units.getValue(id)
@@ -63,6 +81,7 @@ class DataRepo(
             footprintHeight = building.footprintHeight,
             placementClearance = building.placementClearance,
             supportsTraining = building.supportsTraining,
+            supportsResearch = building.supportsResearch,
             supportsRally = building.supportsRally,
             supportsDropoff = building.supportsDropoff,
             dropoffResourceKinds = building.dropoffResourceKinds,
@@ -71,7 +90,8 @@ class DataRepo(
             rallyOffsetY = building.rallyOffsetY,
             mineralCost = building.mineralCost,
             gasCost = building.gasCost,
-            requiredBuildingTypes = building.requiredBuildingTypes
+            requiredBuildingTypes = building.requiredBuildingTypes,
+            requiredResearchIds = building.requiredResearchIds
         )
     }
 
@@ -85,7 +105,21 @@ class DataRepo(
             mineralCost = unit.mineralCost,
             gasCost = unit.gasCost,
             producerTypes = unit.producerTypes,
-            requiredBuildingTypes = unit.requiredBuildingTypes
+            requiredBuildingTypes = unit.requiredBuildingTypes,
+            requiredResearchIds = unit.requiredResearchIds
+        )
+    }
+
+    fun researchSpec(id: String): ResearchSpec? {
+        val tech = techs[id] ?: return null
+        return ResearchSpec(
+            techId = tech.id,
+            buildTicks = tech.buildTicks,
+            mineralCost = tech.mineralCost,
+            gasCost = tech.gasCost,
+            producerTypes = tech.producerTypes,
+            requiredBuildingTypes = tech.requiredBuildingTypes,
+            requiredResearchIds = tech.requiredResearchIds
         )
     }
 }

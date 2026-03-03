@@ -216,6 +216,20 @@ object ScriptRunner {
                     }
                     out.add(Command.CancelTrain(tick, buildingId))
                 }
+                "research" -> {
+                    require(parts.size in 3..6) { "research <buildingId|@label> <techId> [buildTicks] [minerals] [gas]" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    val techId = parts[2]
+                    val buildTicks = if (parts.size > 3) parts[3].toInt() else 0
+                    val minerals = if (parts.size > 4) parts[4].toInt() else 0
+                    val gas = if (parts.size > 5) parts[5].toInt() else 0
+                    out.add(Command.Research(tick, buildingId, techId, buildTicks, minerals, gas))
+                }
                 "rally" -> {
                     require(parts.size == 4) { "rally <buildingId|@label> <x> <y>" }
                     val token = parts[1]

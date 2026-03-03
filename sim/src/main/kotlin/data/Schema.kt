@@ -17,6 +17,7 @@ data class UnitDef(
     val footprintHeight: Int = 0,
     val producerTypes: List<String> = emptyList(),
     val requiredBuildingTypes: List<String> = emptyList(),
+    val requiredResearchIds: List<String> = emptyList(),
 )
 
 @Serializable
@@ -41,6 +42,7 @@ data class BuildingDef(
     val footprintHeight: Int,
     val placementClearance: Int = 0,
     val supportsTraining: Boolean = false,
+    val supportsResearch: Boolean = false,
     val supportsRally: Boolean = false,
     val supportsDropoff: Boolean = false,
     val dropoffResourceKinds: List<String> = emptyList(),
@@ -49,11 +51,26 @@ data class BuildingDef(
     val rallyOffsetY: Float = 0f,
     val mineralCost: Int = 0,
     val gasCost: Int = 0,
-    val requiredBuildingTypes: List<String> = emptyList()
+    val requiredBuildingTypes: List<String> = emptyList(),
+    val requiredResearchIds: List<String> = emptyList()
 )
 
 @Serializable
 data class BuildingDefs(val list: List<BuildingDef>)
+
+@Serializable
+data class TechDef(
+    val id: String,
+    val buildTicks: Int,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0,
+    val producerTypes: List<String> = emptyList(),
+    val requiredBuildingTypes: List<String> = emptyList(),
+    val requiredResearchIds: List<String> = emptyList()
+)
+
+@Serializable
+data class TechDefs(val list: List<TechDef>)
 
 @Serializable
 data class WeaponDefs(val list: List<WeaponDef>)

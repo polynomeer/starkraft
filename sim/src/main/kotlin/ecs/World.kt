@@ -14,8 +14,10 @@ class World {
     val constructionSites = mutableMapOf<EntityId, ConstructionSite>()
     val rallyPoints = mutableMapOf<EntityId, RallyPoint>()
     val productionQueues = mutableMapOf<EntityId, ProductionQueue>()
+    val researchQueues = mutableMapOf<EntityId, ResearchQueue>()
     val stucks = mutableMapOf<EntityId, StuckTracker>()
     val stockpiles = mutableMapOf<Int, ResourceStockpile>()
+    val unlockedTechsByFaction = mutableMapOf<Int, LinkedHashSet<String>>()
     val resourceNodes = mutableMapOf<EntityId, ResourceNode>()
     val harvesters = mutableMapOf<EntityId, Harvester>()
     val autoAttackTargets = mutableMapOf<EntityId, EntityId>()
@@ -69,7 +71,7 @@ class World {
         if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
-        pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); constructionSites.remove(id); rallyPoints.remove(id); productionQueues.remove(id); stucks.remove(id)
+        pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); constructionSites.remove(id); rallyPoints.remove(id); productionQueues.remove(id); researchQueues.remove(id); stucks.remove(id)
         resourceNodes.remove(id); harvesters.remove(id); autoAttackTargets.remove(id)
         if (typeId != null) {
             clearAutoTargetRefs(id)
@@ -110,6 +112,12 @@ class World {
             val entry = iterator.next()
             if (entry.value == targetId) iterator.remove()
         }
+    }
+
+    fun unlockedTechs(faction: Int): Set<String> = unlockedTechsByFaction[faction] ?: emptySet()
+
+    fun unlockTech(faction: Int, techId: String): Boolean {
+        return unlockedTechsByFaction.getOrPut(faction) { LinkedHashSet() }.add(techId)
     }
 }
 

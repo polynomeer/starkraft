@@ -96,6 +96,23 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses research commands`() {
+        val path = Files.createTempFile("starkraft-research-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 4
+            research @depot AdvancedTraining 60 75 0
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.Research(4, -1, "AdvancedTraining", 60, 75, 0), program.commands[0])
+    }
+
+    @Test
     fun `parses build commands`() {
         val path = Files.createTempFile("starkraft-build-script", ".script")
         Files.writeString(

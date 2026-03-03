@@ -9,6 +9,7 @@
       "footprintHeight": 2,
       "placementClearance": 1,
       "supportsTraining": true,
+      "supportsResearch": true,
       "supportsRally": true,
       "supportsDropoff": true,
       "dropoffResourceKinds": ["minerals"],

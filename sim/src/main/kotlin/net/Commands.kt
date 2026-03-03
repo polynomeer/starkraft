@@ -76,6 +76,14 @@ sealed interface Command {
         override val tick: Int,
         val buildingId: Int
     ) : Command
+    data class Research(
+        override val tick: Int,
+        val buildingId: Int,
+        val techId: String,
+        val buildTicks: Int,
+        val mineralCost: Int = 0,
+        val gasCost: Int = 0
+    ) : Command
     data class Rally(
         override val tick: Int,
         val buildingId: Int,

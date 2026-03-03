@@ -148,6 +148,7 @@ object InputJson {
                 "build" -> Command.Build(record.tick, record.faction ?: error("build faction is required"), record.typeId ?: error("build typeId is required"), record.tileX ?: error("build tileX is required"), record.tileY ?: error("build tileY is required"), record.width, record.height, record.hp, record.armor, record.minerals, record.gas, record.label, record.labelId ?: record.label?.let(::labelId))
                 "train" -> Command.Train(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "train buildingId"), record.typeId ?: error("train typeId is required"), record.amount ?: 0, record.minerals, record.gas)
                 "cancelTrain" -> Command.CancelTrain(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "cancelTrain buildingId"))
+                "research" -> Command.Research(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "research buildingId"), record.typeId ?: error("research typeId is required"), record.amount ?: 0, record.minerals, record.gas)
                 "rally" -> Command.Rally(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "rally buildingId"), record.x ?: error("rally x is required"), record.y ?: error("rally y is required"))
                 else -> error("unsupported input commandType '${record.commandType}'")
             }
