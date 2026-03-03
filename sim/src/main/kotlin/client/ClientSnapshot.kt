@@ -30,7 +30,8 @@ data class ClientSnapshot(
     val mapHeight: Int,
     val factions: List<FactionSnapshot>,
     val entities: List<EntitySnapshot>,
-    val resourceNodes: List<ResourceNodeSnapshot> = emptyList()
+    val resourceNodes: List<ResourceNodeSnapshot> = emptyList(),
+    val dropoffEntityIds: List<Int> = emptyList()
 )
 
 @Serializable
@@ -38,7 +39,8 @@ data class FactionSnapshot(
     val faction: Int,
     val visibleTiles: Int,
     val minerals: Int = 0,
-    val gas: Int = 0
+    val gas: Int = 0,
+    val dropoffBuildings: Int = 0
 )
 
 @Serializable
@@ -712,6 +714,7 @@ fun buildClientSnapshot(
     fogByFaction: Map<Int, FogGrid>
 ): ClientSnapshot {
     val entities = ArrayList<EntitySnapshot>(world.transforms.size)
+    val dropoffEntityIds = ArrayList<Int>()
     val ids = world.transforms.keys.sorted()
     for (id in ids) {
         if (world.resourceNodes.containsKey(id)) continue
@@ -730,6 +733,9 @@ fun buildClientSnapshot(
         val buildSpec = data?.buildSpec(tag.typeId)
         val trainSpec = data?.trainSpec(tag.typeId)
         val archetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+        if (buildSpec?.supportsDropoff == true) {
+            dropoffEntityIds.add(id)
+        }
         entities.add(
             EntitySnapshot(
                 id = id,
@@ -777,12 +783,17 @@ fun buildClientSnapshot(
     for (faction in fogByFaction.keys.sorted()) {
         val fog = fogByFaction[faction] ?: continue
         val stockpile = world.stockpiles[faction]
+        var dropoffBuildings = 0
+        for (id in dropoffEntityIds) {
+            if (world.tags[id]?.faction == faction) dropoffBuildings++
+        }
         factions.add(
             FactionSnapshot(
                 faction = faction,
                 visibleTiles = fog.visibleCount(),
                 minerals = stockpile?.minerals ?: 0,
-                gas = stockpile?.gas ?: 0
+                gas = stockpile?.gas ?: 0,
+                dropoffBuildings = dropoffBuildings
             )
         )
     }
@@ -811,7 +822,8 @@ fun buildClientSnapshot(
         mapHeight = map.height,
         factions = factions,
         entities = entities,
-        resourceNodes = resourceNodes
+        resourceNodes = resourceNodes,
+        dropoffEntityIds = dropoffEntityIds
     )
 }
 

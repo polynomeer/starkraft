@@ -148,6 +148,7 @@ class ClientSnapshotTest {
         assertEquals(nodeId, snapshot.resourceNodes.first().id)
         assertEquals("MineralField", snapshot.resourceNodes.first().kind)
         assertEquals(250, snapshot.resourceNodes.first().remaining)
+        assertEquals(listOf(idB), snapshot.dropoffEntityIds)
         assertEquals("producer", entitiesById[idB]?.archetype)
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
@@ -168,8 +169,10 @@ class ClientSnapshotTest {
         assertTrue(snapshot.factions[1].visibleTiles > 0)
         assertEquals(150, snapshot.factions[0].minerals)
         assertEquals(25, snapshot.factions[0].gas)
+        assertEquals(1, snapshot.factions[0].dropoffBuildings)
         assertEquals(80, snapshot.factions[1].minerals)
         assertEquals(10, snapshot.factions[1].gas)
+        assertEquals(0, snapshot.factions[1].dropoffBuildings)
     }
 
     @Test
