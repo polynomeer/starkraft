@@ -84,8 +84,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Producer capabilities such as training and rally override are explicit in building defs.
    - `AttackMove` is now available as a higher-level order.
    - `Hold` is now available as a position-locking order that keeps auto-fire active without chasing.
-   - Next candidate remains `Patrol`, built by composing
-     move + attack decisions at the order layer.
+   - `Patrol` is now available as a repeating two-point movement order.
 
 15. **Networking / Replay**
    - Keep commands deterministic and serializable.
@@ -121,6 +120,7 @@ Script syntax:
 - `selectType <typeId>` select units by type at execution time
 - `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
+- `patrol <x> <y>` alternate movement between the current position and the target point
 - `attackMove <x> <y>` move selection while pausing to attack enemies that enter weapon range
 - `hold` keep selection in place while still auto-attacking in weapon range
 - `attack <targetId|@label>` attack target

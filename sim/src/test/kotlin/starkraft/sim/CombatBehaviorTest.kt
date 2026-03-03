@@ -291,4 +291,48 @@ class CombatBehaviorTest {
         assertEquals(nearTarget, stickyBefore)
         assertEquals(nearTarget, stickyAfter)
     }
+
+    @Test
+    fun `patrol order reverses after reaching its endpoint`() {
+        val data = combatData()
+        val world = World()
+        val map = MapGrid(24, 24)
+        val occ = OccupancyGrid(24, 24)
+        val alive = AliveSystem(world)
+        val occupancy = OccupancySystem(world, occ)
+        val pool = PathPool(map.width * map.height)
+        val queue = PathRequestQueue(64, 64)
+        val pathfinder = Pathfinder(map, occ)
+        val pathing = PathfindingSystem(world, pathfinder, pool, queue, 1024)
+        val movement = MovementSystem(world, map, occ, pool, queue, data)
+
+        val scout =
+            world.spawn(
+                Transform(2f, 2f),
+                UnitTag(1, "Marine"),
+                Health(45, 45),
+                WeaponRef("Gauss")
+            )
+        world.orders[scout]?.items?.addLast(Order.Patrol(2f, 2f, 6f, 2f))
+
+        repeat(220) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+        }
+
+        val patrol = world.orders[scout]?.items?.firstOrNull() as? Order.Patrol
+        assertEquals(false, patrol?.toB)
+        val returnStartX = world.transforms[scout]!!.x
+
+        repeat(30) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+        }
+
+        assertTrue(world.transforms[scout]!!.x < returnStartX)
+    }
 }

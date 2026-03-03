@@ -94,6 +94,11 @@ class PathfindingSystem(
             val (gx, gy) =
                 when (first) {
                     is Order.Move -> floor(first.tx).toInt() to floor(first.ty).toInt()
+                    is Order.Patrol -> {
+                        val tx = if (first.toB) first.bx else first.ax
+                        val ty = if (first.toB) first.by else first.ay
+                        floor(tx).toInt() to floor(ty).toInt()
+                    }
                     is Order.AttackMove -> floor(first.tx).toInt() to floor(first.ty).toInt()
                     is Order.Hold -> continue
                     is Order.Attack -> {

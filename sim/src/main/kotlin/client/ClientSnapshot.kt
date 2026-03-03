@@ -974,6 +974,46 @@ fun renderCommandStreamRecordJson(
                     x = cmd.x,
                     y = cmd.y
                 )
+            is Command.Patrol ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "patrol",
+                    requestId = requestId,
+                    units = cmd.units,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.PatrolFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "patrolFaction",
+                    requestId = requestId,
+                    faction = cmd.faction,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.PatrolType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "patrolType",
+                    requestId = requestId,
+                    typeId = cmd.typeId,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.PatrolArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "patrolArchetype",
+                    requestId = requestId,
+                    archetype = cmd.archetype,
+                    x = cmd.x,
+                    y = cmd.y
+                )
             is Command.AttackMove ->
                 CommandStreamRecord(
                     sequence = sequence,
@@ -1894,6 +1934,7 @@ fun renderCommandFailureStreamRecordJson(
 private fun Order.toSnapshotLabel(): String {
     return when (this) {
         is Order.Move -> "Move"
+        is Order.Patrol -> "Patrol"
         is Order.AttackMove -> "AttackMove"
         is Order.Hold -> "Hold"
         is Order.Attack -> "Attack"

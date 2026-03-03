@@ -93,6 +93,13 @@ object ScriptRunner {
                     val y = parts[2].toFloat()
                     out.add(moveCommand(tick, selection!!, x, y))
                 }
+                "patrol" -> {
+                    require(parts.size == 3) { "patrol <x> <y>" }
+                    require(selection != null) { "patrol requires selection" }
+                    val x = parts[1].toFloat()
+                    val y = parts[2].toFloat()
+                    out.add(patrolCommand(tick, selection!!, x, y))
+                }
                 "attackMove" -> {
                     require(parts.size == 3) { "attackMove <x> <y>" }
                     require(selection != null) { "attackMove requires selection" }
@@ -237,6 +244,16 @@ object ScriptRunner {
             is Selection.Faction -> Command.MoveFaction(tick, selection.id, x, y)
             is Selection.Type -> Command.MoveType(tick, selection.typeId, x, y)
             is Selection.Archetype -> Command.MoveArchetype(tick, selection.archetype, x, y)
+        }
+    }
+
+    private fun patrolCommand(tick: Int, selection: Selection, x: Float, y: Float): Command {
+        return when (selection) {
+            is Selection.Units -> Command.Patrol(tick, selection.ids, x, y)
+            is Selection.All -> Command.Patrol(tick, ALL_UNITS, x, y)
+            is Selection.Faction -> Command.PatrolFaction(tick, selection.id, x, y)
+            is Selection.Type -> Command.PatrolType(tick, selection.typeId, x, y)
+            is Selection.Archetype -> Command.PatrolArchetype(tick, selection.archetype, x, y)
         }
     }
 

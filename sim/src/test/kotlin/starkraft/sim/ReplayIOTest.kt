@@ -16,6 +16,10 @@ class ReplayIOTest {
             Command.MoveFaction(5, 1, 8f, 9f),
             Command.MoveType(7, "Marine", 4f, 5f),
             Command.MoveArchetype(8, "infantry", 6f, 7f),
+            Command.Patrol(8, intArrayOf(1, 2), 7f, 7f),
+            Command.PatrolFaction(8, 1, 8f, 7f),
+            Command.PatrolType(8, "Marine", 9f, 7f),
+            Command.PatrolArchetype(8, "infantry", 10f, 7f),
             Command.AttackMove(9, intArrayOf(1, 3), 7f, 8f),
             Command.AttackMoveFaction(9, 1, 8f, 8f),
             Command.AttackMoveType(9, "Marine", 9f, 8f),
@@ -135,6 +139,34 @@ private fun assertCommandsEqual(a: Command, b: Command) {
         }
         is Command.MoveArchetype -> {
             require(b is Command.MoveArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.Patrol -> {
+            require(b is Command.Patrol)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+            assertEquals(a.units.toList(), b.units.toList())
+        }
+        is Command.PatrolFaction -> {
+            require(b is Command.PatrolFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.PatrolType -> {
+            require(b is Command.PatrolType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.PatrolArchetype -> {
+            require(b is Command.PatrolArchetype)
             assertEquals(a.tick, b.tick)
             assertEquals(a.archetype, b.archetype)
             assertEquals(a.x, b.x)

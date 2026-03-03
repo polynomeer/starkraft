@@ -1940,6 +1940,18 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.MoveArchetype -> {
                     println("tick=$tick moveArchetype archetype=${c.archetype} x=${c.x} y=${c.y}")
                 }
+                is Command.Patrol -> {
+                    println("tick=$tick patrol units=${c.units.joinToString(",")} x=${c.x} y=${c.y}")
+                }
+                is Command.PatrolFaction -> {
+                    println("tick=$tick patrolFaction faction=${c.faction} x=${c.x} y=${c.y}")
+                }
+                is Command.PatrolType -> {
+                    println("tick=$tick patrolType type=${c.typeId} x=${c.x} y=${c.y}")
+                }
+                is Command.PatrolArchetype -> {
+                    println("tick=$tick patrolArchetype archetype=${c.archetype} x=${c.x} y=${c.y}")
+                }
                 is Command.AttackMove -> {
                     println("tick=$tick attackMove units=${c.units.joinToString(",")} x=${c.x} y=${c.y}")
                 }
@@ -2222,6 +2234,13 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         }
                     }
                 }
+                is Command.Patrol -> {
+                    if (!(c.units.size == 1 && c.units[0] == 0)) {
+                        for (id in c.units) if (id >= 0 && !existing.contains(id)) {
+                            error("Unknown unit id '$id' in patrol at tick $tick")
+                        }
+                    }
+                }
                 is Command.AttackMove -> {
                     if (!(c.units.size == 1 && c.units[0] == 0)) {
                         for (id in c.units) if (id >= 0 && !existing.contains(id)) {
@@ -2249,6 +2268,9 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 is Command.MoveFaction -> Unit
                 is Command.MoveType -> Unit
                 is Command.MoveArchetype -> Unit
+                is Command.PatrolFaction -> Unit
+                is Command.PatrolType -> Unit
+                is Command.PatrolArchetype -> Unit
                 is Command.AttackMoveFaction -> Unit
                 is Command.AttackMoveType -> Unit
                 is Command.AttackMoveArchetype -> Unit
@@ -2339,6 +2361,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '$id' in move at tick $tick (spawn first)")
                     }
                 }
+                is Command.Patrol -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in patrol at tick $tick (spawn first)")
+                    }
+                }
                 is Command.AttackMove -> {
                     for (id in c.units) if (id < 0 && !defined.contains(id)) {
                         error("Unknown label id '$id' in attackMove at tick $tick (spawn first)")
@@ -2360,6 +2387,9 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.MoveFaction -> Unit
                 is Command.MoveType -> Unit
                 is Command.MoveArchetype -> Unit
+                is Command.PatrolFaction -> Unit
+                is Command.PatrolType -> Unit
+                is Command.PatrolArchetype -> Unit
                 is Command.AttackMoveFaction -> Unit
                 is Command.AttackMoveType -> Unit
                 is Command.AttackMoveArchetype -> Unit
@@ -2471,6 +2501,7 @@ private fun printPendingOrders(world: World) {
         val items = q.joinToString(",") { o ->
             when (o) {
                 is Order.Move -> "move(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
+                is Order.Patrol -> "patrol(${String.format("%.2f", if (o.toB) o.bx else o.ax)},${String.format("%.2f", if (o.toB) o.by else o.ay)})"
                 is Order.AttackMove -> "attackMove(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
                 is Order.Hold -> "hold"
                 is Order.Attack -> "attack(${o.target})"
@@ -2635,6 +2666,26 @@ internal fun buildCommandStats(
                     tickArchetype++
                     tickMoveArchetype++
                 }
+                is Command.Patrol -> {
+                    tickMoves++
+                    tickDirect++
+                    tickMoveDirect++
+                }
+                is Command.PatrolFaction -> {
+                    tickMoves++
+                    tickFaction++
+                    tickMoveFaction++
+                }
+                is Command.PatrolType -> {
+                    tickMoves++
+                    tickType++
+                    tickMoveType++
+                }
+                is Command.PatrolArchetype -> {
+                    tickMoves++
+                    tickArchetype++
+                    tickMoveArchetype++
+                }
                 is Command.AttackMove -> {
                     tickMoves++
                     tickDirect++
@@ -2747,6 +2798,26 @@ internal fun buildCommandStats(
                     moveType++
                 }
                 is Command.MoveArchetype -> {
+                    moves++
+                    archetype++
+                    moveArchetype++
+                }
+                is Command.Patrol -> {
+                    moves++
+                    direct++
+                    moveDirect++
+                }
+                is Command.PatrolFaction -> {
+                    moves++
+                    faction++
+                    moveFaction++
+                }
+                is Command.PatrolType -> {
+                    moves++
+                    type++
+                    moveType++
+                }
+                is Command.PatrolArchetype -> {
                     moves++
                     archetype++
                     moveArchetype++
@@ -3371,6 +3442,62 @@ fun issue(
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
             emitCommandAck(true, appliedUnits = applied.size)
         }
+        is Command.Patrol -> {
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "patrol", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            if (cmd.units.size == 1 && cmd.units[0] == 0) {
+                for (id in world.orders.keys) {
+                    val actual = resolveLabelId(id, labelIdMap)
+                    val tr = world.transforms[actual] ?: continue
+                    world.orders[actual]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
+                }
+            } else {
+                cmd.units.forEach { id ->
+                    val actual = resolveLabelId(id, labelIdMap)
+                    val tr = world.transforms[actual] ?: return@forEach
+                    world.orders[actual]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "patrol", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.PatrolFaction -> {
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "patrol", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                if (tag.faction == cmd.faction) {
+                    val tr = world.transforms[id] ?: continue
+                    world.orders[id]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "patrol", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.PatrolType -> {
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "patrol", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                if (tag.typeId == cmd.typeId) {
+                    val tr = world.transforms[id] ?: continue
+                    world.orders[id]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "patrol", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.PatrolArchetype -> {
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "patrol", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                val tagArchetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+                if (tagArchetype == cmd.archetype) {
+                    val tr = world.transforms[id] ?: continue
+                    world.orders[id]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "patrol", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
         is Command.AttackMove -> {
             val applied = collectDirectTargets(cmd.units, world, labelIdMap)
             emitOrderAppliedRecord(cmd.tick, "attackMove", applied, null, cmd.x, cmd.y, snapshotOutPath, streamSequence)
@@ -3909,6 +4036,10 @@ private fun commandTypeName(cmd: Command): String =
         is Command.MoveFaction -> "moveFaction"
         is Command.MoveType -> "moveType"
         is Command.MoveArchetype -> "moveArchetype"
+        is Command.Patrol -> "patrol"
+        is Command.PatrolFaction -> "patrolFaction"
+        is Command.PatrolType -> "patrolType"
+        is Command.PatrolArchetype -> "patrolArchetype"
         is Command.AttackMove -> "attackMove"
         is Command.AttackMoveFaction -> "attackMoveFaction"
         is Command.AttackMoveType -> "attackMoveType"

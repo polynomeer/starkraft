@@ -66,7 +66,7 @@ class MovementSystem(
             val q = world.orders[id]?.items ?: continue
             if (q.isNotEmpty()) {
                 val o = q.first()
-                if (o is Order.Move || o is Order.AttackMove) {
+                if (o is Order.Move || o is Order.AttackMove || o is Order.Patrol) {
                     val pf = world.pathFollows[id]
                     if (pf == null) {
                         tryEnqueuePath(id)
@@ -76,7 +76,11 @@ class MovementSystem(
                     if (pf.index >= pf.length) {
                         recordProgress(id, pf.index, 0, completed = true)
                         world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
-                        q.removeFirst()
+                        if (o is Order.Patrol) {
+                            o.toB = !o.toB
+                        } else {
+                            q.removeFirst()
+                        }
                         continue
                     }
 
@@ -114,7 +118,11 @@ class MovementSystem(
                         recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
                         if (pf.index >= pf.length) {
                             world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
-                            q.removeFirst()
+                            if (o is Order.Patrol) {
+                                o.toB = !o.toB
+                            } else {
+                                q.removeFirst()
+                            }
                         }
                     } else {
                         val step = min(speed, dist)

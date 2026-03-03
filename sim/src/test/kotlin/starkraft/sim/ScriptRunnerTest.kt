@@ -78,6 +78,24 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses patrol commands`() {
+        val path = Files.createTempFile("starkraft-patrol-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 4
+            selectType Marine
+            patrol 12 6
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.PatrolType(4, "Marine", 12f, 6f), program.commands[0])
+    }
+
+    @Test
     fun `parses build commands`() {
         val path = Files.createTempFile("starkraft-build-script", ".script")
         Files.writeString(
