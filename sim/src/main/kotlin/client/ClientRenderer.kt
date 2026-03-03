@@ -93,5 +93,5 @@ internal fun buildClientHudLines(
     listOf(
         "tick=$tick selected=$selectedCount",
         formatAckStatus(ack),
-        "left: select   shift+left: add/remove   right: move/attack/harvest"
+        "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
     )

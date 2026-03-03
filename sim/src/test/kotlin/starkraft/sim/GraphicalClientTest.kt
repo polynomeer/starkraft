@@ -51,7 +51,7 @@ class GraphicalClientTest {
             listOf(
                 "tick=15 selected=2",
                 "last ack: ok move[cli-9] @15",
-                "left: select   shift+left: add/remove   right: move/attack/harvest"
+                "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 tick = 15,
@@ -121,15 +121,18 @@ class GraphicalClientTest {
         val ids = ClientCommandIds("test")
 
         val attackIntent =
-            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
         val harvestIntent =
-            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
         val moveIntent =
-            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
+        val attackMoveIntent =
+            buildClientIntent(snapshot, selected, 11f, 10f, leftClick = false, rightClick = true, attackMoveModifier = true, additiveSelection = false, requestIds = ids)
 
         val attack = (attackIntent as ClientIntent.Command).record
         val harvest = (harvestIntent as ClientIntent.Command).record
         val move = (moveIntent as ClientIntent.Command).record
+        val attackMove = (attackMoveIntent as ClientIntent.Command).record
 
         assertEquals("attack", attack.commandType)
         assertEquals("test-1", attack.requestId)
@@ -141,5 +144,9 @@ class GraphicalClientTest {
         assertEquals("test-3", move.requestId)
         assertEquals(10f, move.x)
         assertEquals(10f, move.y)
+        assertEquals("attackMove", attackMove.commandType)
+        assertEquals("test-4", attackMove.requestId)
+        assertEquals(11f, attackMove.x)
+        assertEquals(10f, attackMove.y)
     }
 }

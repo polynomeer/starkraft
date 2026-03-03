@@ -24,6 +24,7 @@ internal fun buildClientIntent(
     worldY: Float,
     leftClick: Boolean,
     rightClick: Boolean,
+    attackMoveModifier: Boolean,
     additiveSelection: Boolean,
     requestIds: ClientCommandIds
 ): ClientIntent? {
@@ -63,7 +64,7 @@ internal fun buildClientIntent(
     return ClientIntent.Command(
         InputJson.InputCommandRecord(
             tick = snapshot.tick + 1,
-            commandType = "move",
+            commandType = if (attackMoveModifier) "attackMove" else "move",
             requestId = requestIds.nextRequestId(),
             units = selectedIds.toIntArray(),
             x = worldX,

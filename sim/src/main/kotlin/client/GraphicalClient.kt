@@ -55,6 +55,7 @@ private class ClientPanel(
                     worldY = worldY,
                     leftClick = SwingUtilities.isLeftMouseButton(e),
                     rightClick = SwingUtilities.isRightMouseButton(e),
+                    attackMoveModifier = e.isControlDown,
                     additiveSelection = e.isShiftDown,
                     requestIds = requestIds
                 )

@@ -182,6 +182,7 @@ Client controls:
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
+- ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
 Left-click selections are also written as `selectionType="units"` NDJSON records so the input trail includes both client selection changes and commands.
