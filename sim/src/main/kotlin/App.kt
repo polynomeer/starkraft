@@ -296,6 +296,7 @@ fun main(args: Array<String>) {
     var totalHarvestDepositCount = 0
     var totalHarvestPickupAmount = 0
     var totalHarvestDepositAmount = 0
+    var totalHarvesterRetargets = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -404,6 +405,7 @@ fun main(args: Array<String>) {
         emitHarvestCycleRecord(harvest, tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceNodeRecord(world, harvest, tick, resolvedSnapshotOutPath, streamSequence)
         removeDepletedResourceNodes(world, harvest)
+        val tickHarvesterRetargets = pendingHarvesterRetargetEvents.size
         emitHarvesterRetargetRecord(tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
@@ -452,6 +454,7 @@ fun main(args: Array<String>) {
         totalHarvestDepositCount += harvest.lastTickDepositCount
         totalHarvestPickupAmount += harvest.lastTickPickupAmount
         totalHarvestDepositAmount += harvest.lastTickDepositAmount
+        totalHarvesterRetargets += tickHarvesterRetargets
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -473,6 +476,7 @@ fun main(args: Array<String>) {
                 commandOutcomeCounters,
                 tickTrainsCompleted,
                 tickResourceDeltas,
+                tickHarvesterRetargets,
                 harvest,
                 resolvedSnapshotOutPath,
                 streamSequence
@@ -646,6 +650,7 @@ fun main(args: Array<String>) {
                 harvestDepositCount = totalHarvestDepositCount,
                 harvestPickupAmount = totalHarvestPickupAmount,
                 harvestDepositAmount = totalHarvestDepositAmount,
+                harvesterRetargets = totalHarvesterRetargets,
                 dropoffBuildingsFaction1 = dropoffCounts.faction1,
                 dropoffBuildingsFaction2 = dropoffCounts.faction2,
                 mineralDropoffBuildings = dropoffCounts.minerals,
@@ -1549,6 +1554,7 @@ private fun emitTickSummaryRecord(
     commandOutcomeCounters: CommandOutcomeCounters,
     tickTrainsCompleted: Int,
     tickResourceDeltas: ResourceDeltaCounterSet,
+    tickHarvesterRetargets: Int,
     harvest: ResourceHarvestSystem,
     snapshotOutPath: java.nio.file.Path?,
     streamSequence: LongArray?
@@ -1612,6 +1618,7 @@ private fun emitTickSummaryRecord(
             harvestDepositCount = harvest.lastTickDepositCount,
             harvestPickupAmount = harvest.lastTickPickupAmount,
             harvestDepositAmount = harvest.lastTickDepositAmount,
+            harvesterRetargets = tickHarvesterRetargets,
             dropoffBuildingsFaction1 = dropoffCounts.faction1,
             dropoffBuildingsFaction2 = dropoffCounts.faction2,
             mineralDropoffBuildings = dropoffCounts.minerals,
