@@ -54,6 +54,8 @@ data class SnapshotStreamSummary(
     val harvesterGatherCount: Int = 0,
     val harvesterReturnCount: Int = 0,
     val harvesterCargoTotal: Int = 0,
+    val harvesterRetargetCount: Int = 0,
+    val harvesterRetargetWorkers: Int = 0,
     val harvestCyclePickupCount: Int = 0,
     val harvestCycleDepositCount: Int = 0,
     val harvestCyclePickupAmount: Int = 0,
@@ -129,6 +131,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var harvesterGatherCount = 0
     var harvesterReturnCount = 0
     var harvesterCargoTotal = 0
+    var harvesterRetargetCount = 0
+    val harvesterRetargetWorkers = linkedSetOf<Int>()
     var harvestCyclePickupCount = 0
     var harvestCycleDepositCount = 0
     var harvestCyclePickupAmount = 0
@@ -308,6 +312,14 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     harvesterCargoTotal += entity.int("cargoAmount") ?: 0
                 }
             }
+            "harvesterRetarget" -> {
+                val events = obj.array("events")
+                harvesterRetargetCount += events.size
+                for (event in events) {
+                    val workerId = event.int("workerId") ?: continue
+                    harvesterRetargetWorkers.add(workerId)
+                }
+            }
             "harvestCycle" -> {
                 val events = obj.array("events")
                 for (event in events) {
@@ -434,6 +446,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         harvesterGatherCount = harvesterGatherCount,
         harvesterReturnCount = harvesterReturnCount,
         harvesterCargoTotal = harvesterCargoTotal,
+        harvesterRetargetCount = harvesterRetargetCount,
+        harvesterRetargetWorkers = harvesterRetargetWorkers.size,
         harvestCyclePickupCount = harvestCyclePickupCount,
         harvestCycleDepositCount = harvestCycleDepositCount,
         harvestCyclePickupAmount = harvestCyclePickupAmount,
@@ -522,6 +536,11 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
         lines.add(
             "harvesters: total=${summary.harvesterCount} gather=${summary.harvesterGatherCount} " +
                 "return=${summary.harvesterReturnCount} cargo=${summary.harvesterCargoTotal}"
+        )
+    }
+    if (summary.harvesterRetargetCount > 0 || summary.countsByType["harvesterRetarget"] != null) {
+        lines.add(
+            "harvesterRetarget: events=${summary.harvesterRetargetCount} workers=${summary.harvesterRetargetWorkers}"
         )
     }
     if (summary.harvestCyclePickupCount > 0 || summary.harvestCycleDepositCount > 0 || summary.countsByType["harvestCycle"] != null) {
