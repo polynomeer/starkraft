@@ -43,6 +43,7 @@ data class SnapshotStreamSummary(
     val producerCount: Int = 0,
     val trainingProducerCount: Int = 0,
     val rallyProducerCount: Int = 0,
+    val dropoffProducerCount: Int = 0,
     val maxProducerQueueLimit: Int = 0,
     val harvesterCount: Int = 0,
     val harvesterGatherCount: Int = 0,
@@ -112,6 +113,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var producerCount = 0
     var trainingProducerCount = 0
     var rallyProducerCount = 0
+    var dropoffProducerCount = 0
     var maxProducerQueueLimit = 0
     var harvesterCount = 0
     var harvesterGatherCount = 0
@@ -253,10 +255,12 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                 producerCount = entities.size
                 trainingProducerCount = 0
                 rallyProducerCount = 0
+                dropoffProducerCount = 0
                 maxProducerQueueLimit = 0
                 for (entity in entities) {
                     if (entity.bool("supportsTraining") == true) trainingProducerCount++
                     if (entity.bool("supportsRally") == true) rallyProducerCount++
+                    if (entity.bool("supportsDropoff") == true) dropoffProducerCount++
                     val limit = entity.int("productionQueueLimit") ?: 0
                     if (limit > maxProducerQueueLimit) maxProducerQueueLimit = limit
                 }
@@ -390,6 +394,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         producerCount = producerCount,
         trainingProducerCount = trainingProducerCount,
         rallyProducerCount = rallyProducerCount,
+        dropoffProducerCount = dropoffProducerCount,
         maxProducerQueueLimit = maxProducerQueueLimit,
         harvesterCount = harvesterCount,
         harvesterGatherCount = harvesterGatherCount,
@@ -466,7 +471,8 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
     if (summary.producerCount > 0 || summary.countsByType["production"] != null) {
         lines.add(
             "producers: total=${summary.producerCount} training=${summary.trainingProducerCount} " +
-                "rally=${summary.rallyProducerCount} maxQueue=${summary.maxProducerQueueLimit} " +
+                "rally=${summary.rallyProducerCount} dropoff=${summary.dropoffProducerCount} " +
+                "maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
         )

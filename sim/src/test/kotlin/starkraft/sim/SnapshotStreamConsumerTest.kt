@@ -20,7 +20,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"command\",\"sequence\":4,\"tick\":0,\"commandType\":\"moveArchetype\",\"units\":[],\"faction\":null,\"typeId\":null,\"archetype\":\"infantry\",\"target\":null,\"x\":2.0,\"y\":3.0,\"vision\":null,\"label\":null,\"labelId\":null}",
                     "{\"recordType\":\"resourceDelta\",\"sequence\":5,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0},{\"faction\":1,\"kind\":\"refund\",\"minerals\":10,\"gas\":0}]}",
                     "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":6,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":10,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
-                    "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"Tower\",\"archetype\":\"defense\",\"supportsTraining\":false,\"supportsRally\":false,\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
+                    "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"Tower\",\"archetype\":\"defense\",\"supportsTraining\":false,\"supportsRally\":false,\"supportsDropoff\":false,\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
                     "{\"recordType\":\"harvesterState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":1},{\"entityId\":14,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"gather\",\"targetNodeId\":11,\"cargoKind\":null,\"cargoAmount\":0,\"returnTargetId\":null}]}",
                     "{\"recordType\":\"harvestCycle\",\"sequence\":9,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2}]}",
                     "{\"recordType\":\"production\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
@@ -79,6 +79,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(2, summary.producerCount)
         assertEquals(1, summary.trainingProducerCount)
         assertEquals(1, summary.rallyProducerCount)
+        assertEquals(1, summary.dropoffProducerCount)
         assertEquals(3, summary.maxProducerQueueLimit)
         assertEquals(2, summary.harvesterCount)
         assertEquals(1, summary.harvesterGatherCount)
@@ -130,7 +131,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"command\",\"sequence\":4,\"tick\":0,\"commandType\":\"moveArchetype\",\"units\":[],\"faction\":null,\"typeId\":null,\"archetype\":\"infantry\",\"target\":null,\"x\":4.0,\"y\":5.0,\"vision\":null,\"label\":null,\"labelId\":null}",
                         "{\"recordType\":\"resourceDelta\",\"sequence\":5,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0}]}",
                         "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":6,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
-                        "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
+                        "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
                         "{\"recordType\":\"harvesterState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":3,\"returnTargetId\":1}]}",
                         "{\"recordType\":\"harvestCycle\",\"sequence\":9,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3}]}",
                         "{\"recordType\":\"production\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
@@ -155,7 +156,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("resourceNodes: changed=1 harvested=3 f1=3/0 f2=0/0 depleted=0 active=2 remaining=347"))
         assertTrue(text.contains("economy: events=1 spend=50/0 refund=0/0"))
         assertTrue(text.contains("f1=50/0->0/0"))
-        assertTrue(text.contains("producers: total=1 training=1 rally=1 maxQueue=3"))
+        assertTrue(text.contains("producers: total=1 training=1 rally=1 dropoff=1 maxQueue=3"))
         assertTrue(text.contains("harvesters: total=1 gather=0 return=1 cargo=3"))
         assertTrue(text.contains("harvestCycle: pickup=1/3 deposit=1/3"))
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
