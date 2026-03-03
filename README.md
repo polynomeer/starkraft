@@ -235,6 +235,11 @@ Sample harvest script:
 Sample harvest script with a dedicated drop-off building:
 `./gradlew :sim:run --args="--script sim/scripts/harvest-depot.script --ticks 50 --noSleep"`
 
+Sample harvest retarget script:
+`./gradlew :sim:run --args="--script sim/scripts/harvest-retarget.script --ticks 5 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-retarget.ndjson"`
+`./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft-retarget.ndjson"`
+This depletes the first node immediately and emits `harvesterRetarget` when the worker is reassigned to `@ore2`.
+
 Sample split economy setup with spawn script + main script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn-harvest.script --script sim/scripts/harvest-main.script --ticks 50 --noSleep"`
 
