@@ -219,6 +219,7 @@ Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`
 This sample now places both a `ResourceDepot` and a `GasDepot`, plus matching mineral and gas nodes.
 `--spawnScript` accepts `build` commands too, so drop-off setup can happen before the main script runs.
+`sim/scripts/sample.script` now also spawns a faction 2 worker that harvests the spawn script's gas geyser, so the combined demo exercises both drop-off types.
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`

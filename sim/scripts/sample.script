@@ -38,3 +38,9 @@ wait 25
 spawn @scout 1 Marine 12 12 7
 select @scout
 move 22 22
+
+wait 10
+# Exercise gas harvesting against the spawn script's GasDepot + geyser setup
+spawn @gasworker 2 Worker 10.5 6 6
+select @gasworker
+harvest @geyser
