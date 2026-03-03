@@ -389,6 +389,7 @@ fun main(args: Array<String>) {
 
         harvest.tick()
         emitResourceNodeRecord(world, harvest, tick, resolvedSnapshotOutPath, streamSequence)
+        removeDepletedResourceNodes(world, harvest)
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
@@ -1025,6 +1026,15 @@ private fun emitResourceNodeRecord(
         ),
         snapshotOutPath
     )
+}
+
+internal fun removeDepletedResourceNodes(world: World, harvest: ResourceHarvestSystem) {
+    for (i in 0 until harvest.lastTickEventCount) {
+        if (!harvest.eventDepleted(i)) continue
+        val nodeId = harvest.eventNodeId(i)
+        if (!world.resourceNodes.containsKey(nodeId)) continue
+        world.remove(nodeId, "resourceDepleted")
+    }
 }
 
 private fun emitProducerStateRecord(

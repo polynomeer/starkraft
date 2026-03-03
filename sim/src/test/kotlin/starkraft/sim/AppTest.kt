@@ -5,6 +5,14 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import starkraft.sim.data.DataRepo
+import starkraft.sim.ecs.Harvester
+import starkraft.sim.ecs.Health
+import starkraft.sim.ecs.ResourceHarvestSystem
+import starkraft.sim.ecs.ResourceNode
+import starkraft.sim.ecs.ResourceSystem
+import starkraft.sim.ecs.Transform
+import starkraft.sim.ecs.UnitTag
+import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Files
@@ -199,6 +207,25 @@ class AppTest {
                 currentResourceNodeRemaining = 0
             )
         )
+    }
+
+    @Test
+    fun `removes depleted resource nodes after harvest`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val nodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 1)
+        world.harvesters[workerId] = Harvester(targetNodeId = nodeId)
+
+        harvest.tick()
+        removeDepletedResourceNodes(world, harvest)
+
+        assertEquals(null, world.resourceNodes[nodeId])
+        assertEquals(null, world.transforms[nodeId])
+        assertEquals(1, world.removedEventCount)
+        assertEquals("resourceDepleted", world.removedReason(0))
     }
 
     @Test
