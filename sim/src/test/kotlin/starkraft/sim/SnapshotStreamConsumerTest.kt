@@ -167,4 +167,20 @@ class SnapshotStreamConsumerTest {
 
         assertTrue(text.contains("resourceNodes: changed=2 harvested=3 f1=2/0 f2=0/1 depleted=0 active=2 remaining=367"))
     }
+
+    @Test
+    fun `removes depleted resource nodes from consumer state on despawn`() {
+        val summary =
+            summarizeSnapshotStream(
+                sequenceOf(
+                    "{\"recordType\":\"sessionStart\",\"sequence\":0,\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
+                    "{\"recordType\":\"mapState\",\"sequence\":1,\"width\":32,\"height\":32,\"blockedTiles\":[],\"weightedTiles\":[],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":1},{\"id\":11,\"kind\":\"GasGeyser\",\"x\":10.0,\"y\":6.0,\"remaining\":120}]}",
+                    "{\"recordType\":\"resourceNode\",\"sequence\":2,\"tick\":0,\"nodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"harvested\":1,\"remaining\":0,\"depleted\":true}]}",
+                    "{\"recordType\":\"despawn\",\"sequence\":3,\"tick\":0,\"entities\":[{\"entityId\":9,\"faction\":0,\"typeId\":\"MineralField\",\"reason\":\"resourceDepleted\"}]}"
+                )
+            )
+
+        assertEquals(1, summary.currentResourceNodeCount)
+        assertEquals(120, summary.currentResourceNodeRemainingTotal)
+    }
 }

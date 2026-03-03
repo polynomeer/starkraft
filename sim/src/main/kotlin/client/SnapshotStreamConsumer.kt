@@ -299,7 +299,13 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
             "despawn" -> {
                 val entities = obj.array("entities")
                 for (entity in entities) {
-                    if (entity.string("reason") == "death") combatDeathDespawnCount++
+                    when (entity.string("reason")) {
+                        "death" -> combatDeathDespawnCount++
+                        "resourceDepleted" -> {
+                            val id = entity.int("entityId") ?: continue
+                            resourceNodeRemainingById.remove(id)
+                        }
+                    }
                 }
             }
         }
