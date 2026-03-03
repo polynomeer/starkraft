@@ -69,18 +69,15 @@ class InputJsonTest {
 
     @Test
     fun `loads input ndjson records`() {
-        val path = Files.createTempFile("starkraft-input-lines", ".ndjson")
-        Files.writeString(
-            path,
-            """
+        val program =
+            InputJson.loadProgram(
+                """
             {"tick":0,"selectionType":"faction","faction":1}
             {"tick":0,"commandType":"moveFaction","faction":1,"x":12.0,"y":13.0}
             {"tick":2,"commandType":"build","faction":1,"typeId":"Depot","tileX":6,"tileY":6,"label":"depot"}
             {"tick":3,"commandType":"train","buildingLabel":"depot","typeId":"Marine"}
             """.trimIndent()
-        )
-
-        val program = InputJson.loadProgram(path)
+            )
 
         assertEquals(1, program.selections.size)
         assertEquals(ScriptRunner.Selection.Faction(1), program.selections[0].selection)

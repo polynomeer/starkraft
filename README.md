@@ -158,6 +158,7 @@ You can run the sample with:
 `./gradlew :sim:run --args="--inputJson sim/scripts/sample.input.json --noSleep --ticks 20"`
 
 NDJSON is also accepted for append-friendly client pipelines, one `selection` or `command` object per line.
+Use `--inputJson -` to read the same JSON or NDJSON payload from stdin.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

@@ -54,8 +54,9 @@ object InputJson {
         val labelId: Int? = null
     )
 
-    fun loadProgram(path: Path): ScriptRunner.ScriptProgram {
-        val raw = Files.readString(path)
+    fun loadProgram(path: Path): ScriptRunner.ScriptProgram = loadProgram(Files.readString(path))
+
+    fun loadProgram(raw: String): ScriptRunner.ScriptProgram {
         val program = parseProgram(raw)
         val labelIds = HashMap<String, Int>()
         var nextLabelId = -1

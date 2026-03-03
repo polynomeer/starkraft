@@ -1702,6 +1702,9 @@ private fun loadScriptProgram(pathStr: String): LoadedProgram {
 }
 
 private fun loadInputJsonProgram(pathStr: String): LoadedProgram {
+    if (pathStr == "-") {
+        return toLoadedProgram(InputJson.loadProgram(generateSequence(::readLine).joinToString("\n")))
+    }
     val path = resolvePath(pathStr)
     if (!Files.exists(path)) error("Input JSON file not found: $pathStr")
     return toLoadedProgram(InputJson.loadProgram(path))
