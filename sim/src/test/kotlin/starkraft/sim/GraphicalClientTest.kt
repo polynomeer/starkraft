@@ -2,12 +2,15 @@ package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.applySelectionClick
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.formatAckStatus
+import starkraft.sim.client.parseClientStreamLine
 import java.nio.file.Paths
 
 class GraphicalClientTest {
@@ -58,5 +61,18 @@ class GraphicalClientTest {
 
         applySelectionClick(selected, clickedId = null, additive = false)
         assertEquals(linkedSetOf<Int>(), selected)
+    }
+
+    @Test
+    fun `parses client stream updates through shared bridge`() {
+        val ack =
+            parseClientStreamLine(
+                "{\"recordType\":\"commandAck\",\"tick\":13,\"commandType\":\"move\",\"requestId\":\"cli-7\",\"accepted\":true,\"reason\":null}"
+            )
+
+        assertNotNull(ack)
+        assertEquals("move", ack?.ack?.commandType)
+        assertEquals("cli-7", ack?.ack?.requestId)
+        assertNull(ack?.snapshot)
     }
 }
