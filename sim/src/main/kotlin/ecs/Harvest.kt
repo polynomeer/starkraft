@@ -78,7 +78,8 @@ class ResourceHarvestSystem(
                 ensureLeadingMove(entityId, nodeTransform.x, nodeTransform.y)
                 continue
             }
-            val harvested = minOf(harvester.harvestPerTick, harvester.cargoCapacity, node.remaining)
+            val yieldCap = if (node.yieldPerTick > 0) node.yieldPerTick else Int.MAX_VALUE
+            val harvested = minOf(harvester.harvestPerTick, harvester.cargoCapacity, node.remaining, yieldCap)
             if (harvested <= 0) continue
             node.remaining -= harvested
             harvester.cargoKind = node.kind

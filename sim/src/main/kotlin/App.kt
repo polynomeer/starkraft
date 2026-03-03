@@ -1072,7 +1072,8 @@ private fun emitResourceNodeRecord(
                 y = transform.y,
                 harvested = harvest.eventHarvested(i),
                 remaining = harvest.eventRemaining(i),
-                depleted = harvest.eventDepleted(i)
+                depleted = harvest.eventDepleted(i),
+                yieldPerTick = world.resourceNodes[nodeId]?.yieldPerTick ?: 1
             )
         )
     }
@@ -1857,7 +1858,8 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 }
                 is Command.SpawnNode -> {
                     val label = c.label?.let { "@$it " } ?: ""
-                    println("tick=$tick spawnNode ${label}kind=${c.kind} x=${c.x} y=${c.y} amount=${c.amount}")
+                    val yield = if (c.yieldPerTick > 0) " yield=${c.yieldPerTick}" else ""
+                    println("tick=$tick spawnNode ${label}kind=${c.kind} x=${c.x} y=${c.y} amount=${c.amount}${yield}")
                 }
                 is Command.Spawn -> {
                     val label = c.label?.let { "@$it " } ?: ""
@@ -1907,6 +1909,9 @@ internal fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data:
                     }
                     if (c.amount <= 0) {
                         error("Invalid resource node amount '${c.amount}' in spawnNode at tick $tick")
+                    }
+                    if (c.yieldPerTick < 0) {
+                        error("Invalid resource node yield '${c.yieldPerTick}' in spawnNode at tick $tick")
                     }
                 }
                 else -> Unit
@@ -3136,6 +3141,7 @@ fun issue(
         is Command.SpawnNode -> {
             require(RESOURCE_NODE_KINDS.contains(cmd.kind)) { "Unknown resource node kind '${cmd.kind}' in spawnNode command" }
             require(cmd.amount > 0) { "Invalid resource node amount '${cmd.amount}' in spawnNode command" }
+            require(cmd.yieldPerTick >= 0) { "Invalid resource node yield '${cmd.yieldPerTick}' in spawnNode command" }
             val nodeId =
                 world.spawn(
                     Transform(cmd.x, cmd.y),
@@ -3145,7 +3151,7 @@ fun issue(
                 )
             val resourceKind =
                 if (cmd.kind == "GasGeyser") ResourceNode.KIND_GAS else ResourceNode.KIND_MINERALS
-            world.resourceNodes[nodeId] = ResourceNode(kind = resourceKind, remaining = cmd.amount)
+            world.resourceNodes[nodeId] = ResourceNode(kind = resourceKind, remaining = cmd.amount, yieldPerTick = cmd.yieldPerTick)
             if (cmd.label != null) {
                 labelMap[cmd.label] = nodeId
             }
@@ -3776,7 +3782,8 @@ private fun emitMapStateRecord(
                 kind = tag.typeId,
                 x = transform.x,
                 y = transform.y,
-                remaining = node.remaining
+                remaining = node.remaining,
+                yieldPerTick = node.yieldPerTick
             )
         )
     }

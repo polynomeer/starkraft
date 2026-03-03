@@ -89,7 +89,8 @@ data class ResourceNodeSnapshot(
     val kind: String,
     val x: Float,
     val y: Float,
-    val remaining: Int
+    val remaining: Int,
+    val yieldPerTick: Int
 )
 
 @Serializable
@@ -216,7 +217,8 @@ data class ResourceNodeEventRecord(
     val y: Float,
     val harvested: Int,
     val remaining: Int,
-    val depleted: Boolean
+    val depleted: Boolean,
+    val yieldPerTick: Int
 )
 
 @Serializable
@@ -610,7 +612,8 @@ data class MapResourceNodeRecord(
     val kind: String,
     val x: Float,
     val y: Float,
-    val remaining: Int
+    val remaining: Int,
+    val yieldPerTick: Int
 )
 
 @Serializable
@@ -856,7 +859,8 @@ fun buildClientSnapshot(
                 kind = tag.typeId,
                 x = transform.x,
                 y = transform.y,
-                remaining = node.remaining
+                remaining = node.remaining,
+                yieldPerTick = node.yieldPerTick
             )
         )
     }

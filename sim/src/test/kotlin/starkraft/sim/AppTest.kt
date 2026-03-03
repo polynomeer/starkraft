@@ -493,7 +493,7 @@ class AppTest {
         assertEquals(
             listOf(
                 Command.Build(0, 1, "ResourceDepot", 7, 5, 0, 0, 0, 0, 0, 0, "dropoff", -1),
-                Command.SpawnNode(0, "MineralField", 6f, 6f, 250, "ore", -2),
+                Command.SpawnNode(0, "MineralField", 6f, 6f, 250, 0, "ore", -2),
                 Command.Spawn(0, 1, "Worker", 6.5f, 6f, 6f, "worker", -3)
             ),
             program.commandsByTick[0]
@@ -527,7 +527,7 @@ class AppTest {
         val commandsByTick =
             arrayOf(
                 arrayListOf<Command>(
-                    Command.SpawnNode(0, "CrystalField", 4f, 4f, 100, "ore", -1)
+                    Command.SpawnNode(0, "CrystalField", 4f, 4f, 100, 1, "ore", -1)
                 )
             )
         val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
@@ -538,6 +538,24 @@ class AppTest {
             }
 
         assertEquals("Unknown resource node kind 'CrystalField' in spawnNode at tick 0", ex.message)
+    }
+
+    @Test
+    fun `script validation rejects negative spawn node yield`() {
+        val commandsByTick =
+            arrayOf(
+                arrayListOf<Command>(
+                    Command.SpawnNode(0, "MineralField", 4f, 4f, 100, -1, "ore", -1)
+                )
+            )
+        val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateSpawnTypes(commandsByTick, data)
+            }
+
+        assertEquals("Invalid resource node yield '-1' in spawnNode at tick 0", ex.message)
     }
 
     @Test

@@ -105,6 +105,26 @@ class ResourceHarvestSystemTest {
     }
 
     @Test
+    fun `resource node yield caps worker harvest rate`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+
+        val depotId = world.spawn(Transform(6f, 4f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(5, 3, 2, 2)
+        val nodeId = world.spawn(Transform(4f, 4f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 10, yieldPerTick = 2)
+        val workerId = world.spawn(Transform(4.5f, 4f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.harvesters[workerId] = Harvester(targetNodeId = nodeId, harvestPerTick = 5)
+
+        harvest.tick()
+
+        assertEquals(2, harvest.lastTickHarvestedMinerals)
+        assertEquals(8, world.resourceNodes[nodeId]?.remaining)
+        assertEquals(2, world.harvesters[workerId]?.cargoAmount)
+    }
+
+    @Test
     fun `harvest command assigns workers to a resource node`() {
         val world = World()
         val resources = ResourceSystem(world)
@@ -117,7 +137,7 @@ class ResourceHarvestSystemTest {
         val labelMap = HashMap<String, Int>()
         val labelIds = HashMap<Int, Int>()
 
-        issue(Command.SpawnNode(0, "MineralField", 6f, 6f, 12, "ore", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
+        issue(Command.SpawnNode(0, "MineralField", 6f, 6f, 12, 1, "ore", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
         val nodeId = labelMap.getValue("ore")
         issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
         harvest.tick()
@@ -144,7 +164,7 @@ class ResourceHarvestSystemTest {
         val labelMap = HashMap<String, Int>()
         val labelIds = HashMap<Int, Int>()
 
-        issue(Command.SpawnNode(0, "GasGeyser", 7f, 6f, 12, "geyser", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
+        issue(Command.SpawnNode(0, "GasGeyser", 7f, 6f, 12, 1, "geyser", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
         val nodeId = labelMap.getValue("geyser")
         issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
         harvest.tick()

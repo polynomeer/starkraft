@@ -119,7 +119,8 @@ Script syntax:
 - `attack <targetId|@label>` attack target
 - `harvest <targetId|@label>` assign selection to harvest from a resource node
   Harvested cargo is delivered to the nearest same-faction building footprint.
-- `spawnNode [@label] <kind> <x> <y> <amount>` spawn a resource node (`MineralField`, `GasGeyser`)
+- `spawnNode [@label] <kind> <x> <y> <amount> [yield]` spawn a resource node (`MineralField`, `GasGeyser`)
+  If `yield` is omitted, the node is uncapped and workers harvest at their own rate.
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building

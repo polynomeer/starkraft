@@ -133,7 +133,7 @@ object ScriptRunner {
                     out.add(Command.Spawn(tick, faction, typeId, x, y, vision, label, labelIdValue))
                 }
                 "spawnNode" -> {
-                    require(parts.size in 5..6) { "spawnNode [@label] <kind> <x> <y> <amount>" }
+                    require(parts.size in 5..7) { "spawnNode [@label] <kind> <x> <y> <amount> [yield]" }
                     var idxStart = 1
                     var label: String? = null
                     var labelIdValue: Int? = null
@@ -146,7 +146,8 @@ object ScriptRunner {
                     val x = parts[idxStart + 1].toFloat()
                     val y = parts[idxStart + 2].toFloat()
                     val amount = parts[idxStart + 3].toInt()
-                    out.add(Command.SpawnNode(tick, kind, x, y, amount, label, labelIdValue))
+                    val yieldPerTick = if (parts.size > idxStart + 4) parts[idxStart + 4].toInt() else 0
+                    out.add(Command.SpawnNode(tick, kind, x, y, amount, yieldPerTick, label, labelIdValue))
                 }
                 "build" -> {
                     require(parts.size in 5..12) {

@@ -152,6 +152,7 @@ class ClientSnapshotTest {
         assertEquals(nodeId, snapshot.resourceNodes.first().id)
         assertEquals("MineralField", snapshot.resourceNodes.first().kind)
         assertEquals(250, snapshot.resourceNodes.first().remaining)
+        assertEquals(0, snapshot.resourceNodes.first().yieldPerTick)
         assertEquals(listOf(idB), snapshot.dropoffEntityIds)
         assertEquals("producer", entitiesById[idB]?.archetype)
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
@@ -819,12 +820,12 @@ class ClientSnapshotTest {
                 blockedTiles = listOf(MapBlockedTileRecord(6, 14), MapBlockedTileRecord(12, 6)),
                 weightedTiles = listOf(MapCostTileRecord(18, 18, 3f)),
                 staticOccupancyTiles = emptyList(),
-                resourceNodes = listOf(MapResourceNodeRecord(9, "MineralField", 6f, 6f, 250)),
+                resourceNodes = listOf(MapResourceNodeRecord(9, "MineralField", 6f, 6f, 250, 2)),
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":250}]}",
+            "{\"recordType\":\"mapState\",\"sequence\":21,\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14},{\"x\":12,\"y\":6}],\"weightedTiles\":[{\"x\":18,\"y\":18,\"cost\":3.0}],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":250,\"yieldPerTick\":2}]}",
             json
         )
     }
@@ -835,12 +836,12 @@ class ClientSnapshotTest {
             renderResourceNodeStreamRecordJson(
                 sequence = 22L,
                 tick = 16,
-                nodes = listOf(ResourceNodeEventRecord(9, "MineralField", 6f, 6f, 3, 247, false)),
+                nodes = listOf(ResourceNodeEventRecord(9, "MineralField", 6f, 6f, 3, 247, false, 2)),
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"resourceNode\",\"sequence\":22,\"tick\":16,\"nodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"harvested\":3,\"remaining\":247,\"depleted\":false}]}",
+            "{\"recordType\":\"resourceNode\",\"sequence\":22,\"tick\":16,\"nodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"harvested\":3,\"remaining\":247,\"depleted\":false,\"yieldPerTick\":2}]}",
             json
         )
     }

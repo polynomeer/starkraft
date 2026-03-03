@@ -23,6 +23,7 @@ sealed interface Command {
         val x: Float,
         val y: Float,
         val amount: Int,
+        val yieldPerTick: Int = 0,
         val label: String? = null,
         val labelId: Int? = null
     ) : Command

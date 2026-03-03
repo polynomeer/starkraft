@@ -72,7 +72,24 @@ class ScriptRunnerTest {
         val program = ScriptRunner.loadProgram(path)
 
         assertEquals(1, program.commands.size)
-        assertEquals(Command.SpawnNode(4, "MineralField", 9f, 10f, 250, "ore", -1), program.commands[0])
+        assertEquals(Command.SpawnNode(4, "MineralField", 9f, 10f, 250, 0, "ore", -1), program.commands[0])
+    }
+
+    @Test
+    fun `parses spawn node commands with explicit yield`() {
+        val path = Files.createTempFile("starkraft-node-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 4
+            spawnNode @ore MineralField 9 10 250 3
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.SpawnNode(4, "MineralField", 9f, 10f, 250, 3, "ore", -1), program.commands[0])
     }
 
     @Test

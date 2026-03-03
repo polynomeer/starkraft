@@ -37,7 +37,8 @@ data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)
 
 data class ResourceNode(
     val kind: String = KIND_MINERALS,
-    var remaining: Int
+    var remaining: Int,
+    val yieldPerTick: Int = 0
 ) {
     companion object {
         const val KIND_MINERALS = "minerals"

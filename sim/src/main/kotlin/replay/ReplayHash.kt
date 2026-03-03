@@ -93,6 +93,7 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
                 mixInt(cmd.amount)
+                mixInt(cmd.yieldPerTick)
                 if (cmd.label != null) {
                     for (ch in cmd.label) mixInt(ch.code)
                 } else {
