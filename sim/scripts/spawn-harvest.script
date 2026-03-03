@@ -1,0 +1,5 @@
+# Spawn-only economy setup
+# Places a dedicated drop-off building before the main harvest script runs.
+
+tick 0
+build @dropoff 1 ResourceDepot 7 5
