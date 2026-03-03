@@ -191,7 +191,7 @@ private class ClientPanel(
         g.color = Color.WHITE
         g.drawString("tick=${snapshot.tick} selected=${state.selectedIds.size}", 12, height - 44)
         g.drawString(formatAckStatus(state.lastAck), 12, height - 28)
-        g.drawString("left click: select   right click: move/attack/harvest", 12, height - 12)
+        g.drawString("left: select   shift+left: add/remove   right: move/attack/harvest", 12, height - 12)
     }
 
     private fun handleMouse(e: MouseEvent) {
@@ -200,8 +200,7 @@ private class ClientPanel(
         val worldY = e.y.toFloat() / tileSize.toFloat()
         if (SwingUtilities.isLeftMouseButton(e)) {
             val selected = nearestEntity(snapshot, worldX, worldY) { it.faction == 1 }
-            state.selectedIds.clear()
-            if (selected != null) state.selectedIds.add(selected.id)
+            applySelectionClick(state.selectedIds, selected?.id, additive = e.isShiftDown)
             commandAppender.append(buildUnitSelectionRecord(snapshot.tick + 1, state.selectedIds))
             repaint()
             return
@@ -335,3 +334,19 @@ internal fun buildUnitSelectionRecord(
         selectionType = "units",
         units = selectedIds.toIntArray()
     )
+
+internal fun applySelectionClick(
+    selectedIds: LinkedHashSet<Int>,
+    clickedId: Int?,
+    additive: Boolean
+) {
+    if (!additive) {
+        selectedIds.clear()
+        if (clickedId != null) selectedIds.add(clickedId)
+        return
+    }
+    if (clickedId == null) return
+    if (!selectedIds.add(clickedId)) {
+        selectedIds.remove(clickedId)
+    }
+}

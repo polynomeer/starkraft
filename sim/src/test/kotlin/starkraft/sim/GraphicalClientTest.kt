@@ -3,6 +3,7 @@ package starkraft.sim
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
+import starkraft.sim.client.applySelectionClick
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
@@ -40,5 +41,22 @@ class GraphicalClientTest {
         assertEquals(8, record.tick)
         assertEquals("units", record.selectionType)
         assertArrayEquals(intArrayOf(4, 9), record.units)
+    }
+
+    @Test
+    fun `applies additive selection clicks`() {
+        val selected = linkedSetOf(4, 9)
+
+        applySelectionClick(selected, clickedId = 12, additive = true)
+        assertEquals(linkedSetOf(4, 9, 12), selected)
+
+        applySelectionClick(selected, clickedId = 9, additive = true)
+        assertEquals(linkedSetOf(4, 12), selected)
+
+        applySelectionClick(selected, clickedId = 7, additive = false)
+        assertEquals(linkedSetOf(7), selected)
+
+        applySelectionClick(selected, clickedId = null, additive = false)
+        assertEquals(linkedSetOf<Int>(), selected)
     }
 }

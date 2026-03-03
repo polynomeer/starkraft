@@ -175,6 +175,7 @@ Minimal graphical client:
 
 Client controls:
 - left click: select nearest faction 1 unit
+- shift + left click: add/remove the nearest faction 1 unit from the current selection
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
