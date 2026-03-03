@@ -226,6 +226,9 @@ Sample harvest script with a dedicated drop-off building:
 Sample split economy setup with spawn script + main script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn-harvest.script --script sim/scripts/harvest-main.script --ticks 50 --noSleep"`
 
+Sample split gas economy setup for faction 2:
+`./gradlew :sim:run --args="--spawnScript sim/scripts/spawn-harvest-gas.script --script sim/scripts/harvest-gas-main.script --ticks 50 --noSleep"`
+
 Sample gas harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest-gas.script --ticks 50 --noSleep"`
 `./gradlew :sim:run --args="--script sim/scripts/harvest-gas.script --ticks 50 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-gas.ndjson"`

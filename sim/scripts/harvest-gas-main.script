@@ -1,0 +1,7 @@
+# Main gas economy script for use with --spawnScript sim/scripts/spawn-harvest-gas.script
+
+tick 0
+spawnNode @geyser GasGeyser 7 6 120
+spawn @worker 2 Worker 7.5 6 6
+select @worker
+harvest @geyser

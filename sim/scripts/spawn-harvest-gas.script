@@ -1,0 +1,5 @@
+# Spawn-only gas economy setup
+# Places a dedicated drop-off building for faction 2 before the main gas script runs.
+
+tick 0
+build @dropoff 2 ResourceDepot 8 5
