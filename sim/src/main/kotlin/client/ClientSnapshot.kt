@@ -71,7 +71,12 @@ data class EntitySnapshot(
     val defaultRallyOffsetX: Float? = null,
     val defaultRallyOffsetY: Float? = null,
     val rallyX: Float? = null,
-    val rallyY: Float? = null
+    val rallyY: Float? = null,
+    val harvestPhase: String? = null,
+    val harvestTargetNodeId: Int? = null,
+    val harvestCargoKind: String? = null,
+    val harvestCargoAmount: Int? = null,
+    val harvestReturnTargetId: Int? = null
 )
 
 @Serializable
@@ -216,6 +221,26 @@ data class ResourceNodeStreamRecord(
     val sequence: Long,
     val tick: Int,
     val nodes: List<ResourceNodeEventRecord>
+)
+
+@Serializable
+data class HarvesterStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val phase: String,
+    val targetNodeId: Int,
+    val cargoKind: String? = null,
+    val cargoAmount: Int = 0,
+    val returnTargetId: Int? = null
+)
+
+@Serializable
+data class HarvesterStateStreamRecord(
+    val recordType: String = "harvesterState",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<HarvesterStateEntityRecord>
 )
 
 @Serializable
@@ -673,6 +698,7 @@ fun buildClientSnapshot(
         val production = world.productionQueues[id]?.items
         val footprint = world.footprints[id]
         val rally = world.rallyPoints[id]
+        val harvester = world.harvesters[id]
         val buildSpec = data?.buildSpec(tag.typeId)
         val trainSpec = data?.trainSpec(tag.typeId)
         val archetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
@@ -706,7 +732,15 @@ fun buildClientSnapshot(
                 defaultRallyOffsetX = buildSpec?.rallyOffsetX,
                 defaultRallyOffsetY = buildSpec?.rallyOffsetY,
                 rallyX = rally?.x,
-                rallyY = rally?.y
+                rallyY = rally?.y,
+                harvestPhase =
+                    harvester?.let {
+                        if (it.cargoAmount > 0) "return" else "gather"
+                    },
+                harvestTargetNodeId = harvester?.targetNodeId?.takeIf { it >= 0 },
+                harvestCargoKind = harvester?.cargoKind,
+                harvestCargoAmount = harvester?.cargoAmount?.takeIf { it > 0 },
+                harvestReturnTargetId = harvester?.returnTargetId?.takeIf { it >= 0 }
             )
         )
     }
@@ -1014,6 +1048,16 @@ fun renderResourceNodeStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ResourceNodeStreamRecord(sequence = sequence, tick = tick, nodes = nodes)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderHarvesterStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<HarvesterStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = HarvesterStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

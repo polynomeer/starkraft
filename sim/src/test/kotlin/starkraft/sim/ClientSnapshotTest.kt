@@ -19,6 +19,7 @@ import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.ResourceNodeEventRecord
@@ -30,6 +31,7 @@ import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
+import starkraft.sim.client.renderHarvesterStateStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
@@ -58,6 +60,7 @@ import starkraft.sim.client.MetricsFactionRecord
 import starkraft.sim.client.TrainFailureCounts
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.Health
+import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.BuildingFootprint
@@ -95,11 +98,20 @@ class ClientSnapshotTest {
         world.stockpiles[2] = ResourceStockpile(80, 10)
         val nodeId = world.spawn(Transform(6f, 6f, 0f), UnitTag(0, "MineralField"), Health(1000, 1000, 0), null)
         world.resourceNodes[nodeId] = ResourceNode(remaining = 250)
+        val idC = world.spawn(Transform(6.5f, 6f, 0f), UnitTag(1, "Worker"), Health(40, 40, 0), null)
+        world.harvesters[idC] =
+            Harvester(
+                targetNodeId = nodeId,
+                harvestPerTick = 2,
+                cargoKind = "MineralField",
+                cargoAmount = 2,
+                returnTargetId = idB
+            )
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
         val data =
             DataRepo(
-                """{"list":[{"id":"Marine","archetype":"infantry","hp":45,"buildTicks":75,"producerTypes":["Depot"]},{"id":"Zergling","archetype":"lightMelee","hp":35,"buildTicks":55,"producerTypes":["Depot"]}]}""",
+                """{"list":[{"id":"Marine","archetype":"infantry","hp":45,"buildTicks":75,"producerTypes":["Depot"]},{"id":"Zergling","archetype":"lightMelee","hp":35,"buildTicks":55,"producerTypes":["Depot"]},{"id":"Worker","archetype":"worker","hp":40,"buildTicks":30,"producerTypes":["Depot"]}]}""",
                 """{"list":[]}""",
                 """{"list":[{"id":"Depot","archetype":"producer","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
             )
@@ -119,11 +131,17 @@ class ClientSnapshotTest {
         assertEquals("demo-map", snapshot.mapId)
         assertEquals("test-build", snapshot.buildVersion)
         assertEquals(7L, snapshot.seed)
-        assertEquals(listOf(idA, idB).sorted(), snapshot.entities.map { it.id })
+        assertEquals(listOf(idA, idB, idC).sorted(), snapshot.entities.map { it.id })
         val entitiesById = snapshot.entities.associateBy { it.id }
         assertEquals("Attack", entitiesById[idA]?.activeOrder)
         assertEquals("Move", entitiesById[idB]?.activeOrder)
         assertEquals("lightMelee", entitiesById[idA]?.archetype)
+        assertEquals("worker", entitiesById[idC]?.archetype)
+        assertEquals("return", entitiesById[idC]?.harvestPhase)
+        assertEquals(nodeId, entitiesById[idC]?.harvestTargetNodeId)
+        assertEquals("MineralField", entitiesById[idC]?.harvestCargoKind)
+        assertEquals(2, entitiesById[idC]?.harvestCargoAmount)
+        assertEquals(idB, entitiesById[idC]?.harvestReturnTargetId)
         assertEquals(1, snapshot.resourceNodes.size)
         assertEquals(nodeId, snapshot.resourceNodes.first().id)
         assertEquals("MineralField", snapshot.resourceNodes.first().kind)
@@ -356,10 +374,38 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders harvester state stream record json`() {
+        val json =
+            renderHarvesterStateStreamRecordJson(
+                sequence = 15L,
+                tick = 5,
+                entities =
+                    listOf(
+                        HarvesterStateEntityRecord(
+                            entityId = 51,
+                            faction = 1,
+                            typeId = "Worker",
+                            phase = "return",
+                            targetNodeId = 9,
+                            cargoKind = "MineralField",
+                            cargoAmount = 2,
+                            returnTargetId = 41
+                        )
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"harvesterState\",\"sequence\":15,\"tick\":5,\"entities\":[{\"entityId\":51,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":41}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders combat stream record json`() {
         val json =
             renderCombatStreamRecordJson(
-                sequence = 15L,
+                sequence = 16L,
                 tick = 6,
                 attacks = 2,
                 kills = 1,
@@ -372,7 +418,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"combat\",\"sequence\":15,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            "{\"recordType\":\"combat\",\"sequence\":16,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }

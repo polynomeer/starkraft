@@ -147,7 +147,7 @@ Other flags:
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
-- Snapshots expose faction minerals/gas, resource nodes with remaining amounts, plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, and current rally point when present
+- Snapshots expose faction minerals/gas, resource nodes with remaining amounts, plus entity archetypes, production state, building extents, placement clearance, producer capabilities/queue limits, default rally offsets, current rally point, and harvester cargo/return state when present
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
@@ -168,6 +168,7 @@ Other flags:
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
   Harvest ticks emit `resourceNode` records with per-node harvested amounts, remaining resources, and depletion flags.
+  Snapshot cadence also emits `harvesterState` records with worker gather/return phase, cargo, node target, and return building target.
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
   Snapshot cadence also emits `producerState` records with producer archetypes, capabilities, and default rally offsets.

@@ -10,6 +10,7 @@ import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.MapResourceNodeRecord
+import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
@@ -25,6 +26,7 @@ import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
+import starkraft.sim.client.renderHarvesterStateStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
@@ -438,6 +440,7 @@ fun main(args: Array<String>) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
             emitMetricsRecord(world, fog1, fog2, tick, pathing, pathQueue, movement, resolvedSnapshotOutPath, streamSequence)
             emitEconomyRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
+            emitHarvesterStateRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitProducerStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
                 world,
@@ -1132,6 +1135,43 @@ private fun emitProducerStateRecord(
     entities.sortBy { it.entityId }
     emitSnapshotLine(
         renderProducerStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitHarvesterStateRecord(
+    world: World,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || world.harvesters.isEmpty()) return
+    val entities = ArrayList<HarvesterStateEntityRecord>(world.harvesters.size)
+    val ids = world.harvesters.keys.sorted()
+    for (id in ids) {
+        val harvester = world.harvesters[id] ?: continue
+        val tag = world.tags[id] ?: continue
+        entities.add(
+            HarvesterStateEntityRecord(
+                entityId = id,
+                faction = tag.faction,
+                typeId = tag.typeId,
+                phase = if (harvester.cargoAmount > 0) "return" else "gather",
+                targetNodeId = harvester.targetNodeId,
+                cargoKind = harvester.cargoKind,
+                cargoAmount = harvester.cargoAmount,
+                returnTargetId = harvester.returnTargetId.takeIf { it >= 0 }
+            )
+        )
+    }
+    if (entities.isEmpty()) return
+    emitSnapshotLine(
+        renderHarvesterStateStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,
