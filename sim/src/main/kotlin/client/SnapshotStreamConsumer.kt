@@ -44,6 +44,9 @@ data class SnapshotStreamSummary(
     val trainingProducerCount: Int = 0,
     val rallyProducerCount: Int = 0,
     val dropoffProducerCount: Int = 0,
+    val dropoffStateCount: Int = 0,
+    val dropoffStateFaction1Count: Int = 0,
+    val dropoffStateFaction2Count: Int = 0,
     val maxProducerQueueLimit: Int = 0,
     val harvesterCount: Int = 0,
     val harvesterGatherCount: Int = 0,
@@ -114,6 +117,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var trainingProducerCount = 0
     var rallyProducerCount = 0
     var dropoffProducerCount = 0
+    var dropoffStateCount = 0
+    var dropoffStateFaction1Count = 0
+    var dropoffStateFaction2Count = 0
     var maxProducerQueueLimit = 0
     var harvesterCount = 0
     var harvesterGatherCount = 0
@@ -265,6 +271,18 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     if (limit > maxProducerQueueLimit) maxProducerQueueLimit = limit
                 }
             }
+            "dropoffState" -> {
+                val entities = obj.array("entities")
+                dropoffStateCount = entities.size
+                dropoffStateFaction1Count = 0
+                dropoffStateFaction2Count = 0
+                for (entity in entities) {
+                    when (entity.int("faction")) {
+                        1 -> dropoffStateFaction1Count++
+                        2 -> dropoffStateFaction2Count++
+                    }
+                }
+            }
             "harvesterState" -> {
                 val entities = obj.array("entities")
                 harvesterCount = entities.size
@@ -395,6 +413,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         trainingProducerCount = trainingProducerCount,
         rallyProducerCount = rallyProducerCount,
         dropoffProducerCount = dropoffProducerCount,
+        dropoffStateCount = dropoffStateCount,
+        dropoffStateFaction1Count = dropoffStateFaction1Count,
+        dropoffStateFaction2Count = dropoffStateFaction2Count,
         maxProducerQueueLimit = maxProducerQueueLimit,
         harvesterCount = harvesterCount,
         harvesterGatherCount = harvesterGatherCount,
@@ -475,6 +496,12 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
+    if (summary.dropoffStateCount > 0 || summary.countsByType["dropoffState"] != null) {
+        lines.add(
+            "dropoffs: total=${summary.dropoffStateCount} " +
+                "f1=${summary.dropoffStateFaction1Count} f2=${summary.dropoffStateFaction2Count}"
         )
     }
     if (summary.harvesterCount > 0 || summary.countsByType["harvesterState"] != null) {

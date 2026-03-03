@@ -21,22 +21,23 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"resourceDelta\",\"sequence\":5,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0},{\"faction\":1,\"kind\":\"refund\",\"minerals\":10,\"gas\":0}]}",
                     "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":6,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":10,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
                     "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"Tower\",\"archetype\":\"defense\",\"supportsTraining\":false,\"supportsRally\":false,\"supportsDropoff\":false,\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
-                    "{\"recordType\":\"harvesterState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":1},{\"entityId\":14,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"gather\",\"targetNodeId\":11,\"cargoKind\":null,\"cargoAmount\":0,\"returnTargetId\":null}]}",
-                    "{\"recordType\":\"harvestCycle\",\"sequence\":9,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2}]}",
-                    "{\"recordType\":\"production\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
-                    "{\"recordType\":\"metrics\",\"sequence\":11,\"tick\":1,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20,\"minerals\":150,\"gas\":25},{\"faction\":2,\"alive\":4,\"visibleTiles\":18,\"minerals\":80,\"gas\":10}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
-                    "{\"recordType\":\"pathAssigned\",\"sequence\":12,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28},{\"entityId\":8,\"pathLength\":6,\"goalX\":12,\"goalY\":10}]}",
-                    "{\"recordType\":\"pathProgress\",\"sequence\":13,\"tick\":1,\"entities\":[{\"entityId\":7,\"waypointIndex\":3,\"remainingNodes\":5,\"completed\":false},{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
-                    "{\"recordType\":\"vision\",\"sequence\":14,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
-                    "{\"recordType\":\"combat\",\"sequence\":15,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                    "{\"recordType\":\"damage\",\"sequence\":16,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                    "{\"recordType\":\"despawn\",\"sequence\":17,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":18,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                    "{\"recordType\":\"sessionEnd\",\"sequence\":19,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                    "{\"recordType\":\"dropoffState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":25.0,\"y\":5.0},{\"entityId\":12,\"faction\":2,\"typeId\":\"ResourceDepot\",\"archetype\":\"econDepot\",\"x\":7.0,\"y\":6.0}]}",
+                    "{\"recordType\":\"harvesterState\",\"sequence\":9,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":1},{\"entityId\":14,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"gather\",\"targetNodeId\":11,\"cargoKind\":null,\"cargoAmount\":0,\"returnTargetId\":null}]}",
+                    "{\"recordType\":\"harvestCycle\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2}]}",
+                    "{\"recordType\":\"production\",\"sequence\":11,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
+                    "{\"recordType\":\"metrics\",\"sequence\":12,\"tick\":1,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20,\"minerals\":150,\"gas\":25},{\"faction\":2,\"alive\":4,\"visibleTiles\":18,\"minerals\":80,\"gas\":10}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
+                    "{\"recordType\":\"pathAssigned\",\"sequence\":13,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28},{\"entityId\":8,\"pathLength\":6,\"goalX\":12,\"goalY\":10}]}",
+                    "{\"recordType\":\"pathProgress\",\"sequence\":14,\"tick\":1,\"entities\":[{\"entityId\":7,\"waypointIndex\":3,\"remainingNodes\":5,\"completed\":false},{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
+                    "{\"recordType\":\"vision\",\"sequence\":15,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
+                    "{\"recordType\":\"combat\",\"sequence\":16,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"damage\",\"sequence\":17,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                    "{\"recordType\":\"despawn\",\"sequence\":18,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":19,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionEnd\",\"sequence\":20,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
 
-        assertEquals(20, summary.totalRecords)
+        assertEquals(21, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["resourceNode"])
@@ -45,6 +46,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.countsByType["resourceDelta"])
         assertEquals(1, summary.countsByType["resourceDeltaSummary"])
         assertEquals(1, summary.countsByType["producerState"])
+        assertEquals(1, summary.countsByType["dropoffState"])
         assertEquals(1, summary.countsByType["harvesterState"])
         assertEquals(1, summary.countsByType["harvestCycle"])
         assertEquals(1, summary.countsByType["production"])
@@ -80,6 +82,9 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.trainingProducerCount)
         assertEquals(1, summary.rallyProducerCount)
         assertEquals(1, summary.dropoffProducerCount)
+        assertEquals(2, summary.dropoffStateCount)
+        assertEquals(1, summary.dropoffStateFaction1Count)
+        assertEquals(1, summary.dropoffStateFaction2Count)
         assertEquals(3, summary.maxProducerQueueLimit)
         assertEquals(2, summary.harvesterCount)
         assertEquals(1, summary.harvesterGatherCount)
@@ -132,18 +137,19 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"resourceDelta\",\"sequence\":5,\"tick\":0,\"events\":[{\"faction\":1,\"kind\":\"spend\",\"minerals\":50,\"gas\":0}]}",
                         "{\"recordType\":\"resourceDeltaSummary\",\"sequence\":6,\"tick\":0,\"factions\":[{\"faction\":1,\"mineralsSpent\":50,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0},{\"faction\":2,\"mineralsSpent\":0,\"gasSpent\":0,\"mineralsRefunded\":0,\"gasRefunded\":0}]}",
                         "{\"recordType\":\"producerState\",\"sequence\":7,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
-                        "{\"recordType\":\"harvesterState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":3,\"returnTargetId\":1}]}",
-                        "{\"recordType\":\"harvestCycle\",\"sequence\":9,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3}]}",
-                        "{\"recordType\":\"production\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
-                        "{\"recordType\":\"metrics\",\"sequence\":11,\"tick\":1,\"factions\":[],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
-                        "{\"recordType\":\"pathAssigned\",\"sequence\":12,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28}]}",
-                        "{\"recordType\":\"pathProgress\",\"sequence\":13,\"tick\":1,\"entities\":[{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
-                        "{\"recordType\":\"vision\",\"sequence\":14,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
-                        "{\"recordType\":\"combat\",\"sequence\":15,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
-                        "{\"recordType\":\"damage\",\"sequence\":16,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
-                        "{\"recordType\":\"despawn\",\"sequence\":17,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
-                        "{\"recordType\":\"sessionStats\",\"sequence\":18,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                        "{\"recordType\":\"sessionEnd\",\"sequence\":19,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                        "{\"recordType\":\"dropoffState\",\"sequence\":8,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":25.0,\"y\":5.0}]}",
+                        "{\"recordType\":\"harvesterState\",\"sequence\":9,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":3,\"returnTargetId\":1}]}",
+                        "{\"recordType\":\"harvestCycle\",\"sequence\":10,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3}]}",
+                        "{\"recordType\":\"production\",\"sequence\":11,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
+                        "{\"recordType\":\"metrics\",\"sequence\":12,\"tick\":1,\"factions\":[],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
+                        "{\"recordType\":\"pathAssigned\",\"sequence\":13,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28}]}",
+                        "{\"recordType\":\"pathProgress\",\"sequence\":14,\"tick\":1,\"entities\":[{\"entityId\":8,\"waypointIndex\":6,\"remainingNodes\":0,\"completed\":true}]}",
+                        "{\"recordType\":\"vision\",\"sequence\":15,\"tick\":1,\"changes\":[{\"faction\":1,\"x\":8,\"y\":8,\"visible\":true},{\"faction\":2,\"x\":12,\"y\":12,\"visible\":false}]}",
+                        "{\"recordType\":\"combat\",\"sequence\":16,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
+                        "{\"recordType\":\"damage\",\"sequence\":17,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+                        "{\"recordType\":\"despawn\",\"sequence\":18,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":19,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":20,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
             )
@@ -157,6 +163,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("economy: events=1 spend=50/0 refund=0/0"))
         assertTrue(text.contains("f1=50/0->0/0"))
         assertTrue(text.contains("producers: total=1 training=1 rally=1 dropoff=1 maxQueue=3"))
+        assertTrue(text.contains("dropoffs: total=1 f1=1 f2=0"))
         assertTrue(text.contains("harvesters: total=1 gather=0 return=1 cargo=3"))
         assertTrue(text.contains("harvestCycle: pickup=1/3 deposit=1/3"))
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
