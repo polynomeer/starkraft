@@ -1,0 +1,8 @@
+# Gas harvest script with a dedicated gas drop-off building.
+
+tick 0
+build @gasdrop 2 GasDepot 8 5
+spawnNode @geyser GasGeyser 7 6 120
+spawn @worker 2 Worker 7.5 6 6
+select @worker
+harvest @geyser
