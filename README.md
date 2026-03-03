@@ -193,6 +193,7 @@ Other flags:
   `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft.ndjson"`
   This reads the NDJSON stream and prints record counts plus session/hash metadata, including resource-node change counts, per-faction harvest splits, active nodes, remaining resources, economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
+  When `harvestCycle` records are present, it also prints pickup/deposit event counts and transferred amounts.
   Resource-node totals also drop depleted nodes once a `despawn` record with reason `resourceDepleted` is seen.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches

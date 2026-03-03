@@ -48,6 +48,10 @@ data class SnapshotStreamSummary(
     val harvesterGatherCount: Int = 0,
     val harvesterReturnCount: Int = 0,
     val harvesterCargoTotal: Int = 0,
+    val harvestCyclePickupCount: Int = 0,
+    val harvestCycleDepositCount: Int = 0,
+    val harvestCyclePickupAmount: Int = 0,
+    val harvestCycleDepositAmount: Int = 0,
     val productionEnqueueCount: Int = 0,
     val productionProgressCount: Int = 0,
     val productionCompleteCount: Int = 0,
@@ -113,6 +117,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var harvesterGatherCount = 0
     var harvesterReturnCount = 0
     var harvesterCargoTotal = 0
+    var harvestCyclePickupCount = 0
+    var harvestCycleDepositCount = 0
+    var harvestCyclePickupAmount = 0
+    var harvestCycleDepositAmount = 0
     var productionEnqueueCount = 0
     var productionProgressCount = 0
     var productionCompleteCount = 0
@@ -267,6 +275,22 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     harvesterCargoTotal += entity.int("cargoAmount") ?: 0
                 }
             }
+            "harvestCycle" -> {
+                val events = obj.array("events")
+                for (event in events) {
+                    val amount = event.int("amount") ?: 0
+                    when (event.string("kind")) {
+                        "deposit" -> {
+                            harvestCycleDepositCount++
+                            harvestCycleDepositAmount += amount
+                        }
+                        else -> {
+                            harvestCyclePickupCount++
+                            harvestCyclePickupAmount += amount
+                        }
+                    }
+                }
+            }
             "production" -> {
                 val events = obj.array("events")
                 for (event in events) {
@@ -371,6 +395,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         harvesterGatherCount = harvesterGatherCount,
         harvesterReturnCount = harvesterReturnCount,
         harvesterCargoTotal = harvesterCargoTotal,
+        harvestCyclePickupCount = harvestCyclePickupCount,
+        harvestCycleDepositCount = harvestCycleDepositCount,
+        harvestCyclePickupAmount = harvestCyclePickupAmount,
+        harvestCycleDepositAmount = harvestCycleDepositAmount,
         productionEnqueueCount = productionEnqueueCount,
         productionProgressCount = productionProgressCount,
         productionCompleteCount = productionCompleteCount,
@@ -447,6 +475,12 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
         lines.add(
             "harvesters: total=${summary.harvesterCount} gather=${summary.harvesterGatherCount} " +
                 "return=${summary.harvesterReturnCount} cargo=${summary.harvesterCargoTotal}"
+        )
+    }
+    if (summary.harvestCyclePickupCount > 0 || summary.harvestCycleDepositCount > 0 || summary.countsByType["harvestCycle"] != null) {
+        lines.add(
+            "harvestCycle: pickup=${summary.harvestCyclePickupCount}/${summary.harvestCyclePickupAmount} " +
+                "deposit=${summary.harvestCycleDepositCount}/${summary.harvestCycleDepositAmount}"
         )
     }
     if (
