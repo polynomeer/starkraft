@@ -528,13 +528,17 @@ class ClientSnapshotTest {
                 harvestedMineralsFaction2 = 1,
                 harvestedGasFaction1 = 1,
                 harvestedGasFaction2 = 0,
+                harvestPickupCount = 2,
+                harvestDepositCount = 1,
+                harvestPickupAmount = 3,
+                harvestDepositAmount = 1,
                 depletedNodes = 1,
                 changedResourceNodes = 2,
                 pretty = false
             )
 
         assertEquals(
-            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"mineralsFaction1\":150,\"mineralsFaction2\":80,\"gasFaction1\":25,\"gasFaction2\":10,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildFailures\":0,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":0,\"insufficientResources\":0},\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":0,\"trainFailures\":1,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"mineralsSpent\":50,\"gasSpent\":5,\"mineralsRefunded\":10,\"gasRefunded\":0,\"mineralsSpentFaction1\":50,\"mineralsSpentFaction2\":0,\"gasSpentFaction1\":5,\"gasSpentFaction2\":0,\"mineralsRefundedFaction1\":10,\"mineralsRefundedFaction2\":0,\"gasRefundedFaction1\":0,\"gasRefundedFaction2\":0,\"harvestedMinerals\":3,\"harvestedGas\":1,\"harvestedMineralsFaction1\":2,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":1,\"harvestedGasFaction2\":0,\"depletedNodes\":1,\"changedResourceNodes\":2}",
+            "{\"recordType\":\"tickSummary\",\"sequence\":13,\"tick\":8,\"aliveTotal\":7,\"visibleTilesFaction1\":20,\"visibleTilesFaction2\":18,\"mineralsFaction1\":150,\"mineralsFaction2\":80,\"gasFaction1\":25,\"gasFaction2\":10,\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":6,\"avgPathLength\":5.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1,\"attacks\":4,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildFailures\":0,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":0,\"insufficientResources\":0},\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":0,\"trainFailures\":1,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"mineralsSpent\":50,\"gasSpent\":5,\"mineralsRefunded\":10,\"gasRefunded\":0,\"mineralsSpentFaction1\":50,\"mineralsSpentFaction2\":0,\"gasSpentFaction1\":5,\"gasSpentFaction2\":0,\"mineralsRefundedFaction1\":10,\"mineralsRefundedFaction2\":0,\"gasRefundedFaction1\":0,\"gasRefundedFaction2\":0,\"harvestedMinerals\":3,\"harvestedGas\":1,\"harvestedMineralsFaction1\":2,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":1,\"harvestedGasFaction2\":0,\"harvestPickupCount\":2,\"harvestDepositCount\":1,\"harvestPickupAmount\":3,\"harvestDepositAmount\":1,\"depletedNodes\":1,\"changedResourceNodes\":2}",
             json
         )
     }
@@ -863,6 +867,10 @@ class ClientSnapshotTest {
                 harvestedMineralsFaction2 = 80,
                 harvestedGasFaction1 = 12,
                 harvestedGasFaction2 = 6,
+                harvestPickupCount = 120,
+                harvestDepositCount = 118,
+                harvestPickupAmount = 238,
+                harvestDepositAmount = 231,
                 depletedNodes = 4,
                 changedResourceNodes = 39,
                 finalVisibleTilesFaction1 = 220,
@@ -877,7 +885,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"builds\":3,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"trainsQueued\":8,\"trainsCompleted\":6,\"trainsCancelled\":1,\"trainFailures\":2,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":1,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"mineralsSpent\":450,\"gasSpent\":25,\"mineralsRefunded\":50,\"gasRefunded\":0,\"mineralsSpentFaction1\":300,\"mineralsSpentFaction2\":150,\"gasSpentFaction1\":25,\"gasSpentFaction2\":0,\"mineralsRefundedFaction1\":50,\"mineralsRefundedFaction2\":0,\"gasRefundedFaction1\":0,\"gasRefundedFaction2\":0,\"harvestedMinerals\":220,\"harvestedGas\":18,\"harvestedMineralsFaction1\":140,\"harvestedMineralsFaction2\":80,\"harvestedGasFaction1\":12,\"harvestedGasFaction2\":6,\"depletedNodes\":4,\"changedResourceNodes\":39,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalMineralsFaction1\":350,\"finalMineralsFaction2\":500,\"finalGasFaction1\":25,\"finalGasFaction2\":10,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
+            "{\"recordType\":\"sessionStats\",\"sequence\":24,\"ticks\":1500,\"pathRequests\":120,\"pathSolved\":110,\"replans\":30,\"replansBlocked\":12,\"replansStuck\":5,\"attacks\":80,\"kills\":14,\"despawns\":14,\"builds\":3,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"trainsQueued\":8,\"trainsCompleted\":6,\"trainsCancelled\":1,\"trainFailures\":2,\"trainFailureReasons\":{\"missingBuilding\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":1,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"mineralsSpent\":450,\"gasSpent\":25,\"mineralsRefunded\":50,\"gasRefunded\":0,\"mineralsSpentFaction1\":300,\"mineralsSpentFaction2\":150,\"gasSpentFaction1\":25,\"gasSpentFaction2\":0,\"mineralsRefundedFaction1\":50,\"mineralsRefundedFaction2\":0,\"gasRefundedFaction1\":0,\"gasRefundedFaction2\":0,\"harvestedMinerals\":220,\"harvestedGas\":18,\"harvestedMineralsFaction1\":140,\"harvestedMineralsFaction2\":80,\"harvestedGasFaction1\":12,\"harvestedGasFaction2\":6,\"harvestPickupCount\":120,\"harvestDepositCount\":118,\"harvestPickupAmount\":238,\"harvestDepositAmount\":231,\"depletedNodes\":4,\"changedResourceNodes\":39,\"finalVisibleTilesFaction1\":220,\"finalVisibleTilesFaction2\":198,\"finalMineralsFaction1\":350,\"finalMineralsFaction2\":500,\"finalGasFaction1\":25,\"finalGasFaction2\":10,\"finalWorldHash\":123456789,\"finalReplayHash\":987654321}",
             json
         )
     }

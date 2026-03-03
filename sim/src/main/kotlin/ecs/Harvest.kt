@@ -35,6 +35,14 @@ class ResourceHarvestSystem(
         private set
     var lastTickDepletedNodes: Int = 0
         private set
+    var lastTickPickupCount: Int = 0
+        private set
+    var lastTickDepositCount: Int = 0
+        private set
+    var lastTickPickupAmount: Int = 0
+        private set
+    var lastTickDepositAmount: Int = 0
+        private set
 
     fun tick() {
         lastTickEventCount = 0
@@ -46,6 +54,10 @@ class ResourceHarvestSystem(
         lastTickHarvestedGasFaction1 = 0
         lastTickHarvestedGasFaction2 = 0
         lastTickDepletedNodes = 0
+        lastTickPickupCount = 0
+        lastTickDepositCount = 0
+        lastTickPickupAmount = 0
+        lastTickDepositAmount = 0
         for ((entityId, harvester) in world.harvesters) {
             val workerTag = world.tags[entityId] ?: continue
             val workerTransform = world.transforms[entityId] ?: continue
@@ -97,6 +109,8 @@ class ResourceHarvestSystem(
             }
             recordEvent(nodeId, harvested, node.remaining, node.remaining == 0)
             recordCycleEvent(EVENT_PICKUP, entityId, nodeId, harvester.returnTargetId, node.kind, harvested)
+            lastTickPickupCount++
+            lastTickPickupAmount += harvested
         }
     }
 
@@ -150,6 +164,8 @@ class ResourceHarvestSystem(
             }
         }
         recordCycleEvent(EVENT_DEPOSIT, entityId, harvester.targetNodeId, returnId, cargoKind, cargoAmount)
+        lastTickDepositCount++
+        lastTickDepositAmount += cargoAmount
         harvester.cargoKind = null
         harvester.cargoAmount = 0
         harvester.returnTargetId = -1

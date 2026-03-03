@@ -287,6 +287,10 @@ fun main(args: Array<String>) {
     var totalHarvestedMineralsFaction2 = 0
     var totalHarvestedGasFaction1 = 0
     var totalHarvestedGasFaction2 = 0
+    var totalHarvestPickupCount = 0
+    var totalHarvestDepositCount = 0
+    var totalHarvestPickupAmount = 0
+    var totalHarvestDepositAmount = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -438,6 +442,10 @@ fun main(args: Array<String>) {
         totalHarvestedMineralsFaction2 += harvest.lastTickHarvestedMineralsFaction2
         totalHarvestedGasFaction1 += harvest.lastTickHarvestedGasFaction1
         totalHarvestedGasFaction2 += harvest.lastTickHarvestedGasFaction2
+        totalHarvestPickupCount += harvest.lastTickPickupCount
+        totalHarvestDepositCount += harvest.lastTickDepositCount
+        totalHarvestPickupAmount += harvest.lastTickPickupAmount
+        totalHarvestDepositAmount += harvest.lastTickDepositAmount
 
         if (snapshotEvery != null && shouldEmitSnapshotAtTick(tick, snapshotEvery)) {
             emitVisionRecord(fog1, fog2, tick, visionPrevTeam1, visionPrevTeam2, resolvedSnapshotOutPath, streamSequence)
@@ -603,6 +611,10 @@ fun main(args: Array<String>) {
                 harvestedMineralsFaction2 = totalHarvestedMineralsFaction2,
                 harvestedGasFaction1 = totalHarvestedGasFaction1,
                 harvestedGasFaction2 = totalHarvestedGasFaction2,
+                harvestPickupCount = totalHarvestPickupCount,
+                harvestDepositCount = totalHarvestDepositCount,
+                harvestPickupAmount = totalHarvestPickupAmount,
+                harvestDepositAmount = totalHarvestDepositAmount,
                 depletedNodes = totalDepletedNodes,
                 changedResourceNodes = totalChangedResourceNodes,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
@@ -1445,6 +1457,10 @@ private fun emitTickSummaryRecord(
             harvestedMineralsFaction2 = harvest.lastTickHarvestedMineralsFaction2,
             harvestedGasFaction1 = harvest.lastTickHarvestedGasFaction1,
             harvestedGasFaction2 = harvest.lastTickHarvestedGasFaction2,
+            harvestPickupCount = harvest.lastTickPickupCount,
+            harvestDepositCount = harvest.lastTickDepositCount,
+            harvestPickupAmount = harvest.lastTickPickupAmount,
+            harvestDepositAmount = harvest.lastTickDepositAmount,
             depletedNodes = harvest.lastTickDepletedNodes,
             changedResourceNodes = harvest.lastTickEventCount,
             pretty = false

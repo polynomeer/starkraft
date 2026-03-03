@@ -185,7 +185,7 @@ Other flags:
   `tickSummary` and `sessionStats` include build/train failure counters split by reason.
   `tickSummary` and `sessionStats` also include faction 1/2 minerals and gas.
   `tickSummary` and `sessionStats` also include mineral/gas spend and refund rollups, both total and split by faction 1/2.
-  They also include harvest totals for minerals/gas plus resource-node change and depletion counts.
+  They also include harvest totals for minerals/gas, pickup/deposit cycle counts and amounts, plus resource-node change and depletion counts.
   `metrics` records also carry faction minerals/gas alongside alive counts and visibility.
   Each NDJSON record also carries a monotonic `sequence` field.
   They end with a `sessionEnd` record carrying final `tick`, `worldHash`, and optional `replayHash`.
