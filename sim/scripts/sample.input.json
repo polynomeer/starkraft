@@ -1,0 +1,33 @@
+{
+  "commands": [
+    {
+      "tick": 0,
+      "commandType": "build",
+      "faction": 1,
+      "typeId": "Depot",
+      "tileX": 6,
+      "tileY": 6,
+      "label": "depot"
+    },
+    {
+      "tick": 1,
+      "commandType": "train",
+      "buildingLabel": "depot",
+      "typeId": "Marine"
+    },
+    {
+      "tick": 2,
+      "commandType": "rally",
+      "buildingLabel": "depot",
+      "x": 14.0,
+      "y": 14.0
+    },
+    {
+      "tick": 5,
+      "commandType": "move",
+      "units": [1, 2, 3],
+      "x": 18.0,
+      "y": 18.0
+    }
+  ]
+}

@@ -67,6 +67,7 @@ import starkraft.sim.ecs.path.PathPool
 import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
+import starkraft.sim.net.InputJson
 import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayIO
@@ -207,6 +208,7 @@ fun main(args: Array<String>) {
 
     val replayPath = parseReplayPath(args)
     val scriptPath = parseScriptPath(args)
+    val inputJsonPath = parseInputJsonPath(args)
     val spawnScriptPath = parseSpawnScriptPath(args)
     val recordPath = parseRecordPath(args)
     val replayOutPath = parseReplayOutPath(args)
@@ -256,6 +258,7 @@ fun main(args: Array<String>) {
     requireReplayCompatibility(replayMeta, strictReplayMeta)
     val baseProgram: LoadedProgram = when {
         replayPath != null -> LoadedProgram(loadReplayCommands(replayPath, strictReplayHash), emptyArray())
+        inputJsonPath != null -> loadInputJsonProgram(inputJsonPath)
         scriptPath != null -> loadScriptProgram(scriptPath)
         else -> LoadedProgram(arrayOf(), emptyArray())
     }
@@ -757,6 +760,17 @@ private fun parseScriptPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--script" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--script=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseInputJsonPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--inputJson" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--inputJson=")) return a.substringAfter("=")
         i++
     }
     return null
@@ -1663,10 +1677,7 @@ internal data class LoadedProgram(
     val selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>
 )
 
-private fun loadScriptProgram(pathStr: String): LoadedProgram {
-    val path = resolvePath(pathStr)
-    if (!Files.exists(path)) error("Script file not found: $pathStr")
-    val program = ScriptRunner.loadProgram(path)
+private fun toLoadedProgram(program: ScriptRunner.ScriptProgram): LoadedProgram {
     val cmds = program.commands
     val selectionEvents = program.selections
     if (cmds.isEmpty() && selectionEvents.isEmpty()) return LoadedProgram(arrayOf(), emptyArray())
@@ -1682,6 +1693,18 @@ private fun loadScriptProgram(pathStr: String): LoadedProgram {
         selectionByTick[event.tick].add(event)
     }
     return LoadedProgram(byTick, selectionByTick)
+}
+
+private fun loadScriptProgram(pathStr: String): LoadedProgram {
+    val path = resolvePath(pathStr)
+    if (!Files.exists(path)) error("Script file not found: $pathStr")
+    return toLoadedProgram(ScriptRunner.loadProgram(path))
+}
+
+private fun loadInputJsonProgram(pathStr: String): LoadedProgram {
+    val path = resolvePath(pathStr)
+    if (!Files.exists(path)) error("Input JSON file not found: $pathStr")
+    return toLoadedProgram(InputJson.loadProgram(path))
 }
 
 private fun resolvePath(pathStr: String): java.nio.file.Path {
