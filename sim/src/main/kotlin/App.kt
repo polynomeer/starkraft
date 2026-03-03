@@ -491,14 +491,15 @@ fun main(args: Array<String>) {
             val outcomeSuffix =
                 renderCommandOutcomeLogSuffix(
                     commandOutcomeCounters,
-                    tickTrainsCompleted,
-                    harvest.lastTickPickupCount,
-                    harvest.lastTickDepositCount,
-                    harvest.lastTickPickupAmount,
-                    harvest.lastTickDepositAmount,
-                    dropoffCounts.faction1,
-                    dropoffCounts.faction2,
-                    dropoffCounts.minerals,
+                tickTrainsCompleted,
+                harvest.lastTickPickupCount,
+                harvest.lastTickDepositCount,
+                harvest.lastTickPickupAmount,
+                harvest.lastTickDepositAmount,
+                tickHarvesterRetargets,
+                dropoffCounts.faction1,
+                dropoffCounts.faction2,
+                dropoffCounts.minerals,
                     dropoffCounts.gas
                 )
             println(
@@ -566,6 +567,7 @@ fun main(args: Array<String>) {
             totalHarvestDepositCount,
             totalHarvestPickupAmount,
             totalHarvestDepositAmount,
+            totalHarvesterRetargets,
             dropoffCounts.faction1,
             dropoffCounts.faction2,
             dropoffCounts.minerals,
@@ -2774,6 +2776,7 @@ internal fun renderCommandOutcomeLogSuffix(
     harvestDepositCount: Int = 0,
     harvestPickupAmount: Int = 0,
     harvestDepositAmount: Int = 0,
+    harvesterRetargets: Int = 0,
     dropoffBuildingsFaction1: Int = 0,
     dropoffBuildingsFaction2: Int = 0,
     mineralDropoffBuildings: Int = 0,
@@ -2792,6 +2795,9 @@ internal fun renderCommandOutcomeLogSuffix(
     }
     if (harvestPickupCount > 0 || harvestDepositCount > 0 || harvestPickupAmount > 0 || harvestDepositAmount > 0) {
         parts.add("cycles=p$harvestPickupCount/$harvestPickupAmount d$harvestDepositCount/$harvestDepositAmount")
+    }
+    if (harvesterRetargets > 0) {
+        parts.add("retargets=$harvesterRetargets")
     }
     if (dropoffBuildingsFaction1 > 0 || dropoffBuildingsFaction2 > 0) {
         parts.add("dropoffs=f1:$dropoffBuildingsFaction1/f2:$dropoffBuildingsFaction2")
@@ -2823,6 +2829,7 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestDepositCount: Int = 0,
     totalHarvestPickupAmount: Int = 0,
     totalHarvestDepositAmount: Int = 0,
+    totalHarvesterRetargets: Int = 0,
     dropoffBuildingsFaction1: Int = 0,
     dropoffBuildingsFaction2: Int = 0,
     mineralDropoffBuildings: Int = 0,
@@ -2849,6 +2856,7 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestDepositCount == 0 &&
         totalHarvestPickupAmount == 0 &&
         totalHarvestDepositAmount == 0 &&
+        totalHarvesterRetargets == 0 &&
         dropoffBuildingsFaction1 == 0 &&
         dropoffBuildingsFaction2 == 0 &&
         mineralDropoffBuildings == 0 &&
@@ -2874,6 +2882,7 @@ internal fun renderAggregateOutcomeSummary(
                 "f2=${totalHarvestedMineralsFaction2}/${totalHarvestedGasFaction2} " +
                 "cycles=p$totalHarvestPickupCount/$totalHarvestPickupAmount " +
                 "d$totalHarvestDepositCount/$totalHarvestDepositAmount " +
+                "retargets=$totalHarvesterRetargets " +
                 "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes " +
                 "active=$currentResourceNodeCount remaining=$currentResourceNodeRemaining"
         )
