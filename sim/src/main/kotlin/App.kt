@@ -536,6 +536,10 @@ fun main(args: Array<String>) {
             totalHarvestedMineralsFaction2,
             totalHarvestedGasFaction1,
             totalHarvestedGasFaction2,
+            totalHarvestPickupCount,
+            totalHarvestDepositCount,
+            totalHarvestPickupAmount,
+            totalHarvestDepositAmount,
             world.resourceNodes.values.count { it.remaining > 0 },
             world.resourceNodes.values.sumOf { it.remaining }
         )
@@ -2636,6 +2640,10 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestedMineralsFaction2: Int = 0,
     totalHarvestedGasFaction1: Int = 0,
     totalHarvestedGasFaction2: Int = 0,
+    totalHarvestPickupCount: Int = 0,
+    totalHarvestDepositCount: Int = 0,
+    totalHarvestPickupAmount: Int = 0,
+    totalHarvestDepositAmount: Int = 0,
     currentResourceNodeCount: Int = 0,
     currentResourceNodeRemaining: Int = 0
 ): String? {
@@ -2654,6 +2662,10 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestedMineralsFaction2 == 0 &&
         totalHarvestedGasFaction1 == 0 &&
         totalHarvestedGasFaction2 == 0 &&
+        totalHarvestPickupCount == 0 &&
+        totalHarvestDepositCount == 0 &&
+        totalHarvestPickupAmount == 0 &&
+        totalHarvestDepositAmount == 0 &&
         currentResourceNodeCount == 0 &&
         currentResourceNodeRemaining == 0
     ) {
@@ -2673,6 +2685,8 @@ internal fun renderAggregateOutcomeSummary(
             "harvest=${totalHarvestedMinerals}/${totalHarvestedGas} " +
                 "f1=${totalHarvestedMineralsFaction1}/${totalHarvestedGasFaction1} " +
                 "f2=${totalHarvestedMineralsFaction2}/${totalHarvestedGasFaction2} " +
+                "cycles=p$totalHarvestPickupCount/$totalHarvestPickupAmount " +
+                "d$totalHarvestDepositCount/$totalHarvestDepositAmount " +
                 "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes " +
                 "active=$currentResourceNodeCount remaining=$currentResourceNodeRemaining"
         )

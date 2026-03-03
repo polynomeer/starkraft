@@ -158,7 +158,7 @@ class AppTest {
     @Test
     fun `renders aggregate harvest summary`() {
         assertEquals(
-            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 nodes=6 depleted=1 active=2 remaining=347",
+            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 cycles=p6/11 d5/9 nodes=6 depleted=1 active=2 remaining=347",
             renderAggregateOutcomeSummary(
                 totalBuilds = 0,
                 totalBuildFailures = 0,
@@ -176,6 +176,10 @@ class AppTest {
                 totalHarvestedMineralsFaction2 = 2,
                 totalHarvestedGasFaction1 = 0,
                 totalHarvestedGasFaction2 = 2,
+                totalHarvestPickupCount = 6,
+                totalHarvestDepositCount = 5,
+                totalHarvestPickupAmount = 11,
+                totalHarvestDepositAmount = 9,
                 currentResourceNodeCount = 2,
                 currentResourceNodeRemaining = 347
             )
@@ -203,6 +207,10 @@ class AppTest {
                 totalHarvestedMineralsFaction2 = 0,
                 totalHarvestedGasFaction1 = 0,
                 totalHarvestedGasFaction2 = 0,
+                totalHarvestPickupCount = 0,
+                totalHarvestDepositCount = 0,
+                totalHarvestPickupAmount = 0,
+                totalHarvestDepositAmount = 0,
                 currentResourceNodeCount = 0,
                 currentResourceNodeRemaining = 0
             )
