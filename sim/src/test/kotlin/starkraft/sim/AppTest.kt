@@ -133,14 +133,16 @@ class AppTest {
             )
 
         assertEquals(
-            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] cycles=p2/3 d1/1",
+            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] cycles=p2/3 d1/1 dropoffs=f1:1/f2:0",
             renderCommandOutcomeLogSuffix(
                 counters,
                 trainsCompleted = 2,
                 harvestPickupCount = 2,
                 harvestDepositCount = 1,
                 harvestPickupAmount = 3,
-                harvestDepositAmount = 1
+                harvestDepositAmount = 1,
+                dropoffBuildingsFaction1 = 1,
+                dropoffBuildingsFaction2 = 0
             )
         )
     }
@@ -165,7 +167,7 @@ class AppTest {
     @Test
     fun `renders aggregate harvest summary`() {
         assertEquals(
-            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 cycles=p6/11 d5/9 nodes=6 depleted=1 active=2 remaining=347",
+            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 cycles=p6/11 d5/9 nodes=6 depleted=1 active=2 remaining=347 dropoffs=f1:1/f2:2",
             renderAggregateOutcomeSummary(
                 totalBuilds = 0,
                 totalBuildFailures = 0,
@@ -187,6 +189,8 @@ class AppTest {
                 totalHarvestDepositCount = 5,
                 totalHarvestPickupAmount = 11,
                 totalHarvestDepositAmount = 9,
+                dropoffBuildingsFaction1 = 1,
+                dropoffBuildingsFaction2 = 2,
                 currentResourceNodeCount = 2,
                 currentResourceNodeRemaining = 347
             )

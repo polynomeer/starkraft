@@ -479,6 +479,7 @@ fun main(args: Array<String>) {
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
+            val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
             val outcomeSuffix =
                 renderCommandOutcomeLogSuffix(
                     commandOutcomeCounters,
@@ -486,7 +487,9 @@ fun main(args: Array<String>) {
                     harvest.lastTickPickupCount,
                     harvest.lastTickDepositCount,
                     harvest.lastTickPickupAmount,
-                    harvest.lastTickDepositAmount
+                    harvest.lastTickDepositAmount,
+                    dropoffBuildingsFaction1,
+                    dropoffBuildingsFaction2
                 )
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
@@ -530,6 +533,7 @@ fun main(args: Array<String>) {
         println("$source hash=$finalReplayHash world hash=$finalWorldHash")
         println(currentRuntimeMetadataLine(seed))
     }
+    val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
     val finalOutcomeSummary =
         renderAggregateOutcomeSummary(
             totalBuilds,
@@ -552,6 +556,8 @@ fun main(args: Array<String>) {
             totalHarvestDepositCount,
             totalHarvestPickupAmount,
             totalHarvestDepositAmount,
+            dropoffBuildingsFaction1,
+            dropoffBuildingsFaction2,
             world.resourceNodes.values.count { it.remaining > 0 },
             world.resourceNodes.values.sumOf { it.remaining }
         )
@@ -2687,9 +2693,11 @@ internal fun renderCommandOutcomeLogSuffix(
     harvestPickupCount: Int = 0,
     harvestDepositCount: Int = 0,
     harvestPickupAmount: Int = 0,
-    harvestDepositAmount: Int = 0
+    harvestDepositAmount: Int = 0,
+    dropoffBuildingsFaction1: Int = 0,
+    dropoffBuildingsFaction2: Int = 0
 ): String {
-    val parts = ArrayList<String>(5)
+    val parts = ArrayList<String>(6)
     if (counters.builds > 0) parts.add("builds=${counters.builds}")
     if (counters.buildFailures > 0) {
         parts.add("buildFails=${counters.buildFailures}[${formatBuildFailureReasons(counters.buildFailureReasons)}]")
@@ -2702,6 +2710,9 @@ internal fun renderCommandOutcomeLogSuffix(
     }
     if (harvestPickupCount > 0 || harvestDepositCount > 0 || harvestPickupAmount > 0 || harvestDepositAmount > 0) {
         parts.add("cycles=p$harvestPickupCount/$harvestPickupAmount d$harvestDepositCount/$harvestDepositAmount")
+    }
+    if (dropoffBuildingsFaction1 > 0 || dropoffBuildingsFaction2 > 0) {
+        parts.add("dropoffs=f1:$dropoffBuildingsFaction1/f2:$dropoffBuildingsFaction2")
     }
     return if (parts.isEmpty()) "" else "  " + parts.joinToString(" ")
 }
@@ -2727,6 +2738,8 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestDepositCount: Int = 0,
     totalHarvestPickupAmount: Int = 0,
     totalHarvestDepositAmount: Int = 0,
+    dropoffBuildingsFaction1: Int = 0,
+    dropoffBuildingsFaction2: Int = 0,
     currentResourceNodeCount: Int = 0,
     currentResourceNodeRemaining: Int = 0
 ): String? {
@@ -2749,6 +2762,8 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestDepositCount == 0 &&
         totalHarvestPickupAmount == 0 &&
         totalHarvestDepositAmount == 0 &&
+        dropoffBuildingsFaction1 == 0 &&
+        dropoffBuildingsFaction2 == 0 &&
         currentResourceNodeCount == 0 &&
         currentResourceNodeRemaining == 0
     ) {
@@ -2773,6 +2788,9 @@ internal fun renderAggregateOutcomeSummary(
                 "nodes=$totalChangedResourceNodes depleted=$totalDepletedNodes " +
                 "active=$currentResourceNodeCount remaining=$currentResourceNodeRemaining"
         )
+    }
+    if (dropoffBuildingsFaction1 > 0 || dropoffBuildingsFaction2 > 0) {
+        parts.add("dropoffs=f1:$dropoffBuildingsFaction1/f2:$dropoffBuildingsFaction2")
     }
     return "command outcomes: " + parts.joinToString(" ")
 }
