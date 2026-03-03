@@ -292,6 +292,28 @@ class AppTest {
     }
 
     @Test
+    fun `retargets harvester by resource kind on depletion`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val depletedNodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val richFallbackNodeId = world.spawn(Transform(7f, 5f), UnitTag(0, "RichMineralField"), Health(1, 1), w = null)
+        val gasNodeId = world.spawn(Transform(5.5f, 5f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[depletedNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 1)
+        world.resourceNodes[richFallbackNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 20)
+        world.resourceNodes[gasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 20)
+        world.harvesters[workerId] = Harvester(targetNodeId = depletedNodeId)
+        world.orders[workerId]?.items?.addLast(starkraft.sim.ecs.Order.Move(5f, 5f))
+
+        harvest.tick()
+        removeDepletedResourceNodes(world, harvest)
+
+        assertEquals(richFallbackNodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(starkraft.sim.ecs.Order.Move(7f, 5f), world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
     fun `finds project root from nested sim path`() {
         val root = Files.createTempDirectory("starkraft-root")
         Files.writeString(root.resolve("settings.gradle.kts"), "rootProject.name = \"starkraft\"")

@@ -1127,7 +1127,7 @@ internal fun removeDepletedResourceNodes(world: World, harvest: ResourceHarvestS
 }
 
 internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nodeY: Float) {
-    val depletedKind = world.tags[nodeId]?.typeId
+    val depletedKind = world.resourceNodes[nodeId]?.kind
     val workerIds = ArrayList<Int>()
     for ((workerId, harvester) in world.harvesters) {
         if (harvester.targetNodeId == nodeId) {
@@ -1163,7 +1163,7 @@ internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nod
 internal fun findNearestHarvestNode(
     world: World,
     workerId: Int,
-    preferredTypeId: String?,
+    preferredKind: String?,
     excludeNodeId: Int = -1
 ): Int? {
     val workerTransform = world.transforms[workerId] ?: return null
@@ -1171,8 +1171,7 @@ internal fun findNearestHarvestNode(
     var bestDist = Float.POSITIVE_INFINITY
     for ((nodeId, node) in world.resourceNodes) {
         if (nodeId == excludeNodeId || node.remaining <= 0) continue
-        val tag = world.tags[nodeId] ?: continue
-        if (preferredTypeId != null && tag.typeId != preferredTypeId) continue
+        if (preferredKind != null && node.kind != preferredKind) continue
         val nodeTransform = world.transforms[nodeId] ?: continue
         val dx = nodeTransform.x - workerTransform.x
         val dy = nodeTransform.y - workerTransform.y
