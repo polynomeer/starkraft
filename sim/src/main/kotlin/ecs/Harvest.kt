@@ -11,7 +11,15 @@ class ResourceHarvestSystem(
     private var eventHarvested = IntArray(8)
     private var eventRemaining = IntArray(8)
     private var eventDepleted = BooleanArray(8)
+    private var cycleEventKinds = ByteArray(8)
+    private var cycleEventWorkers = IntArray(8)
+    private var cycleEventNodes = IntArray(8)
+    private var cycleEventDropoffs = IntArray(8)
+    private var cycleEventKindsCarried = arrayOfNulls<String>(8)
+    private var cycleEventAmounts = IntArray(8)
     var lastTickEventCount: Int = 0
+        private set
+    var lastTickCycleEventCount: Int = 0
         private set
     var lastTickHarvestedMinerals: Int = 0
         private set
@@ -30,6 +38,7 @@ class ResourceHarvestSystem(
 
     fun tick() {
         lastTickEventCount = 0
+        lastTickCycleEventCount = 0
         lastTickHarvestedMinerals = 0
         lastTickHarvestedGas = 0
         lastTickHarvestedMineralsFaction1 = 0
@@ -87,6 +96,7 @@ class ResourceHarvestSystem(
                 ensureLeadingMove(entityId, returnTransform.x, returnTransform.y)
             }
             recordEvent(nodeId, harvested, node.remaining, node.remaining == 0)
+            recordCycleEvent(EVENT_PICKUP, entityId, nodeId, harvester.returnTargetId, node.kind, harvested)
         }
     }
 
@@ -97,6 +107,18 @@ class ResourceHarvestSystem(
     fun eventRemaining(index: Int): Int = eventRemaining[index]
 
     fun eventDepleted(index: Int): Boolean = eventDepleted[index]
+
+    fun cycleEventKind(index: Int): Byte = cycleEventKinds[index]
+
+    fun cycleEventWorker(index: Int): Int = cycleEventWorkers[index]
+
+    fun cycleEventNode(index: Int): Int = cycleEventNodes[index]
+
+    fun cycleEventDropoff(index: Int): Int = cycleEventDropoffs[index]
+
+    fun cycleEventResourceKind(index: Int): String? = cycleEventKindsCarried[index]
+
+    fun cycleEventAmount(index: Int): Int = cycleEventAmounts[index]
 
     private fun tickReturnTrip(entityId: Int, faction: Int, workerTransform: Transform, harvester: Harvester) {
         val returnId =
@@ -117,14 +139,17 @@ class ResourceHarvestSystem(
             ensureLeadingMove(entityId, returnTransform.x, returnTransform.y)
             return
         }
-        when (harvester.cargoKind) {
+        val cargoKind = harvester.cargoKind
+        val cargoAmount = harvester.cargoAmount
+        when (cargoKind) {
             ResourceNode.KIND_GAS -> {
-                resources.stockpile(faction).gas += harvester.cargoAmount
+                resources.stockpile(faction).gas += cargoAmount
             }
             else -> {
-                resources.stockpile(faction).minerals += harvester.cargoAmount
+                resources.stockpile(faction).minerals += cargoAmount
             }
         }
+        recordCycleEvent(EVENT_DEPOSIT, entityId, harvester.targetNodeId, returnId, cargoKind, cargoAmount)
         harvester.cargoKind = null
         harvester.cargoAmount = 0
         harvester.returnTargetId = -1
@@ -195,5 +220,37 @@ class ResourceHarvestSystem(
         eventRemaining[index] = remaining
         eventDepleted[index] = depleted
         lastTickEventCount = index + 1
+    }
+
+    private fun recordCycleEvent(
+        kind: Byte,
+        workerId: Int,
+        nodeId: Int,
+        dropoffId: Int,
+        resourceKind: String?,
+        amount: Int
+    ) {
+        val index = lastTickCycleEventCount
+        if (index >= cycleEventKinds.size) {
+            val nextSize = cycleEventKinds.size * 2
+            cycleEventKinds = cycleEventKinds.copyOf(nextSize)
+            cycleEventWorkers = cycleEventWorkers.copyOf(nextSize)
+            cycleEventNodes = cycleEventNodes.copyOf(nextSize)
+            cycleEventDropoffs = cycleEventDropoffs.copyOf(nextSize)
+            cycleEventKindsCarried = cycleEventKindsCarried.copyOf(nextSize)
+            cycleEventAmounts = cycleEventAmounts.copyOf(nextSize)
+        }
+        cycleEventKinds[index] = kind
+        cycleEventWorkers[index] = workerId
+        cycleEventNodes[index] = nodeId
+        cycleEventDropoffs[index] = dropoffId
+        cycleEventKindsCarried[index] = resourceKind
+        cycleEventAmounts[index] = amount
+        lastTickCycleEventCount = index + 1
+    }
+
+    companion object {
+        const val EVENT_PICKUP: Byte = 1
+        const val EVENT_DEPOSIT: Byte = 2
     }
 }

@@ -224,6 +224,24 @@ data class ResourceNodeStreamRecord(
 )
 
 @Serializable
+data class HarvestCycleEventRecord(
+    val kind: String,
+    val workerId: Int,
+    val nodeId: Int,
+    val dropoffId: Int? = null,
+    val resourceKind: String? = null,
+    val amount: Int
+)
+
+@Serializable
+data class HarvestCycleStreamRecord(
+    val recordType: String = "harvestCycle",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<HarvestCycleEventRecord>
+)
+
+@Serializable
 data class HarvesterStateEntityRecord(
     val entityId: Int,
     val faction: Int,
@@ -1048,6 +1066,16 @@ fun renderResourceNodeStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ResourceNodeStreamRecord(sequence = sequence, tick = tick, nodes = nodes)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderHarvestCycleStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<HarvestCycleEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = HarvestCycleStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

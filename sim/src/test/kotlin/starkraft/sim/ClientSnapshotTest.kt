@@ -20,6 +20,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
+import starkraft.sim.client.HarvestCycleEventRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.ResourceNodeEventRecord
@@ -32,6 +33,7 @@ import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
+import starkraft.sim.client.renderHarvestCycleStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
 import starkraft.sim.client.renderOrderAppliedStreamRecordJson
@@ -402,10 +404,44 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders harvest cycle stream record json`() {
+        val json =
+            renderHarvestCycleStreamRecordJson(
+                sequence = 16L,
+                tick = 5,
+                events =
+                    listOf(
+                        HarvestCycleEventRecord(
+                            kind = "pickup",
+                            workerId = 51,
+                            nodeId = 9,
+                            dropoffId = 41,
+                            resourceKind = "minerals",
+                            amount = 2
+                        ),
+                        HarvestCycleEventRecord(
+                            kind = "deposit",
+                            workerId = 51,
+                            nodeId = 9,
+                            dropoffId = 41,
+                            resourceKind = "minerals",
+                            amount = 2
+                        )
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"harvestCycle\",\"sequence\":16,\"tick\":5,\"events\":[{\"kind\":\"pickup\",\"workerId\":51,\"nodeId\":9,\"dropoffId\":41,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":51,\"nodeId\":9,\"dropoffId\":41,\"resourceKind\":\"minerals\",\"amount\":2}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders combat stream record json`() {
         val json =
             renderCombatStreamRecordJson(
-                sequence = 16L,
+                sequence = 17L,
                 tick = 6,
                 attacks = 2,
                 kills = 1,
@@ -418,7 +454,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"combat\",\"sequence\":16,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
+            "{\"recordType\":\"combat\",\"sequence\":17,\"tick\":6,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
             json
         )
     }

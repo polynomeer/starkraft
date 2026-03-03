@@ -45,11 +45,25 @@ class ResourceHarvestSystemTest {
 
         harvest.tick()
         assertEquals(100, world.stockpiles[1]?.minerals)
+        assertEquals(1, harvest.lastTickCycleEventCount)
+        assertEquals(ResourceHarvestSystem.EVENT_PICKUP, harvest.cycleEventKind(0))
+        assertEquals(workerId, harvest.cycleEventWorker(0))
+        assertEquals(nodeId, harvest.cycleEventNode(0))
+        assertEquals(depotId, harvest.cycleEventDropoff(0))
+        assertEquals("minerals", harvest.cycleEventResourceKind(0))
+        assertEquals(3, harvest.cycleEventAmount(0))
         world.transforms[workerId]?.x = 6f
         world.transforms[workerId]?.y = 4f
         harvest.tick()
 
         assertEquals(103, world.stockpiles[1]?.minerals)
+        assertEquals(1, harvest.lastTickCycleEventCount)
+        assertEquals(ResourceHarvestSystem.EVENT_DEPOSIT, harvest.cycleEventKind(0))
+        assertEquals(workerId, harvest.cycleEventWorker(0))
+        assertEquals(nodeId, harvest.cycleEventNode(0))
+        assertEquals(depotId, harvest.cycleEventDropoff(0))
+        assertEquals("minerals", harvest.cycleEventResourceKind(0))
+        assertEquals(3, harvest.cycleEventAmount(0))
         assertEquals(7, world.resourceNodes[nodeId]?.remaining)
         assertEquals(0, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
@@ -162,6 +176,9 @@ class ResourceHarvestSystemTest {
 
         assertEquals(depotId, world.harvesters[workerId]?.returnTargetId)
         assertEquals(Order.Move(8f, 4f), world.orders[workerId]?.items?.firstOrNull())
+        assertEquals(1, harvest.lastTickCycleEventCount)
+        assertEquals(ResourceHarvestSystem.EVENT_PICKUP, harvest.cycleEventKind(0))
+        assertEquals(depotId, harvest.cycleEventDropoff(0))
     }
 
     @Test

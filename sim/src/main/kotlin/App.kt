@@ -10,6 +10,7 @@ import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.MapResourceNodeRecord
+import starkraft.sim.client.HarvestCycleEventRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
@@ -26,6 +27,7 @@ import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
+import starkraft.sim.client.renderHarvestCycleStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
 import starkraft.sim.client.renderMetricsStreamRecordJson
 import starkraft.sim.client.renderMapStateStreamRecordJson
@@ -390,6 +392,7 @@ fun main(args: Array<String>) {
         }
 
         harvest.tick()
+        emitHarvestCycleRecord(harvest, tick, resolvedSnapshotOutPath, streamSequence)
         emitResourceNodeRecord(world, harvest, tick, resolvedSnapshotOutPath, streamSequence)
         removeDepletedResourceNodes(world, harvest)
         emitResourceDeltaRecord(resources, tick, resolvedSnapshotOutPath, streamSequence)
@@ -1025,6 +1028,42 @@ private fun emitResourceNodeRecord(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             nodes = nodes,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitHarvestCycleRecord(
+    harvest: ResourceHarvestSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || harvest.lastTickCycleEventCount == 0) return
+    val events = ArrayList<HarvestCycleEventRecord>(harvest.lastTickCycleEventCount)
+    for (i in 0 until harvest.lastTickCycleEventCount) {
+        val kind =
+            when (harvest.cycleEventKind(i)) {
+                ResourceHarvestSystem.EVENT_DEPOSIT -> "deposit"
+                else -> "pickup"
+            }
+        events.add(
+            HarvestCycleEventRecord(
+                kind = kind,
+                workerId = harvest.cycleEventWorker(i),
+                nodeId = harvest.cycleEventNode(i),
+                dropoffId = harvest.cycleEventDropoff(i).takeIf { it >= 0 },
+                resourceKind = harvest.cycleEventResourceKind(i),
+                amount = harvest.cycleEventAmount(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderHarvestCycleStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = events,
             pretty = false
         ),
         snapshotOutPath

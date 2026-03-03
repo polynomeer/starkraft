@@ -169,6 +169,7 @@ Other flags:
   Snapshot cadence emits `vision` records with fog visibility deltas per faction.
   Snapshot cadence emits `economy` records with faction minerals/gas for HUD updates.
   Harvest ticks emit `resourceNode` records with per-node harvested amounts, remaining resources, and depletion flags.
+  Harvest ticks also emit `harvestCycle` records for worker pickup/deposit completions.
   Snapshot cadence also emits `harvesterState` records with worker gather/return phase, cargo, node target, and return building target.
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
