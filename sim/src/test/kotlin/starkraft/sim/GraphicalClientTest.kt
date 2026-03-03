@@ -1,7 +1,9 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
+import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.formatAckStatus
@@ -29,5 +31,14 @@ class GraphicalClientTest {
             "last ack: fail build @13 reason=missingTech",
             formatAckStatus(ClientCommandAck(tick = 13, commandType = "build", accepted = false, reason = "missingTech"))
         )
+    }
+
+    @Test
+    fun `builds unit selection records for client input`() {
+        val record = buildUnitSelectionRecord(8, linkedSetOf(4, 9))
+
+        assertEquals(8, record.tick)
+        assertEquals("units", record.selectionType)
+        assertArrayEquals(intArrayOf(4, 9), record.units)
     }
 }

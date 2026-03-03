@@ -177,6 +177,7 @@ Client controls:
 - right click empty ground: issue `move`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
+Left-click selections are also written as `selectionType="units"` NDJSON records so the input trail includes both client selection changes and commands.
 The HUD shows the latest command ack so input failures surface without reading sim logs.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline

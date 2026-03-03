@@ -97,6 +97,14 @@ private class CommandAppender(private val path: Path) {
             StandardOpenOption.APPEND
         )
     }
+
+    fun append(record: InputJson.InputSelectionRecord) {
+        Files.writeString(
+            path,
+            json.encodeToString(InputJson.InputSelectionRecord.serializer(), record) + "\n",
+            StandardOpenOption.APPEND
+        )
+    }
 }
 
 private class ClientPanel(
@@ -194,6 +202,7 @@ private class ClientPanel(
             val selected = nearestEntity(snapshot, worldX, worldY) { it.faction == 1 }
             state.selectedIds.clear()
             if (selected != null) state.selectedIds.add(selected.id)
+            commandAppender.append(buildUnitSelectionRecord(snapshot.tick + 1, state.selectedIds))
             repaint()
             return
         }
@@ -316,3 +325,13 @@ internal fun formatAckStatus(ack: ClientCommandAck?): String =
     }
 
 private fun formatRequestIdSuffix(ack: ClientCommandAck): String = ack.requestId?.let { "[$it]" } ?: ""
+
+internal fun buildUnitSelectionRecord(
+    tick: Int,
+    selectedIds: Collection<Int>
+): InputJson.InputSelectionRecord =
+    InputJson.InputSelectionRecord(
+        tick = tick,
+        selectionType = "units",
+        units = selectedIds.toIntArray()
+    )
