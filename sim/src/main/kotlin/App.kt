@@ -1952,6 +1952,18 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.AttackMoveArchetype -> {
                     println("tick=$tick attackMoveArchetype archetype=${c.archetype} x=${c.x} y=${c.y}")
                 }
+                is Command.Hold -> {
+                    println("tick=$tick hold units=${c.units.joinToString(",")}")
+                }
+                is Command.HoldFaction -> {
+                    println("tick=$tick holdFaction faction=${c.faction}")
+                }
+                is Command.HoldType -> {
+                    println("tick=$tick holdType type=${c.typeId}")
+                }
+                is Command.HoldArchetype -> {
+                    println("tick=$tick holdArchetype archetype=${c.archetype}")
+                }
                 is Command.Attack -> {
                     println("tick=$tick attack units=${c.units.joinToString(",")} target=${c.target}")
                 }
@@ -2217,6 +2229,13 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         }
                     }
                 }
+                is Command.Hold -> {
+                    if (!(c.units.size == 1 && c.units[0] == 0)) {
+                        for (id in c.units) if (id >= 0 && !existing.contains(id)) {
+                            error("Unknown unit id '$id' in hold at tick $tick")
+                        }
+                    }
+                }
                 is Command.Attack -> {
                     if (!(c.units.size == 1 && c.units[0] == 0)) {
                         for (id in c.units) if (id >= 0 && !existing.contains(id)) {
@@ -2233,6 +2252,9 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                 is Command.AttackMoveFaction -> Unit
                 is Command.AttackMoveType -> Unit
                 is Command.AttackMoveArchetype -> Unit
+                is Command.HoldFaction -> Unit
+                is Command.HoldType -> Unit
+                is Command.HoldArchetype -> Unit
                 is Command.AttackFaction -> {
                     if (c.target >= 0 && !existing.contains(c.target)) {
                         error("Unknown target id '${c.target}' in attackFaction at tick $tick")
@@ -2322,6 +2344,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '$id' in attackMove at tick $tick (spawn first)")
                     }
                 }
+                is Command.Hold -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in hold at tick $tick (spawn first)")
+                    }
+                }
                 is Command.Attack -> {
                     for (id in c.units) if (id < 0 && !defined.contains(id)) {
                         error("Unknown label id '$id' in attack at tick $tick (spawn first)")
@@ -2336,6 +2363,9 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.AttackMoveFaction -> Unit
                 is Command.AttackMoveType -> Unit
                 is Command.AttackMoveArchetype -> Unit
+                is Command.HoldFaction -> Unit
+                is Command.HoldType -> Unit
+                is Command.HoldArchetype -> Unit
                 is Command.AttackFaction -> {
                     if (c.target < 0 && !defined.contains(c.target)) {
                         error("Unknown label id '${c.target}' in attackFaction at tick $tick (spawn first)")
@@ -2442,6 +2472,7 @@ private fun printPendingOrders(world: World) {
             when (o) {
                 is Order.Move -> "move(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
                 is Order.AttackMove -> "attackMove(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
+                is Order.Hold -> "hold"
                 is Order.Attack -> "attack(${o.target})"
             }
         }
@@ -2624,6 +2655,18 @@ internal fun buildCommandStats(
                     tickArchetype++
                     tickMoveArchetype++
                 }
+                is Command.Hold -> {
+                    tickDirect++
+                }
+                is Command.HoldFaction -> {
+                    tickFaction++
+                }
+                is Command.HoldType -> {
+                    tickType++
+                }
+                is Command.HoldArchetype -> {
+                    tickArchetype++
+                }
                 is Command.Attack -> {
                     tickAttacks++
                     tickDirect++
@@ -2727,6 +2770,18 @@ internal fun buildCommandStats(
                     moves++
                     archetype++
                     moveArchetype++
+                }
+                is Command.Hold -> {
+                    direct++
+                }
+                is Command.HoldFaction -> {
+                    faction++
+                }
+                is Command.HoldType -> {
+                    type++
+                }
+                is Command.HoldArchetype -> {
+                    archetype++
                 }
                 is Command.Attack -> {
                     attacks++
@@ -3367,6 +3422,57 @@ fun issue(
             emitOrderQueueRecord(cmd.tick, "attackMove", applied, world, snapshotOutPath, streamSequence)
             emitCommandAck(true, appliedUnits = applied.size)
         }
+        is Command.Hold -> {
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "hold", applied, null, null, null, snapshotOutPath, streamSequence)
+            if (cmd.units.size == 1 && cmd.units[0] == 0) {
+                for (id in world.orders.keys) {
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Hold)
+                }
+            } else {
+                cmd.units.forEach { id ->
+                    val actual = resolveLabelId(id, labelIdMap)
+                    world.orders[actual]?.items?.addLast(Order.Hold)
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "hold", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.HoldFaction -> {
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "hold", applied, null, null, null, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                if (tag.faction == cmd.faction) {
+                    world.orders[id]?.items?.addLast(Order.Hold)
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "hold", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.HoldType -> {
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "hold", applied, null, null, null, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                if (tag.typeId == cmd.typeId) {
+                    world.orders[id]?.items?.addLast(Order.Hold)
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "hold", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.HoldArchetype -> {
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "hold", applied, null, null, null, snapshotOutPath, streamSequence)
+            for ((id, tag) in world.tags) {
+                val tagArchetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
+                if (tagArchetype == cmd.archetype) {
+                    world.orders[id]?.items?.addLast(Order.Hold)
+                }
+            }
+            emitOrderQueueRecord(cmd.tick, "hold", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
 
         is Command.Attack -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3807,6 +3913,10 @@ private fun commandTypeName(cmd: Command): String =
         is Command.AttackMoveFaction -> "attackMoveFaction"
         is Command.AttackMoveType -> "attackMoveType"
         is Command.AttackMoveArchetype -> "attackMoveArchetype"
+        is Command.Hold -> "hold"
+        is Command.HoldFaction -> "holdFaction"
+        is Command.HoldType -> "holdType"
+        is Command.HoldArchetype -> "holdArchetype"
         is Command.Attack -> "attack"
         is Command.AttackFaction -> "attackFaction"
         is Command.AttackType -> "attackType"

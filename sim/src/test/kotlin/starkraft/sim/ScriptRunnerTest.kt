@@ -60,6 +60,24 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses hold commands`() {
+        val path = Files.createTempFile("starkraft-hold-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 3
+            selectFaction 2
+            hold
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.HoldFaction(3, 2), program.commands[0])
+    }
+
+    @Test
     fun `parses build commands`() {
         val path = Files.createTempFile("starkraft-build-script", ".script")
         Files.writeString(

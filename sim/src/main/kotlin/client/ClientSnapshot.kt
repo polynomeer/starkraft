@@ -1014,6 +1014,38 @@ fun renderCommandStreamRecordJson(
                     x = cmd.x,
                     y = cmd.y
                 )
+            is Command.Hold ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "hold",
+                    requestId = requestId,
+                    units = cmd.units
+                )
+            is Command.HoldFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "holdFaction",
+                    requestId = requestId,
+                    faction = cmd.faction
+                )
+            is Command.HoldType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "holdType",
+                    requestId = requestId,
+                    typeId = cmd.typeId
+                )
+            is Command.HoldArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "holdArchetype",
+                    requestId = requestId,
+                    archetype = cmd.archetype
+                )
             is Command.Attack ->
                 CommandStreamRecord(
                     sequence = sequence,
@@ -1863,6 +1895,7 @@ private fun Order.toSnapshotLabel(): String {
     return when (this) {
         is Order.Move -> "Move"
         is Order.AttackMove -> "AttackMove"
+        is Order.Hold -> "Hold"
         is Order.Attack -> "Attack"
     }
 }

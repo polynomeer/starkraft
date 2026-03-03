@@ -95,6 +95,7 @@ class PathfindingSystem(
                 when (first) {
                     is Order.Move -> floor(first.tx).toInt() to floor(first.ty).toInt()
                     is Order.AttackMove -> floor(first.tx).toInt() to floor(first.ty).toInt()
+                    is Order.Hold -> continue
                     is Order.Attack -> {
                         val targetTransform = world.transforms[first.target] ?: continue
                         floor(targetTransform.x).toInt() to floor(targetTransform.y).toInt()

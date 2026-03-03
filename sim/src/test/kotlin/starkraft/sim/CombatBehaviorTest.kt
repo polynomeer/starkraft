@@ -202,4 +202,55 @@ class CombatBehaviorTest {
         assertEquals(27, world.healths[farTarget]?.hp)
         assertEquals(2, combat.lastTickAttacks)
     }
+
+    @Test
+    fun `hold order fires in range but does not chase out of range targets`() {
+        val data = combatData()
+        val world = World()
+        val map = MapGrid(24, 24)
+        val occ = OccupancyGrid(24, 24)
+        val alive = AliveSystem(world)
+        val occupancy = OccupancySystem(world, occ)
+        val pool = PathPool(map.width * map.height)
+        val queue = PathRequestQueue(64, 64)
+        val pathfinder = Pathfinder(map, occ)
+        val pathing = PathfindingSystem(world, pathfinder, pool, queue, 1024)
+        val movement = MovementSystem(world, map, occ, pool, queue, data)
+        val combat = CombatSystem(world, data)
+
+        val attacker =
+            world.spawn(
+                Transform(2f, 2f),
+                UnitTag(1, "Marine"),
+                Health(45, 45),
+                WeaponRef("Gauss")
+            )
+        val nearTarget =
+            world.spawn(
+                Transform(5f, 2f),
+                UnitTag(2, "Zergling"),
+                Health(6, 6),
+                w = null
+            )
+        world.spawn(
+            Transform(10f, 2f),
+            UnitTag(2, "Zergling"),
+            Health(35, 35),
+            w = null
+        )
+        world.orders[attacker]?.items?.addLast(Order.Hold)
+
+        repeat(40) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+            combat.tick()
+        }
+
+        assertEquals(null, world.healths[nearTarget])
+        assertTrue(world.transforms[attacker]!!.x < 2.2f)
+        assertEquals(Order.Hold, world.orders[attacker]?.items?.firstOrNull())
+        assertEquals(null, world.pathFollows[attacker])
+    }
 }

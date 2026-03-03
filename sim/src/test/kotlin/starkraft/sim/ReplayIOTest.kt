@@ -20,6 +20,10 @@ class ReplayIOTest {
             Command.AttackMoveFaction(9, 1, 8f, 8f),
             Command.AttackMoveType(9, "Marine", 9f, 8f),
             Command.AttackMoveArchetype(9, "infantry", 10f, 8f),
+            Command.Hold(9, intArrayOf(1, 3)),
+            Command.HoldFaction(9, 1),
+            Command.HoldType(9, "Marine"),
+            Command.HoldArchetype(9, "infantry"),
             Command.Attack(10, intArrayOf(2), 7),
             Command.AttackFaction(12, 2, 9),
             Command.AttackType(14, "Zergling", 3),
@@ -142,6 +146,26 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.archetype, b.archetype)
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
+        }
+        is Command.Hold -> {
+            require(b is Command.Hold)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.units.toList(), b.units.toList())
+        }
+        is Command.HoldFaction -> {
+            require(b is Command.HoldFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+        }
+        is Command.HoldType -> {
+            require(b is Command.HoldType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+        }
+        is Command.HoldArchetype -> {
+            require(b is Command.HoldArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
         }
         is Command.AttackFaction -> {
             require(b is Command.AttackFaction)

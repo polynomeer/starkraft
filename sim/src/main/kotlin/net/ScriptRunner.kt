@@ -100,6 +100,11 @@ object ScriptRunner {
                     val y = parts[2].toFloat()
                     out.add(attackMoveCommand(tick, selection!!, x, y))
                 }
+                "hold" -> {
+                    require(parts.size == 1) { "hold" }
+                    require(selection != null) { "hold requires selection" }
+                    out.add(holdCommand(tick, selection!!))
+                }
                 "attack" -> {
                     require(parts.size == 2) { "attack <targetId>" }
                     require(selection != null) { "attack requires selection" }
@@ -262,6 +267,16 @@ object ScriptRunner {
             is Selection.Faction -> Command.HarvestFaction(tick, selection.id, target)
             is Selection.Type -> Command.HarvestType(tick, selection.typeId, target)
             is Selection.Archetype -> Command.HarvestArchetype(tick, selection.archetype, target)
+        }
+    }
+
+    private fun holdCommand(tick: Int, selection: Selection): Command {
+        return when (selection) {
+            is Selection.Units -> Command.Hold(tick, selection.ids)
+            is Selection.All -> Command.Hold(tick, ALL_UNITS)
+            is Selection.Faction -> Command.HoldFaction(tick, selection.id)
+            is Selection.Type -> Command.HoldType(tick, selection.typeId)
+            is Selection.Archetype -> Command.HoldArchetype(tick, selection.archetype)
         }
     }
 }

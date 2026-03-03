@@ -65,6 +65,27 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
             }
+            is Command.Hold -> {
+                mixInt(18)
+                mixInt(cmd.tick)
+                mixInt(cmd.units.size)
+                for (u in cmd.units) mixInt(u)
+            }
+            is Command.HoldFaction -> {
+                mixInt(19)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+            }
+            is Command.HoldType -> {
+                mixInt(20)
+                mixInt(cmd.tick)
+                for (ch in cmd.typeId) mixInt(ch.code)
+            }
+            is Command.HoldArchetype -> {
+                mixInt(29)
+                mixInt(cmd.tick)
+                for (ch in cmd.archetype) mixInt(ch.code)
+            }
             is Command.Attack -> {
                 mixInt(2)
                 mixInt(cmd.tick)

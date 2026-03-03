@@ -15,6 +15,7 @@ data class OrderQueue(val items: ArrayDeque<Order> = ArrayDeque())
 sealed interface Order {
     data class Move(val tx: Float, val ty: Float) : Order;
     data class AttackMove(val tx: Float, val ty: Float) : Order;
+    data object Hold : Order
     data class Attack(val target: EntityId) : Order
 }
 

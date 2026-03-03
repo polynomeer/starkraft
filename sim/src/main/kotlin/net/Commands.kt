@@ -13,6 +13,10 @@ sealed interface Command {
     data class AttackMoveFaction(override val tick: Int, val faction: Int, val x: Float, val y: Float) : Command
     data class AttackMoveType(override val tick: Int, val typeId: String, val x: Float, val y: Float) : Command
     data class AttackMoveArchetype(override val tick: Int, val archetype: String, val x: Float, val y: Float) : Command
+    data class Hold(override val tick: Int, val units: IntArray) : Command
+    data class HoldFaction(override val tick: Int, val faction: Int) : Command
+    data class HoldType(override val tick: Int, val typeId: String) : Command
+    data class HoldArchetype(override val tick: Int, val archetype: String) : Command
     data class Attack(override val tick: Int, val units: IntArray, val target: EntityId) : Command
     data class AttackFaction(override val tick: Int, val faction: Int, val target: EntityId) : Command
     data class AttackType(override val tick: Int, val typeId: String, val target: EntityId) : Command

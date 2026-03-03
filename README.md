@@ -82,7 +82,8 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Producer building defs can also supply default rally offsets for newly trained units.
    - Producer capabilities such as training and rally override are explicit in building defs.
    - `AttackMove` is now available as a higher-level order.
-   - Next candidates remain `Hold` and `Patrol`, built by composing
+   - `Hold` is now available as a position-locking order that keeps auto-fire active without chasing.
+   - Next candidate remains `Patrol`, built by composing
      move + attack decisions at the order layer.
 
 15. **Networking / Replay**
@@ -120,6 +121,7 @@ Script syntax:
 - `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
 - `attackMove <x> <y>` move selection while pausing to attack enemies that enter weapon range
+- `hold` keep selection in place while still auto-attacking in weapon range
 - `attack <targetId|@label>` attack target
   Attack orders now chase their assigned target through pathfinding until the unit gets into weapon range.
 - `harvest <targetId|@label>` assign selection to harvest from a resource node
