@@ -10,6 +10,7 @@ import starkraft.sim.client.OccupancyChangeEventRecord
 import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.MapResourceNodeRecord
+import starkraft.sim.client.DropoffStateEntityRecord
 import starkraft.sim.client.HarvestCycleEventRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
@@ -26,6 +27,7 @@ import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
+import starkraft.sim.client.renderDropoffStateStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderHarvestCycleStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
@@ -453,6 +455,7 @@ fun main(args: Array<String>) {
             emitEconomyRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitHarvesterStateRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitProducerStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
+            emitDropoffStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
                 world,
                 fog1,
@@ -1199,6 +1202,46 @@ private fun emitProducerStateRecord(
     entities.sortBy { it.entityId }
     emitSnapshotLine(
         renderProducerStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitDropoffStateRecord(
+    world: World,
+    data: DataRepo,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    val entities = ArrayList<DropoffStateEntityRecord>()
+    val alive = world.aliveSnapshot
+    for (i in 0 until alive.count) {
+        val id = alive.ids[i]
+        val tag = world.tags[id] ?: continue
+        val spec = data.buildSpec(tag.typeId) ?: continue
+        if (!spec.supportsDropoff) continue
+        val transform = world.transforms[id] ?: continue
+        entities.add(
+            DropoffStateEntityRecord(
+                entityId = id,
+                faction = tag.faction,
+                typeId = tag.typeId,
+                archetype = spec.archetype,
+                x = transform.x,
+                y = transform.y
+            )
+        )
+    }
+    if (entities.isEmpty()) return
+    entities.sortBy { it.entityId }
+    emitSnapshotLine(
+        renderDropoffStateStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,

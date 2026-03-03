@@ -287,6 +287,24 @@ data class ProducerStateStreamRecord(
 )
 
 @Serializable
+data class DropoffStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val archetype: String,
+    val x: Float,
+    val y: Float
+)
+
+@Serializable
+data class DropoffStateStreamRecord(
+    val recordType: String = "dropoffState",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<DropoffStateEntityRecord>
+)
+
+@Serializable
 data class CombatEventRecord(
     val attackerId: Int,
     val targetId: Int,
@@ -1119,6 +1137,16 @@ fun renderProducerStateStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ProducerStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderDropoffStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<DropoffStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = DropoffStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

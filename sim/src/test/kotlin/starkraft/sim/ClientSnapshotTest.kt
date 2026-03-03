@@ -9,6 +9,7 @@ import starkraft.sim.client.renderBuildFailureStreamRecordJson
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
+import starkraft.sim.client.DropoffStateEntityRecord
 import starkraft.sim.client.EconomyFactionRecord
 import starkraft.sim.client.OrderQueueEntityRecord
 import starkraft.sim.client.OccupancyChangeEventRecord
@@ -31,6 +32,7 @@ import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
+import starkraft.sim.client.renderDropoffStateStreamRecordJson
 import starkraft.sim.client.renderEconomyStreamRecordJson
 import starkraft.sim.client.renderHarvesterStateStreamRecordJson
 import starkraft.sim.client.renderHarvestCycleStreamRecordJson
@@ -380,10 +382,30 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders dropoff state stream record json`() {
+        val json =
+            renderDropoffStateStreamRecordJson(
+                sequence = 15L,
+                tick = 5,
+                entities =
+                    listOf(
+                        DropoffStateEntityRecord(41, 1, "Depot", "producer", 8f, 9f),
+                        DropoffStateEntityRecord(44, 1, "ResourceDepot", "econDepot", 12.5f, 7f)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"dropoffState\",\"sequence\":15,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":8.0,\"y\":9.0},{\"entityId\":44,\"faction\":1,\"typeId\":\"ResourceDepot\",\"archetype\":\"econDepot\",\"x\":12.5,\"y\":7.0}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders harvester state stream record json`() {
         val json =
             renderHarvesterStateStreamRecordJson(
-                sequence = 15L,
+                sequence = 16L,
                 tick = 5,
                 entities =
                     listOf(
@@ -402,7 +424,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"harvesterState\",\"sequence\":15,\"tick\":5,\"entities\":[{\"entityId\":51,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":41}]}",
+            "{\"recordType\":\"harvesterState\",\"sequence\":16,\"tick\":5,\"entities\":[{\"entityId\":51,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":41}]}",
             json
         )
     }

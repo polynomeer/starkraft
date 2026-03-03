@@ -174,6 +174,7 @@ Other flags:
   Per-tick resource spends and refunds emit `resourceDelta` records with mineral/gas deltas.
   Per-tick resource deltas also emit `resourceDeltaSummary` records aggregated by faction.
   Snapshot cadence also emits `producerState` records with producer archetypes, capabilities, and default rally offsets.
+  Snapshot cadence also emits `dropoffState` records with drop-off building ids, archetypes, factions, and positions.
   Combat ticks also emit `damage` records for health-bar style UI updates.
   Production activity emits `production` records for enqueue/progress/complete events.
   Invalid build/train commands emit `commandFailure` records with deterministic reasons.
