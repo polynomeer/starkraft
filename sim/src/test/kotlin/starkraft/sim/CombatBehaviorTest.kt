@@ -160,4 +160,46 @@ class CombatBehaviorTest {
         assertTrue(world.transforms[attacker]!!.x > 9f)
         assertEquals(Order.AttackMove(12f, 2f), world.orders[attacker]?.items?.firstOrNull())
     }
+
+    @Test
+    fun `auto targeting avoids wasting lethal follow up shots when another target is available`() {
+        val data = combatData()
+        val world = World()
+        val alive = AliveSystem(world)
+        val combat = CombatSystem(world, data)
+
+        world.spawn(
+            Transform(2f, 2f),
+            UnitTag(1, "Marine"),
+            Health(45, 45),
+            WeaponRef("Gauss")
+        )
+        world.spawn(
+            Transform(2f, 2.5f),
+            UnitTag(1, "Marine"),
+            Health(45, 45),
+            WeaponRef("Gauss")
+        )
+        val nearTarget =
+            world.spawn(
+                Transform(5f, 2f),
+                UnitTag(2, "Zergling"),
+                Health(12, 12),
+                w = null
+            )
+        val farTarget =
+            world.spawn(
+                Transform(5f, 4f),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                w = null
+            )
+
+        alive.tick()
+        combat.tick()
+
+        assertEquals(4, world.healths[nearTarget]?.hp)
+        assertEquals(27, world.healths[farTarget]?.hp)
+        assertEquals(2, combat.lastTickAttacks)
+    }
 }

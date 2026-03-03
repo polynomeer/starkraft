@@ -42,6 +42,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Resolve targeting and damage in `CombatSystem`.
    - Cache enemy lists per faction to reduce per-tick scan cost.
    - Ensure deterministic ordering when iterating entities.
+   - Auto-targeting now avoids obvious lethal overkill when another in-range target can absorb a full shot.
 
 9. **Vision / Fog**
    - `VisionSystem` updates per-faction fog grids each tick.

@@ -284,6 +284,14 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
     private var eventDamage = IntArray(16)
     private var eventTargetHp = IntArray(16)
     private var eventKilled = BooleanArray(16)
+    private var plannedAttackers = IntArray(16)
+    private var plannedTargets = IntArray(16)
+    private var plannedDamage = IntArray(16)
+    private var plannedOrdered = BooleanArray(16)
+    private var plannedCount = 0
+    private var reservedDamage = IntArray(32)
+    private var reservedTouched = IntArray(16)
+    private var reservedTouchedCount = 0
     var lastTickEventCount = 0
         private set
     var lastTickAttacks = 0
@@ -295,7 +303,8 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
         lastTickEventCount = 0
         lastTickAttacks = 0
         lastTickKills = 0
-        // ① 진영별 enemy 리스트를 틱 단위로 스냅샷 (맵 순회/필터 비용을 1회로 집약)
+        plannedCount = 0
+        clearReservedDamage()
         val enemiesCache: Map<Int, EnemyList> = buildEnemyCache()
 
         val alive = world.aliveSnapshot
@@ -314,6 +323,8 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             val rng2 = def.range * def.range
             var best: EntityId = 0
             var bestD2 = Float.POSITIVE_INFINITY
+            var bestSurvivesHit = false
+            var orderedTarget = false
             val attackOrder = world.orders[id]?.items?.firstOrNull() as? Order.Attack
             if (attackOrder != null) {
                 val target = attackOrder.target
@@ -330,12 +341,13 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
                     if (d2 <= rng2) {
                         best = target
                         bestD2 = d2
+                        bestSurvivesHit = targetHp.hp > kotlin.math.max(0, def.damage - targetHp.armor)
+                        orderedTarget = true
                     }
                 }
             }
 
             if (best == 0) {
-                // ② 아군은 제외된 "적 리스트"만 순회
                 val enemies = enemiesCache[unitTag.faction]
                 val enemyIds = enemies?.ids ?: emptyIds
                 val enemyCount = enemies?.count ?: 0
@@ -348,23 +360,49 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
                     val dx = otr.x - tr.x
                     val dy = otr.y - tr.y
                     val d2 = dx * dx + dy * dy
-                    if (d2 <= rng2 && d2 < bestD2) {
-                        best = other; bestD2 = d2
+                    if (d2 > rng2) continue
+                    val effectiveHp = oHp.hp - reservedDamageAt(other)
+                    if (effectiveHp <= 0) continue
+                    val dmg = kotlin.math.max(0, def.damage - oHp.armor)
+                    val survivesHit = effectiveHp > dmg
+                    if (
+                        best == 0 ||
+                        (survivesHit && !bestSurvivesHit) ||
+                        (survivesHit == bestSurvivesHit && d2 < bestD2)
+                    ) {
+                        best = other
+                        bestD2 = d2
+                        bestSurvivesHit = survivesHit
                     }
                 }
             }
 
             if (best != 0) {
-                val targetHp = world.healths[best]!!
+                val targetHp = world.healths[best] ?: continue
                 val dmg = kotlin.math.max(0, def.damage - targetHp.armor)
-                targetHp.hp -= dmg
-                w.cooldownTicks = def.cooldownTicks
-                val killed = targetHp.hp <= 0
-                recordEvent(id, best, dmg, targetHp.hp, killed)
-                if (killed) {
-                    world.remove(best, reason = "death")
-                    val q = world.orders[id]?.items
-                    if (q?.firstOrNull() is Order.Attack && (q.firstOrNull() as Order.Attack).target == best) {
+                reserveDamage(best, dmg)
+                recordPlannedAttack(id, best, dmg, orderedTarget)
+            }
+        }
+
+        for (i in 0 until plannedCount) {
+            val attackerId = plannedAttackers[i]
+            val weapon = world.weapons[attackerId] ?: continue
+            weapon.cooldownTicks = data.weapon(weapon.id).cooldownTicks
+
+            val targetId = plannedTargets[i]
+            val targetHp = world.healths[targetId]
+            if (targetHp == null || targetHp.hp <= 0) continue
+
+            val dmg = plannedDamage[i]
+            targetHp.hp -= dmg
+            val killed = targetHp.hp <= 0
+            recordEvent(attackerId, targetId, dmg, targetHp.hp, killed)
+            if (killed) {
+                world.remove(targetId, reason = "death")
+                if (plannedOrdered[i]) {
+                    val q = world.orders[attackerId]?.items
+                    if (q?.firstOrNull() is Order.Attack && (q.firstOrNull() as Order.Attack).target == targetId) {
                         q.removeFirst()
                     }
                 }
@@ -381,6 +419,52 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
     fun eventTargetHp(index: Int): Int = eventTargetHp[index]
 
     fun eventKilled(index: Int): Boolean = eventKilled[index]
+
+    private fun reservedDamageAt(id: Int): Int {
+        return if (id < reservedDamage.size) reservedDamage[id] else 0
+    }
+
+    private fun reserveDamage(id: Int, damage: Int) {
+        if (damage <= 0) return
+        ensureReservedCapacity(id)
+        if (reservedDamage[id] == 0) {
+            if (reservedTouchedCount >= reservedTouched.size) {
+                reservedTouched = reservedTouched.copyOf(reservedTouched.size * 2)
+            }
+            reservedTouched[reservedTouchedCount++] = id
+        }
+        reservedDamage[id] += damage
+    }
+
+    private fun clearReservedDamage() {
+        for (i in 0 until reservedTouchedCount) {
+            reservedDamage[reservedTouched[i]] = 0
+        }
+        reservedTouchedCount = 0
+    }
+
+    private fun ensureReservedCapacity(id: Int) {
+        if (id < reservedDamage.size) return
+        var nextSize = reservedDamage.size
+        while (id >= nextSize) nextSize *= 2
+        reservedDamage = reservedDamage.copyOf(nextSize)
+    }
+
+    private fun recordPlannedAttack(attacker: Int, target: Int, damage: Int, ordered: Boolean) {
+        val index = plannedCount
+        if (index >= plannedAttackers.size) {
+            val nextSize = plannedAttackers.size * 2
+            plannedAttackers = plannedAttackers.copyOf(nextSize)
+            plannedTargets = plannedTargets.copyOf(nextSize)
+            plannedDamage = plannedDamage.copyOf(nextSize)
+            plannedOrdered = plannedOrdered.copyOf(nextSize)
+        }
+        plannedAttackers[index] = attacker
+        plannedTargets[index] = target
+        plannedDamage[index] = damage
+        plannedOrdered[index] = ordered
+        plannedCount = index + 1
+    }
 
     private fun buildEnemyCache(): Map<Int, EnemyList> {
         val factions = world.tags.values.asSequence().map { it.faction }.toSet()
