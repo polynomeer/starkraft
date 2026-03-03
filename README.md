@@ -201,12 +201,12 @@ Other flags:
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
 - Normal script/replay runs print current runtime metadata (`mapId`, `buildVersion`, `seed`) with the final hashes
-- Final CLI outcome summaries now include aggregate harvest totals, per-faction harvest splits, pickup/deposit cycle totals, drop-off building counts by faction, changed nodes, depletion counts, and current remaining node totals when harvesting occurred
+- Final CLI outcome summaries now include aggregate harvest totals, per-faction harvest splits, pickup/deposit cycle totals, drop-off building counts by faction, mineral/gas compatibility totals, changed nodes, depletion counts, and current remaining node totals when harvesting occurred
 - Depleted resource nodes are removed from the world with despawn reason `resourceDepleted`
 - Workers targeting a depleted node are cleared from harvesting, and their pending move-to-node order is dropped
 - If another node of the same type exists, affected workers are retargeted to the nearest remaining node instead of going idle
 - Human CLI logs now include build/train outcome summaries, including failure reasons when they occur
-- Periodic tick logs also include per-tick harvest pickup/deposit cycle totals and current drop-off building counts when available
+- Periodic tick logs also include per-tick harvest pickup/deposit cycle totals, current drop-off building counts, and mineral/gas compatibility totals when available
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end

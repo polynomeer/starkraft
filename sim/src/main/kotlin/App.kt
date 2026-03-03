@@ -489,7 +489,9 @@ fun main(args: Array<String>) {
                     harvest.lastTickPickupAmount,
                     harvest.lastTickDepositAmount,
                     dropoffCounts.faction1,
-                    dropoffCounts.faction2
+                    dropoffCounts.faction2,
+                    dropoffCounts.minerals,
+                    dropoffCounts.gas
                 )
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
@@ -558,6 +560,8 @@ fun main(args: Array<String>) {
             totalHarvestDepositAmount,
             dropoffCounts.faction1,
             dropoffCounts.faction2,
+            dropoffCounts.minerals,
+            dropoffCounts.gas,
             world.resourceNodes.values.count { it.remaining > 0 },
             world.resourceNodes.values.sumOf { it.remaining }
         )
@@ -2711,9 +2715,11 @@ internal fun renderCommandOutcomeLogSuffix(
     harvestPickupAmount: Int = 0,
     harvestDepositAmount: Int = 0,
     dropoffBuildingsFaction1: Int = 0,
-    dropoffBuildingsFaction2: Int = 0
+    dropoffBuildingsFaction2: Int = 0,
+    mineralDropoffBuildings: Int = 0,
+    gasDropoffBuildings: Int = 0
 ): String {
-    val parts = ArrayList<String>(6)
+    val parts = ArrayList<String>(7)
     if (counters.builds > 0) parts.add("builds=${counters.builds}")
     if (counters.buildFailures > 0) {
         parts.add("buildFails=${counters.buildFailures}[${formatBuildFailureReasons(counters.buildFailureReasons)}]")
@@ -2729,6 +2735,9 @@ internal fun renderCommandOutcomeLogSuffix(
     }
     if (dropoffBuildingsFaction1 > 0 || dropoffBuildingsFaction2 > 0) {
         parts.add("dropoffs=f1:$dropoffBuildingsFaction1/f2:$dropoffBuildingsFaction2")
+    }
+    if (mineralDropoffBuildings > 0 || gasDropoffBuildings > 0) {
+        parts.add("compat=m$mineralDropoffBuildings/g$gasDropoffBuildings")
     }
     return if (parts.isEmpty()) "" else "  " + parts.joinToString(" ")
 }
@@ -2756,6 +2765,8 @@ internal fun renderAggregateOutcomeSummary(
     totalHarvestDepositAmount: Int = 0,
     dropoffBuildingsFaction1: Int = 0,
     dropoffBuildingsFaction2: Int = 0,
+    mineralDropoffBuildings: Int = 0,
+    gasDropoffBuildings: Int = 0,
     currentResourceNodeCount: Int = 0,
     currentResourceNodeRemaining: Int = 0
 ): String? {
@@ -2780,6 +2791,8 @@ internal fun renderAggregateOutcomeSummary(
         totalHarvestDepositAmount == 0 &&
         dropoffBuildingsFaction1 == 0 &&
         dropoffBuildingsFaction2 == 0 &&
+        mineralDropoffBuildings == 0 &&
+        gasDropoffBuildings == 0 &&
         currentResourceNodeCount == 0 &&
         currentResourceNodeRemaining == 0
     ) {
@@ -2807,6 +2820,9 @@ internal fun renderAggregateOutcomeSummary(
     }
     if (dropoffBuildingsFaction1 > 0 || dropoffBuildingsFaction2 > 0) {
         parts.add("dropoffs=f1:$dropoffBuildingsFaction1/f2:$dropoffBuildingsFaction2")
+    }
+    if (mineralDropoffBuildings > 0 || gasDropoffBuildings > 0) {
+        parts.add("compat=m$mineralDropoffBuildings/g$gasDropoffBuildings")
     }
     return "command outcomes: " + parts.joinToString(" ")
 }
