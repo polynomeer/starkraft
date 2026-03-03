@@ -83,6 +83,9 @@ data class SnapshotStreamSummary(
     val visionHiddenFaction2: Int = 0,
     val finalVisibleTilesFaction1: Int? = null,
     val finalVisibleTilesFaction2: Int? = null,
+    val commandAckAcceptedCount: Int = 0,
+    val commandAckRejectedCount: Int = 0,
+    val commandAckRejectReasons: Map<String, Int> = emptyMap(),
     val archetypeSelectionCount: Int = 0,
     val archetypeMoveCommandCount: Int = 0,
     val archetypeAttackCommandCount: Int = 0,
@@ -161,6 +164,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var visionHiddenFaction2 = 0
     var finalVisibleTilesFaction1: Int? = null
     var finalVisibleTilesFaction2: Int? = null
+    var commandAckAcceptedCount = 0
+    var commandAckRejectedCount = 0
+    val commandAckRejectReasons = linkedMapOf<String, Int>()
     var archetypeSelectionCount = 0
     var archetypeMoveCommandCount = 0
     var archetypeAttackCommandCount = 0
@@ -219,6 +225,16 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     "attackArchetype" -> {
                         archetypeAttackCommandCount++
                         obj.string("archetype")?.let(archetypesUsed::add)
+                    }
+                }
+            }
+            "commandAck" -> {
+                if (obj.bool("accepted") == true) {
+                    commandAckAcceptedCount++
+                } else {
+                    commandAckRejectedCount++
+                    obj.string("reason")?.let { reason ->
+                        commandAckRejectReasons[reason] = (commandAckRejectReasons[reason] ?: 0) + 1
                     }
                 }
             }
@@ -478,6 +494,9 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         visionHiddenFaction2 = visionHiddenFaction2,
         finalVisibleTilesFaction1 = finalVisibleTilesFaction1,
         finalVisibleTilesFaction2 = finalVisibleTilesFaction2,
+        commandAckAcceptedCount = commandAckAcceptedCount,
+        commandAckRejectedCount = commandAckRejectedCount,
+        commandAckRejectReasons = commandAckRejectReasons,
         archetypeSelectionCount = archetypeSelectionCount,
         archetypeMoveCommandCount = archetypeMoveCommandCount,
         archetypeAttackCommandCount = archetypeAttackCommandCount,
@@ -508,6 +527,16 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "${summary.resourceSummaryMineralsRefundedFaction1}/${summary.resourceSummaryGasRefundedFaction1} " +
                 "f2=${summary.resourceSummaryMineralsSpentFaction2}/${summary.resourceSummaryGasSpentFaction2}->" +
                 "${summary.resourceSummaryMineralsRefundedFaction2}/${summary.resourceSummaryGasRefundedFaction2}"
+        )
+    }
+    if (summary.commandAckAcceptedCount > 0 || summary.commandAckRejectedCount > 0) {
+        val reasons =
+            summary.commandAckRejectReasons.entries.joinToString(",") { (reason, count) ->
+                "$reason=$count"
+            }
+        lines.add(
+            "acks: ok=${summary.commandAckAcceptedCount} fail=${summary.commandAckRejectedCount}" +
+                if (reasons.isNotEmpty()) " reasons=$reasons" else ""
         )
     }
     if (summary.resourceNodeChangeCount > 0 || summary.countsByType["resourceNode"] != null) {

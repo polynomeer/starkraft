@@ -237,6 +237,7 @@ The HUD shows the latest command ack so input failures surface without reading s
 - Example consumer:
   `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft.ndjson"`
   This reads the NDJSON stream and prints record counts plus session/hash metadata, including resource-node change counts, per-faction harvest splits, active nodes, remaining resources, economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
+  It also summarizes `commandAck` records as accepted/rejected totals plus deterministic rejection reasons when present.
   It also summarizes `dropoffState` records as faction-split drop-off building totals.
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
   It also summarizes `harvesterRetarget` records as total reassignment events and unique workers retargeted after node depletion.
