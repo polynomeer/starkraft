@@ -161,6 +161,21 @@ You can run the sample with:
 NDJSON is also accepted for append-friendly client pipelines, one `selection` or `command` object per line.
 Use `--inputJson -` to read the same JSON or NDJSON payload from stdin.
 `--inputTail` is for append-only files from an external client process; each completed line is picked up on the next sim tick.
+
+Minimal graphical client:
+
+1. Start the sim with streamed snapshots and live input tailing:
+   `./gradlew :sim:run --args="--snapshotEvery 1 --snapshotOut /tmp/starkraft/live/snapshots.ndjson --inputTail /tmp/starkraft/live/client-input.ndjson --noSleep --ticks 2000"`
+2. Start the client in another terminal:
+   `./gradlew :sim:graphicalClient --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
+
+Client controls:
+- left click: select nearest faction 1 unit
+- right click enemy: issue `attack`
+- right click resource node: issue `harvest`
+- right click empty ground: issue `move`
+
+The client consumes `snapshot` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

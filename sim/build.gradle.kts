@@ -50,3 +50,10 @@ tasks.register<JavaExec>("consumeSnapshotStream") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.SnapshotStreamConsumerKt")
 }
+
+tasks.register<JavaExec>("graphicalClient") {
+    group = "application"
+    description = "Run the minimal snapshot-driven graphical client"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.client.GraphicalClientKt")
+}
