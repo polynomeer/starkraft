@@ -2,6 +2,7 @@
 # Spawns extra units before other commands run.
 
 tick 0
+build @dropoff 1 ResourceDepot 7 5
 spawnNode @ore MineralField 6 6 250
 spawn @m1 1 Marine 4 4 7
 spawn @m2 1 Marine 4.5 4 7

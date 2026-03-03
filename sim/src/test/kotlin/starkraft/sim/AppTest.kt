@@ -305,6 +305,37 @@ class AppTest {
     }
 
     @Test
+    fun `spawn script keeps build commands for dropoff setup`() {
+        val root = Files.createTempDirectory("starkraft-root")
+        Files.writeString(root.resolve("settings.gradle.kts"), "rootProject.name = \"starkraft\"")
+        val script = root.resolve("spawn.script")
+        Files.writeString(
+            script,
+            """
+            tick 0
+            build @dropoff 1 ResourceDepot 7 5
+            spawnNode @ore MineralField 6 6 250
+            spawn @worker 1 Worker 6.5 6 6
+            select @worker
+            harvest @ore
+            """.trimIndent()
+        )
+
+        val program = loadSpawnScriptProgram(script.toString())
+
+        assertEquals(1, program.commandsByTick.size)
+        assertEquals(
+            listOf(
+                Command.Build(0, 1, "ResourceDepot", 7, 5, 0, 0, 0, 0, 0, 0, "dropoff", -1),
+                Command.SpawnNode(0, "MineralField", 6f, 6f, 250, "ore", -2),
+                Command.Spawn(0, 1, "Worker", 6.5f, 6f, 6f, "worker", -3)
+            ),
+            program.commandsByTick[0]
+        )
+        assertEquals(1, program.selectionEventsByTick[0].size)
+    }
+
+    @Test
     fun `script validation rejects build with unknown type and missing defaults`() {
         val commandsByTick =
             arrayOf(

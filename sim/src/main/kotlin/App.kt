@@ -1501,7 +1501,7 @@ private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
     return loadScriptProgram(pathStr).commandsByTick
 }
 
-private data class LoadedProgram(
+internal data class LoadedProgram(
     val commandsByTick: Array<ArrayList<Command>>,
     val selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>
 )
@@ -1559,7 +1559,7 @@ private fun loadSpawnScriptCommands(pathStr: String): Array<ArrayList<Command>> 
     return loadSpawnScriptProgram(pathStr).commandsByTick
 }
 
-private fun loadSpawnScriptProgram(pathStr: String): LoadedProgram {
+internal fun loadSpawnScriptProgram(pathStr: String): LoadedProgram {
     val program = loadScriptProgram(pathStr)
     val all = program.commandsByTick
     val selections = program.selectionEventsByTick
@@ -1568,7 +1568,7 @@ private fun loadSpawnScriptProgram(pathStr: String): LoadedProgram {
         val it = cmds.iterator()
         while (it.hasNext()) {
             val c = it.next()
-            if (c !is Command.Spawn && c !is Command.SpawnNode) it.remove()
+            if (c !is Command.Spawn && c !is Command.SpawnNode && c !is Command.Build) it.remove()
         }
     }
     return LoadedProgram(all, selections)

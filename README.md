@@ -213,6 +213,8 @@ Other flags:
 
 Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`
+This sample now also places a `ResourceDepot` drop-off building alongside the spawned ore node.
+`--spawnScript` accepts `build` commands too, so drop-off setup can happen before the main script runs.
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`
