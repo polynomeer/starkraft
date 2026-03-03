@@ -16,6 +16,23 @@
       "rallyOffsetY": 0.0,
       "mineralCost": 100,
       "gasCost": 0
+    },
+    {
+      "id": "ResourceDepot",
+      "archetype": "econDepot",
+      "hp": 350,
+      "armor": 1,
+      "footprintWidth": 2,
+      "footprintHeight": 2,
+      "placementClearance": 1,
+      "supportsTraining": false,
+      "supportsRally": false,
+      "supportsDropoff": true,
+      "productionQueueLimit": 0,
+      "rallyOffsetX": 0.0,
+      "rallyOffsetY": 0.0,
+      "mineralCost": 75,
+      "gasCost": 0
     }
   ]
 }

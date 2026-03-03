@@ -24,6 +24,7 @@ class ResourceHarvestSystemTest {
             """
             {"list":[
               {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+              {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":75,"gasCost":0},
               {"id":"Tower","archetype":"defense","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
@@ -179,6 +180,27 @@ class ResourceHarvestSystemTest {
         assertEquals(1, harvest.lastTickCycleEventCount)
         assertEquals(ResourceHarvestSystem.EVENT_PICKUP, harvest.cycleEventKind(0))
         assertEquals(depotId, harvest.cycleEventDropoff(0))
+    }
+
+    @Test
+    fun `harvest uses explicit resource depot dropoff`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources, harvestData())
+
+        val depotId = world.spawn(Transform(9f, 4f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(8, 3, 2, 2)
+        val resourceDepotId = world.spawn(Transform(6f, 4f), UnitTag(1, "ResourceDepot"), Health(350, 350), w = null)
+        world.footprints[resourceDepotId] = BuildingFootprint(5, 3, 2, 2)
+        val nodeId = world.spawn(Transform(4f, 4f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 10)
+        val workerId = world.spawn(Transform(4.5f, 4f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.harvesters[workerId] = Harvester(targetNodeId = nodeId, harvestPerTick = 2)
+
+        harvest.tick()
+
+        assertEquals(resourceDepotId, world.harvesters[workerId]?.returnTargetId)
+        assertEquals(Order.Move(6f, 4f), world.orders[workerId]?.items?.firstOrNull())
     }
 
     @Test
