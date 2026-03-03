@@ -175,7 +175,8 @@ Client controls:
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
 
-The client consumes `snapshot` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
+The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
+The HUD shows the latest command ack so input failures surface without reading sim logs.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

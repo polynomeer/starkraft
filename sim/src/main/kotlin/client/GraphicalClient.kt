@@ -2,6 +2,7 @@ package starkraft.sim.client
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import starkraft.sim.net.InputJson
@@ -30,7 +31,15 @@ private val clientJson = Json { ignoreUnknownKeys = true }
 
 private data class ClientViewState(
     var snapshot: ClientSnapshot? = null,
-    val selectedIds: LinkedHashSet<Int> = LinkedHashSet()
+    val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
+    var lastAck: ClientCommandAck? = null
+)
+
+internal data class ClientCommandAck(
+    val tick: Int,
+    val commandType: String,
+    val accepted: Boolean,
+    val reason: String? = null
 )
 
 private class SnapshotTail(path: Path) {
@@ -43,15 +52,29 @@ private class SnapshotTail(path: Path) {
     private val file = RandomAccessFile(path.toFile(), "r")
     var latestSnapshot: ClientSnapshot? = null
         private set
+    var latestAck: ClientCommandAck? = null
+        private set
 
     fun poll() {
         while (true) {
             val line = file.readLine() ?: break
             if (line.isBlank()) continue
             val obj = clientJson.parseToJsonElement(line).jsonObject
-            if (obj["recordType"]?.jsonPrimitive?.content != "snapshot") continue
-            val snapshot = obj["snapshot"] ?: continue
-            latestSnapshot = clientJson.decodeFromJsonElement(ClientSnapshot.serializer(), snapshot)
+            when (obj["recordType"]?.jsonPrimitive?.content) {
+                "snapshot" -> {
+                    val snapshot = obj["snapshot"] ?: continue
+                    latestSnapshot = clientJson.decodeFromJsonElement(ClientSnapshot.serializer(), snapshot)
+                }
+                "commandAck" -> {
+                    latestAck =
+                        ClientCommandAck(
+                            tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                            commandType = obj["commandType"]?.jsonPrimitive?.content ?: "unknown",
+                            accepted = obj["accepted"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false,
+                            reason = obj["reason"]?.let { if (it is JsonNull) null else it.jsonPrimitive.content }
+                        )
+                }
+            }
         }
     }
 }
@@ -155,7 +178,8 @@ private class ClientPanel(
 
     private fun drawHud(g: Graphics2D, snapshot: ClientSnapshot) {
         g.color = Color.WHITE
-        g.drawString("tick=${snapshot.tick} selected=${state.selectedIds.size}", 12, height - 28)
+        g.drawString("tick=${snapshot.tick} selected=${state.selectedIds.size}", 12, height - 44)
+        g.drawString(formatAckStatus(state.lastAck), 12, height - 28)
         g.drawString("left click: select   right click: move/attack/harvest", 12, height - 12)
     }
 
@@ -262,9 +286,12 @@ fun main(args: Array<String>) {
     Timer(50) {
         tail.poll()
         val latest = tail.latestSnapshot ?: return@Timer
+        state.lastAck = tail.latestAck ?: state.lastAck
         if (state.snapshot?.tick != latest.tick) {
             state.snapshot = latest
             state.selectedIds.retainAll(latest.entities.mapTo(HashSet()) { it.id })
+            panel.repaint()
+        } else if (tail.latestAck != null) {
             panel.repaint()
         }
     }.start()
@@ -272,3 +299,10 @@ fun main(args: Array<String>) {
 
 internal fun defaultClientInputPath(snapshotPath: Path): Path =
     snapshotPath.parent.resolve("client-input.ndjson").normalize()
+
+internal fun formatAckStatus(ack: ClientCommandAck?): String =
+    when {
+        ack == null -> "last ack: none"
+        ack.accepted -> "last ack: ok ${ack.commandType} @${ack.tick}"
+        else -> "last ack: fail ${ack.commandType} @${ack.tick} reason=${ack.reason}"
+    }
