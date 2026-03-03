@@ -15,6 +15,7 @@ import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.ResourceNodeSnapshot
@@ -41,6 +42,22 @@ class GraphicalClientTest {
         assertEquals(
             "last ack: fail build @13 reason=missingTech",
             formatAckStatus(ClientCommandAck(tick = 13, commandType = "build", accepted = false, reason = "missingTech"))
+        )
+    }
+
+    @Test
+    fun `builds shared hud lines for pluggable renderers`() {
+        assertEquals(
+            listOf(
+                "tick=15 selected=2",
+                "last ack: ok move[cli-9] @15",
+                "left: select   shift+left: add/remove   right: move/attack/harvest"
+            ),
+            buildClientHudLines(
+                tick = 15,
+                selectedCount = 2,
+                ack = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true)
+            )
         )
     }
 
