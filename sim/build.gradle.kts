@@ -71,3 +71,10 @@ tasks.register<JavaExec>("tcpClientBridge") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.ClientTcpBridgeKt")
 }
+
+tasks.register<JavaExec>("webSocketClientBridge") {
+    group = "application"
+    description = "Bridge snapshot and input ndjson files over websocket sockets"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.client.ClientWebSocketBridgeKt")
+}

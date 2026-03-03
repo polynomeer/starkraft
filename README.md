@@ -179,6 +179,8 @@ Minimal graphical client:
    `./gradlew :sim:graphicalClient --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
    The same client can also connect over TCP sockets:
    `./gradlew :sim:graphicalClient --args="tcp://127.0.0.1:9001 tcp://127.0.0.1:9002"`
+   Or over WebSocket endpoints:
+   `./gradlew :sim:graphicalClient --args="ws://127.0.0.1:9101 ws://127.0.0.1:9102"`
 
 Alternative client transports/renderers:
 - Text client over file stream:
@@ -189,6 +191,8 @@ Alternative client transports/renderers:
   `./gradlew :sim:consoleClient --args="tcp://127.0.0.1:9002 tcp://127.0.0.1:9001"`
 - TCP bridge from ndjson files to sockets:
   `./gradlew :sim:tcpClientBridge --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson 9001 9002"`
+- WebSocket bridge from ndjson files to websocket endpoints:
+  `./gradlew :sim:webSocketClientBridge --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson 9101 9102"`
 
 Client controls:
 - left click: select nearest faction 1 unit
@@ -211,6 +215,7 @@ The UI timer now drives a renderer-agnostic client app loop, so future frontends
 A text-mode client is now available as a second renderer path, and stream subscriptions can come from either file tails or stdin.
 Socket transport is now also available over line-delimited TCP for both snapshot subscriptions and command submission, without adding a websocket dependency.
 A small TCP bridge is included so existing file-based sim output can be exposed to socket-based clients without changing the headless sim process.
+WebSocket transport is now available on the same client bridge abstractions, with a lightweight websocket bridge that exposes the same snapshot/input file pair over `ws://` endpoints.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

@@ -12,12 +12,18 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.io.RandomAccessFile
+import java.net.URI
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketTimeoutException
+import java.net.http.HttpClient
+import java.net.http.WebSocket
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 private val clientBridgeJson = Json { ignoreUnknownKeys = true }
 
@@ -85,6 +91,40 @@ internal class SocketClientStreamSubscription(
 
     override fun close() {
         socket.close()
+    }
+}
+
+internal class WebSocketClientStreamSubscription(
+    uri: String
+) : ClientStreamSubscription {
+    private val queue = ConcurrentLinkedQueue<ClientStreamState>()
+    private val connected = CountDownLatch(1)
+    private val webSocket =
+        HttpClient.newHttpClient()
+            .newWebSocketBuilder()
+            .buildAsync(URI.create(uri), object : WebSocket.Listener {
+                override fun onOpen(webSocket: WebSocket) {
+                    connected.countDown()
+                    webSocket.request(1)
+                }
+
+                override fun onText(webSocket: WebSocket, data: CharSequence, last: Boolean): java.util.concurrent.CompletionStage<*>? {
+                    if (last) {
+                        parseClientStreamLine(data.toString())?.let(queue::add)
+                    }
+                    webSocket.request(1)
+                    return null
+                }
+            }).join()
+
+    init {
+        connected.await(2, TimeUnit.SECONDS)
+    }
+
+    override fun poll(): ClientStreamState? = queue.poll()
+
+    override fun close() {
+        runCatching { webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "bye").join() }
     }
 }
 
@@ -173,6 +213,38 @@ internal class SocketClientInputSink(
     }
 }
 
+internal class WebSocketClientInputSink(
+    uri: String
+) : ClientInputSink {
+    private val json = Json { encodeDefaults = true }
+    private val connected = CountDownLatch(1)
+    private val webSocket =
+        HttpClient.newHttpClient()
+            .newWebSocketBuilder()
+            .buildAsync(URI.create(uri), object : WebSocket.Listener {
+                override fun onOpen(webSocket: WebSocket) {
+                    connected.countDown()
+                    webSocket.request(1)
+                }
+            }).join()
+
+    init {
+        connected.await(2, TimeUnit.SECONDS)
+    }
+
+    override fun append(record: InputJson.InputCommandRecord) {
+        webSocket.sendText(json.encodeToString(InputJson.InputCommandRecord.serializer(), record), true).join()
+    }
+
+    override fun append(record: InputJson.InputSelectionRecord) {
+        webSocket.sendText(json.encodeToString(InputJson.InputSelectionRecord.serializer(), record), true).join()
+    }
+
+    override fun close() {
+        runCatching { webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "bye").join() }
+    }
+}
+
 internal data class ClientSocketEndpoint(val host: String, val port: Int)
 
 internal fun parseClientEndpoint(spec: String): ClientSocketEndpoint? {
@@ -184,6 +256,9 @@ internal fun parseClientEndpoint(spec: String): ClientSocketEndpoint? {
 }
 
 internal fun openClientStreamSubscription(spec: String): ClientStreamSubscription {
+    if (spec.startsWith("ws://") || spec.startsWith("wss://")) {
+        return WebSocketClientStreamSubscription(spec)
+    }
     val endpoint = parseClientEndpoint(spec)
     return if (endpoint != null) {
         SocketClientStreamSubscription(endpoint.host, endpoint.port)
@@ -193,6 +268,9 @@ internal fun openClientStreamSubscription(spec: String): ClientStreamSubscriptio
 }
 
 internal fun openClientInputSink(spec: String): ClientInputSink {
+    if (spec.startsWith("ws://") || spec.startsWith("wss://")) {
+        return WebSocketClientInputSink(spec)
+    }
     val endpoint = parseClientEndpoint(spec)
     return if (endpoint != null) {
         SocketClientInputSink(endpoint.host, endpoint.port)
