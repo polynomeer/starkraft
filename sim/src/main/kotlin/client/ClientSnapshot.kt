@@ -395,6 +395,8 @@ data class TickSummaryStreamRecord(
     val harvestDepositAmount: Int,
     val dropoffBuildingsFaction1: Int,
     val dropoffBuildingsFaction2: Int,
+    val mineralDropoffBuildings: Int,
+    val gasDropoffBuildings: Int,
     val depletedNodes: Int,
     val changedResourceNodes: Int
 )
@@ -684,6 +686,8 @@ data class SessionStatsStreamRecord(
     val harvestDepositAmount: Int,
     val dropoffBuildingsFaction1: Int,
     val dropoffBuildingsFaction2: Int,
+    val mineralDropoffBuildings: Int,
+    val gasDropoffBuildings: Int,
     val depletedNodes: Int,
     val changedResourceNodes: Int,
     val finalVisibleTilesFaction1: Int,
@@ -1238,6 +1242,8 @@ fun renderTickSummaryStreamRecordJson(
     harvestDepositAmount: Int,
     dropoffBuildingsFaction1: Int,
     dropoffBuildingsFaction2: Int,
+    mineralDropoffBuildings: Int,
+    gasDropoffBuildings: Int,
     depletedNodes: Int,
     changedResourceNodes: Int,
     pretty: Boolean = false
@@ -1295,6 +1301,8 @@ fun renderTickSummaryStreamRecordJson(
             harvestDepositAmount = harvestDepositAmount,
             dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
             dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
+            mineralDropoffBuildings = mineralDropoffBuildings,
+            gasDropoffBuildings = gasDropoffBuildings,
             depletedNodes = depletedNodes,
             changedResourceNodes = changedResourceNodes
         )
@@ -1597,6 +1605,8 @@ fun renderSessionStatsStreamRecordJson(
     harvestDepositAmount: Int,
     dropoffBuildingsFaction1: Int,
     dropoffBuildingsFaction2: Int,
+    mineralDropoffBuildings: Int,
+    gasDropoffBuildings: Int,
     depletedNodes: Int,
     changedResourceNodes: Int,
     finalVisibleTilesFaction1: Int,
@@ -1653,6 +1663,8 @@ fun renderSessionStatsStreamRecordJson(
             harvestDepositAmount = harvestDepositAmount,
             dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
             dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
+            mineralDropoffBuildings = mineralDropoffBuildings,
+            gasDropoffBuildings = gasDropoffBuildings,
             depletedNodes = depletedNodes,
             changedResourceNodes = changedResourceNodes,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,

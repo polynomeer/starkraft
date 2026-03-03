@@ -479,7 +479,7 @@ fun main(args: Array<String>) {
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
-            val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
+            val dropoffCounts = countDropoffBuildings(world, data)
             val outcomeSuffix =
                 renderCommandOutcomeLogSuffix(
                     commandOutcomeCounters,
@@ -488,8 +488,8 @@ fun main(args: Array<String>) {
                     harvest.lastTickDepositCount,
                     harvest.lastTickPickupAmount,
                     harvest.lastTickDepositAmount,
-                    dropoffBuildingsFaction1,
-                    dropoffBuildingsFaction2
+                    dropoffCounts.faction1,
+                    dropoffCounts.faction2
                 )
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
@@ -533,7 +533,7 @@ fun main(args: Array<String>) {
         println("$source hash=$finalReplayHash world hash=$finalWorldHash")
         println(currentRuntimeMetadataLine(seed))
     }
-    val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
+    val dropoffCounts = countDropoffBuildings(world, data)
     val finalOutcomeSummary =
         renderAggregateOutcomeSummary(
             totalBuilds,
@@ -556,8 +556,8 @@ fun main(args: Array<String>) {
             totalHarvestDepositCount,
             totalHarvestPickupAmount,
             totalHarvestDepositAmount,
-            dropoffBuildingsFaction1,
-            dropoffBuildingsFaction2,
+            dropoffCounts.faction1,
+            dropoffCounts.faction2,
             world.resourceNodes.values.count { it.remaining > 0 },
             world.resourceNodes.values.sumOf { it.remaining }
         )
@@ -595,7 +595,7 @@ fun main(args: Array<String>) {
         emitClientSnapshot(world, map, fog1, fog2, tick, seed, data, compactJson, resolvedSnapshotOutPath, streamSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
-        val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
+        val dropoffCounts = countDropoffBuildings(world, data)
         emitSnapshotLine(
             renderSessionStatsStreamRecordJson(
                 sequence = nextStreamSequence(streamSequence),
@@ -638,8 +638,10 @@ fun main(args: Array<String>) {
                 harvestDepositCount = totalHarvestDepositCount,
                 harvestPickupAmount = totalHarvestPickupAmount,
                 harvestDepositAmount = totalHarvestDepositAmount,
-                dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
-                dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
+                dropoffBuildingsFaction1 = dropoffCounts.faction1,
+                dropoffBuildingsFaction2 = dropoffCounts.faction2,
+                mineralDropoffBuildings = dropoffCounts.minerals,
+                gasDropoffBuildings = dropoffCounts.gas,
                 depletedNodes = totalDepletedNodes,
                 changedResourceNodes = totalChangedResourceNodes,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
@@ -1262,21 +1264,32 @@ private fun emitDropoffStateRecord(
     )
 }
 
-private fun countDropoffBuildings(world: World, data: DataRepo): Pair<Int, Int> {
+private data class DropoffSummaryCounts(
+    val faction1: Int,
+    val faction2: Int,
+    val minerals: Int,
+    val gas: Int
+)
+
+private fun countDropoffBuildings(world: World, data: DataRepo): DropoffSummaryCounts {
     var faction1 = 0
     var faction2 = 0
+    var minerals = 0
+    var gas = 0
     val alive = world.aliveSnapshot
     for (i in 0 until alive.count) {
         val id = alive.ids[i]
         val tag = world.tags[id] ?: continue
         val spec = data.buildSpec(tag.typeId) ?: continue
         if (!spec.supportsDropoff) continue
+        if ("minerals" in spec.dropoffResourceKinds) minerals++
+        if ("gas" in spec.dropoffResourceKinds) gas++
         when (tag.faction) {
             1 -> faction1++
             2 -> faction2++
         }
     }
-    return faction1 to faction2
+    return DropoffSummaryCounts(faction1 = faction1, faction2 = faction2, minerals = minerals, gas = gas)
 }
 
 private fun emitHarvesterStateRecord(
@@ -1495,7 +1508,7 @@ private fun emitTickSummaryRecord(
         val id = alive.ids[i]
         if ((world.healths[id]?.hp ?: 0) > 0) aliveTotal++
     }
-    val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
+    val dropoffCounts = countDropoffBuildings(world, data)
     emitSnapshotLine(
         renderTickSummaryStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
@@ -1547,8 +1560,10 @@ private fun emitTickSummaryRecord(
             harvestDepositCount = harvest.lastTickDepositCount,
             harvestPickupAmount = harvest.lastTickPickupAmount,
             harvestDepositAmount = harvest.lastTickDepositAmount,
-            dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
-            dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
+            dropoffBuildingsFaction1 = dropoffCounts.faction1,
+            dropoffBuildingsFaction2 = dropoffCounts.faction2,
+            mineralDropoffBuildings = dropoffCounts.minerals,
+            gasDropoffBuildings = dropoffCounts.gas,
             depletedNodes = harvest.lastTickDepletedNodes,
             changedResourceNodes = harvest.lastTickEventCount,
             pretty = false
