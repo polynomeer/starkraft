@@ -70,6 +70,7 @@ data class EntitySnapshot(
     val supportsTraining: Boolean? = null,
     val supportsRally: Boolean? = null,
     val supportsDropoff: Boolean? = null,
+    val dropoffResourceKinds: List<String> = emptyList(),
     val productionQueueLimit: Int? = null,
     val defaultRallyOffsetX: Float? = null,
     val defaultRallyOffsetY: Float? = null,
@@ -273,6 +274,7 @@ data class ProducerStateEntityRecord(
     val supportsTraining: Boolean,
     val supportsRally: Boolean,
     val supportsDropoff: Boolean,
+    val dropoffResourceKinds: List<String>,
     val productionQueueLimit: Int,
     val defaultRallyOffsetX: Float,
     val defaultRallyOffsetY: Float
@@ -785,6 +787,7 @@ fun buildClientSnapshot(
                 supportsTraining = buildSpec?.supportsTraining,
                 supportsRally = buildSpec?.supportsRally,
                 supportsDropoff = buildSpec?.supportsDropoff,
+                dropoffResourceKinds = buildSpec?.dropoffResourceKinds ?: emptyList(),
                 productionQueueLimit = buildSpec?.productionQueueLimit,
                 defaultRallyOffsetX = buildSpec?.rallyOffsetX,
                 defaultRallyOffsetY = buildSpec?.rallyOffsetY,
