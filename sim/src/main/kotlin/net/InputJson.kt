@@ -2,6 +2,7 @@ package starkraft.sim.net
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -55,7 +56,7 @@ object InputJson {
 
     fun loadProgram(path: Path): ScriptRunner.ScriptProgram {
         val raw = Files.readString(path)
-        val program = json.decodeFromString(InputProgram.serializer(), raw)
+        val program = parseProgram(raw)
         val labelIds = HashMap<String, Int>()
         var nextLabelId = -1
 
@@ -221,6 +222,31 @@ object InputJson {
         return ScriptRunner.ScriptProgram(commands, selections)
     }
 
+    private fun parseProgram(raw: String): InputProgram {
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty()) return InputProgram()
+        if (!trimmed.contains('\n')) {
+            return json.decodeFromString(InputProgram.serializer(), trimmed)
+        }
+        val root = runCatching { json.parseToJsonElement(trimmed) }.getOrNull()
+        if (root != null && ("commands" in root.jsonObject || "selections" in root.jsonObject)) {
+            return json.decodeFromString(InputProgram.serializer(), trimmed)
+        }
+        val selections = ArrayList<InputSelectionRecord>()
+        val commands = ArrayList<InputCommandRecord>()
+        for ((index, rawLine) in trimmed.lineSequence().withIndex()) {
+            val line = rawLine.trim()
+            if (line.isEmpty()) continue
+            val obj = json.parseToJsonElement(line).jsonObject
+            when {
+                "selectionType" in obj -> selections.add(json.decodeFromString(InputSelectionRecord.serializer(), line))
+                "commandType" in obj -> commands.add(json.decodeFromString(InputCommandRecord.serializer(), line))
+                else -> error("unsupported input NDJSON record at line ${index + 1}")
+            }
+        }
+        return InputProgram(selections = selections, commands = commands)
+    }
+
     private fun resolveEntityRef(
         id: Int?,
         label: String?,
@@ -232,4 +258,3 @@ object InputJson {
         error("$fieldName is required")
     }
 }
-

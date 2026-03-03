@@ -136,7 +136,7 @@ Other flags:
   Recorded into replay metadata when saving replay files.
   Replay files also store `mapId` and `buildVersion`.
 - `--script <path>` run a command script
-- `--inputJson <path>` load machine-readable client input as JSON with `commands` and optional `selections`
+- `--inputJson <path>` load machine-readable client input as JSON or NDJSON with `commands` and optional `selections`
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script commands without running
 - Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
@@ -156,6 +156,8 @@ Example client-input file:
 You can run the sample with:
 
 `./gradlew :sim:run --args="--inputJson sim/scripts/sample.input.json --noSleep --ticks 20"`
+
+NDJSON is also accepted for append-friendly client pipelines, one `selection` or `command` object per line.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands
