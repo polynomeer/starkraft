@@ -18,14 +18,16 @@ class DataRepoTest {
                 """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
                 """
                 {"list":[
-                  {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
-                  {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":75,"gasCost":0}
+                  {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+                  {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":75,"gasCost":0},
+                  {"id":"GasDepot","archetype":"gasDepot","hp":325,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"dropoffResourceKinds":["gas"],"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":90,"gasCost":0}
                 ]}
                 """.trimIndent()
             )
 
         val build = repo.buildSpec("Depot")
         val resourceDepot = repo.buildSpec("ResourceDepot")
+        val gasDepot = repo.buildSpec("GasDepot")
         val train = repo.trainSpec("Marine")
 
         assertEquals(2, build?.footprintWidth)
@@ -35,6 +37,7 @@ class DataRepoTest {
         assertEquals(true, build?.supportsTraining)
         assertEquals(true, build?.supportsRally)
         assertEquals(true, build?.supportsDropoff)
+        assertEquals(listOf("minerals"), build?.dropoffResourceKinds)
         assertEquals(3, build?.productionQueueLimit)
         assertEquals(4f, build?.rallyOffsetX)
         assertEquals(0f, build?.rallyOffsetY)
@@ -43,7 +46,10 @@ class DataRepoTest {
         assertEquals(false, resourceDepot?.supportsTraining)
         assertEquals(false, resourceDepot?.supportsRally)
         assertEquals(true, resourceDepot?.supportsDropoff)
+        assertEquals(listOf("minerals"), resourceDepot?.dropoffResourceKinds)
         assertEquals(75, resourceDepot?.mineralCost)
+        assertEquals("gasDepot", gasDepot?.archetype)
+        assertEquals(listOf("gas"), gasDepot?.dropoffResourceKinds)
         assertEquals("infantry", train?.archetype)
         assertEquals(75, train?.buildTicks)
         assertEquals(50, train?.mineralCost)

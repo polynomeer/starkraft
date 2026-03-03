@@ -41,6 +41,7 @@ data class BuildingDef(
     val supportsTraining: Boolean = false,
     val supportsRally: Boolean = false,
     val supportsDropoff: Boolean = false,
+    val dropoffResourceKinds: List<String> = emptyList(),
     val productionQueueLimit: Int = 5,
     val rallyOffsetX: Float = 0f,
     val rallyOffsetY: Float = 0f,

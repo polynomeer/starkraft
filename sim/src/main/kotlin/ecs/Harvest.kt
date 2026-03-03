@@ -83,7 +83,7 @@ class ResourceHarvestSystem(
             node.remaining -= harvested
             harvester.cargoKind = node.kind
             harvester.cargoAmount = harvested
-            harvester.returnTargetId = findNearestDropoff(entityId, workerTag.faction)
+            harvester.returnTargetId = findNearestDropoff(entityId, workerTag.faction, node.kind)
             when (node.kind) {
                 ResourceNode.KIND_GAS -> {
                     lastTickHarvestedGas += harvested
@@ -139,7 +139,7 @@ class ResourceHarvestSystem(
             if (harvester.returnTargetId >= 0 && world.footprints.containsKey(harvester.returnTargetId)) {
                 harvester.returnTargetId
             } else {
-                findNearestDropoff(entityId, faction)
+                findNearestDropoff(entityId, faction, harvester.cargoKind)
             }
         harvester.returnTargetId = returnId
         if (returnId < 0) {
@@ -189,10 +189,12 @@ class ResourceHarvestSystem(
         queue.addFirst(Order.Move(x, y))
     }
 
-    private fun findNearestDropoff(entityId: Int, faction: Int): Int {
+    private fun findNearestDropoff(entityId: Int, faction: Int, resourceKind: String?): Int {
         val workerTransform = world.transforms[entityId] ?: return -1
-        var bestProducerId = -1
-        var bestProducerDist = Float.POSITIVE_INFINITY
+        var bestCompatibleId = -1
+        var bestCompatibleDist = Float.POSITIVE_INFINITY
+        var bestDropoffId = -1
+        var bestDropoffDist = Float.POSITIVE_INFINITY
         var bestAnyId = -1
         var bestAnyDist = Float.POSITIVE_INFINITY
         for ((buildingId, footprint) in world.footprints) {
@@ -207,12 +209,24 @@ class ResourceHarvestSystem(
                 bestAnyId = buildingId
             }
             val buildSpec = data?.buildSpec(tag.typeId)
-            if (buildSpec?.supportsDropoff == true && dist < bestProducerDist) {
-                bestProducerDist = dist
-                bestProducerId = buildingId
+            if (buildSpec?.supportsDropoff == true) {
+                if (dist < bestDropoffDist) {
+                    bestDropoffDist = dist
+                    bestDropoffId = buildingId
+                }
+                val compatibleKinds = buildSpec.dropoffResourceKinds
+                val isCompatible = compatibleKinds.isEmpty() || resourceKind == null || compatibleKinds.contains(resourceKind)
+                if (isCompatible && dist < bestCompatibleDist) {
+                    bestCompatibleDist = dist
+                    bestCompatibleId = buildingId
+                }
             }
         }
-        return if (bestProducerId >= 0) bestProducerId else bestAnyId
+        return when {
+            bestCompatibleId >= 0 -> bestCompatibleId
+            bestDropoffId >= 0 -> bestDropoffId
+            else -> bestAnyId
+        }
     }
 
     private fun recordEvent(nodeId: Int, harvested: Int, remaining: Int, depleted: Boolean) {

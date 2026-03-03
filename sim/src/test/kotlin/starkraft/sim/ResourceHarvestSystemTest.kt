@@ -23,8 +23,9 @@ class ResourceHarvestSystemTest {
             """{"list":[]}""",
             """
             {"list":[
-              {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
-              {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":75,"gasCost":0},
+              {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+              {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":75,"gasCost":0},
+              {"id":"GasDepot","archetype":"gasDepot","hp":325,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"supportsDropoff":true,"dropoffResourceKinds":["gas"],"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":90,"gasCost":0},
               {"id":"Tower","archetype":"defense","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
             ]}
             """.trimIndent()
@@ -201,6 +202,28 @@ class ResourceHarvestSystemTest {
 
         assertEquals(resourceDepotId, world.harvesters[workerId]?.returnTargetId)
         assertEquals(Order.Move(6f, 4f), world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
+    fun `harvest prefers gas compatible dropoff for gas cargo`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources, harvestData())
+
+        val depotId = world.spawn(Transform(6f, 4f), UnitTag(2, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(5, 3, 2, 2)
+        val gasDepotId = world.spawn(Transform(9f, 4f), UnitTag(2, "GasDepot"), Health(325, 325), w = null)
+        world.footprints[gasDepotId] = BuildingFootprint(8, 3, 2, 2)
+        val gasNodeId = world.spawn(Transform(4f, 4f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        world.resourceNodes[gasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 10)
+        val workerId = world.spawn(Transform(4.5f, 4f), UnitTag(2, "Worker"), Health(40, 40), w = null)
+        world.harvesters[workerId] = Harvester(targetNodeId = gasNodeId, harvestPerTick = 2)
+
+        harvest.tick()
+
+        assertEquals(gasDepotId, world.harvesters[workerId]?.returnTargetId)
+        assertEquals(Order.Move(9f, 4f), world.orders[workerId]?.items?.firstOrNull())
+        assertEquals(gasDepotId, harvest.cycleEventDropoff(0))
     }
 
     @Test
