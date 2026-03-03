@@ -196,6 +196,7 @@ Other flags:
   This reads the NDJSON stream and prints record counts plus session/hash metadata, including resource-node change counts, per-faction harvest splits, active nodes, remaining resources, economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
   It also summarizes `dropoffState` records as faction-split drop-off building totals.
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
+  It also summarizes `harvesterRetarget` records as total reassignment events and unique workers retargeted after node depletion.
   When `harvestCycle` records are present, it also prints pickup/deposit event counts and transferred amounts.
   Producer summaries include drop-off-capable building counts plus mineral/gas compatibility totals when `dropoffResourceKinds` is present in `producerState`.
   Resource-node totals also drop depleted nodes once a `despawn` record with reason `resourceDepleted` is seen.
@@ -226,6 +227,7 @@ To verify the snapshot stream consumer sees the compatibility data live:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --ticks 260 --noSleep --snapshotEvery 50 --snapshotOut /tmp/starkraft-live-compat.ndjson"`
 `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft-live-compat.ndjson"`
 Expected producer summary includes non-zero compatibility counts, e.g. `producers: total=2 training=1 rally=1 dropoff=2 minerals=2 gas=0 ...`
+If a node depletes and a worker is reassigned, the consumer also prints a line like `harvesterRetarget: events=1 workers=1`.
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`
