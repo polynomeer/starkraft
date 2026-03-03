@@ -1,0 +1,10 @@
+# Gas harvesting retarget script
+# The first geyser depletes immediately, so the worker is reassigned to @geyser2.
+
+tick 0
+build @gasdrop 2 GasDepot 8 5
+spawnNode @geyser GasGeyser 7 6 1
+spawnNode @geyser2 GasGeyser 10 6 20
+spawn @worker 2 Worker 7.5 6 6
+select @worker
+harvest @geyser

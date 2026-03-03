@@ -246,6 +246,11 @@ Sample split economy setup with spawn script + main script:
 Sample split gas economy setup for faction 2:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn-harvest-gas.script --script sim/scripts/harvest-gas-main.script --ticks 50 --noSleep"`
 
+Sample gas harvest retarget script:
+`./gradlew :sim:run --args="--script sim/scripts/harvest-gas-retarget.script --ticks 5 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-gas-retarget.ndjson"`
+`./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft-gas-retarget.ndjson"`
+This depletes the first geyser immediately and emits `harvesterRetarget` with `resourceKind="gas"` when the worker is reassigned to `@geyser2`.
+
 Sample gas harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest-gas.script --ticks 50 --noSleep"`
 `./gradlew :sim:run --args="--script sim/scripts/harvest-gas.script --ticks 50 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-gas.ndjson"`
