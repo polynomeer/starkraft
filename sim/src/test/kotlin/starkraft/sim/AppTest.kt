@@ -133,8 +133,15 @@ class AppTest {
             )
 
         assertEquals(
-            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1]",
-            renderCommandOutcomeLogSuffix(counters, trainsCompleted = 2)
+            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] cycles=p2/3 d1/1",
+            renderCommandOutcomeLogSuffix(
+                counters,
+                trainsCompleted = 2,
+                harvestPickupCount = 2,
+                harvestDepositCount = 1,
+                harvestPickupAmount = 3,
+                harvestDepositAmount = 1
+            )
         )
     }
 

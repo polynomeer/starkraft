@@ -203,6 +203,7 @@ Other flags:
 - Workers targeting a depleted node are cleared from harvesting, and their pending move-to-node order is dropped
 - If another node of the same type exists, affected workers are retargeted to the nearest remaining node instead of going idle
 - Human CLI logs now include build/train outcome summaries, including failure reasons when they occur
+- Periodic tick logs also include per-tick harvest pickup/deposit cycle totals when harvesting is active
 - `--dumpWorldHash` print world hash after a normal run
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end

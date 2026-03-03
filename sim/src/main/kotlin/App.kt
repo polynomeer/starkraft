@@ -475,7 +475,15 @@ fun main(args: Array<String>) {
         if (tick % 25 == 0) {
             val m1 = world.tags.filter { it.value.faction == 1 }.keys.size
             val m2 = world.tags.filter { it.value.faction == 2 }.keys.size
-            val outcomeSuffix = renderCommandOutcomeLogSuffix(commandOutcomeCounters, tickTrainsCompleted)
+            val outcomeSuffix =
+                renderCommandOutcomeLogSuffix(
+                    commandOutcomeCounters,
+                    tickTrainsCompleted,
+                    harvest.lastTickPickupCount,
+                    harvest.lastTickDepositCount,
+                    harvest.lastTickPickupAmount,
+                    harvest.lastTickDepositAmount
+                )
             println(
                 "tick=$tick  alive: team1=$m1 team2=$m2  visibleTiles: t1=${fog1.visibleCount()} t2=${fog2.visibleCount()} " +
                     "buildings=${world.footprints.size} prodQueues=${world.productionQueues.size} " +
@@ -2607,9 +2615,13 @@ data class CommandOutcomeCounters(
 
 internal fun renderCommandOutcomeLogSuffix(
     counters: CommandOutcomeCounters,
-    trainsCompleted: Int
+    trainsCompleted: Int,
+    harvestPickupCount: Int = 0,
+    harvestDepositCount: Int = 0,
+    harvestPickupAmount: Int = 0,
+    harvestDepositAmount: Int = 0
 ): String {
-    val parts = ArrayList<String>(4)
+    val parts = ArrayList<String>(5)
     if (counters.builds > 0) parts.add("builds=${counters.builds}")
     if (counters.buildFailures > 0) {
         parts.add("buildFails=${counters.buildFailures}[${formatBuildFailureReasons(counters.buildFailureReasons)}]")
@@ -2619,6 +2631,9 @@ internal fun renderCommandOutcomeLogSuffix(
     }
     if (counters.trainFailures > 0) {
         parts.add("trainFails=${counters.trainFailures}[${formatTrainFailureReasons(counters.trainFailureReasons)}]")
+    }
+    if (harvestPickupCount > 0 || harvestDepositCount > 0 || harvestPickupAmount > 0 || harvestDepositAmount > 0) {
+        parts.add("cycles=p$harvestPickupCount/$harvestPickupAmount d$harvestDepositCount/$harvestDepositAmount")
     }
     return if (parts.isEmpty()) "" else "  " + parts.joinToString(" ")
 }
