@@ -34,12 +34,12 @@ class Pathfinder(
     private val dirX = intArrayOf(1, 0, -1, 0, 1, 1, -1, -1)
     private val dirY = intArrayOf(0, 1, 0, -1, 1, -1, 1, -1)
 
-    fun findPath(sx: Int, sy: Int, gx: Int, gy: Int, maxNodes: Int, out: IntArray): Int {
+    fun findPath(sx: Int, sy: Int, gx: Int, gy: Int, maxNodes: Int, out: IntArray, allowOccupiedGoal: Boolean = false): Int {
         lastNodesUsed = 0
         lastBudgetExhausted = false
         if (!map.inBounds(sx, sy) || !map.inBounds(gx, gy)) return 0
         if (!map.isPassable(gx, gy)) return 0
-        if (occ.isBlocked(gx, gy) && !(sx == gx && sy == gy)) return 0
+        if (occ.isBlocked(gx, gy) && !(sx == gx && sy == gy) && !allowOccupiedGoal) return 0
         if (sx == gx && sy == gy) {
             out[0] = pack(sx, sy)
             return 1
@@ -79,7 +79,7 @@ class Pathfinder(
                 val ny = cy + dirY[i]
                 if (!map.inBounds(nx, ny)) continue
                 if (!map.isPassable(nx, ny)) continue
-                if (occ.isBlocked(nx, ny)) continue
+                if (occ.isBlocked(nx, ny) && !(allowOccupiedGoal && nx == gx && ny == gy)) continue
                 if (i >= 4 && !allowCornerCut) {
                     val ox = cx + dirX[i]
                     val oy = cy

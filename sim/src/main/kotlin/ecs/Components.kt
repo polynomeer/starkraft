@@ -19,7 +19,7 @@ sealed interface Order {
 
 data class Vision(var range: Float)
 
-data class PathFollow(var nodes: IntArray, var length: Int, var index: Int = 0)
+data class PathFollow(var nodes: IntArray, var length: Int, var index: Int = 0, var goalX: Int = -1, var goalY: Int = -1)
 
 data class RepathCooldown(var ticks: Int = 0)
 

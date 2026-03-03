@@ -16,7 +16,8 @@ class MovementSystem(
     private val map: MapGrid,
     private val occ: OccupancyGrid,
     private val pathPool: PathPool,
-    private val pathQueue: PathRequestQueue
+    private val pathQueue: PathRequestQueue,
+    private val data: DataRepo? = null
 ) {
     private val speed = 0.06f // tiles/tick demo speed
     private val arrivalEps = 0.05f
@@ -113,6 +114,80 @@ class MovementSystem(
                         tr.x += (dx / dist) * step
                         tr.y += (dy / dist) * step
                     }
+                } else if (o is Order.Attack) {
+                    val targetHp = world.healths[o.target]
+                    val targetTransform = world.transforms[o.target]
+                    val targetTag = world.tags[o.target]
+                    val unitTag = world.tags[id]
+                    if (targetHp == null || targetTransform == null || targetHp.hp <= 0 || targetTag == null || unitTag == null || targetTag.faction == unitTag.faction) {
+                        world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        q.removeFirst()
+                        continue
+                    }
+
+                    if (isAttackTargetInRange(id, tr, targetTransform)) {
+                        world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        continue
+                    }
+
+                    val pf = world.pathFollows[id]
+                    val targetTileX = floor(targetTransform.x).toInt()
+                    val targetTileY = floor(targetTransform.y).toInt()
+                    val needsGoalRefresh = pf != null && (pf.goalX != targetTileX || pf.goalY != targetTileY)
+                    if ((pf == null || needsGoalRefresh) && cooldown != null && cooldown.ticks == 0) {
+                        if (pf != null) {
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        }
+                        if (pathQueue.enqueue(id)) {
+                            cooldown.ticks = repathCooldownTicks
+                            lastTickReplans++
+                        }
+                        continue
+                    }
+                    if (pf == null) continue
+
+                    if (pf.index >= pf.length) {
+                        world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                        if (cooldown != null && cooldown.ticks == 0 && pathQueue.enqueue(id)) {
+                            cooldown.ticks = repathCooldownTicks
+                            lastTickReplans++
+                        }
+                        continue
+                    }
+
+                    val curX = floor(tr.x).toInt()
+                    val curY = floor(tr.y).toInt()
+                    val node = pf.nodes[pf.index]
+                    val nx = node % map.width
+                    val ny = node / map.width
+                    val blocked =
+                        !map.isPassable(nx, ny) || occ.isBlockedAllowing(nx, ny, curX, curY) || isDiagonalCornerBlocked(curX, curY, nx, ny)
+                    val isStuck = stuck != null && stuck.ticks >= stuckThresholdTicks
+                    if ((blocked || isStuck) && cooldown != null && cooldown.ticks == 0) {
+                        if (pathQueue.enqueue(id)) {
+                            cooldown.ticks = repathCooldownTicks
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            lastTickReplans++
+                            if (blocked) lastTickReplansBlocked++
+                            if (isStuck) lastTickReplansStuck++
+                        }
+                        continue
+                    }
+
+                    val tx = nx + 0.5f
+                    val ty = ny + 0.5f
+                    val dx = tx - tr.x
+                    val dy = ty - tr.y
+                    val dist = hypot(dx, dy)
+                    if (dist <= arrivalEps) {
+                        pf.index++
+                        val remaining = (pf.length - pf.index).coerceAtLeast(0)
+                        recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
+                    } else {
+                        val step = min(speed, dist)
+                        tr.x += (dx / dist) * step
+                        tr.y += (dy / dist) * step
+                    }
                 }
             }
         }
@@ -137,6 +212,14 @@ class MovementSystem(
         if (!map.isPassable(ox, oy) || occ.isBlocked(ox, oy)) return true
         if (!map.isPassable(px, py) || occ.isBlocked(px, py)) return true
         return false
+    }
+
+    private fun isAttackTargetInRange(id: Int, source: Transform, target: Transform): Boolean {
+        val weapon = world.weapons[id] ?: return false
+        val def = data?.weapon(weapon.id) ?: return false
+        val dx = target.x - source.x
+        val dy = target.y - source.y
+        return dx * dx + dy * dy <= def.range * def.range
     }
 
     fun progressEntityId(index: Int): Int = progressEntityIds[index]
@@ -200,24 +283,45 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             val tr = world.transforms[id]!!
             val def = data.weapon(w.id)
             val rng2 = def.range * def.range
-
-            // ② 아군은 제외된 "적 리스트"만 순회
-            val enemies = enemiesCache[unitTag.faction]
-            val enemyIds = enemies?.ids ?: emptyIds
-            val enemyCount = enemies?.count ?: 0
             var best: EntityId = 0
             var bestD2 = Float.POSITIVE_INFINITY
-            for (i in 0 until enemyCount) {
-                val other = enemyIds[i]
-                if (other == id) continue
-                val oHp = world.healths[other] ?: continue
-                if (oHp.hp <= 0) continue
-                val otr = world.transforms[other] ?: continue
-                val dx = otr.x - tr.x
-                val dy = otr.y - tr.y
-                val d2 = dx * dx + dy * dy
-                if (d2 <= rng2 && d2 < bestD2) {
-                    best = other; bestD2 = d2
+            val attackOrder = world.orders[id]?.items?.firstOrNull() as? Order.Attack
+            if (attackOrder != null) {
+                val target = attackOrder.target
+                val targetTag = world.tags[target]
+                val targetHp = world.healths[target]
+                val targetTransform = world.transforms[target]
+                if (targetTag == null || targetHp == null || targetTransform == null || targetHp.hp <= 0 || targetTag.faction == unitTag.faction) {
+                    world.orders[id]?.items?.removeFirst()
+                    world.pathFollows.remove(id)
+                } else {
+                    val dx = targetTransform.x - tr.x
+                    val dy = targetTransform.y - tr.y
+                    val d2 = dx * dx + dy * dy
+                    if (d2 <= rng2) {
+                        best = target
+                        bestD2 = d2
+                    }
+                }
+            }
+
+            if (best == 0) {
+                // ② 아군은 제외된 "적 리스트"만 순회
+                val enemies = enemiesCache[unitTag.faction]
+                val enemyIds = enemies?.ids ?: emptyIds
+                val enemyCount = enemies?.count ?: 0
+                for (i in 0 until enemyCount) {
+                    val other = enemyIds[i]
+                    if (other == id) continue
+                    val oHp = world.healths[other] ?: continue
+                    if (oHp.hp <= 0) continue
+                    val otr = world.transforms[other] ?: continue
+                    val dx = otr.x - tr.x
+                    val dy = otr.y - tr.y
+                    val d2 = dx * dx + dy * dy
+                    if (d2 <= rng2 && d2 < bestD2) {
+                        best = other; bestD2 = d2
+                    }
                 }
             }
 
@@ -228,7 +332,13 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
                 w.cooldownTicks = def.cooldownTicks
                 val killed = targetHp.hp <= 0
                 recordEvent(id, best, dmg, targetHp.hp, killed)
-                if (killed) world.remove(best, reason = "death")
+                if (killed) {
+                    world.remove(best, reason = "death")
+                    val q = world.orders[id]?.items
+                    if (q?.firstOrNull() is Order.Attack && (q.firstOrNull() as Order.Attack).target == best) {
+                        q.removeFirst()
+                    }
+                }
             }
         }
     }

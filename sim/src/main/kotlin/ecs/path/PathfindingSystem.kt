@@ -82,7 +82,7 @@ class PathfindingSystem(
         for (i in 0 until queue.count) {
             val id = queue.idAt(i)
             val orders = world.orders[id]?.items ?: continue
-            val move = orders.firstOrNull() as? Order.Move ?: continue
+            val first = orders.firstOrNull() ?: continue
             if (remainingBudget <= 0) {
                 queue.setId(newCount++, id)
                 continue
@@ -91,16 +91,22 @@ class PathfindingSystem(
             val tr = world.transforms[id] ?: continue
             val sx = floor(tr.x).toInt()
             val sy = floor(tr.y).toInt()
-            val gx = floor(move.tx).toInt()
-            val gy = floor(move.ty).toInt()
+            val (gx, gy) =
+                when (first) {
+                    is Order.Move -> floor(first.tx).toInt() to floor(first.ty).toInt()
+                    is Order.Attack -> {
+                        val targetTransform = world.transforms[first.target] ?: continue
+                        floor(targetTransform.x).toInt() to floor(targetTransform.y).toInt()
+                    }
+                }
             val out = pool.obtain()
-            val len = pathfinder.findPath(sx, sy, gx, gy, remainingBudget, out)
+            val len = pathfinder.findPath(sx, sy, gx, gy, remainingBudget, out, allowOccupiedGoal = first is Order.Attack)
             remainingBudget -= pathfinder.lastNodesUsed
 
             if (len > 0) {
                 val old = world.pathFollows[id]
                 if (old != null) pool.recycle(old.nodes)
-                world.pathFollows[id] = PathFollow(out, len, 0)
+                world.pathFollows[id] = PathFollow(out, len, 0, gx, gy)
                 recordAssigned(id, len, gx, gy)
                 solved++
                 totalLen += len

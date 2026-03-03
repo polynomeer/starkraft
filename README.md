@@ -117,6 +117,7 @@ Script syntax:
 - `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
+  Attack orders now chase their assigned target through pathfinding until the unit gets into weapon range.
 - `harvest <targetId|@label>` assign selection to harvest from a resource node
   Harvested cargo is delivered to the nearest same-faction building footprint.
 - `spawnNode [@label] <kind> <x> <y> <amount> [yield]` spawn a resource node (`MineralField`, `GasGeyser`)
