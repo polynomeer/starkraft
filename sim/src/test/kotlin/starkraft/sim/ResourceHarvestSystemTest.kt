@@ -90,6 +90,29 @@ class ResourceHarvestSystemTest {
     }
 
     @Test
+    fun `harvest command collects gas into gas stockpile`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val recorder = ReplayHashRecorder()
+        resources.set(2, minerals = 0, gas = 4)
+        val workerId = world.spawn(Transform(7.4f, 6f), UnitTag(2, "Worker"), Health(40, 40), w = null)
+        val labelMap = HashMap<String, Int>()
+        val labelIds = HashMap<Int, Int>()
+
+        issue(Command.SpawnNode(0, "GasGeyser", 7f, 6f, 12, "geyser", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
+        val nodeId = labelMap.getValue("geyser")
+        issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
+        harvest.tick()
+
+        assertEquals(nodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(Order.Move(7f, 6f), world.orders[workerId]?.items?.firstOrNull())
+        assertEquals(5, world.stockpiles[2]?.gas)
+        assertEquals(1, harvest.lastTickHarvestedGasFaction2)
+        assertEquals(11, world.resourceNodes[nodeId]?.remaining)
+    }
+
+    @Test
     fun `aggregates multiple workers on one node into one event`() {
         val world = World()
         val resources = ResourceSystem(world)

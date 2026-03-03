@@ -1,0 +1,8 @@
+# Sample gas harvesting script
+# Spawns a gas node and a worker for faction 2, then assigns harvesting.
+
+tick 0
+spawnNode @geyser GasGeyser 7 6 120
+spawn @worker 2 Worker 7.5 6 6
+select @worker
+harvest @geyser
