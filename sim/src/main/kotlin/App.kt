@@ -122,7 +122,7 @@ fun main(args: Array<String>) {
     val resources = ResourceSystem(world)
     val harvest = ResourceHarvestSystem(world, resources, data)
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
-    val construction = ConstructionSystem(world)
+    val construction = ConstructionSystem(world, data)
     val production = BuildingProductionSystem(world, map, occ, data, resources)
     val research = ResearchSystem(world, data, resources)
     val occupancy = OccupancySystem(world, occ)

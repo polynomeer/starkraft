@@ -10,15 +10,25 @@ import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.BuildFailureReason
 import starkraft.sim.ecs.BuildingPlacementSystem
 import starkraft.sim.ecs.ConstructionSystem
+import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
 import starkraft.sim.ecs.ResourceSystem
+import starkraft.sim.ecs.Transform
+import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.World
 import starkraft.sim.ecs.path.Pathfinder
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
 
 class BuildingPlacementTest {
+    private fun constructionData(): DataRepo =
+        DataRepo(
+            """{"list":[{"id":"Worker","archetype":"worker","hp":40}]}""",
+            """{"list":[]}""",
+            """{"list":[]}"""
+        )
+
     @Test
     fun `place and remove building updates occupancy`() {
         val world = World()
@@ -181,7 +191,8 @@ class BuildingPlacementTest {
         val map = MapGrid(16, 16)
         val occ = OccupancyGrid(16, 16)
         val buildings = BuildingPlacementSystem(world, map, occ)
-        val construction = ConstructionSystem(world)
+        val construction = ConstructionSystem(world, constructionData())
+        world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Worker"), Health(40, 40), null)
 
         val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
 
@@ -206,7 +217,8 @@ class BuildingPlacementTest {
         val map = MapGrid(16, 16)
         val occ = OccupancyGrid(16, 16)
         val buildings = BuildingPlacementSystem(world, map, occ)
-        val construction = ConstructionSystem(world)
+        val construction = ConstructionSystem(world, constructionData())
+        world.spawn(Transform(2.5f, 1.5f), UnitTag(1, "Worker"), Health(40, 40), null)
 
         val depotId = buildings.place(faction = 1, typeId = "Depot", tileX = 2, tileY = 2, width = 2, height = 2, hp = 400, buildTicks = 2)
         assertNotNull(depotId)
@@ -240,5 +252,38 @@ class BuildingPlacementTest {
             )
         assertNotNull(allowed.entityId)
         assertNull(allowed.failure)
+    }
+
+    @Test
+    fun `construction does not progress without nearby worker`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+        val construction = ConstructionSystem(world, constructionData())
+
+        val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
+
+        construction.tick()
+
+        assertEquals(1, world.healths[id]?.hp)
+        assertEquals(4, world.constructionSites[id]?.remainingTicks)
+    }
+
+    @Test
+    fun `non worker units do not build structures`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+        val construction = ConstructionSystem(world, constructionData())
+        world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Marine"), Health(45, 45), null)
+
+        val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
+
+        construction.tick()
+
+        assertEquals(1, world.healths[id]?.hp)
+        assertEquals(4, world.constructionSites[id]?.remainingTicks)
     }
 }

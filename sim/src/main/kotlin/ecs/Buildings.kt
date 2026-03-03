@@ -1,5 +1,7 @@
 package starkraft.sim.ecs
 
+import starkraft.sim.data.DataRepo
+
 enum class BuildFailureReason {
     INVALID_FOOTPRINT,
     MISSING_TECH,
@@ -123,7 +125,11 @@ class BuildingPlacementSystem(
     }
 }
 
-class ConstructionSystem(private val world: World) {
+class ConstructionSystem(
+    private val world: World,
+    private val data: DataRepo,
+    private val workerRange: Float = 1.5f
+) {
     fun tick() {
         if (world.constructionSites.isEmpty()) return
         val ids = IntArray(world.constructionSites.size)
@@ -135,7 +141,7 @@ class ConstructionSystem(private val world: World) {
             val id = ids[i]
             val site = world.constructionSites[id] ?: continue
             val health = world.healths[id] ?: continue
-            if (site.remainingTicks > 0) {
+            if (site.remainingTicks > 0 && hasBuilder(id)) {
                 site.remainingTicks--
             }
             val progressedTicks = site.totalTicks - site.remainingTicks
@@ -149,5 +155,24 @@ class ConstructionSystem(private val world: World) {
                 world.constructionSites.remove(id)
             }
         }
+    }
+
+    private fun hasBuilder(buildingId: Int): Boolean {
+        val buildingTag = world.tags[buildingId] ?: return false
+        val footprint = world.footprints[buildingId] ?: return false
+        val minX = footprint.tileX.toFloat() - workerRange
+        val minY = footprint.tileY.toFloat() - workerRange
+        val maxX = (footprint.tileX + footprint.width).toFloat() + workerRange
+        val maxY = (footprint.tileY + footprint.height).toFloat() + workerRange
+        for ((id, transform) in world.transforms) {
+            if (id == buildingId) continue
+            val tag = world.tags[id] ?: continue
+            if (tag.faction != buildingTag.faction) continue
+            if ((world.healths[id]?.hp ?: 0) <= 0) continue
+            if (data.unitArchetype(tag.typeId) != "worker") continue
+            if (transform.x < minX || transform.x > maxX || transform.y < minY || transform.y > maxY) continue
+            return true
+        }
+        return false
     }
 }
