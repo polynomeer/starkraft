@@ -33,7 +33,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"combat\",\"sequence\":17,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"damage\",\"sequence\":18,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"despawn\",\"sequence\":19,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":20,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":20,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"harvesterRetargets\":3,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                     "{\"recordType\":\"sessionEnd\",\"sequence\":21,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
@@ -96,6 +96,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(2, summary.harvesterCargoTotal)
         assertEquals(2, summary.harvesterRetargetCount)
         assertEquals(1, summary.harvesterRetargetWorkers)
+        assertEquals(3, summary.sessionHarvesterRetargets)
         assertEquals(1, summary.harvestCyclePickupCount)
         assertEquals(1, summary.harvestCycleDepositCount)
         assertEquals(2, summary.harvestCyclePickupAmount)
@@ -155,7 +156,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"combat\",\"sequence\":17,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
                         "{\"recordType\":\"damage\",\"sequence\":18,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                         "{\"recordType\":\"despawn\",\"sequence\":19,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
-                        "{\"recordType\":\"sessionStats\",\"sequence\":20,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":20,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"harvesterRetargets\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                         "{\"recordType\":\"sessionEnd\",\"sequence\":21,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
@@ -172,7 +173,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("producers: total=1 training=1 rally=1 dropoff=1 minerals=1 gas=0 maxQueue=3"))
         assertTrue(text.contains("dropoffs: total=1 f1=1 f2=0"))
         assertTrue(text.contains("harvesters: total=1 gather=0 return=1 cargo=3"))
-        assertTrue(text.contains("harvesterRetarget: events=1 workers=1"))
+        assertTrue(text.contains("harvesterRetarget: events=1 workers=1 total=1"))
         assertTrue(text.contains("harvestCycle: pickup=1/3 deposit=1/3"))
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
         assertTrue(text.contains("combat: attacks=2 kills=1 damageEvents=2 damage=15 deathDespawns=1"))

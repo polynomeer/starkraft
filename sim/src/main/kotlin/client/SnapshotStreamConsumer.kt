@@ -56,6 +56,7 @@ data class SnapshotStreamSummary(
     val harvesterCargoTotal: Int = 0,
     val harvesterRetargetCount: Int = 0,
     val harvesterRetargetWorkers: Int = 0,
+    val sessionHarvesterRetargets: Int = 0,
     val harvestCyclePickupCount: Int = 0,
     val harvestCycleDepositCount: Int = 0,
     val harvestCyclePickupAmount: Int = 0,
@@ -133,6 +134,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var harvesterCargoTotal = 0
     var harvesterRetargetCount = 0
     val harvesterRetargetWorkers = linkedSetOf<Int>()
+    var sessionHarvesterRetargets = 0
     var harvestCyclePickupCount = 0
     var harvestCycleDepositCount = 0
     var harvestCyclePickupAmount = 0
@@ -196,6 +198,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     obj.int("harvestedGasFaction1") ?: resourceNodeHarvestedGasFaction1
                 resourceNodeHarvestedGasFaction2 =
                     obj.int("harvestedGasFaction2") ?: resourceNodeHarvestedGasFaction2
+                sessionHarvesterRetargets = obj.int("harvesterRetargets") ?: sessionHarvesterRetargets
             }
             "sessionEnd" -> {
                 worldHash = obj.long("worldHash") ?: worldHash
@@ -448,6 +451,7 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         harvesterCargoTotal = harvesterCargoTotal,
         harvesterRetargetCount = harvesterRetargetCount,
         harvesterRetargetWorkers = harvesterRetargetWorkers.size,
+        sessionHarvesterRetargets = sessionHarvesterRetargets,
         harvestCyclePickupCount = harvestCyclePickupCount,
         harvestCycleDepositCount = harvestCycleDepositCount,
         harvestCyclePickupAmount = harvestCyclePickupAmount,
@@ -540,7 +544,8 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
     }
     if (summary.harvesterRetargetCount > 0 || summary.countsByType["harvesterRetarget"] != null) {
         lines.add(
-            "harvesterRetarget: events=${summary.harvesterRetargetCount} workers=${summary.harvesterRetargetWorkers}"
+            "harvesterRetarget: events=${summary.harvesterRetargetCount} " +
+                "workers=${summary.harvesterRetargetWorkers} total=${summary.sessionHarvesterRetargets}"
         )
     }
     if (summary.harvestCyclePickupCount > 0 || summary.harvestCycleDepositCount > 0 || summary.countsByType["harvestCycle"] != null) {
