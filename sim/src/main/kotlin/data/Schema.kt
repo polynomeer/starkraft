@@ -35,6 +35,7 @@ data class BuildingDef(
     val id: String,
     val archetype: String = "genericBuilding",
     val hp: Int,
+    val buildTicks: Int = 0,
     val armor: Int = 0,
     val footprintWidth: Int,
     val footprintHeight: Int,

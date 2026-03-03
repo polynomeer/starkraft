@@ -447,6 +447,7 @@ data class BuildFailureCounts(
 @Serializable
 data class TrainFailureCounts(
     val missingBuilding: Int,
+    val underConstruction: Int,
     val missingTech: Int,
     val invalidUnit: Int,
     val invalidBuildTime: Int,

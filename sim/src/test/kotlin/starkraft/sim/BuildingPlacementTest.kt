@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.BuildFailureReason
 import starkraft.sim.ecs.BuildingPlacementSystem
+import starkraft.sim.ecs.ConstructionSystem
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
 import starkraft.sim.ecs.ResourceSystem
@@ -107,6 +108,34 @@ class BuildingPlacementTest {
     }
 
     @Test
+    fun `build command uses build ticks from building defs`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        resources.set(faction = 1, minerals = 150, gas = 0)
+        val data =
+            DataRepo(
+                """{"list":[]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Depot","hp":400,"buildTicks":3,"armor":0,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}]}"""
+            )
+
+        issue(
+            Command.Build(0, 1, "Depot", 8, 8, 0, 0, 0, 0, 0, 0),
+            world,
+            NullRecorder(),
+            data = data,
+            buildings = buildings
+        )
+
+        val depotId = world.footprints.keys.single()
+        assertTrue(world.constructionSites.containsKey(depotId))
+        assertEquals(1, world.healths[depotId]?.hp)
+    }
+
+    @Test
     fun `building clearance prevents adjacent placement`() {
         val world = World()
         val map = MapGrid(16, 16)
@@ -144,5 +173,72 @@ class BuildingPlacementTest {
         assertEquals(BuildFailureReason.MISSING_TECH, result.failure)
         assertNull(result.entityId)
         assertEquals(0, world.footprints.size)
+    }
+
+    @Test
+    fun `building construction progresses health and completion`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+        val construction = ConstructionSystem(world)
+
+        val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
+
+        assertEquals(1, world.healths[id]?.hp)
+        assertTrue(world.constructionSites.containsKey(id))
+
+        construction.tick()
+        assertEquals(100, world.healths[id]?.hp)
+        assertTrue(world.constructionSites.containsKey(id))
+
+        construction.tick()
+        construction.tick()
+        construction.tick()
+
+        assertEquals(400, world.healths[id]?.hp)
+        assertFalse(world.constructionSites.containsKey(id))
+    }
+
+    @Test
+    fun `under construction buildings do not satisfy tech requirements`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+        val construction = ConstructionSystem(world)
+
+        val depotId = buildings.place(faction = 1, typeId = "Depot", tileX = 2, tileY = 2, width = 2, height = 2, hp = 400, buildTicks = 2)
+        assertNotNull(depotId)
+
+        val blocked =
+            buildings.placeResult(
+                faction = 1,
+                typeId = "Factory",
+                tileX = 8,
+                tileY = 8,
+                width = 2,
+                height = 2,
+                hp = 450,
+                requiredBuildingTypes = listOf("Depot")
+            )
+        assertEquals(BuildFailureReason.MISSING_TECH, blocked.failure)
+
+        construction.tick()
+        construction.tick()
+
+        val allowed =
+            buildings.placeResult(
+                faction = 1,
+                typeId = "Factory",
+                tileX = 8,
+                tileY = 8,
+                width = 2,
+                height = 2,
+                hp = 450,
+                requiredBuildingTypes = listOf("Depot")
+            )
+        assertNotNull(allowed.entityId)
+        assertNull(allowed.failure)
     }
 }

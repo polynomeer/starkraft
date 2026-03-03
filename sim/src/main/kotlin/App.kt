@@ -117,6 +117,7 @@ fun main(args: Array<String>) {
     val resources = ResourceSystem(world)
     val harvest = ResourceHarvestSystem(world, resources, data)
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
+    val construction = ConstructionSystem(world)
     val production = BuildingProductionSystem(world, map, occ, data, resources)
     val occupancy = OccupancySystem(world, occ)
     val alive = AliveSystem(world)
@@ -143,6 +144,7 @@ fun main(args: Array<String>) {
                 width = depotBuild.footprintWidth,
                 height = depotBuild.footprintHeight,
                 hp = depotBuild.hp,
+                buildTicks = depotBuild.buildTicks,
                 clearance = depotBuild.placementClearance,
                 armor = depotBuild.armor,
                 mineralCost = depotBuild.mineralCost,
@@ -435,6 +437,7 @@ fun main(args: Array<String>) {
         val tickResourceDeltas = collectResourceDeltaCounters(resources)
         emitResourceDeltaSummaryRecord(tickResourceDeltas, tick, resolvedSnapshotOutPath, streamSequence)
         occupancy.tick()
+        construction.tick()
         production.tick()
         for (i in 0 until production.lastTickEventCount) {
             if (production.eventKind(i) == BuildingProductionSystem.EVENT_COMPLETE) tickTrainsCompleted++
@@ -3089,6 +3092,7 @@ data class BuildFailureCounterSet(
 
 data class TrainFailureCounterSet(
     var missingBuilding: Int = 0,
+    var underConstruction: Int = 0,
     var missingTech: Int = 0,
     var invalidUnit: Int = 0,
     var invalidBuildTime: Int = 0,
@@ -3099,6 +3103,7 @@ data class TrainFailureCounterSet(
 ) {
     fun add(other: TrainFailureCounterSet) {
         missingBuilding += other.missingBuilding
+        underConstruction += other.underConstruction
         missingTech += other.missingTech
         invalidUnit += other.invalidUnit
         invalidBuildTime += other.invalidBuildTime
@@ -3111,6 +3116,7 @@ data class TrainFailureCounterSet(
     fun toRecord(): TrainFailureCounts =
         TrainFailureCounts(
             missingBuilding = missingBuilding,
+            underConstruction = underConstruction,
             missingTech = missingTech,
             invalidUnit = invalidUnit,
             invalidBuildTime = invalidBuildTime,
@@ -3270,6 +3276,7 @@ internal fun formatBuildFailureReasons(reasons: BuildFailureCounterSet): String 
 internal fun formatTrainFailureReasons(reasons: TrainFailureCounterSet): String =
     listOfNotNull(
         reasons.missingBuilding.takeIf { it > 0 }?.let { "missingBuilding=$it" },
+        reasons.underConstruction.takeIf { it > 0 }?.let { "underConstruction=$it" },
         reasons.missingTech.takeIf { it > 0 }?.let { "missingTech=$it" },
         reasons.invalidUnit.takeIf { it > 0 }?.let { "invalidUnit=$it" },
         reasons.invalidBuildTime.takeIf { it > 0 }?.let { "invalidBuildTime=$it" },
@@ -3781,6 +3788,7 @@ fun issue(
             val armor = if (cmd.armor > 0) cmd.armor else (spec?.armor ?: 0)
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
+            val buildTicks = spec?.buildTicks ?: 0
             val clearance = spec?.placementClearance ?: 0
             val requiredBuildingTypes = spec?.requiredBuildingTypes ?: emptyList()
             if (width <= 0 || height <= 0 || hp <= 0) {
@@ -3821,6 +3829,7 @@ fun issue(
                     width = width,
                     height = height,
                     hp = hp,
+                    buildTicks = buildTicks,
                     clearance = clearance,
                     armor = armor,
                     mineralCost = mineralCost,
@@ -3913,6 +3922,7 @@ fun issue(
                     outcomeCounters.trainFailures++
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> outcomeCounters.trainFailureReasons.missingBuilding++
+                        TrainFailureReason.UNDER_CONSTRUCTION -> outcomeCounters.trainFailureReasons.underConstruction++
                         TrainFailureReason.MISSING_TECH -> outcomeCounters.trainFailureReasons.missingTech++
                         TrainFailureReason.INVALID_UNIT -> outcomeCounters.trainFailureReasons.invalidUnit++
                         TrainFailureReason.INVALID_BUILD_TIME -> outcomeCounters.trainFailureReasons.invalidBuildTime++
@@ -3924,6 +3934,7 @@ fun issue(
                 val reason =
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
+                        TrainFailureReason.UNDER_CONSTRUCTION -> "underConstruction"
                         TrainFailureReason.MISSING_TECH -> "missingTech"
                         TrainFailureReason.INVALID_UNIT -> "invalidUnit"
                         TrainFailureReason.INVALID_BUILD_TIME -> "invalidBuildTime"

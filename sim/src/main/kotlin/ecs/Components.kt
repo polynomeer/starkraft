@@ -34,6 +34,12 @@ data class BuildingFootprint(
     val clearance: Int = 0
 )
 
+data class ConstructionSite(
+    var remainingTicks: Int,
+    val totalTicks: Int,
+    val maxHp: Int
+)
+
 data class RallyPoint(val x: Float, val y: Float)
 
 data class ResourceStockpile(var minerals: Int = 0, var gas: Int = 0)

@@ -42,6 +42,7 @@ class BuildingPlacementSystem(
         width: Int,
         height: Int,
         hp: Int,
+        buildTicks: Int = 0,
         clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
@@ -56,6 +57,7 @@ class BuildingPlacementSystem(
             width,
             height,
             hp,
+            buildTicks,
             clearance,
             armor,
             mineralCost,
@@ -72,6 +74,7 @@ class BuildingPlacementSystem(
         width: Int,
         height: Int,
         hp: Int,
+        buildTicks: Int = 0,
         clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
@@ -93,8 +96,12 @@ class BuildingPlacementSystem(
         }
         val centerX = tileX.toFloat() + width.toFloat() * 0.5f
         val centerY = tileY.toFloat() + height.toFloat() * 0.5f
-        val id = world.spawn(Transform(centerX, centerY), UnitTag(faction, typeId), Health(hp, hp, armor), w = null)
+        val initialHp = if (buildTicks > 0) 1 else hp
+        val id = world.spawn(Transform(centerX, centerY), UnitTag(faction, typeId), Health(initialHp, hp, armor), w = null)
         world.footprints[id] = BuildingFootprint(tileX, tileY, width, height, clearance)
+        if (buildTicks > 0) {
+            world.constructionSites[id] = ConstructionSite(buildTicks, buildTicks, hp)
+        }
         return BuildPlacementResult(entityId = id)
     }
 
@@ -107,5 +114,34 @@ class BuildingPlacementSystem(
         }
         world.remove(id, reason)
         return true
+    }
+}
+
+class ConstructionSystem(private val world: World) {
+    fun tick() {
+        if (world.constructionSites.isEmpty()) return
+        val ids = IntArray(world.constructionSites.size)
+        var count = 0
+        for (id in world.constructionSites.keys) {
+            ids[count++] = id
+        }
+        for (i in 0 until count) {
+            val id = ids[i]
+            val site = world.constructionSites[id] ?: continue
+            val health = world.healths[id] ?: continue
+            if (site.remainingTicks > 0) {
+                site.remainingTicks--
+            }
+            val progressedTicks = site.totalTicks - site.remainingTicks
+            val targetHp = maxOf(1, (site.maxHp * progressedTicks + site.totalTicks - 1) / site.totalTicks)
+            if (health.hp < targetHp) {
+                health.hp = targetHp
+            }
+            health.maxHp = site.maxHp
+            if (site.remainingTicks <= 0) {
+                health.hp = site.maxHp
+                world.constructionSites.remove(id)
+            }
+        }
     }
 }

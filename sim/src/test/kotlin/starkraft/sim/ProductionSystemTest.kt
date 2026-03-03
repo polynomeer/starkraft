@@ -151,6 +151,23 @@ class ProductionSystemTest {
     }
 
     @Test
+    fun `under construction producers reject training`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data = testDataWithDepot()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 500, 0)
+        val buildingId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, buildTicks = 3, mineralCost = 100)!!
+
+        assertEquals(TrainFailureReason.UNDER_CONSTRUCTION, production.enqueueResult(buildingId, "Marine", 5, mineralCost = 50))
+        assertEquals(400, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.productionQueues.size)
+    }
+
+    @Test
     fun `train command enqueues production via label`() {
         val world = World()
         val map = MapGrid(16, 16)

@@ -64,6 +64,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Keep building behavior in its own system and avoid branching in movement.
    - `BuildingPlacementSystem` now covers headless placement/removal for rectangular footprints.
    - Placement clearance is data-driven in building defs, so spacing rules stay deterministic.
+   - Building defs can also declare `buildTicks`; those buildings occupy immediately, gain HP over time, and do not satisfy tech prerequisites until construction completes.
 
 13. **Resources**
    - Keep faction stockpiles in deterministic sim state.
@@ -137,6 +138,7 @@ Script syntax:
 - `rally <buildingId|@label> <x> <y>` override a producer building rally point for future trained units
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
 - Unit and building defs can declare `requiredBuildingTypes`, and both `build` and `train` now fail deterministically with `missingTech` until the faction has those prerequisite buildings
+- `train` also fails with `underConstruction` when the producer building has not finished building yet
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 
 Other flags:

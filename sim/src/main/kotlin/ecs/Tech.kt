@@ -4,6 +4,7 @@ internal fun missingRequiredBuildings(world: World, faction: Int, requiredBuildi
     if (requiredBuildingTypes.isEmpty()) return emptyList()
     val present = HashSet<String>()
     for (id in world.footprints.keys) {
+        if (world.constructionSites.containsKey(id)) continue
         val tag = world.tags[id] ?: continue
         if (tag.faction != faction) continue
         present.add(tag.typeId)
@@ -11,4 +12,3 @@ internal fun missingRequiredBuildings(world: World, faction: Int, requiredBuildi
     if (present.isEmpty()) return requiredBuildingTypes
     return requiredBuildingTypes.filterNot(present::contains)
 }
-

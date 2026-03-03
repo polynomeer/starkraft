@@ -4,6 +4,7 @@ import starkraft.sim.data.DataRepo
 
 enum class TrainFailureReason {
     MISSING_BUILDING,
+    UNDER_CONSTRUCTION,
     MISSING_TECH,
     INVALID_UNIT,
     INVALID_BUILD_TIME,
@@ -44,6 +45,7 @@ class BuildingProductionSystem(
         gasCost: Int = 0
     ): TrainFailureReason? {
         if (!world.footprints.containsKey(buildingId)) return TrainFailureReason.MISSING_BUILDING
+        if (world.constructionSites.containsKey(buildingId)) return TrainFailureReason.UNDER_CONSTRUCTION
         if (buildTicks <= 0) return TrainFailureReason.INVALID_BUILD_TIME
         val unit =
             try {
