@@ -1042,6 +1042,7 @@ internal fun removeDepletedResourceNodes(world: World, harvest: ResourceHarvestS
 }
 
 internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nodeY: Float) {
+    val depletedKind = world.tags[nodeId]?.typeId
     val workerIds = ArrayList<Int>()
     for ((workerId, harvester) in world.harvesters) {
         if (harvester.targetNodeId == nodeId) {
@@ -1049,13 +1050,45 @@ internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nod
         }
     }
     for (workerId in workerIds) {
-        world.harvesters.remove(workerId)
-        val queue = world.orders[workerId]?.items ?: continue
-        val first = queue.firstOrNull() as? Order.Move ?: continue
-        if (first.tx == nodeX && first.ty == nodeY) {
+        val queue = world.orders[workerId]?.items
+        val first = queue?.firstOrNull() as? Order.Move
+        if (first != null && first.tx == nodeX && first.ty == nodeY) {
             queue.removeFirst()
         }
+        val nextNodeId = findNearestHarvestNode(world, workerId, depletedKind, excludeNodeId = nodeId)
+        if (nextNodeId != null) {
+            val nextTransform = world.transforms[nextNodeId] ?: continue
+            world.harvesters[workerId]?.targetNodeId = nextNodeId
+            queue?.addFirst(Order.Move(nextTransform.x, nextTransform.y))
+        } else {
+            world.harvesters.remove(workerId)
+        }
     }
+}
+
+internal fun findNearestHarvestNode(
+    world: World,
+    workerId: Int,
+    preferredTypeId: String?,
+    excludeNodeId: Int = -1
+): Int? {
+    val workerTransform = world.transforms[workerId] ?: return null
+    var bestId = -1
+    var bestDist = Float.POSITIVE_INFINITY
+    for ((nodeId, node) in world.resourceNodes) {
+        if (nodeId == excludeNodeId || node.remaining <= 0) continue
+        val tag = world.tags[nodeId] ?: continue
+        if (preferredTypeId != null && tag.typeId != preferredTypeId) continue
+        val nodeTransform = world.transforms[nodeId] ?: continue
+        val dx = nodeTransform.x - workerTransform.x
+        val dy = nodeTransform.y - workerTransform.y
+        val dist = (dx * dx) + (dy * dy)
+        if (dist < bestDist) {
+            bestDist = dist
+            bestId = nodeId
+        }
+    }
+    return bestId.takeIf { it != -1 }
 }
 
 private fun emitProducerStateRecord(

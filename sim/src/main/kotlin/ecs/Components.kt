@@ -46,7 +46,7 @@ data class ResourceNode(
 }
 
 data class Harvester(
-    val targetNodeId: EntityId,
+    var targetNodeId: EntityId,
     val harvestPerTick: Int = 1,
     val range: Float = 1.25f
 )
