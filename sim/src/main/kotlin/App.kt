@@ -68,6 +68,7 @@ import starkraft.sim.ecs.path.PathRequestQueue
 import starkraft.sim.ecs.path.PathfindingSystem
 import starkraft.sim.net.Command
 import starkraft.sim.net.InputJson
+import starkraft.sim.net.InputTailReader
 import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayIO
@@ -209,6 +210,7 @@ fun main(args: Array<String>) {
     val replayPath = parseReplayPath(args)
     val scriptPath = parseScriptPath(args)
     val inputJsonPath = parseInputJsonPath(args)
+    val inputTailPath = parseInputTailPath(args)
     val spawnScriptPath = parseSpawnScriptPath(args)
     val recordPath = parseRecordPath(args)
     val replayOutPath = parseReplayOutPath(args)
@@ -268,6 +270,9 @@ fun main(args: Array<String>) {
     val spawnCommands = spawnProgram.commandsByTick
     val commandsByTick = mergeCommands(spawnCommands, baseCommands)
     val selectionEventsByTick = mergeSelectionEvents(spawnProgram.selectionEventsByTick, baseProgram.selectionEventsByTick)
+    val liveCommandsByTick = ArrayList<ArrayList<Command>>()
+    val liveSelectionEventsByTick = ArrayList<ArrayList<ScriptRunner.SelectionEvent>>()
+    val inputTailReader = inputTailPath?.let { InputTailReader.open(resolvePath(it)) }
     val labelMap = HashMap<String, Int>()
     val labelIdMap = HashMap<Int, Int>()
     var totalPathRequests = 0
@@ -359,6 +364,7 @@ fun main(args: Array<String>) {
     }
     var tick = 0
     while (tick < totalTicks) {
+        inputTailReader?.poll(liveCommandsByTick, liveSelectionEventsByTick)
         val commandOutcomeCounters = CommandOutcomeCounters()
         var tickTrainsCompleted = 0
         world.clearRemovedEvents()
@@ -379,30 +385,36 @@ fun main(args: Array<String>) {
             emitOccupancyChangeRecord(tick, changes, resolvedSnapshotOutPath, streamSequence)
             println("tick=$tick  remove static blockers at y=10 (x=14..20)")
         }
-        if (tick < commandsByTick.size) {
-            if (tick < selectionEventsByTick.size) {
-                val selections = selectionEventsByTick[tick]
-                for (i in 0 until selections.size) {
-                    emitSelectionRecord(selections[i], tick, resolvedSnapshotOutPath, streamSequence)
-                }
-            }
-            val cmds = commandsByTick[tick]
-            for (i in 0 until cmds.size) {
-                issue(
-                    cmds[i],
-                    world,
-                    recorder,
-                    data,
-                    labelMap,
-                    labelIdMap,
-                    resolvedSnapshotOutPath,
-                    streamSequence,
-                    buildings,
-                    production,
-                    commandOutcomeCounters
-                )
-            }
-        }
+        processTickInput(
+            tick,
+            selectionEventsByTick.asList(),
+            commandsByTick.asList(),
+            world,
+            recorder,
+            data,
+            labelMap,
+            labelIdMap,
+            resolvedSnapshotOutPath,
+            streamSequence,
+            buildings,
+            production,
+            commandOutcomeCounters
+        )
+        processTickInput(
+            tick,
+            liveSelectionEventsByTick,
+            liveCommandsByTick,
+            world,
+            recorder,
+            data,
+            labelMap,
+            labelIdMap,
+            resolvedSnapshotOutPath,
+            streamSequence,
+            buildings,
+            production,
+            commandOutcomeCounters
+        )
 
         harvest.tick()
         emitHarvestCycleRecord(harvest, tick, resolvedSnapshotOutPath, streamSequence)
@@ -686,6 +698,8 @@ fun main(args: Array<String>) {
         )
     }
 
+    inputTailReader?.close()
+
     if (replayOutPath != null) {
         val recorded = recorder.snapshot()
         ReplayIO.save(Paths.get(replayOutPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
@@ -771,6 +785,17 @@ private fun parseInputJsonPath(args: Array<String>): String? {
         val a = args[i]
         if (a == "--inputJson" && i + 1 < args.size) return args[i + 1]
         if (a.startsWith("--inputJson=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
+private fun parseInputTailPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--inputTail" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--inputTail=")) return a.substringAfter("=")
         i++
     }
     return null
@@ -1785,6 +1810,46 @@ private fun mergeSelectionEvents(
         if (i < second.size) merged[i].addAll(second[i])
     }
     return merged
+}
+
+private fun processTickInput(
+    tick: Int,
+    selectionEventsByTick: List<ArrayList<ScriptRunner.SelectionEvent>>,
+    commandsByTick: List<ArrayList<Command>>,
+    world: World,
+    recorder: ReplayRecorder,
+    data: DataRepo,
+    labelMap: HashMap<String, Int>,
+    labelIdMap: HashMap<Int, Int>,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?,
+    buildings: BuildingPlacementSystem,
+    production: BuildingProductionSystem,
+    commandOutcomeCounters: CommandOutcomeCounters
+) {
+    if (tick < selectionEventsByTick.size) {
+        val selections = selectionEventsByTick[tick]
+        for (i in 0 until selections.size) {
+            emitSelectionRecord(selections[i], tick, snapshotOutPath, streamSequence)
+        }
+    }
+    if (tick >= commandsByTick.size) return
+    val cmds = commandsByTick[tick]
+    for (i in 0 until cmds.size) {
+        issue(
+            cmds[i],
+            world,
+            recorder,
+            data,
+            labelMap,
+            labelIdMap,
+            snapshotOutPath,
+            streamSequence,
+            buildings,
+            production,
+            commandOutcomeCounters
+        )
+    }
 }
 
 private fun emitSelectionRecord(
