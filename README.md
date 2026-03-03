@@ -68,6 +68,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Apply spending at placement / production time, not lazily.
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
    - `ResourceHarvestSystem` now supports deterministic nearby harvesting from fixed resource nodes.
+   - Harvesters now carry cargo back to the nearest same-faction building footprint before stockpiles increase.
    - `DataRepo.buildSpec(...)` reads dedicated building defs, while `DataRepo.trainSpec(...)` reads trainable unit defs.
    - Unit and building defs now carry explicit `archetype` ids so coarse categories do not have to overload `typeId`.
 
@@ -116,6 +117,7 @@ Script syntax:
 - `move <x> <y>` move selection
 - `attack <targetId|@label>` attack target
 - `harvest <targetId|@label>` assign selection to harvest from a resource node
+  Harvested cargo is delivered to the nearest same-faction building footprint.
 - `spawnNode [@label] <kind> <x> <y> <amount>` spawn a resource node (`MineralField`, `GasGeyser`)
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint

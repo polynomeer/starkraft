@@ -48,7 +48,12 @@ data class ResourceNode(
 data class Harvester(
     var targetNodeId: EntityId,
     val harvestPerTick: Int = 1,
-    val range: Float = 1.25f
+    val range: Float = 1.25f,
+    val cargoCapacity: Int = Int.MAX_VALUE,
+    val dropoffRange: Float = 1.5f,
+    var cargoKind: String? = null,
+    var cargoAmount: Int = 0,
+    var returnTargetId: EntityId = -1
 )
 
 data class ProductionJob(

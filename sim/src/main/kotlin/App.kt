@@ -1050,15 +1050,24 @@ internal fun clearHarvestersForNode(world: World, nodeId: Int, nodeX: Float, nod
         }
     }
     for (workerId in workerIds) {
+        val harvester = world.harvesters[workerId] ?: continue
         val queue = world.orders[workerId]?.items
         val first = queue?.firstOrNull() as? Order.Move
         if (first != null && first.tx == nodeX && first.ty == nodeY) {
             queue.removeFirst()
         }
         val nextNodeId = findNearestHarvestNode(world, workerId, depletedKind, excludeNodeId = nodeId)
-        if (nextNodeId != null) {
+        if (harvester.cargoAmount > 0) {
+            harvester.targetNodeId = nextNodeId ?: -1
+            if (harvester.returnTargetId < 0 && nextNodeId != null) {
+                val nextTransform = world.transforms[nextNodeId] ?: continue
+                queue?.addFirst(Order.Move(nextTransform.x, nextTransform.y))
+            } else if (nextNodeId == null && harvester.returnTargetId < 0) {
+                world.harvesters.remove(workerId)
+            }
+        } else if (nextNodeId != null) {
             val nextTransform = world.transforms[nextNodeId] ?: continue
-            world.harvesters[workerId]?.targetNodeId = nextNodeId
+            harvester.targetNodeId = nextNodeId
             queue?.addFirst(Order.Move(nextTransform.x, nextTransform.y))
         } else {
             world.harvesters.remove(workerId)

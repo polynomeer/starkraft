@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.Health
+import starkraft.sim.ecs.BuildingFootprint
 import starkraft.sim.ecs.ResourceHarvestSystem
 import starkraft.sim.ecs.ResourceNode
 import starkraft.sim.ecs.ResourceSystem
@@ -22,24 +23,27 @@ class ResourceHarvestSystemTest {
         val harvest = ResourceHarvestSystem(world, resources)
         resources.set(1, minerals = 100, gas = 0)
 
+        val depotId = world.spawn(Transform(6f, 4f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(5, 3, 2, 2)
         val nodeId = world.spawn(Transform(4f, 4f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
         world.resourceNodes[nodeId] = ResourceNode(remaining = 10)
         val workerId = world.spawn(Transform(4.5f, 4f), UnitTag(1, "Worker"), Health(40, 40), w = null)
         world.harvesters[workerId] = Harvester(targetNodeId = nodeId, harvestPerTick = 3)
 
         harvest.tick()
+        assertEquals(100, world.stockpiles[1]?.minerals)
+        world.transforms[workerId]?.x = 6f
+        world.transforms[workerId]?.y = 4f
+        harvest.tick()
 
         assertEquals(103, world.stockpiles[1]?.minerals)
         assertEquals(7, world.resourceNodes[nodeId]?.remaining)
-        assertEquals(3, harvest.lastTickHarvestedMinerals)
+        assertEquals(0, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
-        assertEquals(3, harvest.lastTickHarvestedMineralsFaction1)
+        assertEquals(0, harvest.lastTickHarvestedMineralsFaction1)
         assertEquals(0, harvest.lastTickHarvestedMineralsFaction2)
         assertEquals(0, harvest.lastTickDepletedNodes)
-        assertEquals(1, harvest.lastTickEventCount)
-        assertEquals(nodeId, harvest.eventNodeId(0))
-        assertEquals(3, harvest.eventHarvested(0))
-        assertEquals(7, harvest.eventRemaining(0))
+        assertEquals(0, harvest.lastTickEventCount)
     }
 
     @Test
@@ -49,6 +53,8 @@ class ResourceHarvestSystemTest {
         val harvest = ResourceHarvestSystem(world, resources)
         resources.set(1, minerals = 0, gas = 0)
 
+        val depotId = world.spawn(Transform(10f, 8f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(9, 7, 2, 2)
         val nodeId = world.spawn(Transform(8f, 8f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
         world.resourceNodes[nodeId] = ResourceNode(remaining = 5)
         val nearWorker = world.spawn(Transform(8.2f, 8f), UnitTag(1, "Worker"), Health(40, 40), w = null)
@@ -57,11 +63,13 @@ class ResourceHarvestSystemTest {
         world.harvesters[farWorker] = Harvester(targetNodeId = nodeId, harvestPerTick = 4)
 
         harvest.tick()
+        world.transforms[nearWorker]?.x = 10f
+        world.transforms[nearWorker]?.y = 8f
         harvest.tick()
         harvest.tick()
 
-        assertEquals(5, world.stockpiles[1]?.minerals)
-        assertEquals(0, world.resourceNodes[nodeId]?.remaining)
+        assertEquals(4, world.stockpiles[1]?.minerals)
+        assertEquals(1, world.resourceNodes[nodeId]?.remaining)
         assertEquals(0, harvest.lastTickHarvestedMinerals)
         assertEquals(0, harvest.lastTickHarvestedGas)
         assertEquals(0, harvest.lastTickDepletedNodes)
@@ -74,6 +82,8 @@ class ResourceHarvestSystemTest {
         val harvest = ResourceHarvestSystem(world, resources)
         val recorder = ReplayHashRecorder()
         resources.set(1, minerals = 10, gas = 0)
+        val depotId = world.spawn(Transform(7f, 6f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(6, 5, 2, 2)
         val workerId = world.spawn(Transform(6.4f, 6f), UnitTag(1, "Worker"), Health(40, 40), w = null)
         val labelMap = HashMap<String, Int>()
         val labelIds = HashMap<Int, Int>()
@@ -81,6 +91,9 @@ class ResourceHarvestSystemTest {
         issue(Command.SpawnNode(0, "MineralField", 6f, 6f, 12, "ore", -1), world, recorder, labelMap = labelMap, labelIdMap = labelIds)
         val nodeId = labelMap.getValue("ore")
         issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
+        harvest.tick()
+        world.transforms[workerId]?.x = 7f
+        world.transforms[workerId]?.y = 6f
         harvest.tick()
 
         assertEquals(nodeId, world.harvesters[workerId]?.targetNodeId)
@@ -96,6 +109,8 @@ class ResourceHarvestSystemTest {
         val harvest = ResourceHarvestSystem(world, resources)
         val recorder = ReplayHashRecorder()
         resources.set(2, minerals = 0, gas = 4)
+        val depotId = world.spawn(Transform(8f, 6f), UnitTag(2, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(7, 5, 2, 2)
         val workerId = world.spawn(Transform(7.4f, 6f), UnitTag(2, "Worker"), Health(40, 40), w = null)
         val labelMap = HashMap<String, Int>()
         val labelIds = HashMap<Int, Int>()
@@ -104,11 +119,14 @@ class ResourceHarvestSystemTest {
         val nodeId = labelMap.getValue("geyser")
         issue(Command.Harvest(0, intArrayOf(workerId), nodeId), world, recorder)
         harvest.tick()
+        world.transforms[workerId]?.x = 8f
+        world.transforms[workerId]?.y = 6f
+        harvest.tick()
 
         assertEquals(nodeId, world.harvesters[workerId]?.targetNodeId)
         assertEquals(Order.Move(7f, 6f), world.orders[workerId]?.items?.firstOrNull())
         assertEquals(5, world.stockpiles[2]?.gas)
-        assertEquals(1, harvest.lastTickHarvestedGasFaction2)
+        assertEquals(0, harvest.lastTickHarvestedGasFaction2)
         assertEquals(11, world.resourceNodes[nodeId]?.remaining)
     }
 
