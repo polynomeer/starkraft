@@ -44,6 +44,8 @@ data class SnapshotStreamSummary(
     val trainingProducerCount: Int = 0,
     val rallyProducerCount: Int = 0,
     val dropoffProducerCount: Int = 0,
+    val mineralDropoffProducerCount: Int = 0,
+    val gasDropoffProducerCount: Int = 0,
     val dropoffStateCount: Int = 0,
     val dropoffStateFaction1Count: Int = 0,
     val dropoffStateFaction2Count: Int = 0,
@@ -117,6 +119,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var trainingProducerCount = 0
     var rallyProducerCount = 0
     var dropoffProducerCount = 0
+    var mineralDropoffProducerCount = 0
+    var gasDropoffProducerCount = 0
     var dropoffStateCount = 0
     var dropoffStateFaction1Count = 0
     var dropoffStateFaction2Count = 0
@@ -262,11 +266,18 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                 trainingProducerCount = 0
                 rallyProducerCount = 0
                 dropoffProducerCount = 0
+                mineralDropoffProducerCount = 0
+                gasDropoffProducerCount = 0
                 maxProducerQueueLimit = 0
                 for (entity in entities) {
                     if (entity.bool("supportsTraining") == true) trainingProducerCount++
                     if (entity.bool("supportsRally") == true) rallyProducerCount++
-                    if (entity.bool("supportsDropoff") == true) dropoffProducerCount++
+                    if (entity.bool("supportsDropoff") == true) {
+                        dropoffProducerCount++
+                        val kinds = entity.stringArray("dropoffResourceKinds")
+                        if ("minerals" in kinds) mineralDropoffProducerCount++
+                        if ("gas" in kinds) gasDropoffProducerCount++
+                    }
                     val limit = entity.int("productionQueueLimit") ?: 0
                     if (limit > maxProducerQueueLimit) maxProducerQueueLimit = limit
                 }
@@ -413,6 +424,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         trainingProducerCount = trainingProducerCount,
         rallyProducerCount = rallyProducerCount,
         dropoffProducerCount = dropoffProducerCount,
+        mineralDropoffProducerCount = mineralDropoffProducerCount,
+        gasDropoffProducerCount = gasDropoffProducerCount,
         dropoffStateCount = dropoffStateCount,
         dropoffStateFaction1Count = dropoffStateFaction1Count,
         dropoffStateFaction2Count = dropoffStateFaction2Count,
@@ -493,6 +506,7 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
         lines.add(
             "producers: total=${summary.producerCount} training=${summary.trainingProducerCount} " +
                 "rally=${summary.rallyProducerCount} dropoff=${summary.dropoffProducerCount} " +
+                "minerals=${summary.mineralDropoffProducerCount} gas=${summary.gasDropoffProducerCount} " +
                 "maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
@@ -594,4 +608,12 @@ private fun JsonObject.array(key: String): List<JsonObject> =
                 child as? JsonObject
             }
         }
+        ?: emptyList()
+
+private fun JsonObject.stringArray(key: String): List<String> =
+    this[key]
+        ?.toString()
+        ?.let { consumerJson.parseToJsonElement(it) }
+        ?.jsonArray
+        ?.map { it.toString().trim('"') }
         ?: emptyList()

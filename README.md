@@ -196,7 +196,7 @@ Other flags:
   It also summarizes `dropoffState` records as faction-split drop-off building totals.
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
   When `harvestCycle` records are present, it also prints pickup/deposit event counts and transferred amounts.
-  Producer summaries include drop-off-capable building counts when `supportsDropoff` is present in `producerState`.
+  Producer summaries include drop-off-capable building counts plus mineral/gas compatibility totals when `dropoffResourceKinds` is present in `producerState`.
   Resource-node totals also drop depleted nodes once a `despawn` record with reason `resourceDepleted` is seen.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
 - `--strictReplayMeta` fail on replay `mapId`/`buildVersion` mismatches
