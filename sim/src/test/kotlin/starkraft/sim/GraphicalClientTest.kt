@@ -5,12 +5,19 @@ import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import starkraft.sim.client.ClientCommandIds
+import starkraft.sim.client.ClientIntent
 import starkraft.sim.client.applySelectionClick
+import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.parseClientStreamLine
+import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.FactionSnapshot
+import starkraft.sim.client.ResourceNodeSnapshot
 import java.nio.file.Paths
 
 class GraphicalClientTest {
@@ -74,5 +81,48 @@ class GraphicalClientTest {
         assertEquals("move", ack?.ack?.commandType)
         assertEquals("cli-7", ack?.ack?.requestId)
         assertNull(ack?.snapshot)
+    }
+
+    @Test
+    fun `builds right click intents through shared controller`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities =
+                    listOf(
+                        EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                        EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 6f, y = 4f, dir = 0f, hp = 35, maxHp = 35, armor = 0)
+                    ),
+                resourceNodes = listOf(ResourceNodeSnapshot(id = 20, kind = "MineralField", x = 8f, y = 4f, remaining = 200, yieldPerTick = 0))
+            )
+        val selected = linkedSetOf(4)
+        val ids = ClientCommandIds("test")
+
+        val attackIntent =
+            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+        val harvestIntent =
+            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+        val moveIntent =
+            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, additiveSelection = false, requestIds = ids)
+
+        val attack = (attackIntent as ClientIntent.Command).record
+        val harvest = (harvestIntent as ClientIntent.Command).record
+        val move = (moveIntent as ClientIntent.Command).record
+
+        assertEquals("attack", attack.commandType)
+        assertEquals("test-1", attack.requestId)
+        assertEquals(9, attack.target)
+        assertEquals("harvest", harvest.commandType)
+        assertEquals("test-2", harvest.requestId)
+        assertEquals(20, harvest.target)
+        assertEquals("move", move.commandType)
+        assertEquals("test-3", move.requestId)
+        assertEquals(10f, move.x)
+        assertEquals(10f, move.y)
     }
 }

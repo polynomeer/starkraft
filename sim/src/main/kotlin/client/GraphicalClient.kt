@@ -16,8 +16,6 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
-import kotlin.math.abs
-import kotlin.math.hypot
 
 private data class ClientViewState(
     var snapshot: ClientSnapshot? = null,
@@ -30,7 +28,7 @@ private class ClientPanel(
     private val commandAppender: NdjsonClientInputSink
 ) : JPanel() {
     private val tileSize = 20
-    private var nextRequestId = 1L
+    private val requestIds = ClientCommandIds()
     private val friendlyColor = Color(0x4B, 0x8B, 0xFF)
     private val enemyColor = Color(0xE0, 0x5A, 0x47)
     private val neutralColor = Color(0xC8, 0xB0, 0x72)
@@ -116,88 +114,27 @@ private class ClientPanel(
         val snapshot = state.snapshot ?: return
         val worldX = e.x.toFloat() / tileSize.toFloat()
         val worldY = e.y.toFloat() / tileSize.toFloat()
-        if (SwingUtilities.isLeftMouseButton(e)) {
-            val selected = nearestEntity(snapshot, worldX, worldY) { it.faction == 1 }
-            applySelectionClick(state.selectedIds, selected?.id, additive = e.isShiftDown)
-            commandAppender.append(buildUnitSelectionRecord(snapshot.tick + 1, state.selectedIds))
-            repaint()
-            return
-        }
-        if (!SwingUtilities.isRightMouseButton(e) || state.selectedIds.isEmpty()) return
-
-        val enemy = nearestEntity(snapshot, worldX, worldY) { it.faction == 2 && distance(it.x, it.y, worldX, worldY) <= 0.8f }
-        if (enemy != null) {
-            commandAppender.append(
-                InputJson.InputCommandRecord(
-                    tick = snapshot.tick + 1,
-                    commandType = "attack",
-                    requestId = nextRequestId(),
-                    units = state.selectedIds.toIntArray(),
-                    target = enemy.id
+        when (
+            val intent =
+                buildClientIntent(
+                    snapshot = snapshot,
+                    selectedIds = state.selectedIds,
+                    worldX = worldX,
+                    worldY = worldY,
+                    leftClick = SwingUtilities.isLeftMouseButton(e),
+                    rightClick = SwingUtilities.isRightMouseButton(e),
+                    additiveSelection = e.isShiftDown,
+                    requestIds = requestIds
                 )
-            )
-            return
-        }
-        val node = nearestResourceNode(snapshot, worldX, worldY)
-        if (node != null && distance(node.x, node.y, worldX, worldY) <= 0.8f) {
-            commandAppender.append(
-                InputJson.InputCommandRecord(
-                    tick = snapshot.tick + 1,
-                    commandType = "harvest",
-                    requestId = nextRequestId(),
-                    units = state.selectedIds.toIntArray(),
-                    target = node.id
-                )
-            )
-            return
-        }
-        commandAppender.append(
-            InputJson.InputCommandRecord(
-                tick = snapshot.tick + 1,
-                commandType = "move",
-                requestId = nextRequestId(),
-                units = state.selectedIds.toIntArray(),
-                x = worldX,
-                y = worldY
-            )
-        )
-    }
-
-    private fun nearestEntity(
-        snapshot: ClientSnapshot,
-        x: Float,
-        y: Float,
-        predicate: (EntitySnapshot) -> Boolean
-    ): EntitySnapshot? {
-        var best: EntitySnapshot? = null
-        var bestDistance = Float.MAX_VALUE
-        for (entity in snapshot.entities) {
-            if (!predicate(entity)) continue
-            val d = distance(entity.x, entity.y, x, y)
-            if (d < bestDistance) {
-                bestDistance = d
-                best = entity
+        ) {
+            is ClientIntent.Selection -> {
+                commandAppender.append(intent.record)
+                repaint()
             }
+            is ClientIntent.Command -> commandAppender.append(intent.record)
+            null -> return
         }
-        return best
     }
-
-    private fun nearestResourceNode(snapshot: ClientSnapshot, x: Float, y: Float): ResourceNodeSnapshot? {
-        var best: ResourceNodeSnapshot? = null
-        var bestDistance = Float.MAX_VALUE
-        for (node in snapshot.resourceNodes) {
-            val d = distance(node.x, node.y, x, y)
-            if (d < bestDistance) {
-                bestDistance = d
-                best = node
-            }
-        }
-        return best
-    }
-
-    private fun distance(ax: Float, ay: Float, bx: Float, by: Float): Float = hypot(abs(ax - bx), abs(ay - by))
-
-    private fun nextRequestId(): String = "gc-${nextRequestId++}"
 }
 
 fun main(args: Array<String>) {
