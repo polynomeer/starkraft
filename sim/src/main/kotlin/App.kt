@@ -1222,6 +1222,7 @@ internal fun findNearestHarvestNode(
 ): Int? {
     val workerTransform = world.transforms[workerId] ?: return null
     var bestId = -1
+    var bestRemaining = -1
     var bestDist = Float.POSITIVE_INFINITY
     for ((nodeId, node) in world.resourceNodes) {
         if (nodeId == excludeNodeId || node.remaining <= 0) continue
@@ -1230,7 +1231,11 @@ internal fun findNearestHarvestNode(
         val dx = nodeTransform.x - workerTransform.x
         val dy = nodeTransform.y - workerTransform.y
         val dist = (dx * dx) + (dy * dy)
-        if (dist < bestDist) {
+        if (
+            node.remaining > bestRemaining ||
+            (node.remaining == bestRemaining && (dist < bestDist || (dist == bestDist && nodeId < bestId)))
+        ) {
+            bestRemaining = node.remaining
             bestDist = dist
             bestId = nodeId
         }

@@ -315,6 +315,28 @@ class AppTest {
     }
 
     @Test
+    fun `retarget prefers richer compatible nodes over nearer ones`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val depletedNodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val nearPoorNodeId = world.spawn(Transform(5.6f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val farRichNodeId = world.spawn(Transform(8f, 5f), UnitTag(0, "RichMineralField"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[depletedNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 1)
+        world.resourceNodes[nearPoorNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 2)
+        world.resourceNodes[farRichNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 20)
+        world.harvesters[workerId] = Harvester(targetNodeId = depletedNodeId)
+        world.orders[workerId]?.items?.addLast(starkraft.sim.ecs.Order.Move(5f, 5f))
+
+        harvest.tick()
+        removeDepletedResourceNodes(world, harvest)
+
+        assertEquals(farRichNodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(starkraft.sim.ecs.Order.Move(8f, 5f), world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
     fun `retargets gas harvesters only to gas nodes on depletion`() {
         val world = World()
         val resources = ResourceSystem(world)
