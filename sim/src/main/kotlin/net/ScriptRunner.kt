@@ -93,6 +93,13 @@ object ScriptRunner {
                     val y = parts[2].toFloat()
                     out.add(moveCommand(tick, selection!!, x, y))
                 }
+                "attackMove" -> {
+                    require(parts.size == 3) { "attackMove <x> <y>" }
+                    require(selection != null) { "attackMove requires selection" }
+                    val x = parts[1].toFloat()
+                    val y = parts[2].toFloat()
+                    out.add(attackMoveCommand(tick, selection!!, x, y))
+                }
                 "attack" -> {
                     require(parts.size == 2) { "attack <targetId>" }
                     require(selection != null) { "attack requires selection" }
@@ -235,6 +242,16 @@ object ScriptRunner {
             is Selection.Faction -> Command.AttackFaction(tick, selection.id, target)
             is Selection.Type -> Command.AttackType(tick, selection.typeId, target)
             is Selection.Archetype -> Command.AttackArchetype(tick, selection.archetype, target)
+        }
+    }
+
+    private fun attackMoveCommand(tick: Int, selection: Selection, x: Float, y: Float): Command {
+        return when (selection) {
+            is Selection.Units -> Command.AttackMove(tick, selection.ids, x, y)
+            is Selection.All -> Command.AttackMove(tick, ALL_UNITS, x, y)
+            is Selection.Faction -> Command.AttackMoveFaction(tick, selection.id, x, y)
+            is Selection.Type -> Command.AttackMoveType(tick, selection.typeId, x, y)
+            is Selection.Archetype -> Command.AttackMoveArchetype(tick, selection.archetype, x, y)
         }
     }
 

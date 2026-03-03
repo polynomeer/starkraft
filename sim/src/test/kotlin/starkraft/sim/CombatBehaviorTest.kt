@@ -116,4 +116,48 @@ class CombatBehaviorTest {
         assertEquals(null, world.orders[attacker]?.items?.firstOrNull())
         assertEquals(null, world.pathFollows[attacker])
     }
+
+    @Test
+    fun `attack move pauses to fight and then continues`() {
+        val data = combatData()
+        val world = World()
+        val map = MapGrid(24, 24)
+        val occ = OccupancyGrid(24, 24)
+        val alive = AliveSystem(world)
+        val occupancy = OccupancySystem(world, occ)
+        val pool = PathPool(map.width * map.height)
+        val queue = PathRequestQueue(64, 64)
+        val pathfinder = Pathfinder(map, occ)
+        val pathing = PathfindingSystem(world, pathfinder, pool, queue, 1024)
+        val movement = MovementSystem(world, map, occ, pool, queue, data)
+        val combat = CombatSystem(world, data)
+
+        val attacker =
+            world.spawn(
+                Transform(2f, 2f),
+                UnitTag(1, "Marine"),
+                Health(45, 45),
+                WeaponRef("Gauss")
+            )
+        val blocker =
+            world.spawn(
+                Transform(6f, 2f),
+                UnitTag(2, "Zergling"),
+                Health(8, 8),
+                w = null
+            )
+        world.orders[attacker]?.items?.addLast(Order.AttackMove(12f, 2f))
+
+        repeat(160) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+            combat.tick()
+        }
+
+        assertEquals(null, world.healths[blocker])
+        assertTrue(world.transforms[attacker]!!.x > 9f)
+        assertEquals(Order.AttackMove(12f, 2f), world.orders[attacker]?.items?.firstOrNull())
+    }
 }

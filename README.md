@@ -80,7 +80,8 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - Producer queue limits are data-driven in building defs rather than hardcoded in the system.
    - Producer building defs can also supply default rally offsets for newly trained units.
    - Producer capabilities such as training and rally override are explicit in building defs.
-   - Add higher-level orders like `AttackMove`, `Hold`, `Patrol` by composing
+   - `AttackMove` is now available as a higher-level order.
+   - Next candidates remain `Hold` and `Patrol`, built by composing
      move + attack decisions at the order layer.
 
 15. **Networking / Replay**
@@ -105,6 +106,7 @@ Use `./gradlew :sim:run` with JDK 17.
 ### Headless Script Input
 You can run a simple command script with:
 `./gradlew :sim:run --args="--script sim/scripts/sample.script --noSleep"`
+The sample script now includes an `attackMove` order in addition to direct `move`, `attack`, spawn, and harvest flows.
 
 Script syntax:
 - `tick <n>` set absolute tick
@@ -116,6 +118,7 @@ Script syntax:
 - `selectType <typeId>` select units by type at execution time
 - `selectArchetype <id>` select units and buildings by archetype at execution time
 - `move <x> <y>` move selection
+- `attackMove <x> <y>` move selection while pausing to attack enemies that enter weapon range
 - `attack <targetId|@label>` attack target
   Attack orders now chase their assigned target through pathfinding until the unit gets into weapon range.
 - `harvest <targetId|@label>` assign selection to harvest from a resource node

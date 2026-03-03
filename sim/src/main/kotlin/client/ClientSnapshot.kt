@@ -974,6 +974,46 @@ fun renderCommandStreamRecordJson(
                     x = cmd.x,
                     y = cmd.y
                 )
+            is Command.AttackMove ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackMove",
+                    requestId = requestId,
+                    units = cmd.units,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.AttackMoveFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackMoveFaction",
+                    requestId = requestId,
+                    faction = cmd.faction,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.AttackMoveType ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackMoveType",
+                    requestId = requestId,
+                    typeId = cmd.typeId,
+                    x = cmd.x,
+                    y = cmd.y
+                )
+            is Command.AttackMoveArchetype ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "attackMoveArchetype",
+                    requestId = requestId,
+                    archetype = cmd.archetype,
+                    x = cmd.x,
+                    y = cmd.y
+                )
             is Command.Attack ->
                 CommandStreamRecord(
                     sequence = sequence,
@@ -1822,6 +1862,7 @@ fun renderCommandFailureStreamRecordJson(
 private fun Order.toSnapshotLabel(): String {
     return when (this) {
         is Order.Move -> "Move"
+        is Order.AttackMove -> "AttackMove"
         is Order.Attack -> "Attack"
     }
 }

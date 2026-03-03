@@ -16,6 +16,10 @@ class ReplayIOTest {
             Command.MoveFaction(5, 1, 8f, 9f),
             Command.MoveType(7, "Marine", 4f, 5f),
             Command.MoveArchetype(8, "infantry", 6f, 7f),
+            Command.AttackMove(9, intArrayOf(1, 3), 7f, 8f),
+            Command.AttackMoveFaction(9, 1, 8f, 8f),
+            Command.AttackMoveType(9, "Marine", 9f, 8f),
+            Command.AttackMoveArchetype(9, "infantry", 10f, 8f),
             Command.Attack(10, intArrayOf(2), 7),
             Command.AttackFaction(12, 2, 9),
             Command.AttackType(14, "Zergling", 3),
@@ -90,8 +94,22 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.target, b.target)
             assertEquals(a.units.toList(), b.units.toList())
         }
+        is Command.AttackMove -> {
+            require(b is Command.AttackMove)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+            assertEquals(a.units.toList(), b.units.toList())
+        }
         is Command.MoveFaction -> {
             require(b is Command.MoveFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.AttackMoveFaction -> {
+            require(b is Command.AttackMoveFaction)
             assertEquals(a.tick, b.tick)
             assertEquals(a.faction, b.faction)
             assertEquals(a.x, b.x)
@@ -104,8 +122,22 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
         }
+        is Command.AttackMoveType -> {
+            require(b is Command.AttackMoveType)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.typeId, b.typeId)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
         is Command.MoveArchetype -> {
             require(b is Command.MoveArchetype)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.archetype, b.archetype)
+            assertEquals(a.x, b.x)
+            assertEquals(a.y, b.y)
+        }
+        is Command.AttackMoveArchetype -> {
+            require(b is Command.AttackMoveArchetype)
             assertEquals(a.tick, b.tick)
             assertEquals(a.archetype, b.archetype)
             assertEquals(a.x, b.x)

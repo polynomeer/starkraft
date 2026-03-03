@@ -36,6 +36,35 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
             }
+            is Command.AttackMove -> {
+                mixInt(14)
+                mixInt(cmd.tick)
+                mixInt(cmd.units.size)
+                for (u in cmd.units) mixInt(u)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
+            is Command.AttackMoveFaction -> {
+                mixInt(15)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
+            is Command.AttackMoveType -> {
+                mixInt(16)
+                mixInt(cmd.tick)
+                for (ch in cmd.typeId) mixInt(ch.code)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
+            is Command.AttackMoveArchetype -> {
+                mixInt(17)
+                mixInt(cmd.tick)
+                for (ch in cmd.archetype) mixInt(ch.code)
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
+                mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
+            }
             is Command.Attack -> {
                 mixInt(2)
                 mixInt(cmd.tick)

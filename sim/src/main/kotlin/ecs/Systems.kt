@@ -66,7 +66,7 @@ class MovementSystem(
             val q = world.orders[id]?.items ?: continue
             if (q.isNotEmpty()) {
                 val o = q.first()
-                if (o is Order.Move) {
+                if (o is Order.Move || o is Order.AttackMove) {
                     val pf = world.pathFollows[id]
                     if (pf == null) {
                         tryEnqueuePath(id)
@@ -105,10 +105,17 @@ class MovementSystem(
                     val dx = tx - tr.x
                     val dy = ty - tr.y
                     val dist = hypot(dx, dy)
+                    if (o is Order.AttackMove && hasEnemyInRange(id, tr)) {
+                        continue
+                    }
                     if (dist <= arrivalEps) {
                         pf.index++
                         val remaining = (pf.length - pf.index).coerceAtLeast(0)
                         recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
+                        if (pf.index >= pf.length) {
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            q.removeFirst()
+                        }
                     } else {
                         val step = min(speed, dist)
                         tr.x += (dx / dist) * step
@@ -220,6 +227,28 @@ class MovementSystem(
         val dx = target.x - source.x
         val dy = target.y - source.y
         return dx * dx + dy * dy <= def.range * def.range
+    }
+
+    private fun hasEnemyInRange(id: Int, source: Transform): Boolean {
+        val weapon = world.weapons[id] ?: return false
+        val tag = world.tags[id] ?: return false
+        val def = data?.weapon(weapon.id) ?: return false
+        val range2 = def.range * def.range
+        val alive = world.aliveSnapshot
+        val ids = alive.ids
+        for (i in 0 until alive.count) {
+            val other = ids[i]
+            if (other == id) continue
+            val otherTag = world.tags[other] ?: continue
+            if (otherTag.faction == tag.faction) continue
+            val hp = world.healths[other] ?: continue
+            if (hp.hp <= 0) continue
+            val target = world.transforms[other] ?: continue
+            val dx = target.x - source.x
+            val dy = target.y - source.y
+            if (dx * dx + dy * dy <= range2) return true
+        }
+        return false
     }
 
     fun progressEntityId(index: Int): Int = progressEntityIds[index]

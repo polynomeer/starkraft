@@ -42,6 +42,24 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses attack move commands`() {
+        val path = Files.createTempFile("starkraft-attackmove-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 2
+            selectArchetype infantry
+            attackMove 14 7
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.AttackMoveArchetype(2, "infantry", 14f, 7f), program.commands[0])
+    }
+
+    @Test
     fun `parses build commands`() {
         val path = Files.createTempFile("starkraft-build-script", ".script")
         Files.writeString(

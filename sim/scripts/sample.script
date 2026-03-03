@@ -15,7 +15,7 @@ move 5 5
 
 wait 25
 selectFaction 1
-move 18 18
+attackMove 18 18
 
 wait 25
 selectType Zergling
