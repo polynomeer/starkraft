@@ -64,6 +64,9 @@ data class EntitySnapshot(
     val productionQueueSize: Int = 0,
     val activeProductionType: String? = null,
     val activeProductionRemainingTicks: Int = 0,
+    val underConstruction: Boolean = false,
+    val constructionRemainingTicks: Int? = null,
+    val constructionTotalTicks: Int? = null,
     val footprintWidth: Int? = null,
     val footprintHeight: Int? = null,
     val placementClearance: Int? = null,
@@ -337,6 +340,26 @@ data class DropoffStateStreamRecord(
     val sequence: Long,
     val tick: Int,
     val entities: List<DropoffStateEntityRecord>
+)
+
+@Serializable
+data class ConstructionStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val archetype: String,
+    val hp: Int,
+    val maxHp: Int,
+    val remainingTicks: Int,
+    val totalTicks: Int
+)
+
+@Serializable
+data class ConstructionStateStreamRecord(
+    val recordType: String = "constructionState",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<ConstructionStateEntityRecord>
 )
 
 @Serializable
@@ -795,6 +818,7 @@ fun buildClientSnapshot(
         val path = world.pathFollows[id]
         val production = world.productionQueues[id]?.items
         val footprint = world.footprints[id]
+        val construction = world.constructionSites[id]
         val rally = world.rallyPoints[id]
         val harvester = world.harvesters[id]
         val buildSpec = data?.buildSpec(tag.typeId)
@@ -824,6 +848,9 @@ fun buildClientSnapshot(
                 productionQueueSize = production?.size ?: 0,
                 activeProductionType = production?.firstOrNull()?.typeId,
                 activeProductionRemainingTicks = production?.firstOrNull()?.remainingTicks ?: 0,
+                underConstruction = construction != null,
+                constructionRemainingTicks = construction?.remainingTicks,
+                constructionTotalTicks = construction?.totalTicks,
                 footprintWidth = footprint?.width,
                 footprintHeight = footprint?.height,
                 placementClearance = footprint?.clearance,
@@ -1370,6 +1397,16 @@ fun renderDropoffStateStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = DropoffStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderConstructionStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<ConstructionStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ConstructionStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

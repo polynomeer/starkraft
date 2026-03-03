@@ -9,6 +9,7 @@ import starkraft.sim.client.renderBuildFailureStreamRecordJson
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
+import starkraft.sim.client.ConstructionStateEntityRecord
 import starkraft.sim.client.DropoffStateEntityRecord
 import starkraft.sim.client.EconomyFactionRecord
 import starkraft.sim.client.OrderQueueEntityRecord
@@ -32,6 +33,7 @@ import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderCommandAckStreamRecordJson
+import starkraft.sim.client.renderConstructionStateStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderDropoffStateStreamRecordJson
@@ -71,6 +73,7 @@ import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.BuildingFootprint
+import starkraft.sim.ecs.ConstructionSite
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.RallyPoint
@@ -99,6 +102,7 @@ class ClientSnapshotTest {
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
         world.orders[idB]?.items?.addLast(Order.Move(9f, 9f))
         world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
+        world.constructionSites[idB] = ConstructionSite(remainingTicks = 5, totalTicks = 8, maxHp = 45)
         world.footprints[idB] = BuildingFootprint(tileX = 0, tileY = 1, width = 2, height = 3, clearance = 1)
         world.rallyPoints[idB] = RallyPoint(10f, 11f)
         world.stockpiles[1] = ResourceStockpile(150, 25)
@@ -159,6 +163,9 @@ class ClientSnapshotTest {
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
         assertEquals(12, entitiesById[idB]?.activeProductionRemainingTicks)
+        assertEquals(true, entitiesById[idB]?.underConstruction)
+        assertEquals(5, entitiesById[idB]?.constructionRemainingTicks)
+        assertEquals(8, entitiesById[idB]?.constructionTotalTicks)
         assertEquals(2, entitiesById[idB]?.footprintWidth)
         assertEquals(3, entitiesById[idB]?.footprintHeight)
         assertEquals(1, entitiesById[idB]?.placementClearance)
@@ -402,6 +409,26 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"dropoffState\",\"sequence\":15,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":8.0,\"y\":9.0},{\"entityId\":44,\"faction\":1,\"typeId\":\"ResourceDepot\",\"archetype\":\"econDepot\",\"x\":12.5,\"y\":7.0}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders construction state stream record json`() {
+        val json =
+            renderConstructionStateStreamRecordJson(
+                sequence = 16L,
+                tick = 5,
+                entities =
+                    listOf(
+                        ConstructionStateEntityRecord(41, 1, "Depot", "producer", 120, 400, 6, 10),
+                        ConstructionStateEntityRecord(44, 2, "Factory", "producer", 50, 300, 2, 4)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"constructionState\",\"sequence\":16,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"hp\":120,\"maxHp\":400,\"remainingTicks\":6,\"totalTicks\":10},{\"entityId\":44,\"faction\":2,\"typeId\":\"Factory\",\"archetype\":\"producer\",\"hp\":50,\"maxHp\":300,\"remainingTicks\":2,\"totalTicks\":4}]}",
             json
         )
     }
