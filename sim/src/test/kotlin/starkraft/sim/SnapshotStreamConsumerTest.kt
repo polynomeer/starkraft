@@ -148,4 +148,23 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("vision: changes=2 f1=+1/-0 f2=+0/-1 final=12/10"))
         assertTrue(text.contains("archetypes: select=1 move=1 attack=0 ids=infantry"))
     }
+
+    @Test
+    fun `renders gas harvest split in resource summary`() {
+        val text =
+            renderSnapshotStreamSummary(
+                Paths.get("gas-stream.ndjson"),
+                summarizeSnapshotStream(
+                    sequenceOf(
+                        "{\"recordType\":\"sessionStart\",\"sequence\":0,\"mapId\":\"demo-map\",\"buildVersion\":\"test-build\",\"seed\":7}",
+                        "{\"recordType\":\"mapState\",\"sequence\":1,\"width\":32,\"height\":32,\"blockedTiles\":[],\"weightedTiles\":[],\"staticOccupancyTiles\":[],\"resourceNodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"remaining\":250},{\"id\":11,\"kind\":\"GasGeyser\",\"x\":10.0,\"y\":6.0,\"remaining\":120}]}",
+                        "{\"recordType\":\"resourceNode\",\"sequence\":2,\"tick\":0,\"nodes\":[{\"id\":9,\"kind\":\"MineralField\",\"x\":6.0,\"y\":6.0,\"harvested\":2,\"remaining\":248,\"depleted\":false},{\"id\":11,\"kind\":\"GasGeyser\",\"x\":10.0,\"y\":6.0,\"harvested\":1,\"remaining\":119,\"depleted\":false}]}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":3,\"ticks\":3,\"pathRequests\":0,\"pathSolved\":0,\"replans\":0,\"replansBlocked\":0,\"replansStuck\":0,\"attacks\":0,\"kills\":0,\"despawns\":0,\"harvestedMineralsFaction1\":2,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":4,\"tick\":3,\"worldHash\":123,\"replayHash\":456}"
+                    )
+                )
+            )
+
+        assertTrue(text.contains("resourceNodes: changed=2 harvested=3 f1=2/0 f2=0/1 depleted=0 active=2 remaining=367"))
+    }
 }
