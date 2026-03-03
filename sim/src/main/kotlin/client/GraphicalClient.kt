@@ -76,6 +76,7 @@ fun main(args: Array<String>) {
 
     val session = ClientSession(snapshotPath, inputPath)
     val panel = ClientPanel(session)
+    val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -85,9 +86,7 @@ fun main(args: Array<String>) {
     frame.isVisible = true
 
     Timer(50) {
-        if (session.poll()) {
-            panel.repaint()
-        }
+        appLoop.tick()
     }.start()
 }
 

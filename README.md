@@ -189,6 +189,7 @@ Client-side click interpretation is also extracted into reusable controller help
 Snapshot polling, selection retention, ack tracking, and command submission now also live in a renderer-agnostic client session layer, so Swing is reduced to a view adapter over shared client state.
 That session now depends on a stable `ClientStreamSubscription` interface instead of a raw file tail implementation, so alternate transports can plug in without changing session or controller code.
 Swing drawing now also sits behind a pluggable `ClientRenderer` adapter, so the current AWT renderer is replaceable without changing the client session or command/controller layers.
+The UI timer now drives a renderer-agnostic client app loop, so future frontends can reuse the same poll/update lifecycle without depending on Swing timers directly.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands
