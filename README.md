@@ -177,6 +177,12 @@ Minimal graphical client:
 2. Start the client in another terminal:
    `./gradlew :sim:graphicalClient --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
 
+Alternative client transports/renderers:
+- Text client over file stream:
+  `./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson /tmp/starkraft/live/snapshots.ndjson"`
+- Text client over stdin:
+  `tail -f /tmp/starkraft/live/snapshots.ndjson | ./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson -"`
+
 Client controls:
 - left click: select nearest faction 1 unit
 - shift + left click: add/remove the nearest faction 1 unit from the current selection
@@ -194,6 +200,7 @@ Snapshot polling, selection retention, ack tracking, and command submission now 
 That session now depends on a stable `ClientStreamSubscription` interface instead of a raw file tail implementation, so alternate transports can plug in without changing session or controller code.
 Swing drawing now also sits behind a pluggable `ClientRenderer` adapter, so the current AWT renderer is replaceable without changing the client session or command/controller layers.
 The UI timer now drives a renderer-agnostic client app loop, so future frontends can reuse the same poll/update lifecycle without depending on Swing timers directly.
+A text-mode client is now available as a second renderer path, and stream subscriptions can come from either file tails or stdin.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

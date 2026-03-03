@@ -57,3 +57,10 @@ tasks.register<JavaExec>("graphicalClient") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.GraphicalClientKt")
 }
+
+tasks.register<JavaExec>("consoleClient") {
+    group = "application"
+    description = "Run the text client over stdin or a snapshot stream file"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.client.ConsoleClientKt")
+}

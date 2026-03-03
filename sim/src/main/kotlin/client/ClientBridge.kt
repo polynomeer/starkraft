@@ -6,7 +6,9 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import starkraft.sim.net.InputJson
+import java.io.BufferedReader
 import java.io.Closeable
+import java.io.InputStreamReader
 import java.io.RandomAccessFile
 import java.nio.file.Files
 import java.nio.file.Path
@@ -30,6 +32,26 @@ internal data class ClientStreamState(
 internal interface ClientStreamSubscription : Closeable {
     fun poll(): ClientStreamState?
 }
+
+internal open class ReaderClientStreamSubscription(
+    private val reader: BufferedReader
+) : ClientStreamSubscription {
+    override fun poll(): ClientStreamState? {
+        while (true) {
+            val line = reader.readLine() ?: return null
+            if (line.isBlank()) continue
+            return parseClientStreamLine(line)
+        }
+    }
+
+    override fun close() {
+        reader.close()
+    }
+}
+
+internal class StdinClientStreamSubscription : ReaderClientStreamSubscription(
+    BufferedReader(InputStreamReader(System.`in`))
+)
 
 internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscription {
     init {
