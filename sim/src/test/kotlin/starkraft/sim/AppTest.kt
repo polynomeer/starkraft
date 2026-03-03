@@ -20,6 +20,36 @@ import java.nio.file.Files
 
 class AppTest {
     @Test
+    fun `issue emits command ack records for success and failure`() {
+        val world = World()
+        val data = DataRepo("""{"list":[]}""", """{"list":[]}""", """{"list":[]}""")
+        val out = Files.createTempFile("starkraft-command-ack", ".ndjson")
+        val seq = longArrayOf(0L)
+        val unitId = world.spawn(Transform(2f, 2f), UnitTag(1, "Marine"), Health(45, 45), null)
+
+        issue(
+            Command.Move(0, intArrayOf(unitId), 5f, 6f),
+            world,
+            starkraft.sim.replay.NullRecorder(),
+            data = data,
+            snapshotOutPath = out,
+            streamSequence = seq
+        )
+        issue(
+            Command.Rally(1, 999, 10f, 11f),
+            world,
+            starkraft.sim.replay.NullRecorder(),
+            data = data,
+            snapshotOutPath = out,
+            streamSequence = seq
+        )
+
+        val lines = Files.readAllLines(out)
+        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"move\"") && it.contains("\"accepted\":true") && it.contains("\"appliedUnits\":1") })
+        assertTrue(lines.any { it.contains("\"recordType\":\"commandAck\"") && it.contains("\"commandType\":\"rally\"") && it.contains("\"accepted\":false") && it.contains("\"reason\":\"missingBuilding\"") })
+    }
+
+    @Test
     fun `warns on replay compatibility mismatch`() {
         val warnings =
             replayCompatibilityWarnings(

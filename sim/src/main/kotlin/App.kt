@@ -26,6 +26,7 @@ import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderBuildFailureStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
+import starkraft.sim.client.renderCommandAckStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderDropoffStateStreamRecordJson
@@ -3149,9 +3150,28 @@ fun issue(
     outcomeCounters: CommandOutcomeCounters? = null
 ) {
     recorder.onCommand(cmd)
+    var commandSequence: Long? = null
     if (snapshotOutPath != null && streamSequence != null) {
+        commandSequence = nextStreamSequence(streamSequence)
         emitSnapshotLine(
-            renderCommandStreamRecordJson(cmd, sequence = nextStreamSequence(streamSequence), pretty = false),
+            renderCommandStreamRecordJson(cmd, sequence = commandSequence, pretty = false),
+            snapshotOutPath
+        )
+    }
+    fun emitCommandAck(accepted: Boolean, reason: String? = null, appliedUnits: Int? = null, entityId: Int? = null) {
+        if (snapshotOutPath == null || streamSequence == null || commandSequence == null) return
+        emitSnapshotLine(
+            renderCommandAckStreamRecordJson(
+                sequence = nextStreamSequence(streamSequence),
+                tick = cmd.tick,
+                commandType = commandTypeName(cmd),
+                requestSequence = commandSequence!!,
+                accepted = accepted,
+                reason = reason,
+                appliedUnits = appliedUnits,
+                entityId = entityId,
+                pretty = false
+            ),
             snapshotOutPath
         )
     }
@@ -3171,6 +3191,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.MoveFaction -> {
             val applied = collectFactionTargets(cmd.faction, world)
@@ -3181,6 +3202,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.MoveType -> {
             val applied = collectTypeTargets(cmd.typeId, world)
@@ -3191,6 +3213,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.MoveArchetype -> {
             val applied = collectArchetypeTargets(cmd.archetype, world, data)
@@ -3202,6 +3225,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "move", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
 
         is Command.Attack -> {
@@ -3220,6 +3244,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.AttackFaction -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3231,6 +3256,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.AttackType -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3242,6 +3268,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.AttackArchetype -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3254,6 +3281,7 @@ fun issue(
                 }
             }
             emitOrderQueueRecord(cmd.tick, "attack", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.Harvest -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3261,6 +3289,7 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.HarvestFaction -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3268,6 +3297,7 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.HarvestType -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3275,6 +3305,7 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.HarvestArchetype -> {
             val target = resolveLabelId(cmd.target, labelIdMap)
@@ -3282,6 +3313,7 @@ fun issue(
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
         }
         is Command.SpawnNode -> {
             require(RESOURCE_NODE_KINDS.contains(cmd.kind)) { "Unknown resource node kind '${cmd.kind}' in spawnNode command" }
@@ -3321,6 +3353,7 @@ fun issue(
                     snapshotOutPath
                 )
             }
+            emitCommandAck(true, entityId = nodeId)
         }
 
         is Command.Spawn -> {
@@ -3363,6 +3396,7 @@ fun issue(
                     snapshotOutPath
                 )
             }
+            emitCommandAck(true, entityId = id)
         }
         is Command.Build -> {
             val placement = buildings ?: error("Build requires BuildingPlacementSystem")
@@ -3402,6 +3436,7 @@ fun issue(
                     snapshotOutPath = snapshotOutPath,
                     streamSequence = streamSequence
                 )
+                emitCommandAck(false, reason = "invalidDefinition")
                 return
             }
             val result =
@@ -3458,6 +3493,7 @@ fun issue(
                     snapshotOutPath = snapshotOutPath,
                     streamSequence = streamSequence
                 )
+                emitCommandAck(false, reason = reason)
                 return
             }
             if (outcomeCounters != null) outcomeCounters.builds++
@@ -3485,6 +3521,7 @@ fun issue(
                     snapshotOutPath
                 )
             }
+            emitCommandAck(true, entityId = id)
         }
         is Command.Train -> {
             val productionSystem = production ?: error("Train requires BuildingProductionSystem")
@@ -3555,8 +3592,10 @@ fun issue(
                         producerTypeId = producerTypeId
                     )
                 }
+                emitCommandAck(false, reason = reason)
             } else {
                 if (outcomeCounters != null) outcomeCounters.trainsQueued++
+                emitCommandAck(true)
             }
         }
         is Command.CancelTrain -> {
@@ -3564,6 +3603,7 @@ fun issue(
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
             if (productionSystem.cancelLast(buildingId)) {
                 if (outcomeCounters != null) outcomeCounters.trainsCancelled++
+                emitCommandAck(true)
             } else {
                 if (outcomeCounters != null) {
                     outcomeCounters.trainFailures++
@@ -3577,6 +3617,7 @@ fun issue(
                     streamSequence = streamSequence,
                     buildingId = buildingId
                 )
+                emitCommandAck(false, reason = "nothingToCancel")
             }
         }
         is Command.Rally -> {
@@ -3591,6 +3632,7 @@ fun issue(
                     buildingId = buildingId
                 )
                 emitRallyFailureRecord(cmd.tick, "missingBuilding", snapshotOutPath, streamSequence, buildingId)
+                emitCommandAck(false, reason = "missingBuilding")
                 return
             }
             val buildingType = world.tags[buildingId]?.typeId
@@ -3605,13 +3647,37 @@ fun issue(
                     buildingId = buildingId
                 )
                 emitRallyFailureRecord(cmd.tick, "unsupportedRally", snapshotOutPath, streamSequence, buildingId)
+                emitCommandAck(false, reason = "unsupportedRally")
                 return
             }
             world.rallyPoints[buildingId] = RallyPoint(cmd.x, cmd.y)
             emitRallyRecord(cmd.tick, buildingId, cmd.x, cmd.y, snapshotOutPath, streamSequence)
+            emitCommandAck(true, entityId = buildingId)
         }
     }
 }
+
+private fun commandTypeName(cmd: Command): String =
+    when (cmd) {
+        is Command.Move -> "move"
+        is Command.MoveFaction -> "moveFaction"
+        is Command.MoveType -> "moveType"
+        is Command.MoveArchetype -> "moveArchetype"
+        is Command.Attack -> "attack"
+        is Command.AttackFaction -> "attackFaction"
+        is Command.AttackType -> "attackType"
+        is Command.AttackArchetype -> "attackArchetype"
+        is Command.Harvest -> "harvest"
+        is Command.HarvestFaction -> "harvestFaction"
+        is Command.HarvestType -> "harvestType"
+        is Command.HarvestArchetype -> "harvestArchetype"
+        is Command.SpawnNode -> "spawnNode"
+        is Command.Spawn -> "spawn"
+        is Command.Build -> "build"
+        is Command.Train -> "train"
+        is Command.CancelTrain -> "cancelTrain"
+        is Command.Rally -> "rally"
+    }
 
 private fun resolveLabelId(id: Int, labelIdMap: Map<Int, Int>): Int {
     if (id >= 0) return id

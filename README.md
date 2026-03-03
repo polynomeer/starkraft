@@ -179,6 +179,7 @@ Use `--inputJson -` to read the same JSON or NDJSON payload from stdin.
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
   They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, current static occupancy, and resource nodes.
   Issued commands are also emitted as `command` records.
+  Each command also emits a `commandAck` record that references the command record sequence and reports `accepted` or a deterministic `reason`.
   Script-driven selection changes emit `selection` records before commands for that tick.
   Rally overrides emit `rally` records when producer rally points change.
   Invalid rally commands also emit `rallyFailure` records with deterministic reasons.

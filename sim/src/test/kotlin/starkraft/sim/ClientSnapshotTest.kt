@@ -31,6 +31,7 @@ import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
+import starkraft.sim.client.renderCommandAckStreamRecordJson
 import starkraft.sim.client.renderDamageStreamRecordJson
 import starkraft.sim.client.renderDespawnStreamRecordJson
 import starkraft.sim.client.renderDropoffStateStreamRecordJson
@@ -981,6 +982,27 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"commandFailure\",\"sequence\":26,\"tick\":19,\"commandType\":\"train\",\"reason\":\"queueFull\",\"faction\":null,\"buildingId\":41,\"typeId\":\"Marine\",\"tileX\":null,\"tileY\":null}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders command ack stream record json`() {
+        val json =
+            renderCommandAckStreamRecordJson(
+                sequence = 27L,
+                tick = 19,
+                commandType = "build",
+                requestSequence = 26L,
+                accepted = false,
+                reason = "missingTech",
+                appliedUnits = null,
+                entityId = null,
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"commandAck\",\"sequence\":27,\"tick\":19,\"commandType\":\"build\",\"requestSequence\":26,\"accepted\":false,\"reason\":\"missingTech\",\"appliedUnits\":null,\"entityId\":null}",
             json
         )
     }

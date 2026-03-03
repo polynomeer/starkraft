@@ -138,6 +138,19 @@ data class CommandStreamRecord(
 )
 
 @Serializable
+data class CommandAckStreamRecord(
+    val recordType: String = "commandAck",
+    val sequence: Long,
+    val tick: Int,
+    val commandType: String,
+    val requestSequence: Long,
+    val accepted: Boolean,
+    val reason: String? = null,
+    val appliedUnits: Int? = null,
+    val entityId: Int? = null
+)
+
+@Serializable
 data class MetricsFactionRecord(
     val faction: Int,
     val alive: Int,
@@ -1073,6 +1086,31 @@ fun renderCommandStreamRecordJson(cmd: Command, sequence: Long, pretty: Boolean 
                     y = cmd.y
                 )
         }
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderCommandAckStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    commandType: String,
+    requestSequence: Long,
+    accepted: Boolean,
+    reason: String? = null,
+    appliedUnits: Int? = null,
+    entityId: Int? = null,
+    pretty: Boolean = false
+): String {
+    val record =
+        CommandAckStreamRecord(
+            sequence = sequence,
+            tick = tick,
+            commandType = commandType,
+            requestSequence = requestSequence,
+            accepted = accepted,
+            reason = reason,
+            appliedUnits = appliedUnits,
+            entityId = entityId
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
