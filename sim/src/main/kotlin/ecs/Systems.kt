@@ -348,6 +348,29 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             }
 
             if (best == 0) {
+                val stickyTarget = world.autoAttackTargets[id]
+                if (stickyTarget != null) {
+                    val stickyTag = world.tags[stickyTarget]
+                    val stickyHp = world.healths[stickyTarget]
+                    val stickyTransform = world.transforms[stickyTarget]
+                    if (stickyTag != null && stickyHp != null && stickyTransform != null && stickyHp.hp > 0 && stickyTag.faction != unitTag.faction) {
+                        val dx = stickyTransform.x - tr.x
+                        val dy = stickyTransform.y - tr.y
+                        val d2 = dx * dx + dy * dy
+                        if (d2 <= rng2) {
+                            best = stickyTarget
+                            bestD2 = d2
+                            bestSurvivesHit = stickyHp.hp > kotlin.math.max(0, def.damage - stickyHp.armor)
+                        } else {
+                            world.autoAttackTargets.remove(id)
+                        }
+                    } else {
+                        world.autoAttackTargets.remove(id)
+                    }
+                }
+            }
+
+            if (best == 0) {
                 val enemies = enemiesCache[unitTag.faction]
                 val enemyIds = enemies?.ids ?: emptyIds
                 val enemyCount = enemies?.count ?: 0
@@ -378,10 +401,15 @@ class CombatSystem(private val world: World, private val data: DataRepo) {
             }
 
             if (best != 0) {
+                if (!orderedTarget) {
+                    world.autoAttackTargets[id] = best
+                }
                 val targetHp = world.healths[best] ?: continue
                 val dmg = kotlin.math.max(0, def.damage - targetHp.armor)
                 reserveDamage(best, dmg)
                 recordPlannedAttack(id, best, dmg, orderedTarget)
+            } else if (world.autoAttackTargets[id] != null) {
+                world.autoAttackTargets.remove(id)
             }
         }
 

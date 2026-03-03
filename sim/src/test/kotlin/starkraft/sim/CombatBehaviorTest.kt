@@ -253,4 +253,42 @@ class CombatBehaviorTest {
         assertEquals(Order.Hold, world.orders[attacker]?.items?.firstOrNull())
         assertEquals(null, world.pathFollows[attacker])
     }
+
+    @Test
+    fun `auto targeting stays sticky while target remains in range`() {
+        val data = combatData()
+        val world = World()
+        val alive = AliveSystem(world)
+        val combat = CombatSystem(world, data)
+
+        world.spawn(
+            Transform(2f, 2f),
+            UnitTag(1, "Marine"),
+            Health(45, 45),
+            WeaponRef("Gauss")
+        )
+        val nearTarget =
+            world.spawn(
+                Transform(5f, 2f),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                w = null
+            )
+        world.spawn(
+            Transform(5f, 2.6f),
+            UnitTag(2, "Zergling"),
+            Health(35, 35),
+            w = null
+        )
+
+        alive.tick()
+        combat.tick()
+        val stickyBefore = world.autoAttackTargets.values.firstOrNull()
+        alive.tick()
+        combat.tick()
+        val stickyAfter = world.autoAttackTargets.values.firstOrNull()
+
+        assertEquals(nearTarget, stickyBefore)
+        assertEquals(nearTarget, stickyAfter)
+    }
 }
