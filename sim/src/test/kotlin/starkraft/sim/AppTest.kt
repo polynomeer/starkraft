@@ -367,6 +367,36 @@ class AppTest {
     }
 
     @Test
+    fun `retargets loaded mineral harvesters by mineral kind on depletion`() {
+        drainPendingHarvesterRetargetEvents()
+        val world = World()
+        val depletedMineralNodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val gasNodeId = world.spawn(Transform(5.5f, 5f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        val fallbackMineralNodeId = world.spawn(Transform(7f, 5f), UnitTag(0, "RichMineralField"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[depletedMineralNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 0)
+        world.resourceNodes[gasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 20)
+        world.resourceNodes[fallbackMineralNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 20)
+        world.harvesters[workerId] =
+            Harvester(
+                targetNodeId = depletedMineralNodeId,
+                cargoKind = ResourceNode.KIND_MINERALS,
+                cargoAmount = 1,
+                returnTargetId = 1
+            )
+        world.orders[workerId]?.items?.addLast(Order.Move(5f, 5f))
+
+        clearHarvestersForNode(world, depletedMineralNodeId, 5f, 5f)
+
+        assertEquals(fallbackMineralNodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(null, world.orders[workerId]?.items?.firstOrNull())
+        val events = drainPendingHarvesterRetargetEvents()
+        assertEquals(1, events.size)
+        assertEquals(fallbackMineralNodeId, events[0].toNodeId)
+        assertEquals(ResourceNode.KIND_MINERALS, events[0].resourceKind)
+    }
+
+    @Test
     fun `records harvester retarget events during depletion cleanup`() {
         drainPendingHarvesterRetargetEvents()
         val world = World()
