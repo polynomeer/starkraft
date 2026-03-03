@@ -1,8 +1,11 @@
 package starkraft.sim.ecs
 
+import starkraft.sim.data.DataRepo
+
 class ResourceHarvestSystem(
     private val world: World,
-    private val resources: ResourceSystem
+    private val resources: ResourceSystem,
+    private val data: DataRepo? = null
 ) {
     private var eventNodeIds = IntArray(8)
     private var eventHarvested = IntArray(8)
@@ -147,8 +150,10 @@ class ResourceHarvestSystem(
 
     private fun findNearestDropoff(entityId: Int, faction: Int): Int {
         val workerTransform = world.transforms[entityId] ?: return -1
-        var bestId = -1
-        var bestDist = Float.POSITIVE_INFINITY
+        var bestProducerId = -1
+        var bestProducerDist = Float.POSITIVE_INFINITY
+        var bestAnyId = -1
+        var bestAnyDist = Float.POSITIVE_INFINITY
         for ((buildingId, footprint) in world.footprints) {
             val tag = world.tags[buildingId] ?: continue
             if (tag.faction != faction) continue
@@ -156,12 +161,17 @@ class ResourceHarvestSystem(
             val dx = buildingTransform.x - workerTransform.x
             val dy = buildingTransform.y - workerTransform.y
             val dist = (dx * dx) + (dy * dy)
-            if (dist < bestDist) {
-                bestDist = dist
-                bestId = buildingId
+            if (dist < bestAnyDist) {
+                bestAnyDist = dist
+                bestAnyId = buildingId
+            }
+            val buildSpec = data?.buildSpec(tag.typeId)
+            if (buildSpec?.supportsTraining == true && dist < bestProducerDist) {
+                bestProducerDist = dist
+                bestProducerId = buildingId
             }
         }
-        return bestId
+        return if (bestProducerId >= 0) bestProducerId else bestAnyId
     }
 
     private fun recordEvent(nodeId: Int, harvested: Int, remaining: Int, depleted: Boolean) {

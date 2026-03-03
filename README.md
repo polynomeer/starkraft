@@ -69,6 +69,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - `ResourceSystem` now provides basic minerals/gas stockpiles for headless costs.
    - `ResourceHarvestSystem` now supports deterministic nearby harvesting from fixed resource nodes.
    - Harvesters now carry cargo back to the nearest same-faction building footprint before stockpiles increase.
+   - When building defs are available, harvest drop-off prefers producer-capable buildings over other same-faction footprints.
    - `DataRepo.buildSpec(...)` reads dedicated building defs, while `DataRepo.trainSpec(...)` reads trainable unit defs.
    - Unit and building defs now carry explicit `archetype` ids so coarse categories do not have to overload `typeId`.
 

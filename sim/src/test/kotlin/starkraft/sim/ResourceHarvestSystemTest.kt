@@ -2,6 +2,7 @@ package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.BuildingFootprint
@@ -16,6 +17,18 @@ import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayHashRecorder
 
 class ResourceHarvestSystemTest {
+    private fun harvestData(): DataRepo =
+        DataRepo(
+            """{"list":[{"id":"Worker","archetype":"worker","hp":40,"buildTicks":30,"producerTypes":["Depot"]}]}""",
+            """{"list":[]}""",
+            """
+            {"list":[
+              {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+              {"id":"Tower","archetype":"defense","hp":300,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0}
+            ]}
+            """.trimIndent()
+        )
+
     @Test
     fun `harvests nearby minerals into faction stockpile`() {
         val world = World()
@@ -128,6 +141,27 @@ class ResourceHarvestSystemTest {
         assertEquals(5, world.stockpiles[2]?.gas)
         assertEquals(0, harvest.lastTickHarvestedGasFaction2)
         assertEquals(11, world.resourceNodes[nodeId]?.remaining)
+    }
+
+    @Test
+    fun `harvest prefers producer dropoff buildings over nearest footprint`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources, harvestData())
+
+        val towerId = world.spawn(Transform(5f, 4f), UnitTag(1, "Tower"), Health(300, 300), w = null)
+        world.footprints[towerId] = BuildingFootprint(4, 3, 2, 2)
+        val depotId = world.spawn(Transform(8f, 4f), UnitTag(1, "Depot"), Health(400, 400), w = null)
+        world.footprints[depotId] = BuildingFootprint(7, 3, 2, 2)
+        val nodeId = world.spawn(Transform(4f, 4f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        world.resourceNodes[nodeId] = ResourceNode(remaining = 10)
+        val workerId = world.spawn(Transform(4.5f, 4f), UnitTag(1, "Worker"), Health(40, 40), w = null)
+        world.harvesters[workerId] = Harvester(targetNodeId = nodeId, harvestPerTick = 2)
+
+        harvest.tick()
+
+        assertEquals(depotId, world.harvesters[workerId]?.returnTargetId)
+        assertEquals(Order.Move(8f, 4f), world.orders[workerId]?.items?.firstOrNull())
     }
 
     @Test

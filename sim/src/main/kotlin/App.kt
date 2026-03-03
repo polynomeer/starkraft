@@ -104,7 +104,7 @@ fun main(args: Array<String>) {
     val pathing = PathfindingSystem(world, pathfinder, pathPool, pathQueue, nodesBudgetPerTick = 2000)
     val movement = MovementSystem(world, map, occ, pathPool, pathQueue)
     val resources = ResourceSystem(world)
-    val harvest = ResourceHarvestSystem(world, resources)
+    val harvest = ResourceHarvestSystem(world, resources, data)
     val buildings = BuildingPlacementSystem(world, map, occ, resources)
     val production = BuildingProductionSystem(world, map, occ, data, resources)
     val occupancy = OccupancySystem(world, occ)
