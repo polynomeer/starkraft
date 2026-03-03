@@ -12,7 +12,7 @@ internal data class ClientSessionState(
 
 internal class ClientSession(
     private val subscription: ClientStreamSubscription,
-    private val inputSink: NdjsonClientInputSink,
+    private val inputSink: ClientInputSink,
     val state: ClientSessionState = ClientSessionState()
 ) : Closeable {
     constructor(
@@ -21,7 +21,7 @@ internal class ClientSession(
         state: ClientSessionState = ClientSessionState()
     ) : this(
         subscription = FileClientStreamSubscription(snapshotPath),
-        inputSink = NdjsonClientInputSink(inputPath),
+        inputSink = FileClientInputSink(inputPath),
         state = state
     )
 
@@ -54,6 +54,7 @@ internal class ClientSession(
 
     override fun close() {
         subscription.close()
+        inputSink.close()
     }
 
     private fun syncSelection(snapshot: ClientSnapshot) {

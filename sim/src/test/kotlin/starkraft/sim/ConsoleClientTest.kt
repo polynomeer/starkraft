@@ -2,6 +2,7 @@ package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientSessionState
@@ -9,9 +10,13 @@ import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.ReaderClientStreamSubscription
+import starkraft.sim.client.openClientInputSink
+import starkraft.sim.client.openClientStreamSubscription
 import starkraft.sim.client.renderClientTextFrame
 import java.io.BufferedReader
 import java.io.StringReader
+import java.net.ServerSocket
+import kotlin.concurrent.thread
 
 class ConsoleClientTest {
     @Test
@@ -64,5 +69,62 @@ class ConsoleClientTest {
             "tick=9 selected=1 entities=1 resources=0 visible[f1=6 f2=4] last ack: ok attackMove[cli-5] @9",
             output
         )
+    }
+
+    @Test
+    fun `socket subscription and sink support tcp transport`() {
+        ServerSocket(0).use { streamServer ->
+            ServerSocket(0).use { inputServer ->
+                val streamPort = streamServer.localPort
+                val inputPort = inputServer.localPort
+                val received = StringBuilder()
+
+                val streamThread =
+                    thread(start = true) {
+                        streamServer.accept().use { socket ->
+                            socket.getOutputStream().bufferedWriter().use { writer ->
+                                writer.write("{\"recordType\":\"commandAck\",\"tick\":7,\"commandType\":\"move\",\"requestId\":\"sock-1\",\"accepted\":true,\"reason\":null}\n")
+                                writer.flush()
+                            }
+                        }
+                    }
+                val inputThread =
+                    thread(start = true) {
+                        inputServer.accept().use { socket ->
+                            socket.getInputStream().bufferedReader().use { reader ->
+                                received.append(reader.readLine())
+                            }
+                        }
+                    }
+
+                val subscription = openClientStreamSubscription("tcp://127.0.0.1:$streamPort")
+                val sink = openClientInputSink("tcp://127.0.0.1:$inputPort")
+                subscription.use {
+                    sink.use {
+                        var update = subscription.poll()
+                        while (update == null) {
+                            update = subscription.poll()
+                        }
+                        assertEquals("sock-1", update.ack?.requestId)
+
+                        sink.append(
+                            starkraft.sim.net.InputJson.InputCommandRecord(
+                                tick = 8,
+                                commandType = "move",
+                                requestId = "sock-2",
+                                units = intArrayOf(4),
+                                x = 10f,
+                                y = 11f
+                            )
+                        )
+                    }
+                }
+
+                streamThread.join()
+                inputThread.join()
+                assertTrue(received.contains("\"requestId\":\"sock-2\""))
+                assertTrue(received.contains("\"commandType\":\"move\""))
+            }
+        }
     }
 }

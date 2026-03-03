@@ -9,7 +9,12 @@ import starkraft.sim.net.InputJson
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
 import java.io.RandomAccessFile
+import java.net.ServerSocket
+import java.net.Socket
+import java.net.SocketTimeoutException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -33,6 +38,11 @@ internal interface ClientStreamSubscription : Closeable {
     fun poll(): ClientStreamState?
 }
 
+internal interface ClientInputSink : Closeable {
+    fun append(record: InputJson.InputCommandRecord)
+    fun append(record: InputJson.InputSelectionRecord)
+}
+
 internal open class ReaderClientStreamSubscription(
     private val reader: BufferedReader
 ) : ClientStreamSubscription {
@@ -52,6 +62,31 @@ internal open class ReaderClientStreamSubscription(
 internal class StdinClientStreamSubscription : ReaderClientStreamSubscription(
     BufferedReader(InputStreamReader(System.`in`))
 )
+
+internal class SocketClientStreamSubscription(
+    host: String,
+    port: Int,
+    timeoutMs: Int = 25
+) : ClientStreamSubscription {
+    private val socket = Socket(host, port).apply { soTimeout = timeoutMs }
+    private val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+
+    override fun poll(): ClientStreamState? {
+        try {
+            while (true) {
+                val line = reader.readLine() ?: return null
+                if (line.isBlank()) continue
+                return parseClientStreamLine(line)
+            }
+        } catch (_: SocketTimeoutException) {
+            return null
+        }
+    }
+
+    override fun close() {
+        socket.close()
+    }
+}
 
 internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscription {
     init {
@@ -104,6 +139,65 @@ internal class NdjsonClientInputSink(private val path: Path) {
             line + "\n",
             StandardOpenOption.APPEND
         )
+    }
+}
+
+internal class FileClientInputSink(path: Path) : ClientInputSink {
+    private val delegate = NdjsonClientInputSink(path)
+
+    override fun append(record: InputJson.InputCommandRecord) = delegate.append(record)
+
+    override fun append(record: InputJson.InputSelectionRecord) = delegate.append(record)
+
+    override fun close() = Unit
+}
+
+internal class SocketClientInputSink(
+    host: String,
+    port: Int
+) : ClientInputSink {
+    private val json = Json { encodeDefaults = true }
+    private val socket = Socket(host, port)
+    private val writer = PrintWriter(OutputStreamWriter(socket.getOutputStream()), true)
+
+    override fun append(record: InputJson.InputCommandRecord) {
+        writer.println(json.encodeToString(InputJson.InputCommandRecord.serializer(), record))
+    }
+
+    override fun append(record: InputJson.InputSelectionRecord) {
+        writer.println(json.encodeToString(InputJson.InputSelectionRecord.serializer(), record))
+    }
+
+    override fun close() {
+        socket.close()
+    }
+}
+
+internal data class ClientSocketEndpoint(val host: String, val port: Int)
+
+internal fun parseClientEndpoint(spec: String): ClientSocketEndpoint? {
+    if (!spec.startsWith("tcp://")) return null
+    val rest = spec.removePrefix("tcp://")
+    val colon = rest.lastIndexOf(':')
+    require(colon > 0 && colon < rest.length - 1) { "invalid tcp endpoint '$spec'" }
+    return ClientSocketEndpoint(rest.substring(0, colon), rest.substring(colon + 1).toInt())
+}
+
+internal fun openClientStreamSubscription(spec: String): ClientStreamSubscription {
+    val endpoint = parseClientEndpoint(spec)
+    return if (endpoint != null) {
+        SocketClientStreamSubscription(endpoint.host, endpoint.port)
+    } else {
+        FileClientStreamSubscription(Path.of(spec).toAbsolutePath().normalize())
+    }
+}
+
+internal fun openClientInputSink(spec: String): ClientInputSink {
+    val endpoint = parseClientEndpoint(spec)
+    return if (endpoint != null) {
+        SocketClientInputSink(endpoint.host, endpoint.port)
+    } else {
+        FileClientInputSink(Path.of(spec).toAbsolutePath().normalize())
     }
 }
 

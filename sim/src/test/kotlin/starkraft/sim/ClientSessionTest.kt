@@ -15,6 +15,7 @@ import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.FileClientInputSink
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.net.InputJson
 import java.nio.file.Files
@@ -80,7 +81,7 @@ class ClientSessionTest {
                         )
                     )
                 ),
-            inputSink = starkraft.sim.client.NdjsonClientInputSink(inputPath),
+            inputSink = FileClientInputSink(inputPath),
             state = ClientSessionState(selectedIds = linkedSetOf(7, 8))
         ).use { session ->
             assertTrue(session.poll())

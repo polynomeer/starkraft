@@ -13,8 +13,8 @@ import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.ClientStreamState
 import starkraft.sim.client.ClientStreamSubscription
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.FileClientInputSink
 import starkraft.sim.client.FactionSnapshot
-import starkraft.sim.client.NdjsonClientInputSink
 import java.nio.file.Path
 
 class ClientAppLoopTest {
@@ -46,7 +46,7 @@ class ClientAppLoopTest {
         val session =
             ClientSession(
                 subscription = TestSubscription(updates),
-                inputSink = NdjsonClientInputSink(inputPath),
+                inputSink = FileClientInputSink(inputPath),
                 state = ClientSessionState()
             )
         var notifications = 0

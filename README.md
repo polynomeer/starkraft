@@ -177,12 +177,16 @@ Minimal graphical client:
    `./gradlew :sim:run --args="--snapshotEvery 1 --snapshotOut /tmp/starkraft/live/snapshots.ndjson --inputTail /tmp/starkraft/live/client-input.ndjson --noSleep --ticks 2000"`
 2. Start the client in another terminal:
    `./gradlew :sim:graphicalClient --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
+   The same client can also connect over TCP sockets:
+   `./gradlew :sim:graphicalClient --args="tcp://127.0.0.1:9001 tcp://127.0.0.1:9002"`
 
 Alternative client transports/renderers:
 - Text client over file stream:
   `./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson /tmp/starkraft/live/snapshots.ndjson"`
 - Text client over stdin:
   `tail -f /tmp/starkraft/live/snapshots.ndjson | ./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson -"`
+- Text client over TCP sockets:
+  `./gradlew :sim:consoleClient --args="tcp://127.0.0.1:9002 tcp://127.0.0.1:9001"`
 
 Client controls:
 - left click: select nearest faction 1 unit
@@ -203,6 +207,7 @@ That session now depends on a stable `ClientStreamSubscription` interface instea
 Swing drawing now also sits behind a pluggable `ClientRenderer` adapter, so the current AWT renderer is replaceable without changing the client session or command/controller layers.
 The UI timer now drives a renderer-agnostic client app loop, so future frontends can reuse the same poll/update lifecycle without depending on Swing timers directly.
 A text-mode client is now available as a second renderer path, and stream subscriptions can come from either file tails or stdin.
+Socket transport is now also available over line-delimited TCP for both snapshot subscriptions and command submission, without adding a websocket dependency.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

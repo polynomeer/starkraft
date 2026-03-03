@@ -1,18 +1,16 @@
 package starkraft.sim.client
 
-import java.nio.file.Paths
-
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: ConsoleClientKt <input.ndjson> [snapshot.ndjson|-]" }
-    val inputPath = Paths.get(args[0]).toAbsolutePath().normalize()
+    require(args.isNotEmpty()) { "usage: ConsoleClientKt <input.ndjson|tcp://host:port> [snapshot.ndjson|tcp://host:port|-]" }
+    val inputSpec = args[0]
     val subscription =
         if (args.size >= 2 && args[1] != "-") {
-            FileClientStreamSubscription(Paths.get(args[1]).toAbsolutePath().normalize())
+            openClientStreamSubscription(args[1])
         } else {
             StdinClientStreamSubscription()
         }
 
-    ClientSession(subscription, NdjsonClientInputSink(inputPath)).use { session ->
+    ClientSession(subscription, openClientInputSink(inputSpec)).use { session ->
         while (session.poll()) {
             println(renderClientTextFrame(session.state))
         }

@@ -71,11 +71,17 @@ private class ClientPanel(
 }
 
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson> [input.ndjson]" }
-    val snapshotPath = Paths.get(args[0]).toAbsolutePath().normalize()
-    val inputPath = if (args.size >= 2) Paths.get(args[1]).toAbsolutePath().normalize() else defaultClientInputPath(snapshotPath)
+    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port]" }
+    val snapshotSpec = args[0]
+    val inputSpec =
+        if (args.size >= 2) {
+            args[1]
+        } else {
+            val snapshotPath = Paths.get(snapshotSpec).toAbsolutePath().normalize()
+            defaultClientInputPath(snapshotPath).toString()
+        }
 
-    val session = ClientSession(snapshotPath, inputPath)
+    val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
     val panel = ClientPanel(session)
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
