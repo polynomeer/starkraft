@@ -220,6 +220,10 @@ Sample spawn script:
 This sample now places both a `ResourceDepot` and a `GasDepot`, plus matching mineral and gas nodes.
 `--spawnScript` accepts `build` commands too, so drop-off setup can happen before the main script runs.
 `sim/scripts/sample.script` now also spawns a faction 2 worker that harvests the spawn script's gas geyser, so the combined demo exercises both drop-off types.
+To verify the snapshot stream consumer sees the compatibility data live:
+`./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --ticks 260 --noSleep --snapshotEvery 50 --snapshotOut /tmp/starkraft-live-compat.ndjson"`
+`./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft-live-compat.ndjson"`
+Expected producer summary includes non-zero compatibility counts, e.g. `producers: total=2 training=1 rally=1 dropoff=2 minerals=2 gas=0 ...`
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`
