@@ -423,6 +423,7 @@ data class TickSummaryStreamRecord(
 @Serializable
 data class BuildFailureCounts(
     val invalidDefinition: Int,
+    val missingTech: Int,
     val invalidFootprint: Int,
     val invalidPlacement: Int,
     val insufficientResources: Int
@@ -431,6 +432,7 @@ data class BuildFailureCounts(
 @Serializable
 data class TrainFailureCounts(
     val missingBuilding: Int,
+    val missingTech: Int,
     val invalidUnit: Int,
     val invalidBuildTime: Int,
     val incompatibleProducer: Int,

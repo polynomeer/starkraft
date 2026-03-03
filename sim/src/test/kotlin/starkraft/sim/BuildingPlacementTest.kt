@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.data.DataRepo
+import starkraft.sim.ecs.BuildFailureReason
 import starkraft.sim.ecs.BuildingPlacementSystem
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
@@ -119,5 +120,29 @@ class BuildingPlacementTest {
         assertNotNull(first)
         assertNull(second)
         assertNotNull(third)
+    }
+
+    @Test
+    fun `building placement rejects missing tech requirements`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val buildings = BuildingPlacementSystem(world, map, occ)
+
+        val result =
+            buildings.placeResult(
+                faction = 1,
+                typeId = "Factory",
+                tileX = 6,
+                tileY = 6,
+                width = 2,
+                height = 2,
+                hp = 450,
+                requiredBuildingTypes = listOf("Depot")
+            )
+
+        assertEquals(BuildFailureReason.MISSING_TECH, result.failure)
+        assertNull(result.entityId)
+        assertEquals(0, world.footprints.size)
     }
 }

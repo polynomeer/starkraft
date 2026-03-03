@@ -300,8 +300,8 @@ fun main(args: Array<String>) {
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
-        validateBuildCommands(commandsByTick, data)
-        validateTrainCommands(commandsByTick, data)
+        validateBuildCommands(commandsByTick, data, world)
+        validateTrainCommands(commandsByTick, data, world)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
@@ -1920,7 +1920,8 @@ internal fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data:
     }
 }
 
-internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo, world: World = World()) {
+    val availableBuildingsByFaction = snapshotFactionBuildings(world)
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
@@ -1942,13 +1943,23 @@ internal fun validateBuildCommands(commandsByTick: Array<ArrayList<Command>>, da
                         "(resolved width=$width height=$height hp=$hp)"
                 )
             }
+            val missingTech = missingRequiredTypes(availableBuildingsByFaction[c.faction], spec?.requiredBuildingTypes)
+            if (missingTech.isNotEmpty()) {
+                error(
+                    "Missing tech for build '${c.typeId}' at tick $tick " +
+                        "(required=${missingTech.joinToString(",")})"
+                )
+            }
+            availableBuildingsByFaction.getOrPut(c.faction, ::HashSet).add(c.typeId)
         }
     }
 }
 
-internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
+internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, data: DataRepo, world: World = World()) {
     val labeledBuildingTypes = HashMap<Int, String>()
+    val labeledBuildingFactions = HashMap<Int, Int>()
     val labeledQueueState = HashMap<Int, ValidationQueueState>()
+    val availableBuildingsByFaction = snapshotFactionBuildings(world)
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
         for (i in 0 until cmds.size) {
@@ -1958,9 +1969,11 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                     val labelId = c.labelId
                     if (labelId != null) {
                         labeledBuildingTypes[labelId] = c.typeId
+                        labeledBuildingFactions[labelId] = c.faction
                         val queueLimit = data.buildSpec(c.typeId)?.productionQueueLimit ?: 5
                         labeledQueueState[labelId] = ValidationQueueState(queueLimit)
                     }
+                    availableBuildingsByFaction.getOrPut(c.faction, ::HashSet).add(c.typeId)
                 }
                 is Command.Train -> {
                     val spec = data.trainSpec(c.typeId)
@@ -1973,6 +1986,7 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                     }
                     if (c.buildingId < 0) {
                         val buildingType = labeledBuildingTypes[c.buildingId]
+                        val buildingFaction = labeledBuildingFactions[c.buildingId]
                         val buildingSpec = buildingType?.let { data.buildSpec(it) }
                         if (buildingType != null && buildingSpec != null && !buildingSpec.supportsTraining) {
                             error("Producer '$buildingType' does not support training at tick $tick")
@@ -1981,6 +1995,13 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                             error(
                                 "Incompatible producer '$buildingType' for '${c.typeId}' in train at tick $tick " +
                                     "(allowed=${spec.producerTypes.joinToString(",")})"
+                            )
+                        }
+                        val missingTech = missingRequiredTypes(buildingFaction?.let(availableBuildingsByFaction::get), spec?.requiredBuildingTypes)
+                        if (missingTech.isNotEmpty()) {
+                            error(
+                                "Missing tech for train '${c.typeId}' at tick $tick " +
+                                    "(required=${missingTech.joinToString(",")})"
                             )
                         }
                         val queueState = labeledQueueState[c.buildingId]
@@ -1995,6 +2016,16 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
                             queueState.enqueue(tick, buildTicks)
                         }
                     }
+                    if (c.buildingId >= 0) {
+                        val buildingTag = world.tags[c.buildingId]
+                        val missingTech = missingRequiredTypes(buildingTag?.faction?.let(availableBuildingsByFaction::get), spec?.requiredBuildingTypes)
+                        if (missingTech.isNotEmpty()) {
+                            error(
+                                "Missing tech for train '${c.typeId}' at tick $tick " +
+                                    "(required=${missingTech.joinToString(",")})"
+                            )
+                        }
+                    }
                 }
                 is Command.CancelTrain -> {
                     if (c.buildingId < 0) {
@@ -2006,6 +2037,21 @@ internal fun validateTrainCommands(commandsByTick: Array<ArrayList<Command>>, da
             }
         }
     }
+}
+
+private fun snapshotFactionBuildings(world: World): HashMap<Int, HashSet<String>> {
+    val availableBuildingsByFaction = HashMap<Int, HashSet<String>>()
+    for (id in world.footprints.keys) {
+        val tag = world.tags[id] ?: continue
+        availableBuildingsByFaction.getOrPut(tag.faction, ::HashSet).add(tag.typeId)
+    }
+    return availableBuildingsByFaction
+}
+
+private fun missingRequiredTypes(availableTypes: Set<String>?, requiredTypes: List<String>?): List<String> {
+    if (requiredTypes.isNullOrEmpty()) return emptyList()
+    if (availableTypes == null) return requiredTypes
+    return requiredTypes.filterNot(availableTypes::contains)
 }
 
 private class ValidationQueueState(val limit: Int) {
@@ -2713,12 +2759,14 @@ internal fun currentRuntimeMetadataLine(seed: Long?): String {
 
 data class BuildFailureCounterSet(
     var invalidDefinition: Int = 0,
+    var missingTech: Int = 0,
     var invalidFootprint: Int = 0,
     var invalidPlacement: Int = 0,
     var insufficientResources: Int = 0
 ) {
     fun add(other: BuildFailureCounterSet) {
         invalidDefinition += other.invalidDefinition
+        missingTech += other.missingTech
         invalidFootprint += other.invalidFootprint
         invalidPlacement += other.invalidPlacement
         insufficientResources += other.insufficientResources
@@ -2727,6 +2775,7 @@ data class BuildFailureCounterSet(
     fun toRecord(): BuildFailureCounts =
         BuildFailureCounts(
             invalidDefinition = invalidDefinition,
+            missingTech = missingTech,
             invalidFootprint = invalidFootprint,
             invalidPlacement = invalidPlacement,
             insufficientResources = insufficientResources
@@ -2735,6 +2784,7 @@ data class BuildFailureCounterSet(
 
 data class TrainFailureCounterSet(
     var missingBuilding: Int = 0,
+    var missingTech: Int = 0,
     var invalidUnit: Int = 0,
     var invalidBuildTime: Int = 0,
     var incompatibleProducer: Int = 0,
@@ -2744,6 +2794,7 @@ data class TrainFailureCounterSet(
 ) {
     fun add(other: TrainFailureCounterSet) {
         missingBuilding += other.missingBuilding
+        missingTech += other.missingTech
         invalidUnit += other.invalidUnit
         invalidBuildTime += other.invalidBuildTime
         incompatibleProducer += other.incompatibleProducer
@@ -2755,6 +2806,7 @@ data class TrainFailureCounterSet(
     fun toRecord(): TrainFailureCounts =
         TrainFailureCounts(
             missingBuilding = missingBuilding,
+            missingTech = missingTech,
             invalidUnit = invalidUnit,
             invalidBuildTime = invalidBuildTime,
             incompatibleProducer = incompatibleProducer,
@@ -2904,6 +2956,7 @@ internal fun renderAggregateOutcomeSummary(
 internal fun formatBuildFailureReasons(reasons: BuildFailureCounterSet): String =
     listOfNotNull(
         reasons.invalidDefinition.takeIf { it > 0 }?.let { "invalidDefinition=$it" },
+        reasons.missingTech.takeIf { it > 0 }?.let { "missingTech=$it" },
         reasons.invalidFootprint.takeIf { it > 0 }?.let { "invalidFootprint=$it" },
         reasons.invalidPlacement.takeIf { it > 0 }?.let { "invalidPlacement=$it" },
         reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" }
@@ -2912,6 +2965,7 @@ internal fun formatBuildFailureReasons(reasons: BuildFailureCounterSet): String 
 internal fun formatTrainFailureReasons(reasons: TrainFailureCounterSet): String =
     listOfNotNull(
         reasons.missingBuilding.takeIf { it > 0 }?.let { "missingBuilding=$it" },
+        reasons.missingTech.takeIf { it > 0 }?.let { "missingTech=$it" },
         reasons.invalidUnit.takeIf { it > 0 }?.let { "invalidUnit=$it" },
         reasons.invalidBuildTime.takeIf { it > 0 }?.let { "invalidBuildTime=$it" },
         reasons.incompatibleProducer.takeIf { it > 0 }?.let { "incompatibleProducer=$it" },
@@ -3230,6 +3284,7 @@ fun issue(
             val mineralCost = if (cmd.mineralCost > 0) cmd.mineralCost else (spec?.mineralCost ?: 0)
             val gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
             val clearance = spec?.placementClearance ?: 0
+            val requiredBuildingTypes = spec?.requiredBuildingTypes ?: emptyList()
             if (width <= 0 || height <= 0 || hp <= 0) {
                 if (outcomeCounters != null) {
                     outcomeCounters.buildFailures++
@@ -3270,13 +3325,15 @@ fun issue(
                     clearance = clearance,
                     armor = armor,
                     mineralCost = mineralCost,
-                    gasCost = gasCost
+                    gasCost = gasCost,
+                    requiredBuildingTypes = requiredBuildingTypes
                 )
             val id = result.entityId
             if (id == null) {
                 if (outcomeCounters != null) {
                     outcomeCounters.buildFailures++
                     when (result.failure) {
+                        BuildFailureReason.MISSING_TECH -> outcomeCounters.buildFailureReasons.missingTech++
                         BuildFailureReason.INSUFFICIENT_RESOURCES -> outcomeCounters.buildFailureReasons.insufficientResources++
                         BuildFailureReason.INVALID_FOOTPRINT -> outcomeCounters.buildFailureReasons.invalidFootprint++
                         else -> outcomeCounters.buildFailureReasons.invalidPlacement++
@@ -3284,6 +3341,7 @@ fun issue(
                 }
                 val reason =
                     when (result.failure) {
+                        BuildFailureReason.MISSING_TECH -> "missingTech"
                         BuildFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
                         BuildFailureReason.INVALID_FOOTPRINT -> "invalidFootprint"
                         else -> "invalidPlacement"
@@ -3354,6 +3412,7 @@ fun issue(
                     outcomeCounters.trainFailures++
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> outcomeCounters.trainFailureReasons.missingBuilding++
+                        TrainFailureReason.MISSING_TECH -> outcomeCounters.trainFailureReasons.missingTech++
                         TrainFailureReason.INVALID_UNIT -> outcomeCounters.trainFailureReasons.invalidUnit++
                         TrainFailureReason.INVALID_BUILD_TIME -> outcomeCounters.trainFailureReasons.invalidBuildTime++
                         TrainFailureReason.INCOMPATIBLE_PRODUCER -> outcomeCounters.trainFailureReasons.incompatibleProducer++
@@ -3364,6 +3423,7 @@ fun issue(
                 val reason =
                     when (failure) {
                         TrainFailureReason.MISSING_BUILDING -> "missingBuilding"
+                        TrainFailureReason.MISSING_TECH -> "missingTech"
                         TrainFailureReason.INVALID_UNIT -> "invalidUnit"
                         TrainFailureReason.INVALID_BUILD_TIME -> "invalidBuildTime"
                         TrainFailureReason.INCOMPATIBLE_PRODUCER -> "incompatibleProducer"

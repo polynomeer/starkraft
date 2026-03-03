@@ -18,7 +18,8 @@ data class BuildSpec(
     val rallyOffsetX: Float,
     val rallyOffsetY: Float,
     val mineralCost: Int,
-    val gasCost: Int
+    val gasCost: Int,
+    val requiredBuildingTypes: List<String>
 )
 
 data class TrainSpec(
@@ -27,7 +28,8 @@ data class TrainSpec(
     val buildTicks: Int,
     val mineralCost: Int,
     val gasCost: Int,
-    val producerTypes: List<String>
+    val producerTypes: List<String>,
+    val requiredBuildingTypes: List<String>
 )
 
 class DataRepo(
@@ -66,7 +68,8 @@ class DataRepo(
             rallyOffsetX = building.rallyOffsetX,
             rallyOffsetY = building.rallyOffsetY,
             mineralCost = building.mineralCost,
-            gasCost = building.gasCost
+            gasCost = building.gasCost,
+            requiredBuildingTypes = building.requiredBuildingTypes
         )
     }
 
@@ -79,7 +82,8 @@ class DataRepo(
             buildTicks = unit.buildTicks,
             mineralCost = unit.mineralCost,
             gasCost = unit.gasCost,
-            producerTypes = unit.producerTypes
+            producerTypes = unit.producerTypes,
+            requiredBuildingTypes = unit.requiredBuildingTypes
         )
     }
 }

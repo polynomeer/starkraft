@@ -16,6 +16,7 @@ data class UnitDef(
     val footprintWidth: Int = 0,
     val footprintHeight: Int = 0,
     val producerTypes: List<String> = emptyList(),
+    val requiredBuildingTypes: List<String> = emptyList(),
 )
 
 @Serializable
@@ -46,7 +47,8 @@ data class BuildingDef(
     val rallyOffsetX: Float = 0f,
     val rallyOffsetY: Float = 0f,
     val mineralCost: Int = 0,
-    val gasCost: Int = 0
+    val gasCost: Int = 0,
+    val requiredBuildingTypes: List<String> = emptyList()
 )
 
 @Serializable

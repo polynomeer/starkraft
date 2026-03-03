@@ -4,6 +4,7 @@ import starkraft.sim.data.DataRepo
 
 enum class TrainFailureReason {
     MISSING_BUILDING,
+    MISSING_TECH,
     INVALID_UNIT,
     INVALID_BUILD_TIME,
     INCOMPATIBLE_PRODUCER,
@@ -51,6 +52,7 @@ class BuildingProductionSystem(
                 return TrainFailureReason.INVALID_UNIT
             }
         val buildingType = world.tags[buildingId]?.typeId ?: return TrainFailureReason.MISSING_BUILDING
+        val faction = world.tags[buildingId]?.faction ?: return TrainFailureReason.MISSING_BUILDING
         val buildingSpec = data.buildSpec(buildingType) ?: return TrainFailureReason.MISSING_BUILDING
         if (!buildingSpec.supportsTraining) {
             return TrainFailureReason.INCOMPATIBLE_PRODUCER
@@ -58,11 +60,13 @@ class BuildingProductionSystem(
         if (unit.producerTypes.isNotEmpty() && !unit.producerTypes.contains(buildingType)) {
             return TrainFailureReason.INCOMPATIBLE_PRODUCER
         }
+        if (missingRequiredBuildings(world, faction, unit.requiredBuildingTypes).isNotEmpty()) {
+            return TrainFailureReason.MISSING_TECH
+        }
         val queueLimit = buildingSpec.productionQueueLimit
         val queue = world.productionQueues[buildingId]
         if (queue != null && queue.items.size >= queueLimit) return TrainFailureReason.QUEUE_FULL
         if (resources != null) {
-            val faction = world.tags[buildingId]?.faction ?: return TrainFailureReason.MISSING_BUILDING
             if (!resources.spend(faction, mineralCost, gasCost)) return TrainFailureReason.INSUFFICIENT_RESOURCES
         }
         val actualQueue = queue ?: ProductionQueue().also { world.productionQueues[buildingId] = it }

@@ -128,6 +128,7 @@ Script syntax:
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
 - `rally <buildingId|@label> <x> <y>` override a producer building rally point for future trained units
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
+- Unit and building defs can declare `requiredBuildingTypes`, and both `build` and `train` now fail deterministically with `missingTech` until the faction has those prerequisite buildings
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 
 Other flags:
@@ -162,6 +163,7 @@ Other flags:
   Producer-related train failures also emit `producerFailure` records with building/type context.
   Invalid build commands also emit `buildFailure` records with faction/type/tile context.
   Other invalid train commands emit `trainFailure` records with producer/type context.
+  Tech-prerequisite failures surface as `missingTech` in those failure records.
   Spawn commands emit `spawn` records with resolved runtime entity ids.
   Applied move and attack orders emit `orderApplied` records after selector resolution.
   Those order applications also emit `orderQueue` records with the resulting queue sizes.

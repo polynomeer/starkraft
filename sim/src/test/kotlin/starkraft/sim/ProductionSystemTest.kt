@@ -11,6 +11,7 @@ import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.OccupancyGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.ResourceSystem
+import starkraft.sim.ecs.TrainFailureReason
 import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
@@ -342,6 +343,31 @@ class ProductionSystemTest {
         val factoryId = buildings.place(1, "Factory", 6, 6, 2, 2, 500, mineralCost = 100)!!
 
         assertFalse(production.enqueue(factoryId, "Marine", 5, mineralCost = 50))
+        assertEquals(400, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.productionQueues.size)
+    }
+
+    @Test
+    fun `production enqueue rejects missing tech requirements`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val data =
+            DataRepo(
+                """{"list":[{"id":"Marine","hp":45,"armor":0,"speed":0.06,"weaponId":"Gauss","mineralCost":50,"buildTicks":75,"producerTypes":["Depot"],"requiredBuildingTypes":["Academy"]}]}""",
+                """{"list":[{"id":"Gauss","damage":6,"range":4.0,"cooldownTicks":15}]}""",
+                """{"list":[
+                    {"id":"Depot","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"productionQueueLimit":3,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0},
+                    {"id":"Academy","hp":250,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":false,"supportsRally":false,"productionQueueLimit":0,"rallyOffsetX":0.0,"rallyOffsetY":0.0,"mineralCost":100,"gasCost":0,"requiredBuildingTypes":["Depot"]}
+                ]}"""
+            )
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val production = BuildingProductionSystem(world, map, occ, data, resources)
+        resources.set(1, 500, 0)
+        val depotId = buildings.place(1, "Depot", 6, 6, 2, 2, 400, mineralCost = 100)!!
+
+        assertEquals(TrainFailureReason.MISSING_TECH, production.enqueueResult(depotId, "Marine", 5, mineralCost = 50))
         assertEquals(400, world.stockpiles[1]?.minerals)
         assertEquals(0, world.productionQueues.size)
     }

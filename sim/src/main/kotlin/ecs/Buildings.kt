@@ -2,6 +2,7 @@ package starkraft.sim.ecs
 
 enum class BuildFailureReason {
     INVALID_FOOTPRINT,
+    MISSING_TECH,
     INVALID_PLACEMENT,
     INSUFFICIENT_RESOURCES
 }
@@ -44,9 +45,23 @@ class BuildingPlacementSystem(
         clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
-        gasCost: Int = 0
+        gasCost: Int = 0,
+        requiredBuildingTypes: List<String> = emptyList()
     ): EntityId? {
-        return placeResult(faction, typeId, tileX, tileY, width, height, hp, clearance, armor, mineralCost, gasCost).entityId
+        return placeResult(
+            faction,
+            typeId,
+            tileX,
+            tileY,
+            width,
+            height,
+            hp,
+            clearance,
+            armor,
+            mineralCost,
+            gasCost,
+            requiredBuildingTypes
+        ).entityId
     }
 
     fun placeResult(
@@ -60,9 +75,13 @@ class BuildingPlacementSystem(
         clearance: Int = 0,
         armor: Int = 0,
         mineralCost: Int = 0,
-        gasCost: Int = 0
+        gasCost: Int = 0,
+        requiredBuildingTypes: List<String> = emptyList()
     ): BuildPlacementResult {
         if (width <= 0 || height <= 0 || hp <= 0) return BuildPlacementResult(failure = BuildFailureReason.INVALID_FOOTPRINT)
+        if (missingRequiredBuildings(world, faction, requiredBuildingTypes).isNotEmpty()) {
+            return BuildPlacementResult(failure = BuildFailureReason.MISSING_TECH)
+        }
         if (!canPlace(tileX, tileY, width, height, clearance)) return BuildPlacementResult(failure = BuildFailureReason.INVALID_PLACEMENT)
         if (resources != null && !resources.spend(faction, mineralCost, gasCost)) {
             return BuildPlacementResult(failure = BuildFailureReason.INSUFFICIENT_RESOURCES)
