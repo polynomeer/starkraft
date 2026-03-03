@@ -391,6 +391,8 @@ data class TickSummaryStreamRecord(
     val harvestDepositCount: Int,
     val harvestPickupAmount: Int,
     val harvestDepositAmount: Int,
+    val dropoffBuildingsFaction1: Int,
+    val dropoffBuildingsFaction2: Int,
     val depletedNodes: Int,
     val changedResourceNodes: Int
 )
@@ -678,6 +680,8 @@ data class SessionStatsStreamRecord(
     val harvestDepositCount: Int,
     val harvestPickupAmount: Int,
     val harvestDepositAmount: Int,
+    val dropoffBuildingsFaction1: Int,
+    val dropoffBuildingsFaction2: Int,
     val depletedNodes: Int,
     val changedResourceNodes: Int,
     val finalVisibleTilesFaction1: Int,
@@ -1229,6 +1233,8 @@ fun renderTickSummaryStreamRecordJson(
     harvestDepositCount: Int,
     harvestPickupAmount: Int,
     harvestDepositAmount: Int,
+    dropoffBuildingsFaction1: Int,
+    dropoffBuildingsFaction2: Int,
     depletedNodes: Int,
     changedResourceNodes: Int,
     pretty: Boolean = false
@@ -1284,6 +1290,8 @@ fun renderTickSummaryStreamRecordJson(
             harvestDepositCount = harvestDepositCount,
             harvestPickupAmount = harvestPickupAmount,
             harvestDepositAmount = harvestDepositAmount,
+            dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
+            dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
             depletedNodes = depletedNodes,
             changedResourceNodes = changedResourceNodes
         )
@@ -1584,6 +1592,8 @@ fun renderSessionStatsStreamRecordJson(
     harvestDepositCount: Int,
     harvestPickupAmount: Int,
     harvestDepositAmount: Int,
+    dropoffBuildingsFaction1: Int,
+    dropoffBuildingsFaction2: Int,
     depletedNodes: Int,
     changedResourceNodes: Int,
     finalVisibleTilesFaction1: Int,
@@ -1638,6 +1648,8 @@ fun renderSessionStatsStreamRecordJson(
             harvestDepositCount = harvestDepositCount,
             harvestPickupAmount = harvestPickupAmount,
             harvestDepositAmount = harvestDepositAmount,
+            dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
+            dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
             depletedNodes = depletedNodes,
             changedResourceNodes = changedResourceNodes,
             finalVisibleTilesFaction1 = finalVisibleTilesFaction1,

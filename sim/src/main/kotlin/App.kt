@@ -460,6 +460,7 @@ fun main(args: Array<String>) {
                 world,
                 fog1,
                 fog2,
+                data,
                 tick,
                 pathing,
                 pathQueue,
@@ -588,6 +589,7 @@ fun main(args: Array<String>) {
         emitClientSnapshot(world, map, fog1, fog2, tick, seed, data, compactJson, resolvedSnapshotOutPath, streamSequence)
     }
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
+        val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
         emitSnapshotLine(
             renderSessionStatsStreamRecordJson(
                 sequence = nextStreamSequence(streamSequence),
@@ -630,6 +632,8 @@ fun main(args: Array<String>) {
                 harvestDepositCount = totalHarvestDepositCount,
                 harvestPickupAmount = totalHarvestPickupAmount,
                 harvestDepositAmount = totalHarvestDepositAmount,
+                dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
+                dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
                 depletedNodes = totalDepletedNodes,
                 changedResourceNodes = totalChangedResourceNodes,
                 finalVisibleTilesFaction1 = fog1.visibleCount(),
@@ -1251,6 +1255,23 @@ private fun emitDropoffStateRecord(
     )
 }
 
+private fun countDropoffBuildings(world: World, data: DataRepo): Pair<Int, Int> {
+    var faction1 = 0
+    var faction2 = 0
+    val alive = world.aliveSnapshot
+    for (i in 0 until alive.count) {
+        val id = alive.ids[i]
+        val tag = world.tags[id] ?: continue
+        val spec = data.buildSpec(tag.typeId) ?: continue
+        if (!spec.supportsDropoff) continue
+        when (tag.faction) {
+            1 -> faction1++
+            2 -> faction2++
+        }
+    }
+    return faction1 to faction2
+}
+
 private fun emitHarvesterStateRecord(
     world: World,
     tick: Int,
@@ -1447,6 +1468,7 @@ private fun emitTickSummaryRecord(
     world: World,
     fog1: FogGrid,
     fog2: FogGrid,
+    data: DataRepo,
     tick: Int,
     pathing: PathfindingSystem,
     pathQueue: PathRequestQueue,
@@ -1466,6 +1488,7 @@ private fun emitTickSummaryRecord(
         val id = alive.ids[i]
         if ((world.healths[id]?.hp ?: 0) > 0) aliveTotal++
     }
+    val (dropoffBuildingsFaction1, dropoffBuildingsFaction2) = countDropoffBuildings(world, data)
     emitSnapshotLine(
         renderTickSummaryStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
@@ -1517,6 +1540,8 @@ private fun emitTickSummaryRecord(
             harvestDepositCount = harvest.lastTickDepositCount,
             harvestPickupAmount = harvest.lastTickPickupAmount,
             harvestDepositAmount = harvest.lastTickDepositAmount,
+            dropoffBuildingsFaction1 = dropoffBuildingsFaction1,
+            dropoffBuildingsFaction2 = dropoffBuildingsFaction2,
             depletedNodes = harvest.lastTickDepletedNodes,
             changedResourceNodes = harvest.lastTickEventCount,
             pretty = false
