@@ -27,7 +27,11 @@ internal data class ClientStreamState(
     val ack: ClientCommandAck? = null
 )
 
-internal class SnapshotTailReader(path: Path) : Closeable {
+internal interface ClientStreamSubscription : Closeable {
+    fun poll(): ClientStreamState?
+}
+
+internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscription {
     init {
         val parent = path.parent
         if (parent != null) Files.createDirectories(parent)
@@ -35,12 +39,10 @@ internal class SnapshotTailReader(path: Path) : Closeable {
     }
 
     private val file = RandomAccessFile(path.toFile(), "r")
-    var latestSnapshot: ClientSnapshot? = null
-        private set
-    var latestAck: ClientCommandAck? = null
-        private set
 
-    fun poll() {
+    override fun poll(): ClientStreamState? {
+        var latestSnapshot: ClientSnapshot? = null
+        var latestAck: ClientCommandAck? = null
         while (true) {
             val line = file.readLine() ?: break
             if (line.isBlank()) continue
@@ -48,6 +50,8 @@ internal class SnapshotTailReader(path: Path) : Closeable {
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.ack != null) latestAck = update.ack
         }
+        if (latestSnapshot == null && latestAck == null) return null
+        return ClientStreamState(snapshot = latestSnapshot, ack = latestAck)
     }
 
     override fun close() {

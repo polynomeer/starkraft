@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.ClientIntent
+import starkraft.sim.client.ClientStreamState
+import starkraft.sim.client.ClientStreamSubscription
 import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
@@ -42,16 +44,51 @@ class ClientSessionTest {
                 "{\"recordType\":\"commandAck\",\"tick\":12,\"commandType\":\"move\",\"requestId\":\"cli-1\",\"accepted\":true,\"reason\":null}\n"
         )
 
-        ClientSession(
-            snapshotPath = snapshotPath,
-            inputPath = inputPath,
-            state = ClientSessionState(selectedIds = linkedSetOf(4, 9))
-        ).use { session ->
+        ClientSession(snapshotPath = snapshotPath, inputPath = inputPath, state = ClientSessionState(selectedIds = linkedSetOf(4, 9))).use { session ->
             assertTrue(session.poll())
             assertEquals(12, session.state.snapshot?.tick)
             assertEquals(linkedSetOf(4), session.state.selectedIds)
             assertEquals("move", session.state.lastAck?.commandType)
             assertEquals("cli-1", session.state.lastAck?.requestId)
+
+            assertFalse(session.poll())
+        }
+    }
+
+    @Test
+    fun `session works with non-file stream subscriptions`(@TempDir tempDir: Path) {
+        val inputPath = tempDir.resolve("client-input.ndjson")
+        val snapshot =
+            ClientSnapshot(
+                tick = 3,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 16,
+                mapHeight = 16,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 4)),
+                entities = listOf(EntitySnapshot(id = 7, faction = 1, typeId = "Worker", archetype = "worker", x = 2f, y = 3f, dir = 0f, hp = 20, maxHp = 20, armor = 0)),
+                resourceNodes = emptyList()
+            )
+
+        ClientSession(
+            subscription =
+                TestSubscription(
+                    ArrayDeque(
+                        listOf(
+                            ClientStreamState(snapshot = snapshot),
+                            ClientStreamState(ack = starkraft.sim.client.ClientCommandAck(tick = 4, commandType = "move", requestId = "req-1", accepted = true))
+                        )
+                    )
+                ),
+            inputSink = starkraft.sim.client.NdjsonClientInputSink(inputPath),
+            state = ClientSessionState(selectedIds = linkedSetOf(7, 8))
+        ).use { session ->
+            assertTrue(session.poll())
+            assertEquals(linkedSetOf(7), session.state.selectedIds)
+            assertEquals(3, session.state.snapshot?.tick)
+
+            assertTrue(session.poll())
+            assertEquals("req-1", session.state.lastAck?.requestId)
 
             assertFalse(session.poll())
         }
@@ -84,5 +121,12 @@ class ClientSessionTest {
         assertArrayEquals(intArrayOf(4, 9), record.units)
         assertEquals(10f, record.x)
         assertEquals(12f, record.y)
+    }
+
+    private class TestSubscription(
+        private val updates: ArrayDeque<ClientStreamState>
+    ) : ClientStreamSubscription {
+        override fun poll(): ClientStreamState? = if (updates.isEmpty()) null else updates.removeFirst()
+        override fun close() = Unit
     }
 }

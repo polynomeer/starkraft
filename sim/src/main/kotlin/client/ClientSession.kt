@@ -11,25 +11,32 @@ internal data class ClientSessionState(
 )
 
 internal class ClientSession(
-    snapshotPath: Path,
-    inputPath: Path,
+    private val subscription: ClientStreamSubscription,
+    private val inputSink: NdjsonClientInputSink,
     val state: ClientSessionState = ClientSessionState()
 ) : Closeable {
-    private val tail = SnapshotTailReader(snapshotPath)
-    private val inputSink = NdjsonClientInputSink(inputPath)
+    constructor(
+        snapshotPath: Path,
+        inputPath: Path,
+        state: ClientSessionState = ClientSessionState()
+    ) : this(
+        subscription = FileClientStreamSubscription(snapshotPath),
+        inputSink = NdjsonClientInputSink(inputPath),
+        state = state
+    )
 
     fun poll(): Boolean {
-        tail.poll()
+        val update = subscription.poll() ?: return false
 
         var changed = false
-        val latestSnapshot = tail.latestSnapshot
+        val latestSnapshot = update.snapshot
         if (latestSnapshot != null && state.snapshot?.tick != latestSnapshot.tick) {
             state.snapshot = latestSnapshot
             syncSelection(latestSnapshot)
             changed = true
         }
 
-        val latestAck = tail.latestAck
+        val latestAck = update.ack
         if (latestAck != null && latestAck != state.lastAck) {
             state.lastAck = latestAck
             changed = true
@@ -46,7 +53,7 @@ internal class ClientSession(
     }
 
     override fun close() {
-        tail.close()
+        subscription.close()
     }
 
     private fun syncSelection(snapshot: ClientSnapshot) {
