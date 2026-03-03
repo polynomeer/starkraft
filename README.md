@@ -187,6 +187,8 @@ Alternative client transports/renderers:
   `tail -f /tmp/starkraft/live/snapshots.ndjson | ./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson -"`
 - Text client over TCP sockets:
   `./gradlew :sim:consoleClient --args="tcp://127.0.0.1:9002 tcp://127.0.0.1:9001"`
+- TCP bridge from ndjson files to sockets:
+  `./gradlew :sim:tcpClientBridge --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson 9001 9002"`
 
 Client controls:
 - left click: select nearest faction 1 unit
@@ -208,6 +210,7 @@ Swing drawing now also sits behind a pluggable `ClientRenderer` adapter, so the 
 The UI timer now drives a renderer-agnostic client app loop, so future frontends can reuse the same poll/update lifecycle without depending on Swing timers directly.
 A text-mode client is now available as a second renderer path, and stream subscriptions can come from either file tails or stdin.
 Socket transport is now also available over line-delimited TCP for both snapshot subscriptions and command submission, without adding a websocket dependency.
+A small TCP bridge is included so existing file-based sim output can be exposed to socket-based clients without changing the headless sim process.
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands

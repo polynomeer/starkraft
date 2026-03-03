@@ -64,3 +64,10 @@ tasks.register<JavaExec>("consoleClient") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.ConsoleClientKt")
 }
+
+tasks.register<JavaExec>("tcpClientBridge") {
+    group = "application"
+    description = "Bridge snapshot and input ndjson files over tcp sockets"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.client.ClientTcpBridgeKt")
+}
