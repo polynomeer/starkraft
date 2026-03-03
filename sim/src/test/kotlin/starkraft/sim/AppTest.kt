@@ -315,6 +315,28 @@ class AppTest {
     }
 
     @Test
+    fun `retargets gas harvesters only to gas nodes on depletion`() {
+        val world = World()
+        val resources = ResourceSystem(world)
+        val harvest = ResourceHarvestSystem(world, resources)
+        val depletedGasNodeId = world.spawn(Transform(5f, 5f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        val mineralNodeId = world.spawn(Transform(5.5f, 5f), UnitTag(0, "MineralField"), Health(1, 1), w = null)
+        val fallbackGasNodeId = world.spawn(Transform(7f, 5f), UnitTag(0, "GasGeyser"), Health(1, 1), w = null)
+        val workerId = world.spawn(Transform(5.4f, 5f), UnitTag(2, "Worker"), Health(40, 40), w = null)
+        world.resourceNodes[depletedGasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 1)
+        world.resourceNodes[mineralNodeId] = ResourceNode(kind = ResourceNode.KIND_MINERALS, remaining = 20)
+        world.resourceNodes[fallbackGasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 20)
+        world.harvesters[workerId] = Harvester(targetNodeId = depletedGasNodeId)
+        world.orders[workerId]?.items?.addLast(starkraft.sim.ecs.Order.Move(5f, 5f))
+
+        harvest.tick()
+        removeDepletedResourceNodes(world, harvest)
+
+        assertEquals(fallbackGasNodeId, world.harvesters[workerId]?.targetNodeId)
+        assertEquals(starkraft.sim.ecs.Order.Move(7f, 5f), world.orders[workerId]?.items?.firstOrNull())
+    }
+
+    @Test
     fun `records harvester retarget events during depletion cleanup`() {
         drainPendingHarvesterRetargetEvents()
         val world = World()
