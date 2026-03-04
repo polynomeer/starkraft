@@ -17,6 +17,7 @@ import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
+import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
@@ -61,21 +62,23 @@ class GraphicalClientTest {
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
-                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30)
+                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30),
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, researchQueueSize = 2, activeResearchTech = "AdvancedTraining", activeResearchRemainingTicks = 8)
                 ),
                 resourceNodes = emptyList()
             )
         assertEquals(
             listOf(
-                "tick=15 selected=2",
-                "selection: Marinex1 Workerx1",
+                "tick=15 selected=3",
+                "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
+                "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
-                state = ClientSessionState(selectedIds = linkedSetOf(4, 11), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
+                state = ClientSessionState(selectedIds = linkedSetOf(4, 11, 12), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
             )
         )
     }
@@ -122,6 +125,31 @@ class GraphicalClientTest {
 
         assertEquals("builders: active=2 targets=1", buildBuilderSummary(snapshot, linkedSetOf(6, 7, 8)))
         assertEquals("builders: none", buildBuilderSummary(snapshot, linkedSetOf(8)))
+    }
+
+    @Test
+    fun `builds research summary from selected labs`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, researchQueueSize = 2, activeResearchTech = "AdvancedTraining", activeResearchRemainingTicks = 8),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Lab", archetype = "tech", x = 8f, y = 4f, dir = 0f, hp = 250, maxHp = 250, armor = 1, researchQueueSize = 1, activeResearchTech = "ArmorUp", activeResearchRemainingTicks = 3),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Marine", archetype = "infantry", x = 9f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "research: labs=2 queue=3 active=AdvancedTrainingx1 ArmorUpx1",
+            buildResearchSummary(snapshot, linkedSetOf(12, 13, 14))
+        )
+        assertEquals("research: none", buildResearchSummary(snapshot, linkedSetOf(14)))
     }
 
     @Test

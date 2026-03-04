@@ -95,6 +95,7 @@ internal fun buildClientHudLines(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
+        buildResearchSummary(snapshot, state.selectedIds),
         formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
     )
@@ -129,4 +130,31 @@ internal fun buildBuilderSummary(
     }
     if (activeBuilders == 0) return "builders: none"
     return "builders: active=$activeBuilders targets=${targets.size}"
+}
+
+internal fun buildResearchSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "research: none"
+    var researchBuildings = 0
+    var queued = 0
+    val activeTechs = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.researchQueueSize <= 0 && entity.activeResearchTech == null) continue
+        researchBuildings++
+        queued += entity.researchQueueSize
+        entity.activeResearchTech?.let { tech ->
+            activeTechs[tech] = (activeTechs[tech] ?: 0) + 1
+        }
+    }
+    if (researchBuildings == 0) return "research: none"
+    val active =
+        if (activeTechs.isEmpty()) {
+            "idle"
+        } else {
+            activeTechs.entries.joinToString(" ") { "${it.key}x${it.value}" }
+        }
+    return "research: labs=$researchBuildings queue=$queued active=$active"
 }
