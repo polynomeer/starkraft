@@ -52,7 +52,7 @@ internal class SwingClientRenderer(
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera, state.viewedFaction)
         drawFog(graphics, snapshot, state.visionState, effectiveCamera, state.viewedFaction)
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
-        drawCommandPanel(graphics, width, height, state)
+        drawCommandPanel(graphics, width, height, state, overlayLines)
         drawHud(graphics, height, state, snapshot, overlayLines)
         drawGameStateOverlay(graphics, width, height, snapshot, state.viewedFaction)
     }
@@ -237,7 +237,8 @@ internal class SwingClientRenderer(
         g: Graphics2D,
         width: Int,
         height: Int,
-        state: ClientSessionState
+        state: ClientSessionState,
+        overlayLines: List<String>
     ) {
         val panel = commandPanelBounds(width, height)
         g.color = Color(0x0F, 0x14, 0x1A, 210)
@@ -246,12 +247,16 @@ internal class SwingClientRenderer(
         g.drawRect(panel.x, panel.y, panel.width, panel.height)
         g.color = Color.WHITE
         g.drawString("Commands", panel.x + 12, panel.y + 20)
+        val statusLines = buildCommandPanelStatusLines(overlayLines)
+        for (i in statusLines.indices) {
+            g.drawString(statusLines[i], panel.x + 12, panel.y + 38 + (i * 14))
+        }
         val snapshot = state.snapshot
         val canTrain = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
         val canResearch = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
         val buttons = buildCommandButtons(defaultClientCatalog(), state.selectedIds.isNotEmpty(), canTrain, canResearch)
         for (i in buttons.indices) {
-            val bounds = commandButtonBounds(width, i)
+            val bounds = commandButtonBounds(width, i, statusLines.size)
             g.color = Color(0x1B, 0x26, 0x31, 220)
             g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
             g.color = Color(0x61, 0x71, 0x80)
@@ -322,6 +327,9 @@ internal class SwingClientRenderer(
 internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
     Rectangle(width - 176, 12, 164, height - 24)
 
+internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<String> =
+    overlayLines.filter { it.startsWith("play:") || it.startsWith("scenario:") }
+
 internal fun miniMapBounds(width: Int, height: Int): Rectangle =
     Rectangle(12, 12, minOf(144, width / 4), minOf(144, height / 4))
 
@@ -357,9 +365,9 @@ internal fun miniMapViewport(
     )
 }
 
-internal fun commandButtonBounds(width: Int, index: Int): Rectangle {
+internal fun commandButtonBounds(width: Int, index: Int, statusLineCount: Int = 0): Rectangle {
     val panel = commandPanelBounds(width, 640)
-    return Rectangle(panel.x + 10, panel.y + 28 + (index * 34), panel.width - 20, 26)
+    return Rectangle(panel.x + 10, panel.y + 28 + (statusLineCount * 14) + 8 + (index * 34), panel.width - 20, 26)
 }
 
 internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButton> {
@@ -419,13 +427,14 @@ internal fun commandButtonAt(
     x: Int,
     y: Int,
     catalog: ClientCatalog,
+    statusLineCount: Int = 0,
     hasSelection: Boolean,
     canTrain: Boolean = hasSelection,
     canResearch: Boolean = hasSelection
 ): ClientCommandButton? {
     val buttons = buildCommandButtons(catalog, hasSelection, canTrain, canResearch)
     for (i in buttons.indices) {
-        if (commandButtonBounds(width, i).contains(x, y)) return buttons[i]
+        if (commandButtonBounds(width, i, statusLineCount).contains(x, y)) return buttons[i]
     }
     return null
 }

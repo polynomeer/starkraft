@@ -40,6 +40,7 @@ import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
+import starkraft.sim.client.buildCommandPanelStatusLines
 import starkraft.sim.client.buildFogSummary
 import starkraft.sim.client.buildEntityStatusLabel
 import starkraft.sim.client.buildGameState
@@ -384,17 +385,25 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds command panel status lines from overlay`() {
+        assertEquals(
+            listOf("play: paused x2", "scenario: gas"),
+            buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
+        )
+    }
+
+    @Test
     fun `locates command button by panel click`() {
-        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (19 * 34), catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
-        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (18 * 34), catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
-        val pause = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (14 * 34), catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
+        val move = commandButtonAt(width = 640, x = 640 - 150, y = 82, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val pause = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (14 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (18 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (19 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("clear", clear?.actionId)
-        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true))
+        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
     }
 
     @Test

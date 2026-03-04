@@ -499,7 +499,18 @@ private class ClientPanel(
         val snapshot = session.state.snapshot
         val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
         val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
-        val button = commandButtonAt(width, e.x, e.y, catalog, session.state.selectedIds.isNotEmpty(), canTrain, canResearch) ?: return false
+        val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
+        val button =
+            commandButtonAt(
+                width,
+                e.x,
+                e.y,
+                catalog,
+                statusLineCount = statusLineCount,
+                hasSelection = session.state.selectedIds.isNotEmpty(),
+                canTrain = canTrain,
+                canResearch = canResearch
+            ) ?: return false
         when (button.actionId) {
             "move" -> {
                 groundMode = ClientGroundCommandMode.MOVE
