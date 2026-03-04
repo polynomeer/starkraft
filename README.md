@@ -1,5 +1,24 @@
 # Starkraft (Headless RTS Prototype)
 
+## Status
+
+The `sim` module is complete as a deterministic headless RTS sandbox.
+
+Completed scope:
+- fixed-tick deterministic simulation loop
+- movement, pathfinding, replanning, and occupancy
+- combat, fog-of-war, attack-move, hold, and patrol
+- buildings, construction, production, research, and tech prerequisites
+- economy with stockpiles, harvesting, drop-offs, and retargeting
+- replay, benchmark, golden determinism checks, and snapshot/replay tooling
+- client-facing snapshot, event stream, live input, and minimal graphical/console clients
+
+Out of scope for this module:
+- a polished game UI
+- art, audio, menus, and campaign content
+- full online multiplayer
+- non-headless rendering engine integration
+
 ## Architecture / Dev Roadmap
 
 This project is a headless, fixed-tick RTS simulation. The roadmap below is ordered to keep the runtime deterministic and stable while layering systems.
