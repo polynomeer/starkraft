@@ -257,6 +257,7 @@ Client controls:
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
+- left click on the minimap recenters the camera
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.

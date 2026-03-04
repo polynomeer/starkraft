@@ -46,6 +46,32 @@ internal fun zoomCameraAt(camera: CameraView, screenX: Float, screenY: Float, zo
     )
 }
 
+internal fun centerCameraOnWorld(
+    camera: CameraView,
+    viewportWidth: Int,
+    viewportHeight: Int,
+    worldX: Float,
+    worldY: Float
+): CameraView =
+    camera.copy(
+        panX = (viewportWidth / 2f) - (worldX * camera.tileSize),
+        panY = (viewportHeight / 2f) - (worldY * camera.tileSize)
+    )
+
+internal fun miniMapWorldPosition(
+    x: Int,
+    y: Int,
+    width: Int,
+    height: Int,
+    snapshot: ClientSnapshot
+): Pair<Float, Float>? {
+    val bounds = miniMapBounds(width, height)
+    if (!bounds.contains(x, y)) return null
+    val worldX = (((x - bounds.x).toFloat() / bounds.width.toFloat()) * snapshot.mapWidth).coerceIn(0f, snapshot.mapWidth.toFloat())
+    val worldY = (((y - bounds.y).toFloat() / bounds.height.toFloat()) * snapshot.mapHeight).coerceIn(0f, snapshot.mapHeight.toFloat())
+    return worldX to worldY
+}
+
 internal data class BuildPreviewSpec(
     val typeId: String,
     val width: Int,
@@ -123,6 +149,10 @@ private class ClientPanel(
             override fun mousePressed(e: MouseEvent) {
                 requestFocusInWindow()
                 if (SwingUtilities.isLeftMouseButton(e) && handleCommandPanelClick(e)) {
+                    repaint()
+                    return
+                }
+                if (SwingUtilities.isLeftMouseButton(e) && handleMiniMapClick(e)) {
                     repaint()
                     return
                 }
@@ -370,6 +400,13 @@ private class ClientPanel(
                 }
             }
         }
+        return true
+    }
+
+    private fun handleMiniMapClick(e: MouseEvent): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        val world = miniMapWorldPosition(e.x, e.y, width, height, snapshot) ?: return false
+        camera = centerCameraOnWorld(camera, width, height, world.first, world.second)
         return true
     }
 

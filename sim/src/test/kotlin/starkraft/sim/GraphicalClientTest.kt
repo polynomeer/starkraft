@@ -15,6 +15,7 @@ import starkraft.sim.client.buildHoldIntent
 import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.buildPreviewSpec
+import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientConstructionActivity
@@ -48,6 +49,7 @@ import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.isBuildPreviewValid
+import starkraft.sim.client.miniMapWorldPosition
 import starkraft.sim.client.ClientVisionState
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
@@ -606,6 +608,16 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `recenters camera on requested world position`() {
+        val camera = CameraView(zoom = 1.5f, baseTileSize = 20)
+
+        val centered = centerCameraOnWorld(camera, viewportWidth = 640, viewportHeight = 480, worldX = 10f, worldY = 6f)
+
+        assertEquals(320f, centered.worldToScreenX(10f))
+        assertEquals(240f, centered.worldToScreenY(6f))
+    }
+
+    @Test
     fun `applies additive selection clicks`() {
         val selected = linkedSetOf(4, 9)
 
@@ -847,6 +859,27 @@ class GraphicalClientTest {
         assertEquals(32, update?.mapState?.width)
         assertTrue((6 to 14) in (update?.mapState?.blockedTiles ?: emptySet()))
         assertTrue((7 to 8) in (update?.mapState?.staticOccupancyTiles ?: emptySet()))
+    }
+
+    @Test
+    fun `converts minimap clicks to world positions`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 16,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+
+        val center = miniMapWorldPosition(84, 84, 640, 640, snapshot)
+
+        assertEquals(16f, center?.first)
+        assertEquals(8f, center?.second)
+        assertEquals(null, miniMapWorldPosition(400, 400, 640, 640, snapshot))
     }
 
     @Test
