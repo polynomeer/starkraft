@@ -281,6 +281,9 @@ internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButto
             ClientCommandButton("AttackMove", "attackMove"),
             ClientCommandButton("Patrol", "patrol"),
             ClientCommandButton("Hold", "hold"),
+            ClientCommandButton("Cancel Build", "cancelBuild"),
+            ClientCommandButton("Cancel Train", "cancelTrain"),
+            ClientCommandButton("Cancel Research", "cancelResearch"),
             ClientCommandButton("Build Depot", "build:Depot"),
             ClientCommandButton("Build ResourceDepot", "build:ResourceDepot"),
             ClientCommandButton("Build GasDepot", "build:GasDepot"),
@@ -319,7 +322,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: m move   a attackMove   p patrol   h hold   esc clear"
+        "keys: m move   a attackMove   p patrol   h hold   x/t/y cancel   esc clear"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

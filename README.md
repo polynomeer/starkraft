@@ -247,6 +247,9 @@ Client controls:
 - `R`: arm `ResourceDepot` placement preview
 - `G`: arm `GasDepot` placement preview
 - `H`: issue hold to the current selection immediately
+- `X`: cancel build on the first selected construction site
+- `T`: cancel train on the first selected producer queue
+- `Y`: cancel research on the first selected research queue
 - `Esc`: clear selection and reset command mode
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
@@ -256,6 +259,7 @@ Client controls:
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
+- the command panel also exposes cancel build/train/research actions for quick queue control
 - the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
 - left click on the minimap recenters the camera
 - ctrl + right click empty ground: issue `attackMove`

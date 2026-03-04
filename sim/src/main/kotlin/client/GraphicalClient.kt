@@ -123,6 +123,32 @@ internal fun isBuildPreviewValid(
     return true
 }
 
+internal fun buildCancelIntent(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>,
+    commandType: String,
+    requestIds: ClientCommandIds
+): ClientIntent.Command? {
+    val target =
+        snapshot.entities.firstOrNull { entity ->
+            if (entity.id !in selectedIds) return@firstOrNull false
+            when (commandType) {
+                "cancelBuild" -> entity.underConstruction
+                "cancelTrain" -> entity.productionQueueSize > 0 || entity.activeProductionType != null
+                "cancelResearch" -> entity.researchQueueSize > 0 || entity.activeResearchTech != null
+                else -> false
+            }
+        } ?: return null
+    return ClientIntent.Command(
+        InputJson.InputCommandRecord(
+            tick = snapshot.tick + 1,
+            commandType = commandType,
+            requestId = requestIds.nextRequestId(),
+            buildingId = target.id
+        )
+    )
+}
+
 private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer()
@@ -251,6 +277,18 @@ private class ClientPanel(
                         session.append(hold)
                         groundMode = null
                         buildModeTypeId = null
+                    }
+                    KeyEvent.VK_X -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
+                    }
+                    KeyEvent.VK_T -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildCancelIntent(snapshot, session.state.selectedIds, "cancelTrain", requestIds)?.let(session::append)
+                    }
+                    KeyEvent.VK_Y -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildCancelIntent(snapshot, session.state.selectedIds, "cancelResearch", requestIds)?.let(session::append)
                     }
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
@@ -387,6 +425,10 @@ private class ClientPanel(
                 if (hold != null) session.append(hold)
                 groundMode = null
                 buildModeTypeId = null
+            }
+            "cancelBuild", "cancelTrain", "cancelResearch" -> {
+                val snapshot = session.state.snapshot ?: return true
+                buildCancelIntent(snapshot, session.state.selectedIds, button.actionId, requestIds)?.let(session::append)
             }
             "clear" -> {
                 session.state.selectedIds.clear()

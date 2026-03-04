@@ -13,6 +13,7 @@ import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.applySelectionClick
 import starkraft.sim.client.buildHoldIntent
 import starkraft.sim.client.buildClientIntent
+import starkraft.sim.client.buildCancelIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
@@ -194,7 +195,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: m move   a attackMove   p patrol   h hold   esc clear"
+                "keys: m move   a attackMove   p patrol   h hold   x/t/y cancel   esc clear"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -320,7 +321,7 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
             buildCommandButtons(true).map { it.actionId }
         )
         assertEquals(
@@ -332,11 +333,34 @@ class GraphicalClientTest {
     @Test
     fun `locates command button by panel click`() {
         val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (7 * 34), hasSelection = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (10 * 34), hasSelection = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true))
+    }
+
+    @Test
+    fun `builds cancel intents from selected buildings`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 120, maxHp = 400, armor = 1, underConstruction = true),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Depot", archetype = "producer", x = 8f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, productionQueueSize = 2, researchQueueSize = 1)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        val ids = ClientCommandIds("cancel")
+        assertEquals(12, buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelBuild", ids)?.record?.buildingId)
+        assertEquals("cancel-2", buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelTrain", ids)?.record?.requestId)
+        assertEquals(13, buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelResearch", ids)?.record?.buildingId)
     }
 
     @Test
