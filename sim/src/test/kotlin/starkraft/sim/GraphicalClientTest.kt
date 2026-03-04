@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.ClientCommandIds
+import starkraft.sim.client.ClientGroundCommandMode
 import starkraft.sim.client.ClientIntent
 import starkraft.sim.client.applySelectionClick
+import starkraft.sim.client.buildHoldIntent
 import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
@@ -169,7 +171,8 @@ class GraphicalClientTest {
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
-                "right: move/attack/harvest   ctrl+right: attackMove"
+                "right: move/attack/harvest   ctrl+right: attackMove",
+                "keys: m move   a attackMove   p patrol   h hold   esc clear"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -383,6 +386,27 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds hold intent from current selection`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+
+        val intent = buildHoldIntent(snapshot, linkedSetOf(4, 5), ClientCommandIds("test"))
+
+        assertEquals("hold", intent?.record?.commandType)
+        assertEquals("test-1", intent?.record?.requestId)
+        assertArrayEquals(intArrayOf(4, 5), intent?.record?.units)
+    }
+
+    @Test
     fun `camera converts between world and screen coordinates`() {
         val camera = CameraView(panX = 40f, panY = 10f, zoom = 1.5f, baseTileSize = 20)
 
@@ -570,13 +594,13 @@ class GraphicalClientTest {
         val ids = ClientCommandIds("test")
 
         val attackIntent =
-            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val harvestIntent =
-            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val moveIntent =
-            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, attackMoveModifier = false, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val attackMoveIntent =
-            buildClientIntent(snapshot, selected, 11f, 10f, leftClick = false, rightClick = true, attackMoveModifier = true, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 11f, 10f, leftClick = false, rightClick = true, attackMoveModifier = true, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
 
         val attack = (attackIntent as ClientIntent.Command).record
         val harvest = (harvestIntent as ClientIntent.Command).record
@@ -597,5 +621,39 @@ class GraphicalClientTest {
         assertEquals("test-4", attackMove.requestId)
         assertEquals(11f, attackMove.x)
         assertEquals(10f, attackMove.y)
+    }
+
+    @Test
+    fun `ground command mode overrides default ground order`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        val intent =
+            buildClientIntent(
+                snapshot,
+                linkedSetOf(4),
+                10f,
+                10f,
+                leftClick = false,
+                rightClick = true,
+                attackMoveModifier = false,
+                forcedGroundCommandType = ClientGroundCommandMode.PATROL.commandType,
+                additiveSelection = false,
+                requestIds = ClientCommandIds("mode")
+            ) as ClientIntent.Command
+
+        assertEquals("patrol", intent.record.commandType)
+        assertEquals("mode-1", intent.record.requestId)
     }
 }

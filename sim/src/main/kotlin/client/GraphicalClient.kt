@@ -51,7 +51,6 @@ private class ClientPanel(
     private val renderer: ClientRenderer = SwingClientRenderer()
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
-    private val tileSize = 20
     private var dragStartX = 0
     private var dragStartY = 0
     private var dragCurrentX = 0
@@ -61,6 +60,7 @@ private class ClientPanel(
     private var panLastX = 0
     private var panLastY = 0
     private var camera = CameraView()
+    private var groundMode: ClientGroundCommandMode? = null
 
     init {
         background = Color(0x12, 0x18, 0x1F)
@@ -134,17 +134,31 @@ private class ClientPanel(
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 val delta = 24f
-                camera =
-                    when (e.keyCode) {
-                        KeyEvent.VK_LEFT, KeyEvent.VK_A -> camera.copy(panX = camera.panX + delta)
-                        KeyEvent.VK_RIGHT, KeyEvent.VK_D -> camera.copy(panX = camera.panX - delta)
-                        KeyEvent.VK_UP, KeyEvent.VK_W -> camera.copy(panY = camera.panY + delta)
-                        KeyEvent.VK_DOWN, KeyEvent.VK_S -> camera.copy(panY = camera.panY - delta)
-                        KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS -> zoomCameraAt(camera, width / 2f, height / 2f, 1.1f)
-                        KeyEvent.VK_MINUS -> zoomCameraAt(camera, width / 2f, height / 2f, 0.9f)
-                        KeyEvent.VK_0 -> CameraView()
-                        else -> return
+                when (e.keyCode) {
+                    KeyEvent.VK_LEFT -> camera = camera.copy(panX = camera.panX + delta)
+                    KeyEvent.VK_RIGHT -> camera = camera.copy(panX = camera.panX - delta)
+                    KeyEvent.VK_UP -> camera = camera.copy(panY = camera.panY + delta)
+                    KeyEvent.VK_DOWN -> camera = camera.copy(panY = camera.panY - delta)
+                    KeyEvent.VK_W -> camera = camera.copy(panY = camera.panY + delta)
+                    KeyEvent.VK_S -> camera = camera.copy(panY = camera.panY - delta)
+                    KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS -> camera = zoomCameraAt(camera, width / 2f, height / 2f, 1.1f)
+                    KeyEvent.VK_MINUS -> camera = zoomCameraAt(camera, width / 2f, height / 2f, 0.9f)
+                    KeyEvent.VK_0 -> camera = CameraView()
+                    KeyEvent.VK_M -> groundMode = ClientGroundCommandMode.MOVE
+                    KeyEvent.VK_A -> groundMode = ClientGroundCommandMode.ATTACK_MOVE
+                    KeyEvent.VK_P -> groundMode = ClientGroundCommandMode.PATROL
+                    KeyEvent.VK_H -> {
+                        val snapshot = session.state.snapshot ?: return
+                        val hold = buildHoldIntent(snapshot, session.state.selectedIds, requestIds) ?: return
+                        session.append(hold)
+                        groundMode = null
                     }
+                    KeyEvent.VK_ESCAPE -> {
+                        session.state.selectedIds.clear()
+                        groundMode = null
+                    }
+                    else -> return
+                }
                 repaint()
             }
         })
@@ -154,7 +168,7 @@ private class ClientPanel(
         super.paintComponent(graphics)
         val g = graphics as Graphics2D
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        renderer.render(g, width, height, session.state, camera)
+        renderer.render(g, width, height, session.state, camera, buildOverlayLines())
         if (draggingSelection && isSelectionDrag()) {
             drawSelectionBox(g)
         }
@@ -174,6 +188,7 @@ private class ClientPanel(
                     leftClick = SwingUtilities.isLeftMouseButton(e),
                     rightClick = SwingUtilities.isRightMouseButton(e),
                     attackMoveModifier = e.isControlDown,
+                    forcedGroundCommandType = groundMode?.commandType,
                     additiveSelection = e.isShiftDown,
                     requestIds = requestIds
                 )
@@ -182,7 +197,10 @@ private class ClientPanel(
                 session.append(intent)
                 repaint()
             }
-            is ClientIntent.Command -> session.append(intent)
+            is ClientIntent.Command -> {
+                session.append(intent)
+                groundMode = null
+            }
             null -> return
         }
     }
@@ -215,6 +233,12 @@ private class ClientPanel(
         g.color = Color(0xF4, 0xE2, 0x71)
         g.drawRect(minX, minY, width, height)
     }
+
+    private fun buildOverlayLines(): List<String> =
+        listOf(
+            "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
+            "mode: ${groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}"
+        )
 }
 
 fun main(args: Array<String>) {

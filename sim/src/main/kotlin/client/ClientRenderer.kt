@@ -6,7 +6,7 @@ import java.awt.Graphics2D
 import java.util.LinkedHashMap
 
 internal interface ClientRenderer {
-    fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView)
+    fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView, overlayLines: List<String> = emptyList())
 }
 
 internal class SwingClientRenderer(
@@ -17,7 +17,7 @@ internal class SwingClientRenderer(
     private val neutralColor = Color(0xC8, 0xB0, 0x72)
     private val selectionColor = Color(0xF4, 0xE2, 0x71)
 
-    override fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView) {
+    override fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView, overlayLines: List<String>) {
         val snapshot = state.snapshot ?: run {
             graphics.color = Color.WHITE
             graphics.drawString("waiting for snapshots...", 16, 24)
@@ -27,7 +27,7 @@ internal class SwingClientRenderer(
         drawGrid(graphics, snapshot, effectiveCamera)
         drawResources(graphics, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
-        drawHud(graphics, height, state, snapshot)
+        drawHud(graphics, height, state, snapshot, overlayLines)
     }
 
     private fun drawGrid(g: Graphics2D, snapshot: ClientSnapshot, camera: CameraView) {
@@ -77,10 +77,11 @@ internal class SwingClientRenderer(
         g: Graphics2D,
         height: Int,
         state: ClientSessionState,
-        snapshot: ClientSnapshot
+        snapshot: ClientSnapshot,
+        overlayLines: List<String>
     ) {
         g.color = Color.WHITE
-        val hudLines = buildClientHudLines(snapshot, state)
+        val hudLines = buildClientHudLines(snapshot, state) + overlayLines
         val baseY = height - 12 - ((hudLines.size - 1) * 16)
         for (i in hudLines.indices) {
             g.drawString(hudLines[i], 12, baseY + (i * 16))
@@ -106,7 +107,8 @@ internal fun buildClientHudLines(
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
-        "right: move/attack/harvest   ctrl+right: attackMove"
+        "right: move/attack/harvest   ctrl+right: attackMove",
+        "keys: m move   a attackMove   p patrol   h hold   esc clear"
     )
 
 internal fun buildSelectionSummary(

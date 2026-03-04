@@ -10,6 +10,12 @@ internal sealed interface ClientIntent {
     data class Command(val record: InputJson.InputCommandRecord) : ClientIntent
 }
 
+internal enum class ClientGroundCommandMode(val commandType: String) {
+    MOVE("move"),
+    ATTACK_MOVE("attackMove"),
+    PATROL("patrol")
+}
+
 internal class ClientCommandIds(prefix: String = "gc") {
     private val base = prefix
     private var next = 1L
@@ -25,6 +31,7 @@ internal fun buildClientIntent(
     leftClick: Boolean,
     rightClick: Boolean,
     attackMoveModifier: Boolean,
+    forcedGroundCommandType: String? = null,
     additiveSelection: Boolean,
     requestIds: ClientCommandIds
 ): ClientIntent? {
@@ -64,11 +71,27 @@ internal fun buildClientIntent(
     return ClientIntent.Command(
         InputJson.InputCommandRecord(
             tick = snapshot.tick + 1,
-            commandType = if (attackMoveModifier) "attackMove" else "move",
+            commandType = forcedGroundCommandType ?: if (attackMoveModifier) "attackMove" else "move",
             requestId = requestIds.nextRequestId(),
             units = selectedIds.toIntArray(),
             x = worldX,
             y = worldY
+        )
+    )
+}
+
+internal fun buildHoldIntent(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>,
+    requestIds: ClientCommandIds
+): ClientIntent.Command? {
+    if (selectedIds.isEmpty()) return null
+    return ClientIntent.Command(
+        InputJson.InputCommandRecord(
+            tick = snapshot.tick + 1,
+            commandType = "hold",
+            requestId = requestIds.nextRequestId(),
+            units = selectedIds.toIntArray()
         )
     )
 }

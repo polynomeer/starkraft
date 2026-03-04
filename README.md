@@ -240,6 +240,11 @@ Client controls:
 - middle drag or `WASD` / arrow keys: pan the camera
 - mouse wheel or `+` / `-`: zoom
 - `0`: reset camera
+- `M`: arm move mode for the next ground right-click
+- `A`: arm attack-move mode for the next ground right-click
+- `P`: arm patrol mode for the next ground right-click
+- `H`: issue hold to the current selection immediately
+- `Esc`: clear selection and reset command mode
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
