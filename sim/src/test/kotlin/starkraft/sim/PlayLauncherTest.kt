@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.PlayPaths
 import starkraft.sim.client.PlayScenario
+import starkraft.sim.client.CLIENT_EXIT_RESTART
 import starkraft.sim.client.buildPlayClientCommand
 import starkraft.sim.client.buildPlaySimCommand
 import starkraft.sim.client.defaultPlayPaths
 import starkraft.sim.client.resetPlayFiles
+import starkraft.sim.client.shouldRestartPlay
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -107,5 +109,11 @@ class PlayLauncherTest {
         assertTrue(Files.exists(paths.input))
         assertEquals("", Files.readString(paths.snapshots))
         assertEquals("", Files.readString(paths.input))
+    }
+
+    @Test
+    fun `restart exit code is recognized`() {
+        assertTrue(shouldRestartPlay(CLIENT_EXIT_RESTART))
+        assertTrue(!shouldRestartPlay(0))
     }
 }

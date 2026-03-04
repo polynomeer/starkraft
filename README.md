@@ -225,6 +225,7 @@ One-command local play:
   - `gas`
   - `scripted`
   Each launch resets the play workspace NDJSON files so the next match starts cleanly.
+  While the graphical client is open, press `F5` to restart the current play scenario in the same workspace.
 
 Alternative client transports/renderers:
 - Text client over file stream:
@@ -262,6 +263,7 @@ Client controls:
 - `I`: queue `Train Marine` on the first selected training building
 - `O`: queue `Train Zergling` on the first selected training building
 - `L`: queue `Research AdvancedTraining` on the first selected research-capable building
+- `F5`: restart the current `:sim:play` match
 - `X`: cancel build on the first selected construction site
 - `T`: cancel train on the first selected producer queue
 - `Y`: cancel research on the first selected research queue

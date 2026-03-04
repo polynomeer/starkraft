@@ -20,6 +20,8 @@ import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
 
+internal const val CLIENT_EXIT_RESTART = 75
+
 internal data class CameraView(
     val panX: Float = 0f,
     val panY: Float = 0f,
@@ -180,7 +182,8 @@ internal fun buildQueueIntent(
 
 private class ClientPanel(
     private val session: ClientSession,
-    private val renderer: ClientRenderer = SwingClientRenderer()
+    private val renderer: ClientRenderer = SwingClientRenderer(),
+    private val requestRestart: () -> Unit = {}
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
     private var dragStartX = 0
@@ -338,6 +341,7 @@ private class ClientPanel(
                         val snapshot = session.state.snapshot ?: return
                         buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
                     }
+                    KeyEvent.VK_F5 -> requestRestart()
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
                         groundMode = null
@@ -562,7 +566,8 @@ fun main(args: Array<String>) {
         }
 
     val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
-    val panel = ClientPanel(session)
+    var restartRequested = false
+    val panel = ClientPanel(session) { restartRequested = true }
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")
@@ -571,10 +576,26 @@ fun main(args: Array<String>) {
     frame.pack()
     frame.setLocationRelativeTo(null)
     frame.isVisible = true
+    panel.setFocusTraversalKeysEnabled(false)
+    panel.focusTraversalKeysEnabled = false
+    panel.requestFocusInWindow()
 
     Timer(50) {
         appLoop.tick()
+        if (restartRequested) {
+            frame.dispose()
+        }
     }.start()
+
+    frame.addWindowListener(
+        object : java.awt.event.WindowAdapter() {
+            override fun windowClosed(e: java.awt.event.WindowEvent?) {
+                if (restartRequested) {
+                    System.exit(CLIENT_EXIT_RESTART)
+                }
+            }
+        }
+    )
 }
 
 internal fun defaultClientInputPath(snapshotPath: Path): Path =

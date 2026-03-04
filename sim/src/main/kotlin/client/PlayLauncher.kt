@@ -83,6 +83,8 @@ internal fun resetPlayFiles(paths: PlayPaths) {
     Files.createFile(paths.input)
 }
 
+internal fun shouldRestartPlay(exitCode: Int): Boolean = exitCode == CLIENT_EXIT_RESTART
+
 fun main(args: Array<String>) {
     val root =
         if (args.isNotEmpty()) {
@@ -105,34 +107,39 @@ fun main(args: Array<String>) {
 
     root.createDirectories()
     val paths = defaultPlayPaths(root)
-    resetPlayFiles(paths)
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
 
-    val simProcess =
-        ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, ticks, scenario))
-            .inheritIO()
-            .start()
-
-    val shutdownHook = Thread {
-        if (simProcess.isAlive) {
-            simProcess.destroy()
-            simProcess.waitFor()
-        }
-    }
-    Runtime.getRuntime().addShutdownHook(shutdownHook)
-
-    try {
-        val clientProcess =
-            ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input))
+    while (true) {
+        resetPlayFiles(paths)
+        val simProcess =
+            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, ticks, scenario))
                 .inheritIO()
                 .start()
-        clientProcess.waitFor()
-    } finally {
-        if (simProcess.isAlive) {
-            simProcess.destroy()
-            simProcess.waitFor()
+
+        val shutdownHook = Thread {
+            if (simProcess.isAlive) {
+                simProcess.destroy()
+                simProcess.waitFor()
+            }
         }
-        runCatching { Runtime.getRuntime().removeShutdownHook(shutdownHook) }
+        Runtime.getRuntime().addShutdownHook(shutdownHook)
+
+        try {
+            val clientProcess =
+                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input))
+                    .inheritIO()
+                    .start()
+            val exitCode = clientProcess.waitFor()
+            if (!shouldRestartPlay(exitCode)) {
+                return
+            }
+        } finally {
+            if (simProcess.isAlive) {
+                simProcess.destroy()
+                simProcess.waitFor()
+            }
+            runCatching { Runtime.getRuntime().removeShutdownHook(shutdownHook) }
+        }
     }
 }
