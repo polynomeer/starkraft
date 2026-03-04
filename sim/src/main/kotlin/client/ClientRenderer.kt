@@ -43,6 +43,7 @@ internal class SwingClientRenderer(
         drawPathMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawTaskMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
+        drawStatusMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawFog(graphics, snapshot, state.visionState, effectiveCamera)
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
@@ -171,6 +172,20 @@ internal class SwingClientRenderer(
                 val endY = camera.worldToScreenY(target.y).toInt()
                 g.drawLine(startX, startY, endX, endY)
             }
+        }
+    }
+
+    private fun drawStatusMarkers(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
+        for (entity in snapshot.entities) {
+            if (entity.id !in selectedIds) continue
+            val status = buildEntityStatusLabel(entity) ?: continue
+            val px = camera.worldToScreenX(entity.x).toInt() + 10
+            val py = camera.worldToScreenY(entity.y).toInt() - 14
+            val boxWidth = (status.length * 7).coerceAtLeast(52)
+            g.color = Color(0x10, 0x14, 0x19, 220)
+            g.fillRect(px - 3, py - 10, boxWidth, 14)
+            g.color = Color(0xF0, 0xF3, 0xF7)
+            g.drawString(status, px, py)
         }
     }
 
@@ -586,6 +601,14 @@ internal fun buildPreviewLabel(spec: BuildPreviewSpec?, valid: Boolean): BuildPr
         valid = valid
     )
 }
+
+internal fun buildEntityStatusLabel(entity: EntitySnapshot): String? =
+    when {
+        entity.underConstruction -> "build ${entity.constructionRemainingTicks ?: 0}"
+        entity.activeProductionType != null -> "train ${entity.activeProductionType} ${entity.activeProductionRemainingTicks}"
+        entity.activeResearchTech != null -> "research ${entity.activeResearchTech} ${entity.activeResearchRemainingTicks}"
+        else -> null
+    }
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
     if (activity == null) {

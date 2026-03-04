@@ -37,6 +37,7 @@ import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
 import starkraft.sim.client.buildFogSummary
+import starkraft.sim.client.buildEntityStatusLabel
 import starkraft.sim.client.buildPreviewLabel
 import starkraft.sim.client.miniMapBounds
 import starkraft.sim.client.miniMapPoint
@@ -539,6 +540,84 @@ class GraphicalClientTest {
 
         assertEquals("paths: active=2 remaining=10 goals=14,10x2", buildPathSummary(snapshot, linkedSetOf(12, 13, 14)))
         assertEquals("paths: none", buildPathSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds selected entity status labels`() {
+        assertEquals(
+            "build 6",
+            buildEntityStatusLabel(
+                EntitySnapshot(
+                    id = 12,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 7f,
+                    y = 4f,
+                    dir = 0f,
+                    hp = 120,
+                    maxHp = 400,
+                    armor = 1,
+                    underConstruction = true,
+                    constructionRemainingTicks = 6
+                )
+            )
+        )
+        assertEquals(
+            "train Marine 8",
+            buildEntityStatusLabel(
+                EntitySnapshot(
+                    id = 13,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 7f,
+                    y = 4f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    activeProductionType = "Marine",
+                    activeProductionRemainingTicks = 8
+                )
+            )
+        )
+        assertEquals(
+            "research AdvancedTraining 5",
+            buildEntityStatusLabel(
+                EntitySnapshot(
+                    id = 14,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 7f,
+                    y = 4f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    activeResearchTech = "AdvancedTraining",
+                    activeResearchRemainingTicks = 5
+                )
+            )
+        )
+        assertEquals(
+            null,
+            buildEntityStatusLabel(
+                EntitySnapshot(
+                    id = 15,
+                    faction = 1,
+                    typeId = "Marine",
+                    archetype = "infantry",
+                    x = 7f,
+                    y = 4f,
+                    dir = 0f,
+                    hp = 45,
+                    maxHp = 45,
+                    armor = 0
+                )
+            )
+        )
     }
 
     @Test
