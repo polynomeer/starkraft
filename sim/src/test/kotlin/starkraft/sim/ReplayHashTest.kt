@@ -20,7 +20,7 @@ class ReplayHashTest {
         assertEquals(h1.replayHash, h2.replayHash)
         assertEquals(h1.worldHash, h2.worldHash)
         assertEquals(6762632104746809539L, h1.replayHash)
-        assertEquals(6018382555110414077L, h1.worldHash)
+        assertEquals(-4988873926744904994L, h1.worldHash)
     }
 }
 

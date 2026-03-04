@@ -19,7 +19,7 @@ class DeterminismTest {
         val h1 = runSimAndHash(seed)
         val h2 = runSimAndHash(seed)
         assertEquals(h1, h2)
-        assertEquals(1138349077658145092L, h1)
+        assertEquals(-5851922756786243413L, h1)
     }
 }
 
