@@ -38,6 +38,7 @@ import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
 import starkraft.sim.client.buildFogSummary
 import starkraft.sim.client.buildEntityStatusLabel
+import starkraft.sim.client.buildGameState
 import starkraft.sim.client.buildPreviewLabel
 import starkraft.sim.client.miniMapBounds
 import starkraft.sim.client.miniMapPoint
@@ -618,6 +619,40 @@ class GraphicalClientTest {
                 )
             )
         )
+    }
+
+    @Test
+    fun `builds simple victory and defeat states`() {
+        val victorySnapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", archetype = "infantry", x = 2f, y = 2f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+        val defeatSnapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = listOf(
+                    EntitySnapshot(id = 2, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 3f, y = 2f, dir = 0f, hp = 35, maxHp = 35, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("Victory", buildGameState(victorySnapshot)?.title)
+        assertEquals("Defeat", buildGameState(defeatSnapshot)?.title)
+        assertEquals(null, buildGameState(victorySnapshot.copy(entities = victorySnapshot.entities + EntitySnapshot(id = 3, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 4f, y = 4f, dir = 0f, hp = 35, maxHp = 35, armor = 0))))
     }
 
     @Test

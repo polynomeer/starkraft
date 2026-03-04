@@ -23,6 +23,11 @@ internal data class BuildPreviewLabel(
     val valid: Boolean
 )
 
+internal data class ClientGameState(
+    val title: String,
+    val detail: String
+)
+
 internal class SwingClientRenderer(
     private val tileSize: Int = 20
 ) : ClientRenderer {
@@ -49,6 +54,7 @@ internal class SwingClientRenderer(
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
         drawCommandPanel(graphics, width, height, state)
         drawHud(graphics, height, state, snapshot, overlayLines)
+        drawGameStateOverlay(graphics, width, height, snapshot)
     }
 
     private fun drawGrid(g: Graphics2D, snapshot: ClientSnapshot, camera: CameraView) {
@@ -286,6 +292,26 @@ internal class SwingClientRenderer(
         val viewport = miniMapViewport(bounds, snapshot, camera, width, height)
         g.color = selectionColor
         g.drawRect(viewport.x, viewport.y, viewport.width.coerceAtLeast(1), viewport.height.coerceAtLeast(1))
+    }
+
+    private fun drawGameStateOverlay(
+        g: Graphics2D,
+        width: Int,
+        height: Int,
+        snapshot: ClientSnapshot
+    ) {
+        val gameState = buildGameState(snapshot) ?: return
+        val boxWidth = 260
+        val boxHeight = 64
+        val x = (width - boxWidth) / 2
+        val y = 24
+        g.color = Color(0x0A, 0x0E, 0x13, 220)
+        g.fillRoundRect(x, y, boxWidth, boxHeight, 12, 12)
+        g.color = if (gameState.title == "Victory") Color(0x7F, 0xE3, 0x7C) else Color(0xE3, 0x7C, 0x7C)
+        g.drawRoundRect(x, y, boxWidth, boxHeight, 12, 12)
+        g.color = Color.WHITE
+        g.drawString(gameState.title, x + 12, y + 24)
+        g.drawString(gameState.detail, x + 12, y + 44)
     }
 }
 
@@ -609,6 +635,23 @@ internal fun buildEntityStatusLabel(entity: EntitySnapshot): String? =
         entity.activeResearchTech != null -> "research ${entity.activeResearchTech} ${entity.activeResearchRemainingTicks}"
         else -> null
     }
+
+internal fun buildGameState(snapshot: ClientSnapshot): ClientGameState? {
+    var friendlyAlive = 0
+    var enemyAlive = 0
+    for (entity in snapshot.entities) {
+        if (entity.hp <= 0) continue
+        when (entity.faction) {
+            1 -> friendlyAlive++
+            2 -> enemyAlive++
+        }
+    }
+    return when {
+        friendlyAlive > 0 && enemyAlive == 0 -> ClientGameState("Victory", "Enemy faction eliminated")
+        friendlyAlive == 0 && enemyAlive > 0 -> ClientGameState("Defeat", "Your faction has been eliminated")
+        else -> null
+    }
+}
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
     if (activity == null) {

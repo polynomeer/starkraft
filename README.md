@@ -258,6 +258,7 @@ Client controls:
 - selected units with active paths render path-goal markers and a path summary in the HUD
 - selected builders and harvesters now render simple assignment lines, and the HUD summarizes build/gather/return tasks
 - selected buildings now render compact status labels for construction, training, and research progress
+- the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - the build preview also shows structure name, footprint, clearance, and mineral/gas cost next to the ghost
