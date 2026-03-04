@@ -57,6 +57,10 @@ data class SnapshotStreamSummary(
     val constructionFaction1Count: Int = 0,
     val constructionFaction2Count: Int = 0,
     val constructionRemainingTicks: Int = 0,
+    val buildPlacedCount: Int = 0,
+    val buildCancelledCount: Int = 0,
+    val buildFailureCount: Int = 0,
+    val buildFailureReasons: Map<String, Int> = emptyMap(),
     val maxProducerQueueLimit: Int = 0,
     val harvesterCount: Int = 0,
     val harvesterGatherCount: Int = 0,
@@ -150,6 +154,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var constructionFaction1Count = 0
     var constructionFaction2Count = 0
     var constructionRemainingTicks = 0
+    var buildPlacedCount = 0
+    var buildCancelledCount = 0
+    var buildFailureCount = 0
+    var buildFailureReasons = linkedMapOf<String, Int>()
     var maxProducerQueueLimit = 0
     var harvesterCount = 0
     var harvesterGatherCount = 0
@@ -218,6 +226,16 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
             "sessionStats" -> {
                 worldHash = obj.long("finalWorldHash") ?: worldHash
                 replayHash = obj.long("finalReplayHash") ?: replayHash
+                buildPlacedCount = obj.int("builds") ?: buildPlacedCount
+                buildCancelledCount = obj.int("buildsCancelled") ?: buildCancelledCount
+                buildFailureCount = obj.int("buildFailures") ?: buildFailureCount
+                buildFailureReasons = linkedMapOf()
+                obj.jsonObj("buildFailureReasons")?.let { reasons ->
+                    for ((reason, value) in reasons) {
+                        val count = value.toString().toIntOrNull() ?: continue
+                        if (count > 0) buildFailureReasons[reason] = count
+                    }
+                }
                 finalVisibleTilesFaction1 = obj.int("finalVisibleTilesFaction1") ?: finalVisibleTilesFaction1
                 finalVisibleTilesFaction2 = obj.int("finalVisibleTilesFaction2") ?: finalVisibleTilesFaction2
                 resourceNodeHarvestedMineralsFaction1 =
@@ -530,6 +548,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         constructionFaction1Count = constructionFaction1Count,
         constructionFaction2Count = constructionFaction2Count,
         constructionRemainingTicks = constructionRemainingTicks,
+        buildPlacedCount = buildPlacedCount,
+        buildCancelledCount = buildCancelledCount,
+        buildFailureCount = buildFailureCount,
+        buildFailureReasons = buildFailureReasons,
         maxProducerQueueLimit = maxProducerQueueLimit,
         harvesterCount = harvesterCount,
         harvesterGatherCount = harvesterGatherCount,
@@ -657,6 +679,17 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "f2=${summary.builderFaction2Count} targets=${summary.builderTargetCount}"
         )
     }
+    if (summary.buildPlacedCount > 0 || summary.buildCancelledCount > 0 || summary.buildFailureCount > 0) {
+        val reasons =
+            summary.buildFailureReasons.entries.joinToString(",") { (reason, count) ->
+                "$reason=$count"
+            }
+        lines.add(
+            "builds: placed=${summary.buildPlacedCount} canceled=${summary.buildCancelledCount} " +
+                "fail=${summary.buildFailureCount}" +
+                if (reasons.isNotEmpty()) " reasons=$reasons" else ""
+        )
+    }
     if (summary.constructionCount > 0 || summary.countsByType["constructionState"] != null) {
         lines.add(
             "construction: total=${summary.constructionCount} " +
@@ -750,6 +783,9 @@ private fun JsonObject.int(key: String): Int? =
 
 private fun JsonObject.bool(key: String): Boolean? =
     this[key]?.toString()?.toBooleanStrictOrNull()
+
+private fun JsonObject.jsonObj(key: String): JsonObject? =
+    this[key]?.jsonObject
 
 private fun JsonObject.array(key: String): List<JsonObject> =
     this[key]

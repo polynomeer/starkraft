@@ -330,6 +330,7 @@ To verify the snapshot stream consumer sees the compatibility data live:
 Expected producer summary includes non-zero compatibility counts, e.g. `producers: total=2 training=1 rally=1 dropoff=2 minerals=2 gas=0 ...`
 If a node depletes and a worker is reassigned, the consumer also prints a line like `harvesterRetarget: events=1 workers=1`.
 If workers are assigned to construction, the consumer also prints a line like `builders: total=2 f1=2 f2=0 targets=1`.
+If build placement and cancellation happened, the consumer also prints a line like `builds: placed=1 canceled=1 fail=1 reasons=invalidPlacement=1`.
 If buildings are under construction, the consumer also prints a line like `construction: total=1 f1=1 f2=0 remaining=6`.
 The graphical client HUD also shows selected builder assignment state, e.g. `builders: active=1 targets=1`.
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.

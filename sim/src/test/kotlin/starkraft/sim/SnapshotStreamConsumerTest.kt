@@ -38,7 +38,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"combat\",\"sequence\":19,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"damage\",\"sequence\":20,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"despawn\",\"sequence\":21,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
-                    "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"harvesterRetargets\":3,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                    "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"builds\":2,\"buildsCancelled\":1,\"buildFailures\":2,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":1,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"harvesterRetargets\":3,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                     "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                 )
             )
@@ -106,6 +106,11 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.constructionFaction1Count)
         assertEquals(1, summary.constructionFaction2Count)
         assertEquals(8, summary.constructionRemainingTicks)
+        assertEquals(2, summary.buildPlacedCount)
+        assertEquals(1, summary.buildCancelledCount)
+        assertEquals(2, summary.buildFailureCount)
+        assertEquals(1, summary.buildFailureReasons["missingTech"])
+        assertEquals(1, summary.buildFailureReasons["invalidPlacement"])
         assertEquals(3, summary.maxProducerQueueLimit)
         assertEquals(2, summary.harvesterCount)
         assertEquals(1, summary.harvesterGatherCount)
@@ -185,7 +190,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"combat\",\"sequence\":19,\"tick\":1,\"attacks\":2,\"kills\":1,\"events\":[]}",
                         "{\"recordType\":\"damage\",\"sequence\":20,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                         "{\"recordType\":\"despawn\",\"sequence\":21,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
-                        "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"harvesterRetargets\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
+                        "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"harvesterRetargets\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
                         "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
                     )
                 )
@@ -203,6 +208,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("producers: total=1 training=1 rally=1 dropoff=1 minerals=1 gas=0 maxQueue=3"))
         assertTrue(text.contains("dropoffs: total=1 f1=1 f2=0"))
         assertTrue(text.contains("builders: total=2 f1=2 f2=0 targets=1"))
+        assertTrue(text.contains("builds: placed=1 canceled=1 fail=1 reasons=invalidPlacement=1"))
         assertTrue(text.contains("construction: total=1 f1=1 f2=0 remaining=6"))
         assertTrue(text.contains("harvesters: total=1 gather=0 return=1 cargo=3"))
         assertTrue(text.contains("harvesterRetarget: events=1 workers=1 total=1"))
