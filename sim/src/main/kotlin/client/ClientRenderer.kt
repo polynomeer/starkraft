@@ -96,8 +96,10 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
+        buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         formatTickActivity(state.lastTickActivity),
+        formatProductionActivity(state.lastProductionActivity),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
@@ -162,6 +164,33 @@ internal fun buildResearchSummary(
     return "research: labs=$researchBuildings queue=$queued active=$active"
 }
 
+internal fun buildProductionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "production: none"
+    var producers = 0
+    var queued = 0
+    val activeTypes = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.productionQueueSize <= 0 && entity.activeProductionType == null) continue
+        producers++
+        queued += entity.productionQueueSize
+        entity.activeProductionType?.let { typeId ->
+            activeTypes[typeId] = (activeTypes[typeId] ?: 0) + 1
+        }
+    }
+    if (producers == 0) return "production: none"
+    val active =
+        if (activeTypes.isEmpty()) {
+            "idle"
+        } else {
+            activeTypes.entries.joinToString(" ") { "${it.key}x${it.value}" }
+        }
+    return "production: labs=$producers queue=$queued active=$active"
+}
+
 internal fun buildConstructionSummary(
     snapshot: ClientSnapshot,
     selectedIds: Set<Int>
@@ -187,6 +216,13 @@ internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
         "research events: none"
     } else {
         "research events: e${activity.enqueue}/p${activity.progress}/c${activity.complete}/x${activity.cancel} @${activity.tick}"
+    }
+
+internal fun formatProductionActivity(activity: ClientProductionActivity?): String =
+    if (activity == null) {
+        "production events: none"
+    } else {
+        "production events: e${activity.enqueue}/p${activity.progress}/c${activity.complete}/x${activity.cancel} @${activity.tick}"
     }
 
 internal fun formatTickActivity(activity: ClientTickActivity?): String =

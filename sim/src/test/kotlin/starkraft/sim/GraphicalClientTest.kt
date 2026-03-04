@@ -12,9 +12,11 @@ import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
+import starkraft.sim.client.ClientProductionActivity
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.formatAckStatus
+import starkraft.sim.client.formatProductionActivity
 import starkraft.sim.client.formatResearchActivity
 import starkraft.sim.client.formatTickActivity
 import starkraft.sim.client.parseClientStreamLine
@@ -22,6 +24,7 @@ import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
+import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.ClientSessionState
@@ -60,6 +63,15 @@ class GraphicalClientTest {
         assertEquals(
             "research events: e1/p2/c0/x1 @12",
             formatResearchActivity(ClientResearchActivity(tick = 12, enqueue = 1, progress = 2, complete = 0, cancel = 1))
+        )
+    }
+
+    @Test
+    fun `formats production activity for hud`() {
+        assertEquals("production events: none", formatProductionActivity(null))
+        assertEquals(
+            "production events: e1/p2/c0/x1 @12",
+            formatProductionActivity(ClientProductionActivity(tick = 12, enqueue = 1, progress = 2, complete = 0, cancel = 1))
         )
     }
 
@@ -117,6 +129,9 @@ class GraphicalClientTest {
                         underConstruction = true,
                         constructionRemainingTicks = 6,
                         constructionTotalTicks = 10,
+                        productionQueueSize = 2,
+                        activeProductionType = "Marine",
+                        activeProductionRemainingTicks = 9,
                         researchQueueSize = 2,
                         activeResearchTech = "AdvancedTraining",
                         activeResearchRemainingTicks = 8
@@ -130,8 +145,10 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
+                "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
+                "production events: e1/p2/c0/x1 @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
@@ -141,6 +158,7 @@ class GraphicalClientTest {
                 state = ClientSessionState(
                     selectedIds = linkedSetOf(4, 11, 12),
                     lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true),
+                    lastProductionActivity = ClientProductionActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1),
                     lastResearchActivity = ClientResearchActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1),
                     lastTickActivity = ClientTickActivity(
                         tick = 15,
@@ -230,6 +248,31 @@ class GraphicalClientTest {
             buildResearchSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("research: none", buildResearchSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds production summary from selected producers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, productionQueueSize = 2, activeProductionType = "Marine", activeProductionRemainingTicks = 8),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Lab", archetype = "producer", x = 8f, y = 4f, dir = 0f, hp = 250, maxHp = 250, armor = 1, productionQueueSize = 1, activeProductionType = "Medic", activeProductionRemainingTicks = 3),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Marine", archetype = "infantry", x = 9f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "production: labs=2 queue=3 active=Marinex1 Medicx1",
+            buildProductionSummary(snapshot, linkedSetOf(12, 13, 14))
+        )
+        assertEquals("production: none", buildProductionSummary(snapshot, linkedSetOf(14)))
     }
 
     @Test
@@ -335,6 +378,20 @@ class GraphicalClientTest {
         assertEquals(14, update?.researchActivity?.tick)
         assertEquals(1, update?.researchActivity?.enqueue)
         assertEquals(1, update?.researchActivity?.cancel)
+        assertNull(update?.snapshot)
+    }
+
+    @Test
+    fun `parses production stream updates through shared bridge`() {
+        val update =
+            parseClientStreamLine(
+                "{\"recordType\":\"production\",\"tick\":14,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":60},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":12}]}"
+            )
+
+        assertNotNull(update)
+        assertEquals(14, update?.productionActivity?.tick)
+        assertEquals(1, update?.productionActivity?.enqueue)
+        assertEquals(1, update?.productionActivity?.cancel)
         assertNull(update?.snapshot)
     }
 

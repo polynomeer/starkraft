@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.ClientCommandAck
+import starkraft.sim.client.ClientProductionActivity
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
@@ -89,6 +90,9 @@ class ConsoleClientTest {
                                         underConstruction = true,
                                         constructionRemainingTicks = 6,
                                         constructionTotalTicks = 10,
+                                        productionQueueSize = 2,
+                                        activeProductionType = "Marine",
+                                        activeProductionRemainingTicks = 9,
                                         researchQueueSize = 2,
                                         activeResearchTech = "AdvancedTraining",
                                         activeResearchRemainingTicks = 8
@@ -98,6 +102,7 @@ class ConsoleClientTest {
                         ),
                     selectedIds = linkedSetOf(7, 8, 9),
                     lastAck = ClientCommandAck(tick = 9, commandType = "attackMove", requestId = "cli-5", accepted = true),
+                    lastProductionActivity = ClientProductionActivity(tick = 9, enqueue = 1, progress = 2, cancel = 1),
                     lastResearchActivity = ClientResearchActivity(tick = 9, enqueue = 1, progress = 2, cancel = 1),
                     lastTickActivity =
                         ClientTickActivity(
@@ -120,7 +125,7 @@ class ConsoleClientTest {
             )
 
         assertEquals(
-            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 production: labs=1 queue=2 active=Marinex1 research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 production events: e1/p2/c0/x1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
     }

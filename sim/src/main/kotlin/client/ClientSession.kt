@@ -8,6 +8,7 @@ internal data class ClientSessionState(
     var snapshot: ClientSnapshot? = null,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
     var lastAck: ClientCommandAck? = null,
+    var lastProductionActivity: ClientProductionActivity? = null,
     var lastResearchActivity: ClientResearchActivity? = null,
     var lastTickActivity: ClientTickActivity? = null
 )
@@ -41,6 +42,12 @@ internal class ClientSession(
         val latestAck = update.ack
         if (latestAck != null && latestAck != state.lastAck) {
             state.lastAck = latestAck
+            changed = true
+        }
+
+        val latestProductionActivity = update.productionActivity
+        if (latestProductionActivity != null && latestProductionActivity != state.lastProductionActivity) {
+            state.lastProductionActivity = latestProductionActivity
             changed = true
         }
 

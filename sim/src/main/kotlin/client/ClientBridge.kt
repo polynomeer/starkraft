@@ -44,6 +44,14 @@ internal data class ClientResearchActivity(
     val cancel: Int = 0
 )
 
+internal data class ClientProductionActivity(
+    val tick: Int,
+    val enqueue: Int = 0,
+    val progress: Int = 0,
+    val complete: Int = 0,
+    val cancel: Int = 0
+)
+
 internal data class ClientTickActivity(
     val tick: Int,
     val builds: Int = 0,
@@ -65,6 +73,7 @@ internal data class ClientTickActivity(
 internal data class ClientStreamState(
     val snapshot: ClientSnapshot? = null,
     val ack: ClientCommandAck? = null,
+    val productionActivity: ClientProductionActivity? = null,
     val researchActivity: ClientResearchActivity? = null,
     val tickActivity: ClientTickActivity? = null
 )
@@ -169,6 +178,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
     override fun poll(): ClientStreamState? {
         var latestSnapshot: ClientSnapshot? = null
         var latestAck: ClientCommandAck? = null
+        var latestProductionActivity: ClientProductionActivity? = null
         var latestResearchActivity: ClientResearchActivity? = null
         var latestTickActivity: ClientTickActivity? = null
         while (true) {
@@ -177,13 +187,15 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
             val update = parseClientStreamLine(line) ?: continue
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.ack != null) latestAck = update.ack
+            if (update.productionActivity != null) latestProductionActivity = update.productionActivity
             if (update.researchActivity != null) latestResearchActivity = update.researchActivity
             if (update.tickActivity != null) latestTickActivity = update.tickActivity
         }
-        if (latestSnapshot == null && latestAck == null && latestResearchActivity == null && latestTickActivity == null) return null
+        if (latestSnapshot == null && latestAck == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
         return ClientStreamState(
             snapshot = latestSnapshot,
             ack = latestAck,
+            productionActivity = latestProductionActivity,
             researchActivity = latestResearchActivity,
             tickActivity = latestTickActivity
         )
@@ -355,6 +367,31 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
             ClientStreamState(
                 researchActivity =
                     ClientResearchActivity(
+                        tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        enqueue = enqueue,
+                        progress = progress,
+                        complete = complete,
+                        cancel = cancel
+                    )
+            )
+        }
+        "production" -> {
+            val events = obj["events"]?.jsonArray ?: return null
+            var enqueue = 0
+            var progress = 0
+            var complete = 0
+            var cancel = 0
+            for (event in events) {
+                when (event.jsonObject["kind"]?.jsonPrimitive?.content) {
+                    "enqueue" -> enqueue++
+                    "complete" -> complete++
+                    "cancel" -> cancel++
+                    else -> progress++
+                }
+            }
+            ClientStreamState(
+                productionActivity =
+                    ClientProductionActivity(
                         tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         enqueue = enqueue,
                         progress = progress,
