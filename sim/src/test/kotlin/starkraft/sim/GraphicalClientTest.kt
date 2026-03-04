@@ -16,6 +16,7 @@ import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
+import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
@@ -59,20 +60,22 @@ class GraphicalClientTest {
                 factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
-                    EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                    EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30)
                 ),
                 resourceNodes = emptyList()
             )
         assertEquals(
             listOf(
                 "tick=15 selected=2",
-                "selection: Marinex2",
+                "selection: Marinex1 Workerx1",
+                "builders: active=1 targets=1",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
-                state = ClientSessionState(selectedIds = linkedSetOf(4, 9), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
+                state = ClientSessionState(selectedIds = linkedSetOf(4, 11), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
             )
         )
     }
@@ -97,6 +100,28 @@ class GraphicalClientTest {
 
         assertEquals("selection: Marinex2 Workerx1", buildSelectionSummary(snapshot, linkedSetOf(4, 5, 6)))
         assertEquals("selection: none", buildSelectionSummary(snapshot, emptySet()))
+    }
+
+    @Test
+    fun `builds builder summary from selected workers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 6, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 41),
+                    EntitySnapshot(id = 7, faction = 1, typeId = "Worker", archetype = "worker", x = 7f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 41),
+                    EntitySnapshot(id = 8, faction = 1, typeId = "Marine", archetype = "infantry", x = 8f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("builders: active=2 targets=1", buildBuilderSummary(snapshot, linkedSetOf(6, 7, 8)))
+        assertEquals("builders: none", buildBuilderSummary(snapshot, linkedSetOf(8)))
     }
 
     @Test

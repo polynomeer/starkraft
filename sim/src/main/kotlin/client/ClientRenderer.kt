@@ -80,10 +80,10 @@ internal class SwingClientRenderer(
     ) {
         g.color = Color.WHITE
         val hudLines = buildClientHudLines(snapshot, state)
-        g.drawString(hudLines[0], 12, height - 60)
-        g.drawString(hudLines[1], 12, height - 44)
-        g.drawString(hudLines[2], 12, height - 28)
-        g.drawString(hudLines[3], 12, height - 12)
+        val baseY = height - 12 - ((hudLines.size - 1) * 16)
+        for (i in hudLines.indices) {
+            g.drawString(hudLines[i], 12, baseY + (i * 16))
+        }
     }
 }
 
@@ -94,6 +94,7 @@ internal fun buildClientHudLines(
     listOf(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
         buildSelectionSummary(snapshot, state.selectedIds),
+        buildBuilderSummary(snapshot, state.selectedIds),
         formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
     )
@@ -111,4 +112,21 @@ internal fun buildSelectionSummary(
     if (counts.isEmpty()) return "selection: none"
     val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection: $summary"
+}
+
+internal fun buildBuilderSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "builders: none"
+    var activeBuilders = 0
+    val targets = LinkedHashMap<Int, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val targetId = entity.buildTargetId ?: continue
+        activeBuilders++
+        targets[targetId] = (targets[targetId] ?: 0) + 1
+    }
+    if (activeBuilders == 0) return "builders: none"
+    return "builders: active=$activeBuilders targets=${targets.size}"
 }

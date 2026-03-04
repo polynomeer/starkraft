@@ -49,6 +49,10 @@ data class SnapshotStreamSummary(
     val dropoffStateCount: Int = 0,
     val dropoffStateFaction1Count: Int = 0,
     val dropoffStateFaction2Count: Int = 0,
+    val builderCount: Int = 0,
+    val builderFaction1Count: Int = 0,
+    val builderFaction2Count: Int = 0,
+    val builderTargetCount: Int = 0,
     val maxProducerQueueLimit: Int = 0,
     val harvesterCount: Int = 0,
     val harvesterGatherCount: Int = 0,
@@ -130,6 +134,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var dropoffStateCount = 0
     var dropoffStateFaction1Count = 0
     var dropoffStateFaction2Count = 0
+    var builderCount = 0
+    var builderFaction1Count = 0
+    var builderFaction2Count = 0
+    var builderTargetCount = 0
     var maxProducerQueueLimit = 0
     var harvesterCount = 0
     var harvesterGatherCount = 0
@@ -317,6 +325,19 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "builderState" -> {
+                val entities = obj.array("entities")
+                builderCount = entities.size
+                builderFaction1Count = 0
+                builderFaction2Count = 0
+                builderTargetCount = entities.mapNotNull { it.int("targetBuildingId") }.toSet().size
+                for (entity in entities) {
+                    when (entity.int("faction")) {
+                        1 -> builderFaction1Count++
+                        2 -> builderFaction2Count++
+                    }
+                }
+            }
             "harvesterState" -> {
                 val entities = obj.array("entities")
                 harvesterCount = entities.size
@@ -460,6 +481,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         dropoffStateCount = dropoffStateCount,
         dropoffStateFaction1Count = dropoffStateFaction1Count,
         dropoffStateFaction2Count = dropoffStateFaction2Count,
+        builderCount = builderCount,
+        builderFaction1Count = builderFaction1Count,
+        builderFaction2Count = builderFaction2Count,
+        builderTargetCount = builderTargetCount,
         maxProducerQueueLimit = maxProducerQueueLimit,
         harvesterCount = harvesterCount,
         harvesterGatherCount = harvesterGatherCount,
@@ -563,6 +588,12 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
         lines.add(
             "dropoffs: total=${summary.dropoffStateCount} " +
                 "f1=${summary.dropoffStateFaction1Count} f2=${summary.dropoffStateFaction2Count}"
+        )
+    }
+    if (summary.builderCount > 0 || summary.countsByType["builderState"] != null) {
+        lines.add(
+            "builders: total=${summary.builderCount} f1=${summary.builderFaction1Count} " +
+                "f2=${summary.builderFaction2Count} targets=${summary.builderTargetCount}"
         )
     }
     if (summary.harvesterCount > 0 || summary.countsByType["harvesterState"] != null) {

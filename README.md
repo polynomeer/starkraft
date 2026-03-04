@@ -292,6 +292,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
   This reads the NDJSON stream and prints record counts plus session/hash metadata, including resource-node change counts, per-faction harvest splits, active nodes, remaining resources, economy, producer/production, combat, pathing, vision, and archetype selector summaries when present.
   It also summarizes `commandAck` records as accepted/rejected totals plus deterministic rejection reasons when present.
   It also summarizes `dropoffState` records as faction-split drop-off building totals.
+  It also summarizes `builderState` records as faction-split active builder counts and unique build targets.
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
   It also summarizes `harvesterRetarget` records as total reassignment events and unique workers retargeted after node depletion.
   When `harvestCycle` records are present, it also prints pickup/deposit event counts and transferred amounts.
@@ -325,6 +326,8 @@ To verify the snapshot stream consumer sees the compatibility data live:
 `./gradlew :sim:consumeSnapshotStream --args="/tmp/starkraft-live-compat.ndjson"`
 Expected producer summary includes non-zero compatibility counts, e.g. `producers: total=2 training=1 rally=1 dropoff=2 minerals=2 gas=0 ...`
 If a node depletes and a worker is reassigned, the consumer also prints a line like `harvesterRetarget: events=1 workers=1`.
+If workers are assigned to construction, the consumer also prints a line like `builders: total=2 f1=2 f2=0 targets=1`.
+The graphical client HUD also shows selected builder assignment state, e.g. `builders: active=1 targets=1`.
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`
