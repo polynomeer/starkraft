@@ -149,6 +149,7 @@ class AppTest {
         val counters =
             CommandOutcomeCounters(
                 builds = 1,
+                buildsCancelled = 1,
                 buildFailures = 2,
                 buildFailureReasons =
                     BuildFailureCounterSet(
@@ -175,7 +176,7 @@ class AppTest {
             )
 
         assertEquals(
-            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] research=q2/c1/x1 queues=1 researchFails=2[invalidTech=1,alreadyUnlocked=1,nothingToCancel=1] cycles=p2/3 d1/1 retargets=1 dropoffs=f1:1/f2:0 compat=m1/g0",
+            "  builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] research=q2/c1/x1 queues=1 researchFails=2[invalidTech=1,alreadyUnlocked=1,nothingToCancel=1] cycles=p2/3 d1/1 retargets=1 dropoffs=f1:1/f2:0 compat=m1/g0",
             renderCommandOutcomeLogSuffix(
                 counters,
                 trainsCompleted = 2,
@@ -198,9 +199,10 @@ class AppTest {
     @Test
     fun `renders aggregate command outcome summary`() {
         assertEquals(
-            "command outcomes: builds=2 buildFails=1[invalidDefinition=1] train=q4/c3/x1 trainFails=2[missingBuilding=1,nothingToCancel=1] research=q2/c1/x1 queues=1 researchFails=2[missingTech=1,queueFull=1,nothingToCancel=1]",
+            "command outcomes: builds=2/x1 buildFails=1[invalidDefinition=1] train=q4/c3/x1 trainFails=2[missingBuilding=1,nothingToCancel=1] research=q2/c1/x1 queues=1 researchFails=2[missingTech=1,queueFull=1,nothingToCancel=1]",
             renderAggregateOutcomeSummary(
                 totalBuilds = 2,
+                totalBuildsCancelled = 1,
                 totalBuildFailures = 1,
                 totalBuildFailureReasons = BuildFailureCounterSet(invalidDefinition = 1),
                 totalTrainsQueued = 4,
@@ -221,9 +223,10 @@ class AppTest {
     @Test
     fun `renders aggregate harvest summary`() {
         assertEquals(
-            "command outcomes: builds=0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 cycles=p6/11 d5/9 retargets=4 nodes=6 depleted=1 active=2 remaining=347 dropoffs=f1:1/f2:2 compat=m2/g1",
+            "command outcomes: builds=0/x0 train=q0/c0/x0 harvest=9/2 f1=7/0 f2=2/2 cycles=p6/11 d5/9 retargets=4 nodes=6 depleted=1 active=2 remaining=347 dropoffs=f1:1/f2:2 compat=m2/g1",
             renderAggregateOutcomeSummary(
                 totalBuilds = 0,
+                totalBuildsCancelled = 0,
                 totalBuildFailures = 0,
                 totalBuildFailureReasons = BuildFailureCounterSet(),
                 totalTrainsQueued = 0,
@@ -260,6 +263,7 @@ class AppTest {
             null,
             renderAggregateOutcomeSummary(
                 totalBuilds = 0,
+                totalBuildsCancelled = 0,
                 totalBuildFailures = 0,
                 totalBuildFailureReasons = BuildFailureCounterSet(),
                 totalTrainsQueued = 0,

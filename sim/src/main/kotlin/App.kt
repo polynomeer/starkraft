@@ -315,6 +315,7 @@ fun main(args: Array<String>) {
     var totalKills = 0
     var totalDespawns = 0
     var totalBuilds = 0
+    var totalBuildsCancelled = 0
     var totalBuildFailures = 0
     val totalBuildFailureReasons = BuildFailureCounterSet()
     var totalTrainsQueued = 0
@@ -499,6 +500,7 @@ fun main(args: Array<String>) {
         totalKills += combat.lastTickKills
         totalDespawns += world.removedEventCount
         totalBuilds += commandOutcomeCounters.builds
+        totalBuildsCancelled += commandOutcomeCounters.buildsCancelled
         totalBuildFailures += commandOutcomeCounters.buildFailures
         totalBuildFailureReasons.add(commandOutcomeCounters.buildFailureReasons)
         totalTrainsQueued += commandOutcomeCounters.trainsQueued
@@ -627,6 +629,7 @@ fun main(args: Array<String>) {
     val finalOutcomeSummary =
         renderAggregateOutcomeSummary(
             totalBuilds,
+            totalBuildsCancelled,
             totalBuildFailures,
             totalBuildFailureReasons,
             totalTrainsQueued,
@@ -708,6 +711,7 @@ fun main(args: Array<String>) {
                 kills = totalKills,
                 despawns = totalDespawns,
                 builds = totalBuilds,
+                buildsCancelled = totalBuildsCancelled,
                 buildFailures = totalBuildFailures,
                 buildFailureReasons = totalBuildFailureReasons.toRecord(),
                 trainsQueued = totalTrainsQueued,
@@ -1839,6 +1843,7 @@ private fun emitTickSummaryRecord(
             kills = combat.lastTickKills,
             despawns = world.removedEventCount,
             builds = commandOutcomeCounters.builds,
+            buildsCancelled = commandOutcomeCounters.buildsCancelled,
             buildFailures = commandOutcomeCounters.buildFailures,
             buildFailureReasons = commandOutcomeCounters.buildFailureReasons.toRecord(),
             trainsQueued = commandOutcomeCounters.trainsQueued,
@@ -3594,6 +3599,7 @@ data class ResearchFailureCounterSet(
 
 data class CommandOutcomeCounters(
     var builds: Int = 0,
+    var buildsCancelled: Int = 0,
     var buildFailures: Int = 0,
     val buildFailureReasons: BuildFailureCounterSet = BuildFailureCounterSet(),
     var trainsQueued: Int = 0,
@@ -3623,7 +3629,9 @@ internal fun renderCommandOutcomeLogSuffix(
     gasDropoffBuildings: Int = 0
 ): String {
     val parts = ArrayList<String>(7)
-    if (counters.builds > 0) parts.add("builds=${counters.builds}")
+    if (counters.builds > 0 || counters.buildsCancelled > 0) {
+        parts.add("builds=${counters.builds}/x${counters.buildsCancelled}")
+    }
     if (counters.buildFailures > 0) {
         parts.add("buildFails=${counters.buildFailures}[${formatBuildFailureReasons(counters.buildFailureReasons)}]")
     }
@@ -3656,6 +3664,7 @@ internal fun renderCommandOutcomeLogSuffix(
 
 internal fun renderAggregateOutcomeSummary(
     totalBuilds: Int,
+    totalBuildsCancelled: Int,
     totalBuildFailures: Int,
     totalBuildFailureReasons: BuildFailureCounterSet,
     totalTrainsQueued: Int,
@@ -3691,6 +3700,7 @@ internal fun renderAggregateOutcomeSummary(
 ): String? {
     if (
         totalBuilds == 0 &&
+        totalBuildsCancelled == 0 &&
         totalBuildFailures == 0 &&
         totalTrainsQueued == 0 &&
         totalTrainsCompleted == 0 &&
@@ -3724,7 +3734,7 @@ internal fun renderAggregateOutcomeSummary(
         return null
     }
     val parts = ArrayList<String>(5)
-    parts.add("builds=$totalBuilds")
+    parts.add("builds=$totalBuilds/x$totalBuildsCancelled")
     if (totalBuildFailures > 0) {
         parts.add("buildFails=$totalBuildFailures[${formatBuildFailureReasons(totalBuildFailureReasons)}]")
     }
@@ -4567,6 +4577,7 @@ fun issue(
                 )
                 emitCommandAck(false, reason = reason)
             } else {
+                if (outcomeCounters != null) outcomeCounters.buildsCancelled++
                 emitCommandAck(true)
             }
         }
