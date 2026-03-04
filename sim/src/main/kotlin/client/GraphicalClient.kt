@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.LinkedHashSet
@@ -183,6 +184,7 @@ internal fun buildQueueIntent(
 private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer(),
+    private val controlPath: Path? = null,
     private val requestRestart: () -> Unit = {}
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
@@ -197,8 +199,12 @@ private class ClientPanel(
     private var camera = CameraView()
     private var groundMode: ClientGroundCommandMode? = null
     private var buildModeTypeId: String? = null
+    private var playControlState = PlayControlState()
 
     init {
+        if (controlPath != null && Files.exists(controlPath)) {
+            playControlState = parsePlayControlState(Files.readString(controlPath))
+        }
         background = Color(0x12, 0x18, 0x1F)
         preferredSize = Dimension(640, 640)
         font = Font("Monospaced", Font.PLAIN, 12)
@@ -341,6 +347,9 @@ private class ClientPanel(
                         val snapshot = session.state.snapshot ?: return
                         buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
                     }
+                    KeyEvent.VK_SPACE -> togglePause()
+                    KeyEvent.VK_OPEN_BRACKET -> adjustSpeed(-1)
+                    KeyEvent.VK_CLOSE_BRACKET -> adjustSpeed(1)
                     KeyEvent.VK_F5 -> requestRestart()
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
@@ -456,7 +465,8 @@ private class ClientPanel(
         listOf(
             "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
             "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}",
-            "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}"
+            "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}",
+            formatPlayControlOverlay(playControlState)
         )
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
@@ -552,10 +562,25 @@ private class ClientPanel(
         g.drawString(label.title, labelX, labelY)
         g.drawString("${label.cost} ${label.size}", labelX, labelY + 14)
     }
+
+    private fun togglePause() {
+        playControlState = playControlState.copy(paused = !playControlState.paused)
+        writePlayControl()
+    }
+
+    private fun adjustSpeed(delta: Int) {
+        playControlState = playControlState.copy(speed = clampPlaySpeed(playControlState.speed + delta))
+        writePlayControl()
+    }
+
+    private fun writePlayControl() {
+        val path = controlPath ?: return
+        Files.writeString(path, renderPlayControlState(playControlState))
+    }
 }
 
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port]" }
+    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt]" }
     val snapshotSpec = args[0]
     val inputSpec =
         if (args.size >= 2) {
@@ -564,10 +589,11 @@ fun main(args: Array<String>) {
             val snapshotPath = Paths.get(snapshotSpec).toAbsolutePath().normalize()
             defaultClientInputPath(snapshotPath).toString()
         }
+    val controlPath = if (args.size >= 3) Paths.get(args[2]).toAbsolutePath().normalize() else null
 
     val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
     var restartRequested = false
-    val panel = ClientPanel(session) { restartRequested = true }
+    val panel = ClientPanel(session, controlPath = controlPath) { restartRequested = true }
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")
@@ -609,6 +635,9 @@ internal fun formatAckStatus(ack: ClientCommandAck?): String =
     }
 
 private fun formatRequestIdSuffix(ack: ClientCommandAck): String = ack.requestId?.let { "[$it]" } ?: ""
+
+internal fun formatPlayControlOverlay(state: PlayControlState): String =
+    "play: ${if (state.paused) "paused" else "running"} x${clampPlaySpeed(state.speed)}"
 
 internal fun buildUnitSelectionRecord(
     tick: Int,

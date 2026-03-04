@@ -68,7 +68,10 @@ import starkraft.sim.client.renderTickSummaryStreamRecordJson
 import starkraft.sim.client.renderTrainFailureStreamRecordJson
 import starkraft.sim.client.renderVisionStreamRecordJson
 import starkraft.sim.client.ProductionEventRecord
+import starkraft.sim.client.PlayControlState
 import starkraft.sim.client.TrainFailureCounts
+import starkraft.sim.client.parsePlayControlState
+import starkraft.sim.client.renderPlayControlState
 import starkraft.sim.client.renderProductionStreamRecordJson
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.*
@@ -262,8 +265,11 @@ fun main(args: Array<String>) {
     val snapshotJson = hasFlag(args, "--snapshotJson")
     val compactJson = hasFlag(args, "--compactJson")
     val replayDumpPath = parseReplayDumpPath(args)
+    val playControlPath = parsePlayControlPath(args)
     val resolvedReplayPath = replayPath?.let(::resolvePath)
     val resolvedSnapshotOutPath = snapshotOutPath?.let(::resolvePath)
+    val resolvedPlayControlPath = playControlPath?.let(::resolvePath)
+    ensurePlayControlFile(resolvedPlayControlPath)
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
     val streamSequence = longArrayOf(0L)
@@ -598,7 +604,7 @@ fun main(args: Array<String>) {
             )
         }
         tick++
-        if (!noSleep) Thread.sleep(Time.TICK_MS.toLong())
+        waitForNextTick(noSleep, resolvedPlayControlPath)
     }
 
     if (recordPath != null) {
@@ -851,6 +857,17 @@ private fun parseReplayDumpPath(args: Array<String>): String? {
     return null
 }
 
+private fun parsePlayControlPath(args: Array<String>): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        if (a == "--playControlFile" && i + 1 < args.size) return args[i + 1]
+        if (a.startsWith("--playControlFile=")) return a.substringAfter("=")
+        i++
+    }
+    return null
+}
+
 private fun parseScriptPath(args: Array<String>): String? {
     var i = 0
     while (i < args.size) {
@@ -919,6 +936,35 @@ private fun parseSnapshotEvery(args: Array<String>): Int? {
 
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
+
+internal fun ensurePlayControlFile(path: java.nio.file.Path?) {
+    if (path == null) return
+    path.parent?.let { Files.createDirectories(it) }
+    if (!Files.exists(path)) {
+        Files.writeString(path, renderPlayControlState(PlayControlState()))
+    }
+}
+
+internal fun readPlayControlState(path: java.nio.file.Path?): PlayControlState? {
+    if (path == null || !Files.exists(path)) return null
+    return parsePlayControlState(Files.readString(path))
+}
+
+internal fun tickSleepMs(noSleep: Boolean, controlState: PlayControlState?): Long? {
+    if (noSleep) return null
+    val speed = controlState?.speed ?: 1
+    return maxOf(1L, Time.TICK_MS.toLong() / speed.toLong())
+}
+
+internal fun waitForNextTick(noSleep: Boolean, controlPath: java.nio.file.Path?) {
+    var controlState = readPlayControlState(controlPath)
+    while (controlState?.paused == true) {
+        Thread.sleep(Time.TICK_MS.toLong())
+        controlState = readPlayControlState(controlPath)
+    }
+    val sleepMs = tickSleepMs(noSleep, controlState) ?: return
+    Thread.sleep(sleepMs)
+}
 
 private fun parseReplayTicks(args: Array<String>): Int? {
     var i = 0

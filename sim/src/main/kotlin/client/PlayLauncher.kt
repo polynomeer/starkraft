@@ -9,14 +9,16 @@ import kotlin.io.path.createDirectories
 data class PlayPaths(
     val root: Path,
     val snapshots: Path,
-    val input: Path
+    val input: Path,
+    val control: Path
 )
 
 internal fun defaultPlayPaths(root: Path): PlayPaths =
     PlayPaths(
         root = root,
         snapshots = root.resolve("snapshots.ndjson"),
-        input = root.resolve("client-input.ndjson")
+        input = root.resolve("client-input.ndjson"),
+        control = root.resolve("play-control.txt")
     )
 
 internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
@@ -42,6 +44,7 @@ internal fun buildPlaySimCommand(
     classpath: String,
     snapshotPath: Path,
     inputPath: Path,
+    controlPath: Path,
     ticks: Int,
     scenario: PlayScenario
 ): List<String> =
@@ -56,7 +59,8 @@ internal fun buildPlaySimCommand(
         snapshotPath.toString(),
         "--inputTail",
         inputPath.toString(),
-        "--noSleep",
+        "--playControlFile",
+        controlPath.toString(),
         "--ticks",
         ticks.toString()
     ) + scenario.simArgs
@@ -65,7 +69,8 @@ internal fun buildPlayClientCommand(
     javaBin: String,
     classpath: String,
     snapshotPath: Path,
-    inputPath: Path
+    inputPath: Path,
+    controlPath: Path
 ): List<String> =
     listOf(
         javaBin,
@@ -73,14 +78,17 @@ internal fun buildPlayClientCommand(
         classpath,
         "starkraft.sim.client.GraphicalClientKt",
         snapshotPath.toString(),
-        inputPath.toString()
+        inputPath.toString(),
+        controlPath.toString()
     )
 
 internal fun resetPlayFiles(paths: PlayPaths) {
     Files.deleteIfExists(paths.snapshots)
     Files.deleteIfExists(paths.input)
+    Files.deleteIfExists(paths.control)
     Files.createFile(paths.snapshots)
     Files.createFile(paths.input)
+    Files.writeString(paths.control, renderPlayControlState(PlayControlState()))
 }
 
 internal fun shouldRestartPlay(exitCode: Int): Boolean = exitCode == CLIENT_EXIT_RESTART
@@ -113,7 +121,7 @@ fun main(args: Array<String>) {
     while (true) {
         resetPlayFiles(paths)
         val simProcess =
-            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, ticks, scenario))
+            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, ticks, scenario))
                 .inheritIO()
                 .start()
 
@@ -127,7 +135,7 @@ fun main(args: Array<String>) {
 
         try {
             val clientProcess =
-                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input))
+                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control))
                     .inheritIO()
                     .start()
             val exitCode = clientProcess.waitFor()

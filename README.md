@@ -226,6 +226,7 @@ One-command local play:
   - `scripted`
   Each launch resets the play workspace NDJSON files so the next match starts cleanly.
   While the graphical client is open, press `F5` to restart the current play scenario in the same workspace.
+  The play workspace also includes `play-control.txt`, which the client updates for pause and speed control.
 
 Alternative client transports/renderers:
 - Text client over file stream:
@@ -249,6 +250,8 @@ Client controls:
 - middle drag or `WASD` / arrow keys: pan the camera
 - mouse wheel or `+` / `-`: zoom
 - `0`: reset camera
+- `Space`: pause/resume `:sim:play`
+- `[` / `]`: decrease/increase `:sim:play` speed
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view

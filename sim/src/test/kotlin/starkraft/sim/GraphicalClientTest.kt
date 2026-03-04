@@ -27,6 +27,7 @@ import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.formatConstructionActivity
+import starkraft.sim.client.formatPlayControlOverlay
 import starkraft.sim.client.formatProductionActivity
 import starkraft.sim.client.formatResearchActivity
 import starkraft.sim.client.formatTickActivity
@@ -112,6 +113,12 @@ class GraphicalClientTest {
             "construction state: total=2 f1=1 f2=1 remaining=8 @12",
             formatConstructionActivity(ClientConstructionActivity(tick = 12, total = 2, faction1 = 1, faction2 = 1, remainingTicks = 8))
         )
+    }
+
+    @Test
+    fun `formats play control overlay`() {
+        assertEquals("play: running x1", formatPlayControlOverlay(starkraft.sim.client.PlayControlState()))
+        assertEquals("play: paused x4", formatPlayControlOverlay(starkraft.sim.client.PlayControlState(paused = true, speed = 4)))
     }
 
     @Test
@@ -201,7 +208,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction   3 observer   m/a/p/h u/i/o train l research x/t/y cancel esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] speed spc pause esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,

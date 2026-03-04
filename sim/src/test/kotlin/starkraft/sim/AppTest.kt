@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.Health
@@ -17,8 +18,28 @@ import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Files
+import java.nio.file.Path
 
 class AppTest {
+    @Test
+    fun `play control file is created and parsed`(@TempDir tempDir: Path) {
+        val controlPath = tempDir.resolve("play-control.txt")
+
+        ensurePlayControlFile(controlPath)
+
+        assertEquals("paused=0\nspeed=1\n", Files.readString(controlPath))
+        Files.writeString(controlPath, "paused=1\nspeed=3\n")
+        assertEquals(starkraft.sim.client.PlayControlState(paused = true, speed = 3), readPlayControlState(controlPath))
+    }
+
+    @Test
+    fun `tick sleep respects no sleep and control speed`() {
+        assertEquals(null, tickSleepMs(noSleep = true, controlState = null))
+        assertEquals(20L, tickSleepMs(noSleep = false, controlState = null))
+        assertEquals(6L, tickSleepMs(noSleep = false, controlState = starkraft.sim.client.PlayControlState(speed = 3)))
+        assertEquals(2L, tickSleepMs(noSleep = false, controlState = starkraft.sim.client.PlayControlState(speed = 8)))
+    }
+
     @Test
     fun `issue emits command ack records for success and failure`() {
         val world = World()
