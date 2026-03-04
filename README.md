@@ -254,6 +254,7 @@ Client controls:
 - selected producers render rally markers, and entities now show simple health bars in the graphical client
 - selected units with active paths render path-goal markers and a path summary in the HUD
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
+- a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.

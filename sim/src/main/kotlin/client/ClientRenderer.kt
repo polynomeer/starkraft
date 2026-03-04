@@ -3,7 +3,13 @@ package starkraft.sim.client
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
+import java.awt.Rectangle
 import java.util.LinkedHashMap
+
+internal data class ClientCommandButton(
+    val label: String,
+    val actionId: String
+)
 
 internal interface ClientRenderer {
     fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView, overlayLines: List<String> = emptyList())
@@ -29,6 +35,7 @@ internal class SwingClientRenderer(
         drawPathMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
+        drawCommandPanel(graphics, width, height, state)
         drawHud(graphics, height, state, snapshot, overlayLines)
     }
 
@@ -138,6 +145,62 @@ internal class SwingClientRenderer(
             g.drawString(hudLines[i], 12, baseY + (i * 16))
         }
     }
+
+    private fun drawCommandPanel(
+        g: Graphics2D,
+        width: Int,
+        height: Int,
+        state: ClientSessionState
+    ) {
+        val panel = commandPanelBounds(width, height)
+        g.color = Color(0x0F, 0x14, 0x1A, 210)
+        g.fillRect(panel.x, panel.y, panel.width, panel.height)
+        g.color = Color(0x42, 0x4F, 0x5A)
+        g.drawRect(panel.x, panel.y, panel.width, panel.height)
+        g.color = Color.WHITE
+        g.drawString("Commands", panel.x + 12, panel.y + 20)
+        val buttons = buildCommandButtons(state.selectedIds.isNotEmpty())
+        for (i in buttons.indices) {
+            val bounds = commandButtonBounds(width, i)
+            g.color = Color(0x1B, 0x26, 0x31, 220)
+            g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
+            g.color = Color(0x61, 0x71, 0x80)
+            g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+            g.color = Color.WHITE
+            g.drawString(buttons[i].label, bounds.x + 10, bounds.y + 21)
+        }
+    }
+}
+
+internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
+    Rectangle(width - 176, 12, 164, height - 24)
+
+internal fun commandButtonBounds(width: Int, index: Int): Rectangle {
+    val panel = commandPanelBounds(width, 640)
+    return Rectangle(panel.x + 10, panel.y + 28 + (index * 34), panel.width - 20, 26)
+}
+
+internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButton> {
+    val buttons =
+        mutableListOf(
+            ClientCommandButton("Move", "move"),
+            ClientCommandButton("AttackMove", "attackMove"),
+            ClientCommandButton("Patrol", "patrol"),
+            ClientCommandButton("Hold", "hold"),
+            ClientCommandButton("Build Depot", "build:Depot"),
+            ClientCommandButton("Build ResourceDepot", "build:ResourceDepot"),
+            ClientCommandButton("Build GasDepot", "build:GasDepot"),
+            ClientCommandButton("Clear", "clear")
+        )
+    return if (hasSelection) buttons else buttons.filter { it.actionId.startsWith("build:") || it.actionId == "clear" }
+}
+
+internal fun commandButtonAt(width: Int, x: Int, y: Int, hasSelection: Boolean): ClientCommandButton? {
+    val buttons = buildCommandButtons(hasSelection)
+    for (i in buttons.indices) {
+        if (commandButtonBounds(width, i).contains(x, y)) return buttons[i]
+    }
+    return null
 }
 
 internal fun buildClientHudLines(

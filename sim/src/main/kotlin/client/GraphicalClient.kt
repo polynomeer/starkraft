@@ -122,6 +122,10 @@ private class ClientPanel(
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
                 requestFocusInWindow()
+                if (SwingUtilities.isLeftMouseButton(e) && handleCommandPanelClick(e)) {
+                    repaint()
+                    return
+                }
                 if (SwingUtilities.isMiddleMouseButton(e)) {
                     panningCamera = true
                     panLastX = e.x
@@ -331,6 +335,43 @@ private class ClientPanel(
             "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
             "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}"
         )
+
+    private fun handleCommandPanelClick(e: MouseEvent): Boolean {
+        val button = commandButtonAt(width, e.x, e.y, session.state.selectedIds.isNotEmpty()) ?: return false
+        when (button.actionId) {
+            "move" -> {
+                groundMode = ClientGroundCommandMode.MOVE
+                buildModeTypeId = null
+            }
+            "attackMove" -> {
+                groundMode = ClientGroundCommandMode.ATTACK_MOVE
+                buildModeTypeId = null
+            }
+            "patrol" -> {
+                groundMode = ClientGroundCommandMode.PATROL
+                buildModeTypeId = null
+            }
+            "hold" -> {
+                val snapshot = session.state.snapshot ?: return true
+                val hold = buildHoldIntent(snapshot, session.state.selectedIds, requestIds)
+                if (hold != null) session.append(hold)
+                groundMode = null
+                buildModeTypeId = null
+            }
+            "clear" -> {
+                session.state.selectedIds.clear()
+                groundMode = null
+                buildModeTypeId = null
+            }
+            else -> {
+                if (button.actionId.startsWith("build:")) {
+                    buildModeTypeId = button.actionId.removePrefix("build:")
+                    groundMode = null
+                }
+            }
+        }
+        return true
+    }
 
     private fun drawBuildPreview(g: Graphics2D) {
         val snapshot = session.state.snapshot ?: return

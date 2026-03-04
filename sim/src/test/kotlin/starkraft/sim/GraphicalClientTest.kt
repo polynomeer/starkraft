@@ -32,6 +32,7 @@ import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
+import starkraft.sim.client.buildCommandButtons
 import starkraft.sim.client.buildPathSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
@@ -39,6 +40,7 @@ import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
+import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.isBuildPreviewValid
@@ -304,6 +306,28 @@ class GraphicalClientTest {
 
         assertEquals("rally: 14.0,10.0x2", buildRallySummary(snapshot, linkedSetOf(12, 13, 14)))
         assertEquals("rally: none", buildRallySummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds command panel buttons for selection state`() {
+        assertEquals(
+            listOf("move", "attackMove", "patrol", "hold", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            buildCommandButtons(true).map { it.actionId }
+        )
+        assertEquals(
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            buildCommandButtons(false).map { it.actionId }
+        )
+    }
+
+    @Test
+    fun `locates command button by panel click`() {
+        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (7 * 34), hasSelection = true)
+
+        assertEquals("move", move?.actionId)
+        assertEquals("clear", clear?.actionId)
+        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true))
     }
 
     @Test
