@@ -381,6 +381,9 @@ internal fun buildCommandButtons(
             ClientCommandButton("Cancel Build", "cancelBuild"),
             ClientCommandButton("Cancel Train", "cancelTrain"),
             ClientCommandButton("Cancel Research", "cancelResearch"),
+            ClientCommandButton("Pause", "play:pause"),
+            ClientCommandButton("Slower", "play:slower"),
+            ClientCommandButton("Faster", "play:faster"),
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Clear", "clear")
@@ -403,7 +406,10 @@ internal fun buildCommandButtons(
         buttons
     } else {
         buttons.filter {
-            it.actionId.startsWith("build:") || it.actionId.startsWith("scenario:") || it.actionId == "clear"
+            it.actionId.startsWith("build:") ||
+                it.actionId.startsWith("play:") ||
+                it.actionId.startsWith("scenario:") ||
+                it.actionId == "clear"
         }
     }
 }

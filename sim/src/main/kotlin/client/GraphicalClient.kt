@@ -531,6 +531,9 @@ private class ClientPanel(
             }
             "scenario:prev" -> cycleScenario(-1)
             "scenario:next" -> cycleScenario(1)
+            "play:pause" -> togglePause()
+            "play:slower" -> adjustSpeed(-1)
+            "play:faster" -> adjustSpeed(1)
             else -> {
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")
