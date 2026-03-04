@@ -254,6 +254,11 @@ class ReplayHashRecorder : Recorder {
                 mixInt(cmd.tick)
                 mixInt(cmd.buildingId)
             }
+            is Command.CancelBuild -> {
+                mixInt(39)
+                mixInt(cmd.tick)
+                mixInt(cmd.buildingId)
+            }
             is Command.Research -> {
                 mixInt(34)
                 mixInt(cmd.tick)

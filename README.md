@@ -135,6 +135,7 @@ Script syntax:
   If `yield` is omitted, the node is uncapped and workers harvest at their own rate.
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
 - `build [@label] <faction> <typeId> <tileX> <tileY> [width] [height] [hp] [armor] [minerals] [gas]` place a building footprint
+- `cancelBuild <buildingId|@label>` cancel an unfinished building and refund its stored build cost
 - `train <buildingId|@label> <typeId> [buildTicks] [minerals] [gas]` enqueue unit production on a building
 - `research <buildingId|@label> <techId> [buildTicks] [minerals] [gas]` enqueue faction tech research on a building
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
@@ -144,6 +145,7 @@ Script syntax:
 - Unit, building, and research defs can also declare `requiredResearchIds`, which unlock only after that faction finishes the corresponding research queue
 - `train` also fails with `underConstruction` when the producer building has not finished building yet
 - Buildings under construction only advance while a same-faction worker with an active `construct` order is in build range
+- `cancelBuild` only works on unfinished structures; completed buildings fail with `notUnderConstruction`
 - Building defs can opt into research with `supportsResearch`; tech defs live in `/Users/hammac/Projects/starkraft/sim/src/main/resources/data/techs.json`
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 

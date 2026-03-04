@@ -2230,6 +2230,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     println("tick=$tick cancelTrain building=${c.buildingId}")
                 }
+                is Command.CancelBuild -> {
+                    println("tick=$tick cancelBuild building=${c.buildingId}")
+                }
                 is Command.Research -> {
                     println(
                         "tick=$tick research building=${c.buildingId} tech=${c.techId} " +
@@ -2674,6 +2677,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in cancelTrain at tick $tick")
                     }
                 }
+                is Command.CancelBuild -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in cancelBuild at tick $tick")
+                    }
+                }
                 is Command.Research -> {
                     if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
                         error("Unknown building id '${c.buildingId}' in research at tick $tick")
@@ -2817,6 +2825,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.CancelTrain -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in cancelTrain at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.CancelBuild -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in cancelBuild at tick $tick (spawn/build first)")
                     }
                 }
                 is Command.Research -> {
@@ -3127,6 +3140,7 @@ internal fun buildCommandStats(
                 is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
                 is Command.Train -> Unit
+                is Command.CancelBuild -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Research -> Unit
                 is Command.Rally -> Unit
@@ -3268,6 +3282,7 @@ internal fun buildCommandStats(
                 is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
                 is Command.Train -> Unit
+                is Command.CancelBuild -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Research -> Unit
                 is Command.Rally -> Unit
@@ -4499,6 +4514,29 @@ fun issue(
                 emitCommandAck(false, reason = "nothingToCancel")
             }
         }
+        is Command.CancelBuild -> {
+            val placement = buildings ?: error("CancelBuild requires BuildingPlacementSystem")
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            val failure = placement.cancelConstruction(buildingId)
+            if (failure != null) {
+                val reason =
+                    when (failure) {
+                        CancelConstructionFailure.MISSING_BUILDING -> "missingBuilding"
+                        CancelConstructionFailure.NOT_UNDER_CONSTRUCTION -> "notUnderConstruction"
+                    }
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "cancelBuild",
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId
+                )
+                emitCommandAck(false, reason = reason)
+            } else {
+                emitCommandAck(true)
+            }
+        }
         is Command.Research -> {
             val researchSystem = research ?: error("Research requires ResearchSystem")
             val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
@@ -4623,6 +4661,7 @@ private fun commandTypeName(cmd: Command): String =
         is Command.Spawn -> "spawn"
         is Command.Build -> "build"
         is Command.Train -> "train"
+        is Command.CancelBuild -> "cancelBuild"
         is Command.CancelTrain -> "cancelTrain"
         is Command.Research -> "research"
         is Command.Rally -> "rally"

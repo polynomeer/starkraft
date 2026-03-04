@@ -227,6 +227,16 @@ object ScriptRunner {
                     }
                     out.add(Command.CancelTrain(tick, buildingId))
                 }
+                "cancelBuild" -> {
+                    require(parts.size == 2) { "cancelBuild <buildingId|@label>" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    out.add(Command.CancelBuild(tick, buildingId))
+                }
                 "research" -> {
                     require(parts.size in 3..6) { "research <buildingId|@label> <techId> [buildTicks] [minerals] [gas]" }
                     val token = parts[1]

@@ -1355,6 +1355,14 @@ fun renderCommandStreamRecordJson(
                     requestId = requestId,
                     target = cmd.buildingId
                 )
+            is Command.CancelBuild ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "cancelBuild",
+                    requestId = requestId,
+                    target = cmd.buildingId
+                )
             is Command.Research ->
                 CommandStreamRecord(
                     sequence = sequence,

@@ -14,6 +14,11 @@ data class BuildPlacementResult(
     val failure: BuildFailureReason? = null
 )
 
+enum class CancelConstructionFailure {
+    MISSING_BUILDING,
+    NOT_UNDER_CONSTRUCTION
+}
+
 class BuildingPlacementSystem(
     private val world: World,
     private val map: MapGrid,
@@ -108,9 +113,23 @@ class BuildingPlacementSystem(
         val id = world.spawn(Transform(centerX, centerY), UnitTag(faction, typeId), Health(initialHp, hp, armor), w = null)
         world.footprints[id] = BuildingFootprint(tileX, tileY, width, height, clearance)
         if (buildTicks > 0) {
-            world.constructionSites[id] = ConstructionSite(buildTicks, buildTicks, hp)
+            world.constructionSites[id] = ConstructionSite(buildTicks, buildTicks, hp, mineralCost, gasCost)
         }
         return BuildPlacementResult(entityId = id)
+    }
+
+    fun cancelConstruction(id: EntityId, reason: String = "constructionCanceled"): CancelConstructionFailure? {
+        val site = world.constructionSites[id] ?: return if (world.footprints.containsKey(id)) {
+            CancelConstructionFailure.NOT_UNDER_CONSTRUCTION
+        } else {
+            CancelConstructionFailure.MISSING_BUILDING
+        }
+        val faction = world.tags[id]?.faction ?: return CancelConstructionFailure.MISSING_BUILDING
+        if (resources != null && (site.mineralCost > 0 || site.gasCost > 0)) {
+            resources.refund(faction, site.mineralCost, site.gasCost)
+        }
+        remove(id, reason)
+        return null
     }
 
     fun remove(id: EntityId, reason: String = "buildingRemoved"): Boolean {

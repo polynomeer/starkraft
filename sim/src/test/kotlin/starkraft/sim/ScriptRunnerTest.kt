@@ -238,6 +238,24 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses cancel build commands`() {
+        val path = Files.createTempFile("starkraft-cancel-build-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 0
+            build @depot 1 Depot 4 4
+            wait 1
+            cancelBuild @depot
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(Command.CancelBuild(1, -1), program.commands[1])
+    }
+
+    @Test
     fun `parses rally commands`() {
         val path = Files.createTempFile("starkraft-rally-script", ".script")
         Files.writeString(

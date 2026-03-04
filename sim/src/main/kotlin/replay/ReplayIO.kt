@@ -200,6 +200,7 @@ private data class ReplayEvent(
                     gasCost = gasCost ?: 0
                 )
             "cancelTrain" -> Command.CancelTrain(tick = tick, buildingId = target ?: 0)
+            "cancelBuild" -> Command.CancelBuild(tick = tick, buildingId = target ?: 0)
             "research" ->
                 Command.Research(
                     tick = tick,
@@ -300,6 +301,12 @@ private data class ReplayEvent(
                 is Command.CancelTrain ->
                     ReplayEvent(
                         type = "cancelTrain",
+                        tick = cmd.tick,
+                        target = cmd.buildingId
+                    )
+                is Command.CancelBuild ->
+                    ReplayEvent(
+                        type = "cancelBuild",
                         tick = cmd.tick,
                         target = cmd.buildingId
                     )

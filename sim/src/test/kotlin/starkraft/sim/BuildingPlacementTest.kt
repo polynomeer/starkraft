@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.data.DataRepo
 import starkraft.sim.ecs.BuildFailureReason
 import starkraft.sim.ecs.BuildingPlacementSystem
+import starkraft.sim.ecs.CancelConstructionFailure
 import starkraft.sim.ecs.ConstructionSystem
 import starkraft.sim.ecs.Health
 import starkraft.sim.ecs.MapGrid
@@ -288,5 +289,58 @@ class BuildingPlacementTest {
 
         assertEquals(1, world.healths[id]?.hp)
         assertEquals(4, world.constructionSites[id]?.remainingTicks)
+    }
+
+    @Test
+    fun `cancel build refunds and removes unfinished structure`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val data =
+            DataRepo(
+                """{"list":[]}""",
+                """{"list":[]}""",
+                """{"list":[{"id":"Depot","hp":400,"buildTicks":4,"armor":0,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"mineralCost":100,"gasCost":0}]}"""
+            )
+        resources.set(faction = 1, minerals = 150, gas = 0)
+
+        issue(
+            Command.Build(0, 1, "Depot", 8, 8, 0, 0, 0, 0, 0, 0),
+            world,
+            NullRecorder(),
+            data = data,
+            buildings = buildings
+        )
+        val depotId = world.footprints.keys.single()
+
+        issue(
+            Command.CancelBuild(1, depotId),
+            world,
+            NullRecorder(),
+            data = data,
+            buildings = buildings
+        )
+
+        assertFalse(world.footprints.containsKey(depotId))
+        assertFalse(world.constructionSites.containsKey(depotId))
+        assertFalse(occ.isBlocked(8, 8))
+        assertEquals(150, world.stockpiles[1]?.minerals)
+    }
+
+    @Test
+    fun `cancel build rejects completed structures`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        resources.set(faction = 1, minerals = 150, gas = 0)
+
+        val depotId = buildings.place(faction = 1, typeId = "Depot", tileX = 8, tileY = 8, width = 2, height = 2, hp = 400, mineralCost = 100)!!
+        assertEquals(CancelConstructionFailure.NOT_UNDER_CONSTRUCTION, buildings.cancelConstruction(depotId))
+        assertTrue(world.footprints.containsKey(depotId))
+        assertEquals(50, world.stockpiles[1]?.minerals)
     }
 }

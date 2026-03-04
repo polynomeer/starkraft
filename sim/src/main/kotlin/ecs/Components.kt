@@ -38,7 +38,9 @@ data class BuildingFootprint(
 data class ConstructionSite(
     var remainingTicks: Int,
     val totalTicks: Int,
-    val maxHp: Int
+    val maxHp: Int,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0
 )
 
 data class RallyPoint(val x: Float, val y: Float)

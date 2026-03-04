@@ -80,6 +80,10 @@ sealed interface Command {
         override val tick: Int,
         val buildingId: Int
     ) : Command
+    data class CancelBuild(
+        override val tick: Int,
+        val buildingId: Int
+    ) : Command
     data class Research(
         override val tick: Int,
         val buildingId: Int,
