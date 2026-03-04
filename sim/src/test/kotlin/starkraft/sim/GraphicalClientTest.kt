@@ -29,6 +29,7 @@ import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -121,7 +122,7 @@ class GraphicalClientTest {
                 buildVersion = "test-build",
                 mapWidth = 32,
                 mapHeight = 32,
-                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10, unlockedTechIds = listOf("AdvancedTraining"))),
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
@@ -158,6 +159,7 @@ class GraphicalClientTest {
                 "construction: sites=1 remaining=6 Depotx1",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
+                "tech: AdvancedTrainingx1",
                 "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
                 "construction state: total=2 f1=2 f2=0 remaining=10 @15",
                 "production events: e1/p2/c0/x1 @15",
@@ -286,6 +288,32 @@ class GraphicalClientTest {
             buildProductionSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("production: none", buildProductionSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds tech summary from unlocked faction techs`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(
+                    FactionSnapshot(faction = 1, visibleTiles = 10, unlockedTechIds = listOf("AdvancedTraining", "ArmorUp")),
+                    FactionSnapshot(faction = 2, visibleTiles = 8, unlockedTechIds = listOf("ArmorUp"))
+                ),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("tech: AdvancedTrainingx1 ArmorUpx2", buildTechSummary(snapshot))
+        assertEquals(
+            "tech: none",
+            buildTechSummary(
+                snapshot.copy(factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)))
+            )
+        )
     }
 
     @Test

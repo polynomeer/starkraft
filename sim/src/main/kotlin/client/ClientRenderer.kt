@@ -98,6 +98,7 @@ internal fun buildClientHudLines(
         buildConstructionSummary(snapshot, state.selectedIds),
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
+        buildTechSummary(snapshot),
         formatTickActivity(state.lastTickActivity),
         formatConstructionActivity(state.lastConstructionActivity),
         formatProductionActivity(state.lastProductionActivity),
@@ -163,6 +164,17 @@ internal fun buildResearchSummary(
             activeTechs.entries.joinToString(" ") { "${it.key}x${it.value}" }
     }
     return "research: labs=$researchBuildings queue=$queued active=$active"
+}
+
+internal fun buildTechSummary(snapshot: ClientSnapshot): String {
+    val techs = LinkedHashMap<String, Int>()
+    for (faction in snapshot.factions) {
+        for (techId in faction.unlockedTechIds) {
+            techs[techId] = (techs[techId] ?: 0) + 1
+        }
+    }
+    if (techs.isEmpty()) return "tech: none"
+    return "tech: " + techs.entries.joinToString(" ") { "${it.key}x${it.value}" }
 }
 
 internal fun buildProductionSummary(
