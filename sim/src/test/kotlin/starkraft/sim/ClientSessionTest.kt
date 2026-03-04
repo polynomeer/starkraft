@@ -88,10 +88,12 @@ class ClientSessionTest {
                                         builds = 1,
                                         buildsCancelled = 1,
                                         buildFailures = 2,
+                                        buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
                                         researchQueued = 1,
                                         researchCancelled = 1,
                                         researchCompleted = 0,
-                                        researchFailures = 1
+                                        researchFailures = 1,
+                                        researchFailureReasons = "invalidTech=1"
                                     )
                             )
                         )
@@ -115,7 +117,9 @@ class ClientSessionTest {
             assertEquals(1, session.state.lastTickActivity?.builds)
             assertEquals(1, session.state.lastTickActivity?.buildsCancelled)
             assertEquals(2, session.state.lastTickActivity?.buildFailures)
+            assertEquals("invalidPlacement=1,insufficientResources=1", session.state.lastTickActivity?.buildFailureReasons)
             assertEquals(1, session.state.lastTickActivity?.researchQueued)
+            assertEquals("invalidTech=1", session.state.lastTickActivity?.researchFailureReasons)
 
             assertFalse(session.poll())
         }

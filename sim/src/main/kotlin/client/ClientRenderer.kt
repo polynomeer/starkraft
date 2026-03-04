@@ -194,7 +194,7 @@ internal fun formatTickActivity(activity: ClientTickActivity?): String =
         "activity: none"
     } else {
         "activity: builds=${activity.builds}/x${activity.buildsCancelled} " +
-            "buildFails=${activity.buildFailures} " +
+            "buildFails=${activity.buildFailures}[${activity.buildFailureReasons}] " +
             "research=q${activity.researchQueued}/c${activity.researchCompleted}/x${activity.researchCancelled} " +
-            "researchFails=${activity.researchFailures} @${activity.tick}"
+            "researchFails=${activity.researchFailures}[${activity.researchFailureReasons}] @${activity.tick}"
     }

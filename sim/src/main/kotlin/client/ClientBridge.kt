@@ -49,10 +49,12 @@ internal data class ClientTickActivity(
     val builds: Int = 0,
     val buildsCancelled: Int = 0,
     val buildFailures: Int = 0,
+    val buildFailureReasons: String = "none",
     val researchQueued: Int = 0,
     val researchCancelled: Int = 0,
     val researchCompleted: Int = 0,
-    val researchFailures: Int = 0
+    val researchFailures: Int = 0,
+    val researchFailureReasons: String = "none"
 )
 
 internal data class ClientStreamState(
@@ -364,12 +366,24 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                         builds = obj["builds"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         buildsCancelled = obj["buildsCancelled"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         buildFailures = obj["buildFailures"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        buildFailureReasons = summarizeReasons(obj["buildFailureReasons"]?.jsonObject),
                         researchQueued = obj["researchQueued"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         researchCancelled = obj["researchCancelled"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         researchCompleted = obj["researchCompleted"]?.jsonPrimitive?.content?.toInt() ?: 0,
-                        researchFailures = obj["researchFailures"]?.jsonPrimitive?.content?.toInt() ?: 0
+                        researchFailures = obj["researchFailures"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        researchFailureReasons = summarizeReasons(obj["researchFailureReasons"]?.jsonObject)
                     )
             )
         else -> null
     }
+}
+
+private fun summarizeReasons(obj: kotlinx.serialization.json.JsonObject?): String {
+    if (obj == null) return "none"
+    val parts = ArrayList<String>()
+    for ((key, value) in obj) {
+        val count = value.jsonPrimitive.content.toIntOrNull() ?: continue
+        if (count > 0) parts += "$key=$count"
+    }
+    return if (parts.isEmpty()) "none" else parts.joinToString(",")
 }

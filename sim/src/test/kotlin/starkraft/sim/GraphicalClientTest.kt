@@ -67,16 +67,18 @@ class GraphicalClientTest {
     fun `formats tick activity for hud`() {
         assertEquals("activity: none", formatTickActivity(null))
         assertEquals(
-            "activity: builds=1/x1 buildFails=2 research=q1/c0/x1 researchFails=1 @12",
+            "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @12",
             formatTickActivity(
                 ClientTickActivity(
                     tick = 12,
                     builds = 1,
                     buildsCancelled = 1,
                     buildFailures = 2,
+                    buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
                     researchQueued = 1,
                     researchCancelled = 1,
-                    researchFailures = 1
+                    researchFailures = 1,
+                    researchFailureReasons = "invalidTech=1"
                 )
             )
         )
@@ -124,7 +126,7 @@ class GraphicalClientTest {
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
-                "activity: builds=1/x1 buildFails=2 research=q1/c0/x1 researchFails=1 @15",
+                "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
@@ -135,7 +137,17 @@ class GraphicalClientTest {
                     selectedIds = linkedSetOf(4, 11, 12),
                     lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true),
                     lastResearchActivity = ClientResearchActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1),
-                    lastTickActivity = ClientTickActivity(tick = 15, builds = 1, buildsCancelled = 1, buildFailures = 2, researchQueued = 1, researchCancelled = 1, researchFailures = 1)
+                    lastTickActivity = ClientTickActivity(
+                        tick = 15,
+                        builds = 1,
+                        buildsCancelled = 1,
+                        buildFailures = 2,
+                        buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
+                        researchQueued = 1,
+                        researchCancelled = 1,
+                        researchFailures = 1,
+                        researchFailureReasons = "invalidTech=1"
+                    )
                 )
             )
         )
@@ -320,7 +332,7 @@ class GraphicalClientTest {
     fun `parses tick summary updates through shared bridge`() {
         val update =
             parseClientStreamLine(
-                "{\"recordType\":\"tickSummary\",\"tick\":14,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":2,\"researchQueued\":1,\"researchCancelled\":1,\"researchCompleted\":0,\"researchFailures\":1}"
+                "{\"recordType\":\"tickSummary\",\"tick\":14,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":2,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":1},\"researchQueued\":1,\"researchCancelled\":1,\"researchCompleted\":0,\"researchFailures\":1,\"researchFailureReasons\":{\"missingBuilding\":0,\"underConstruction\":0,\"invalidTech\":1,\"missingTech\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"alreadyUnlocked\":0,\"queueFull\":0,\"nothingToCancel\":0}}"
             )
 
         assertNotNull(update)
@@ -328,9 +340,11 @@ class GraphicalClientTest {
         assertEquals(1, update?.tickActivity?.builds)
         assertEquals(1, update?.tickActivity?.buildsCancelled)
         assertEquals(2, update?.tickActivity?.buildFailures)
+        assertEquals("invalidPlacement=1,insufficientResources=1", update?.tickActivity?.buildFailureReasons)
         assertEquals(1, update?.tickActivity?.researchQueued)
         assertEquals(1, update?.tickActivity?.researchCancelled)
         assertEquals(1, update?.tickActivity?.researchFailures)
+        assertEquals("invalidTech=1", update?.tickActivity?.researchFailureReasons)
         assertNull(update?.snapshot)
     }
 
