@@ -185,6 +185,7 @@ private class ClientPanel(
     private val catalog: ClientCatalog = defaultClientCatalog(),
     private val controlPath: Path? = null,
     private val scenarioPath: Path? = null,
+    private val playRoot: Path? = null,
     private val requestRestart: () -> Unit = {}
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
@@ -368,6 +369,8 @@ private class ClientPanel(
                     KeyEvent.VK_CLOSE_BRACKET -> adjustSpeed(1)
                     KeyEvent.VK_F6 -> cycleScenario(-1)
                     KeyEvent.VK_F7 -> cycleScenario(1)
+                    KeyEvent.VK_F8 -> savePreset("quick")
+                    KeyEvent.VK_F9 -> loadPreset("quick")
                     KeyEvent.VK_TAB -> toggleScenarioMenu()
                     KeyEvent.VK_ENTER -> {
                         if (scenarioMenuOpen) applyScenarioSelection()
@@ -513,7 +516,8 @@ private class ClientPanel(
             "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}",
             "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}",
             formatPlayControlOverlay(playControlState),
-            "scenario: ${playScenario.id}"
+            "scenario: ${playScenario.id}",
+            "preset: quick"
         ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
@@ -566,6 +570,8 @@ private class ClientPanel(
             "play:pause" -> togglePause()
             "play:slower" -> adjustSpeed(-1)
             "play:faster" -> adjustSpeed(1)
+            "preset:save" -> savePreset("quick")
+            "preset:load" -> loadPreset("quick")
             else -> {
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")
@@ -659,10 +665,26 @@ private class ClientPanel(
         scenarioMenuOpen = false
         requestRestart()
     }
+
+    private fun savePreset(name: String) {
+        val root = playRoot ?: return
+        savePlayPreset(root.resolve("presets"), name, PlayPresetState(playScenario, playControlState))
+    }
+
+    private fun loadPreset(name: String) {
+        val root = playRoot ?: return
+        val preset = loadPlayPreset(root.resolve("presets"), name, playScenario) ?: return
+        playScenario = preset.scenario
+        scenarioMenuSelection = preset.scenario
+        playControlState = preset.control
+        scenarioPath?.let { writePlayScenario(it, playScenario) }
+        writePlayControl()
+        requestRestart()
+    }
 }
 
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt] [play-scenario.txt]" }
+    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt] [play-scenario.txt] [play-root]" }
     val snapshotSpec = args[0]
     val inputSpec =
         if (args.size >= 2) {
@@ -673,10 +695,11 @@ fun main(args: Array<String>) {
         }
     val controlPath = if (args.size >= 3) Paths.get(args[2]).toAbsolutePath().normalize() else null
     val scenarioPath = if (args.size >= 4) Paths.get(args[3]).toAbsolutePath().normalize() else null
+    val playRoot = if (args.size >= 5) Paths.get(args[4]).toAbsolutePath().normalize() else scenarioPath?.parent
 
     val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
     var restartRequested = false
-    val panel = ClientPanel(session, controlPath = controlPath, scenarioPath = scenarioPath) { restartRequested = true }
+    val panel = ClientPanel(session, controlPath = controlPath, scenarioPath = scenarioPath, playRoot = playRoot) { restartRequested = true }
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")

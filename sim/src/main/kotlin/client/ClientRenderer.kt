@@ -27,6 +27,8 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "play:pause" -> "Toggle play pause and resume"
         actionId == "play:slower" -> "Lower play speed by one step"
         actionId == "play:faster" -> "Raise play speed by one step"
+        actionId == "preset:save" -> "Save the current scenario and speed into the quick preset"
+        actionId == "preset:load" -> "Load the quick preset and restart into it"
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
         actionId == "clear" -> "Clear the current selection and command mode"
@@ -413,6 +415,8 @@ internal fun buildCommandButtons(
             ClientCommandButton("Pause", "play:pause"),
             ClientCommandButton("Slower", "play:slower"),
             ClientCommandButton("Faster", "play:faster"),
+            ClientCommandButton("Save Preset", "preset:save"),
+            ClientCommandButton("Load Preset", "preset:load"),
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Clear", "clear")
@@ -437,6 +441,7 @@ internal fun buildCommandButtons(
         buttons.filter {
             it.actionId.startsWith("build:") ||
                 it.actionId.startsWith("play:") ||
+                it.actionId.startsWith("preset:") ||
                 it.actionId.startsWith("scenario:") ||
                 it.actionId == "clear"
         }
@@ -483,7 +488,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] speed spc pause f5/f6/f7 tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f5/f6/f7/f8/f9 tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

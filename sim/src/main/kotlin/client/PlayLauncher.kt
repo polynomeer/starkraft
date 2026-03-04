@@ -11,7 +11,8 @@ data class PlayPaths(
     val snapshots: Path,
     val input: Path,
     val control: Path,
-    val scenario: Path
+    val scenario: Path,
+    val presetsDir: Path
 )
 
 internal fun defaultPlayPaths(root: Path): PlayPaths =
@@ -20,7 +21,8 @@ internal fun defaultPlayPaths(root: Path): PlayPaths =
         snapshots = root.resolve("snapshots.ndjson"),
         input = root.resolve("client-input.ndjson"),
         control = root.resolve("play-control.txt"),
-        scenario = root.resolve("play-scenario.txt")
+        scenario = root.resolve("play-scenario.txt"),
+        presetsDir = root.resolve("presets")
     )
 
 internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
@@ -48,6 +50,48 @@ internal fun readPlayScenario(path: Path, fallback: PlayScenario): PlayScenario 
     if (!Files.exists(path)) return fallback
     val id = Files.readString(path).lineSequence().firstOrNull()?.trim().orEmpty()
     return runCatching { PlayScenario.fromId(id) }.getOrDefault(fallback)
+}
+
+internal data class PlayPresetState(
+    val scenario: PlayScenario,
+    val control: PlayControlState
+)
+
+internal fun presetFilePath(presetsDir: Path, name: String): Path =
+    presetsDir.resolve("$name.play")
+
+internal fun renderPlayPreset(state: PlayPresetState): String =
+    buildString {
+        append("scenario=")
+        append(state.scenario.id)
+        append('\n')
+        append(renderPlayControlState(state.control))
+    }
+
+internal fun parsePlayPreset(text: String, fallbackScenario: PlayScenario): PlayPresetState {
+    var scenario = fallbackScenario
+    val controlLines = ArrayList<String>()
+    for (line in text.lineSequence()) {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty()) continue
+        if (trimmed.startsWith("scenario=")) {
+            scenario = runCatching { PlayScenario.fromId(trimmed.substringAfter('=')) }.getOrDefault(fallbackScenario)
+        } else {
+            controlLines.add(trimmed)
+        }
+    }
+    return PlayPresetState(scenario = scenario, control = parsePlayControlState(controlLines.joinToString("\n")))
+}
+
+internal fun savePlayPreset(presetsDir: Path, name: String, state: PlayPresetState) {
+    Files.createDirectories(presetsDir)
+    Files.writeString(presetFilePath(presetsDir, name), renderPlayPreset(state))
+}
+
+internal fun loadPlayPreset(presetsDir: Path, name: String, fallbackScenario: PlayScenario): PlayPresetState? {
+    val path = presetFilePath(presetsDir, name)
+    if (!Files.exists(path)) return null
+    return parsePlayPreset(Files.readString(path), fallbackScenario)
 }
 
 internal fun currentJavaBinary(): String =
@@ -88,7 +132,8 @@ internal fun buildPlayClientCommand(
     snapshotPath: Path,
     inputPath: Path,
     controlPath: Path,
-    scenarioPath: Path
+    scenarioPath: Path,
+    rootPath: Path
 ): List<String> =
     listOf(
         javaBin,
@@ -98,7 +143,8 @@ internal fun buildPlayClientCommand(
         snapshotPath.toString(),
         inputPath.toString(),
         controlPath.toString(),
-        scenarioPath.toString()
+        scenarioPath.toString(),
+        rootPath.toString()
     )
 
 internal fun resetPlayFiles(paths: PlayPaths) {
@@ -134,6 +180,7 @@ fun main(args: Array<String>) {
 
     root.createDirectories()
     val paths = defaultPlayPaths(root)
+    Files.createDirectories(paths.presetsDir)
     writePlayScenario(paths.scenario, scenario)
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
@@ -156,7 +203,7 @@ fun main(args: Array<String>) {
 
         try {
             val clientProcess =
-                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, paths.scenario))
+                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, paths.scenario, paths.root))
                     .inheritIO()
                     .start()
             val exitCode = clientProcess.waitFor()
