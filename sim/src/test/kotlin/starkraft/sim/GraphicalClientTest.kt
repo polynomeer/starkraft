@@ -34,6 +34,9 @@ import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
 import starkraft.sim.client.buildFogSummary
+import starkraft.sim.client.miniMapBounds
+import starkraft.sim.client.miniMapPoint
+import starkraft.sim.client.miniMapViewport
 import starkraft.sim.client.buildPathSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
@@ -496,6 +499,31 @@ class GraphicalClientTest {
         assertEquals(20, healthBarFillWidth(20, 50, 20))
         assertEquals(0, healthBarFillWidth(20, 0, 20))
         assertEquals(0, healthBarFillWidth(20, 10, 0))
+    }
+
+    @Test
+    fun `computes minimap geometry from world state`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 16,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+        val bounds = miniMapBounds(width = 640, height = 640)
+        val point = miniMapPoint(bounds, snapshot, 16f, 8f)
+        val viewport = miniMapViewport(bounds, snapshot, CameraView(panX = 0f, panY = 0f, zoom = 1f, baseTileSize = 20), 320, 160)
+
+        assertEquals(144, bounds.width)
+        assertEquals(144, bounds.height)
+        assertEquals(bounds.x + 72, point.x)
+        assertEquals(bounds.y + 72, point.y)
+        assertEquals(72, viewport.width)
+        assertEquals(72, viewport.height)
     }
 
     @Test

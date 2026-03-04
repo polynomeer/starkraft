@@ -3,6 +3,7 @@ package starkraft.sim.client
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
+import java.awt.Point
 import java.awt.Rectangle
 import java.util.LinkedHashMap
 
@@ -36,6 +37,7 @@ internal class SwingClientRenderer(
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawFog(graphics, snapshot, state.visionState, effectiveCamera)
+        drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
         drawCommandPanel(graphics, width, height, state)
         drawHud(graphics, height, state, snapshot, overlayLines)
     }
@@ -191,10 +193,81 @@ internal class SwingClientRenderer(
             g.drawString(buttons[i].label, bounds.x + 10, bounds.y + 21)
         }
     }
+
+    private fun drawMiniMap(
+        g: Graphics2D,
+        width: Int,
+        height: Int,
+        snapshot: ClientSnapshot,
+        selectedIds: Set<Int>,
+        camera: CameraView
+    ) {
+        val bounds = miniMapBounds(width, height)
+        g.color = Color(0x0F, 0x14, 0x1A, 210)
+        g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
+        g.color = Color(0x42, 0x4F, 0x5A)
+        g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+
+        for (node in snapshot.resourceNodes) {
+            val point = miniMapPoint(bounds, snapshot, node.x, node.y)
+            g.color = if (node.kind == "gas") Color(0x3A, 0xC4, 0x92) else neutralColor
+            g.fillRect(point.x - 1, point.y - 1, 3, 3)
+        }
+        for (entity in snapshot.entities) {
+            val point = miniMapPoint(bounds, snapshot, entity.x, entity.y)
+            g.color =
+                when (entity.faction) {
+                    1 -> friendlyColor
+                    2 -> enemyColor
+                    else -> neutralColor
+                }
+            val size = if (entity.id in selectedIds) 4 else 3
+            g.fillRect(point.x - (size / 2), point.y - (size / 2), size, size)
+        }
+
+        val viewport = miniMapViewport(bounds, snapshot, camera, width, height)
+        g.color = selectionColor
+        g.drawRect(viewport.x, viewport.y, viewport.width.coerceAtLeast(1), viewport.height.coerceAtLeast(1))
+    }
 }
 
 internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
     Rectangle(width - 176, 12, 164, height - 24)
+
+internal fun miniMapBounds(width: Int, height: Int): Rectangle =
+    Rectangle(12, 12, minOf(144, width / 4), minOf(144, height / 4))
+
+internal fun miniMapPoint(
+    bounds: Rectangle,
+    snapshot: ClientSnapshot,
+    worldX: Float,
+    worldY: Float
+): Point {
+    val x = bounds.x + ((worldX / snapshot.mapWidth.toFloat()) * bounds.width).toInt().coerceIn(0, bounds.width - 1)
+    val y = bounds.y + ((worldY / snapshot.mapHeight.toFloat()) * bounds.height).toInt().coerceIn(0, bounds.height - 1)
+    return Point(x, y)
+}
+
+internal fun miniMapViewport(
+    bounds: Rectangle,
+    snapshot: ClientSnapshot,
+    camera: CameraView,
+    screenWidth: Int,
+    screenHeight: Int
+): Rectangle {
+    val left = camera.screenToWorldX(0f).coerceIn(0f, snapshot.mapWidth.toFloat())
+    val top = camera.screenToWorldY(0f).coerceIn(0f, snapshot.mapHeight.toFloat())
+    val right = camera.screenToWorldX(screenWidth.toFloat()).coerceIn(0f, snapshot.mapWidth.toFloat())
+    val bottom = camera.screenToWorldY(screenHeight.toFloat()).coerceIn(0f, snapshot.mapHeight.toFloat())
+    val topLeft = miniMapPoint(bounds, snapshot, left, top)
+    val bottomRight = miniMapPoint(bounds, snapshot, right, bottom)
+    return Rectangle(
+        topLeft.x,
+        topLeft.y,
+        (bottomRight.x - topLeft.x).coerceAtLeast(1),
+        (bottomRight.y - topLeft.y).coerceAtLeast(1)
+    )
+}
 
 internal fun commandButtonBounds(width: Int, index: Int): Rectangle {
     val panel = commandPanelBounds(width, 640)

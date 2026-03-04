@@ -256,6 +256,7 @@ Client controls:
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
+- the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
