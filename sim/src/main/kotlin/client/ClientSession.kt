@@ -6,6 +6,7 @@ import java.util.LinkedHashSet
 
 internal data class ClientSessionState(
     var snapshot: ClientSnapshot? = null,
+    var mapState: ClientMapState? = null,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
     var lastAck: ClientCommandAck? = null,
     var lastConstructionActivity: ClientConstructionActivity? = null,
@@ -37,6 +38,12 @@ internal class ClientSession(
         if (latestSnapshot != null && state.snapshot?.tick != latestSnapshot.tick) {
             state.snapshot = latestSnapshot
             syncSelection(latestSnapshot)
+            changed = true
+        }
+
+        val latestMapState = update.mapState
+        if (latestMapState != null && latestMapState != state.mapState) {
+            state.mapState = latestMapState
             changed = true
         }
 

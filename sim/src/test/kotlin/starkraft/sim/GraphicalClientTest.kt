@@ -4,14 +4,17 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.ClientCommandIds
 import starkraft.sim.client.ClientGroundCommandMode
 import starkraft.sim.client.ClientIntent
+import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.applySelectionClick
 import starkraft.sim.client.buildHoldIntent
 import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
+import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientConstructionActivity
@@ -38,6 +41,7 @@ import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
+import starkraft.sim.client.isBuildPreviewValid
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -467,6 +471,44 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `build preview validity uses map and footprint blockers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(
+                        id = 12,
+                        faction = 1,
+                        typeId = "Depot",
+                        archetype = "producer",
+                        x = 7f,
+                        y = 4f,
+                        dir = 0f,
+                        hp = 400,
+                        maxHp = 400,
+                        armor = 1,
+                        footprintWidth = 2,
+                        footprintHeight = 2,
+                        placementClearance = 1
+                    )
+                ),
+                resourceNodes = emptyList()
+            )
+        val mapState = ClientMapState(width = 32, height = 32, blockedTiles = setOf(1 to 1), staticOccupancyTiles = setOf(2 to 2))
+        val depot = buildPreviewSpec("Depot")
+
+        assertEquals(true, isBuildPreviewValid(mapState, snapshot, depot, 12, 12))
+        assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 1, 1))
+        assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 2, 2))
+        assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 7, 4))
+    }
+
+    @Test
     fun `camera converts between world and screen coordinates`() {
         val camera = CameraView(panX = 40f, panY = 10f, zoom = 1.5f, baseTileSize = 20)
 
@@ -715,5 +757,18 @@ class GraphicalClientTest {
 
         assertEquals("patrol", intent.record.commandType)
         assertEquals("mode-1", intent.record.requestId)
+    }
+
+    @Test
+    fun `parses map state updates through shared bridge`() {
+        val update =
+            parseClientStreamLine(
+                "{\"recordType\":\"mapState\",\"width\":32,\"height\":32,\"blockedTiles\":[{\"x\":6,\"y\":14}],\"weightedTiles\":[],\"staticOccupancyTiles\":[{\"x\":7,\"y\":8}],\"resourceNodes\":[]}"
+            )
+
+        assertNotNull(update)
+        assertEquals(32, update?.mapState?.width)
+        assertTrue((6 to 14) in (update?.mapState?.blockedTiles ?: emptySet()))
+        assertTrue((7 to 8) in (update?.mapState?.staticOccupancyTiles ?: emptySet()))
     }
 }

@@ -78,8 +78,16 @@ internal data class ClientTickActivity(
     val researchFailureReasons: String = "none"
 )
 
+internal data class ClientMapState(
+    val width: Int,
+    val height: Int,
+    val blockedTiles: Set<Pair<Int, Int>> = emptySet(),
+    val staticOccupancyTiles: Set<Pair<Int, Int>> = emptySet()
+)
+
 internal data class ClientStreamState(
     val snapshot: ClientSnapshot? = null,
+    val mapState: ClientMapState? = null,
     val ack: ClientCommandAck? = null,
     val constructionActivity: ClientConstructionActivity? = null,
     val productionActivity: ClientProductionActivity? = null,
@@ -186,6 +194,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
 
     override fun poll(): ClientStreamState? {
         var latestSnapshot: ClientSnapshot? = null
+        var latestMapState: ClientMapState? = null
         var latestAck: ClientCommandAck? = null
         var latestConstructionActivity: ClientConstructionActivity? = null
         var latestProductionActivity: ClientProductionActivity? = null
@@ -196,15 +205,17 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
             if (line.isBlank()) continue
             val update = parseClientStreamLine(line) ?: continue
             if (update.snapshot != null) latestSnapshot = update.snapshot
+            if (update.mapState != null) latestMapState = update.mapState
             if (update.ack != null) latestAck = update.ack
             if (update.constructionActivity != null) latestConstructionActivity = update.constructionActivity
             if (update.productionActivity != null) latestProductionActivity = update.productionActivity
             if (update.researchActivity != null) latestResearchActivity = update.researchActivity
             if (update.tickActivity != null) latestTickActivity = update.tickActivity
         }
-        if (latestSnapshot == null && latestAck == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
+        if (latestSnapshot == null && latestMapState == null && latestAck == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
         return ClientStreamState(
             snapshot = latestSnapshot,
+            mapState = latestMapState,
             ack = latestAck,
             constructionActivity = latestConstructionActivity,
             productionActivity = latestProductionActivity,
@@ -345,6 +356,26 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
     if (line.isBlank()) return null
     val obj = clientBridgeJson.parseToJsonElement(line).jsonObject
     return when (obj["recordType"]?.jsonPrimitive?.content) {
+        "mapState" -> {
+            val blocked = obj["blockedTiles"]?.jsonArray?.mapNotNull { tile ->
+                val x = tile.jsonObject["x"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null
+                val y = tile.jsonObject["y"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null
+                x to y
+            }?.toSet() ?: emptySet()
+            val occupied = obj["staticOccupancyTiles"]?.jsonArray?.mapNotNull { tile ->
+                val x = tile.jsonObject["x"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null
+                val y = tile.jsonObject["y"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null
+                x to y
+            }?.toSet() ?: emptySet()
+            ClientStreamState(
+                mapState = ClientMapState(
+                    width = obj["width"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                    height = obj["height"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                    blockedTiles = blocked,
+                    staticOccupancyTiles = occupied
+                )
+            )
+        }
         "snapshot" -> {
             val snapshot = obj["snapshot"] ?: return null
             ClientStreamState(

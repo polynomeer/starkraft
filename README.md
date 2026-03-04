@@ -243,6 +243,9 @@ Client controls:
 - `M`: arm move mode for the next ground right-click
 - `A`: arm attack-move mode for the next ground right-click
 - `P`: arm patrol mode for the next ground right-click
+- `B`: arm `Depot` placement preview
+- `R`: arm `ResourceDepot` placement preview
+- `G`: arm `GasDepot` placement preview
 - `H`: issue hold to the current selection immediately
 - `Esc`: clear selection and reset command mode
 - right click enemy: issue `attack`
@@ -250,6 +253,7 @@ Client controls:
 - right click empty ground: issue `move`
 - selected producers render rally markers, and entities now show simple health bars in the graphical client
 - selected units with active paths render path-goal markers and a path summary in the HUD
+- the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.

@@ -46,6 +46,57 @@ internal fun zoomCameraAt(camera: CameraView, screenX: Float, screenY: Float, zo
     )
 }
 
+internal data class BuildPreviewSpec(
+    val typeId: String,
+    val width: Int,
+    val height: Int,
+    val clearance: Int
+)
+
+internal fun buildPreviewSpec(typeId: String): BuildPreviewSpec? =
+    when (typeId) {
+        "Depot" -> BuildPreviewSpec(typeId, 2, 2, 1)
+        "ResourceDepot" -> BuildPreviewSpec(typeId, 2, 2, 1)
+        "GasDepot" -> BuildPreviewSpec(typeId, 2, 2, 1)
+        else -> null
+    }
+
+internal fun isBuildPreviewValid(
+    mapState: ClientMapState?,
+    snapshot: ClientSnapshot?,
+    spec: BuildPreviewSpec?,
+    tileX: Int,
+    tileY: Int
+): Boolean {
+    if (mapState == null || snapshot == null || spec == null) return false
+    val minX = tileX - spec.clearance
+    val minY = tileY - spec.clearance
+    val maxX = tileX + spec.width + spec.clearance - 1
+    val maxY = tileY + spec.height + spec.clearance - 1
+    if (minX < 0 || minY < 0 || maxX >= mapState.width || maxY >= mapState.height) return false
+    for (x in minX..maxX) {
+        for (y in minY..maxY) {
+            if ((x to y) in mapState.blockedTiles) return false
+            if ((x to y) in mapState.staticOccupancyTiles) return false
+        }
+    }
+    for (entity in snapshot.entities) {
+        val width = entity.footprintWidth ?: continue
+        val height = entity.footprintHeight ?: continue
+        val clearance = entity.placementClearance ?: 0
+        val entityTileX = kotlin.math.floor(entity.x).toInt()
+        val entityTileY = kotlin.math.floor(entity.y).toInt()
+        val entityMinX = entityTileX - clearance
+        val entityMinY = entityTileY - clearance
+        val entityMaxX = entityTileX + width + clearance - 1
+        val entityMaxY = entityTileY + height + clearance - 1
+        if (maxX >= entityMinX && minX <= entityMaxX && maxY >= entityMinY && minY <= entityMaxY) {
+            return false
+        }
+    }
+    return true
+}
+
 private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer()
@@ -61,6 +112,7 @@ private class ClientPanel(
     private var panLastY = 0
     private var camera = CameraView()
     private var groundMode: ClientGroundCommandMode? = null
+    private var buildModeTypeId: String? = null
 
     init {
         background = Color(0x12, 0x18, 0x1F)
@@ -147,15 +199,29 @@ private class ClientPanel(
                     KeyEvent.VK_M -> groundMode = ClientGroundCommandMode.MOVE
                     KeyEvent.VK_A -> groundMode = ClientGroundCommandMode.ATTACK_MOVE
                     KeyEvent.VK_P -> groundMode = ClientGroundCommandMode.PATROL
+                    KeyEvent.VK_B -> {
+                        buildModeTypeId = "Depot"
+                        groundMode = null
+                    }
+                    KeyEvent.VK_R -> {
+                        buildModeTypeId = "ResourceDepot"
+                        groundMode = null
+                    }
+                    KeyEvent.VK_G -> {
+                        buildModeTypeId = "GasDepot"
+                        groundMode = null
+                    }
                     KeyEvent.VK_H -> {
                         val snapshot = session.state.snapshot ?: return
                         val hold = buildHoldIntent(snapshot, session.state.selectedIds, requestIds) ?: return
                         session.append(hold)
                         groundMode = null
+                        buildModeTypeId = null
                     }
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
                         groundMode = null
+                        buildModeTypeId = null
                     }
                     else -> return
                 }
@@ -169,6 +235,7 @@ private class ClientPanel(
         val g = graphics as Graphics2D
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         renderer.render(g, width, height, session.state, camera, buildOverlayLines())
+        drawBuildPreview(g)
         if (draggingSelection && isSelectionDrag()) {
             drawSelectionBox(g)
         }
@@ -178,6 +245,30 @@ private class ClientPanel(
         val snapshot = session.state.snapshot ?: return
         val worldX = camera.screenToWorldX(e.x.toFloat())
         val worldY = camera.screenToWorldY(e.y.toFloat())
+        if (SwingUtilities.isRightMouseButton(e) && buildModeTypeId != null) {
+            val typeId = buildModeTypeId ?: return
+            val spec = buildPreviewSpec(typeId) ?: return
+            val tileX = kotlin.math.floor(worldX).toInt()
+            val tileY = kotlin.math.floor(worldY).toInt()
+            if (isBuildPreviewValid(session.state.mapState, snapshot, spec, tileX, tileY)) {
+                session.append(
+                    ClientIntent.Command(
+                        InputJson.InputCommandRecord(
+                            tick = snapshot.tick + 1,
+                            commandType = "build",
+                            requestId = requestIds.nextRequestId(),
+                            faction = 1,
+                            typeId = typeId,
+                            tileX = tileX,
+                            tileY = tileY
+                        )
+                    )
+                )
+                buildModeTypeId = null
+            }
+            repaint()
+            return
+        }
         when (
             val intent =
                 buildClientIntent(
@@ -200,6 +291,7 @@ private class ClientPanel(
             is ClientIntent.Command -> {
                 session.append(intent)
                 groundMode = null
+                buildModeTypeId = null
             }
             null -> return
         }
@@ -237,8 +329,27 @@ private class ClientPanel(
     private fun buildOverlayLines(): List<String> =
         listOf(
             "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
-            "mode: ${groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}"
+            "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}"
         )
+
+    private fun drawBuildPreview(g: Graphics2D) {
+        val snapshot = session.state.snapshot ?: return
+        val mapState = session.state.mapState ?: return
+        val typeId = buildModeTypeId ?: return
+        val spec = buildPreviewSpec(typeId) ?: return
+        val mouse = mousePosition ?: return
+        val tileX = kotlin.math.floor(camera.screenToWorldX(mouse.x.toFloat())).toInt()
+        val tileY = kotlin.math.floor(camera.screenToWorldY(mouse.y.toFloat())).toInt()
+        val valid = isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)
+        val startX = camera.worldToScreenX(tileX.toFloat()).toInt()
+        val startY = camera.worldToScreenY(tileY.toFloat()).toInt()
+        val width = (spec.width * camera.tileSize).toInt()
+        val height = (spec.height * camera.tileSize).toInt()
+        g.color = if (valid) Color(0x4A, 0xD7, 0x7D, 72) else Color(0xD7, 0x4A, 0x4A, 72)
+        g.fillRect(startX, startY, width, height)
+        g.color = if (valid) Color(0x4A, 0xD7, 0x7D) else Color(0xD7, 0x4A, 0x4A)
+        g.drawRect(startX, startY, width, height)
+    }
 }
 
 fun main(args: Array<String>) {
