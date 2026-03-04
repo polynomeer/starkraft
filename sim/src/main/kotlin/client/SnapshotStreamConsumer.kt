@@ -69,6 +69,10 @@ data class SnapshotStreamSummary(
     val productionProgressCount: Int = 0,
     val productionCompleteCount: Int = 0,
     val productionCancelCount: Int = 0,
+    val researchEnqueueCount: Int = 0,
+    val researchProgressCount: Int = 0,
+    val researchCompleteCount: Int = 0,
+    val researchCancelCount: Int = 0,
     val combatAttackCount: Int = 0,
     val combatKillCount: Int = 0,
     val combatDamageEventCount: Int = 0,
@@ -154,6 +158,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var productionProgressCount = 0
     var productionCompleteCount = 0
     var productionCancelCount = 0
+    var researchEnqueueCount = 0
+    var researchProgressCount = 0
+    var researchCompleteCount = 0
+    var researchCancelCount = 0
     var combatAttackCount = 0
     var combatKillCount = 0
     var combatDamageEventCount = 0
@@ -387,6 +395,17 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "research" -> {
+                val events = obj.array("events")
+                for (event in events) {
+                    when (event.string("kind")) {
+                        "enqueue" -> researchEnqueueCount++
+                        "complete" -> researchCompleteCount++
+                        "cancel" -> researchCancelCount++
+                        else -> researchProgressCount++
+                    }
+                }
+            }
             "metrics" -> {
                 pathRequestCount += obj.int("pathRequests") ?: 0
                 pathSolvedCount += obj.int("pathSolved") ?: 0
@@ -501,6 +520,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         productionProgressCount = productionProgressCount,
         productionCompleteCount = productionCompleteCount,
         productionCancelCount = productionCancelCount,
+        researchEnqueueCount = researchEnqueueCount,
+        researchProgressCount = researchProgressCount,
+        researchCompleteCount = researchCompleteCount,
+        researchCancelCount = researchCancelCount,
         combatAttackCount = combatAttackCount,
         combatKillCount = combatKillCount,
         combatDamageEventCount = combatDamageEventCount,
@@ -582,6 +605,18 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
+    if (
+        summary.researchEnqueueCount > 0 ||
+        summary.researchProgressCount > 0 ||
+        summary.researchCompleteCount > 0 ||
+        summary.researchCancelCount > 0 ||
+        summary.countsByType["research"] != null
+    ) {
+        lines.add(
+            "research: e${summary.researchEnqueueCount}/p${summary.researchProgressCount}/" +
+                "c${summary.researchCompleteCount}/x${summary.researchCancelCount}"
         )
     }
     if (summary.dropoffStateCount > 0 || summary.countsByType["dropoffState"] != null) {

@@ -296,6 +296,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
   It also summarizes harvester gather/return phase counts and total carried cargo when `harvesterState` records are present.
   It also summarizes `harvesterRetarget` records as total reassignment events and unique workers retargeted after node depletion.
   When `harvestCycle` records are present, it also prints pickup/deposit event counts and transferred amounts.
+  It also summarizes `research` records as `enqueue/progress/complete/cancel` totals.
   Producer summaries include drop-off-capable building counts plus mineral/gas compatibility totals when `dropoffResourceKinds` is present in `producerState`.
   Resource-node totals also drop depleted nodes once a `despawn` record with reason `resourceDepleted` is seen.
 - Replay validation/stats warn when replay `mapId` or `buildVersion` differs from the current run
