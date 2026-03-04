@@ -35,6 +35,7 @@ internal class SwingClientRenderer(
         drawResources(graphics, snapshot, effectiveCamera)
         drawPathMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
+        drawTaskMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawFog(graphics, snapshot, state.visionState, effectiveCamera)
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
@@ -131,6 +132,38 @@ internal class SwingClientRenderer(
             val endY = camera.worldToScreenY(goalY + 0.5f).toInt()
             g.drawLine(startX, startY, endX, endY)
             g.drawRect(endX - 4, endY - 4, 8, 8)
+        }
+    }
+
+    private fun drawTaskMarkers(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
+        val entitiesById = snapshot.entities.associateBy { it.id }
+        val resourceNodesById = snapshot.resourceNodes.associateBy { it.id }
+        g.stroke = BasicStroke(1.25f)
+        for (entity in snapshot.entities) {
+            if (entity.id !in selectedIds) continue
+            val startX = camera.worldToScreenX(entity.x).toInt()
+            val startY = camera.worldToScreenY(entity.y).toInt()
+            entity.buildTargetId?.let { targetId ->
+                val target = entitiesById[targetId] ?: return@let
+                g.color = Color(0xF5, 0xCB, 0x5C)
+                val endX = camera.worldToScreenX(target.x).toInt()
+                val endY = camera.worldToScreenY(target.y).toInt()
+                g.drawLine(startX, startY, endX, endY)
+            }
+            entity.harvestTargetNodeId?.let { targetId ->
+                val target = resourceNodesById[targetId] ?: return@let
+                g.color = Color(0x6E, 0xD3, 0x91)
+                val endX = camera.worldToScreenX(target.x).toInt()
+                val endY = camera.worldToScreenY(target.y).toInt()
+                g.drawLine(startX, startY, endX, endY)
+            }
+            entity.harvestReturnTargetId?.let { targetId ->
+                val target = entitiesById[targetId] ?: return@let
+                g.color = Color(0xD3, 0x9A, 0x6E)
+                val endX = camera.worldToScreenX(target.x).toInt()
+                val endY = camera.worldToScreenY(target.y).toInt()
+                g.drawLine(startX, startY, endX, endY)
+            }
         }
     }
 
@@ -309,6 +342,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
+        buildTaskSummary(snapshot, state.selectedIds),
         buildPathSummary(snapshot, state.selectedIds),
         buildFogSummary(snapshot, state.visionState),
         buildProductionSummary(snapshot, state.selectedIds),
@@ -462,6 +496,26 @@ internal fun buildConstructionSummary(
     if (sites == 0) return "construction: none"
     val kinds = buildingTypes.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "construction: sites=$sites remaining=$remainingTicks $kinds"
+}
+
+internal fun buildTaskSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "tasks: none"
+    var builds = 0
+    var gathers = 0
+    var returns = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.buildTargetId != null) builds++
+        when (entity.harvestPhase) {
+            "gather" -> gathers++
+            "return" -> returns++
+        }
+    }
+    if (builds == 0 && gathers == 0 && returns == 0) return "tasks: none"
+    return "tasks: build=$builds gather=$gathers return=$returns"
 }
 
 internal fun buildPathSummary(

@@ -44,6 +44,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.commandButtonAt
@@ -148,7 +149,7 @@ class GraphicalClientTest {
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
-                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30),
+                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30, harvestPhase = "gather", harvestTargetNodeId = 40),
                     EntitySnapshot(
                         id = 12,
                         faction = 1,
@@ -182,6 +183,7 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
+                "tasks: build=1 gather=1 return=0",
                 "paths: active=1 remaining=5 goals=12,14x1",
                 "fog: visible=10 hidden=1014",
                 "production: labs=1 queue=2 active=Marinex1",
@@ -465,6 +467,28 @@ class GraphicalClientTest {
             buildConstructionSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("construction: none", buildConstructionSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds task summary from selected workers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Worker", archetype = "worker", x = 7f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 31),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Worker", archetype = "worker", x = 8f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, harvestPhase = "gather", harvestTargetNodeId = 50),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Worker", archetype = "worker", x = 9f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, harvestPhase = "return", harvestReturnTargetId = 60)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("tasks: build=1 gather=1 return=1", buildTaskSummary(snapshot, linkedSetOf(12, 13, 14)))
+        assertEquals("tasks: none", buildTaskSummary(snapshot, emptySet()))
     }
 
     @Test
