@@ -12,7 +12,9 @@ import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
+import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.formatAckStatus
+import starkraft.sim.client.formatResearchActivity
 import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
@@ -50,6 +52,15 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `formats research activity for hud`() {
+        assertEquals("research events: none", formatResearchActivity(null))
+        assertEquals(
+            "research events: e1/p2/c0/x1 @12",
+            formatResearchActivity(ClientResearchActivity(tick = 12, enqueue = 1, progress = 2, complete = 0, cancel = 1))
+        )
+    }
+
+    @Test
     fun `builds shared hud lines for pluggable renderers`() {
         val snapshot =
             ClientSnapshot(
@@ -73,12 +84,17 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
+                "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
-                state = ClientSessionState(selectedIds = linkedSetOf(4, 11, 12), lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true))
+                state = ClientSessionState(
+                    selectedIds = linkedSetOf(4, 11, 12),
+                    lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true),
+                    lastResearchActivity = ClientResearchActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1)
+                )
             )
         )
     }
@@ -189,6 +205,20 @@ class GraphicalClientTest {
         assertEquals("move", ack?.ack?.commandType)
         assertEquals("cli-7", ack?.ack?.requestId)
         assertNull(ack?.snapshot)
+    }
+
+    @Test
+    fun `parses research stream updates through shared bridge`() {
+        val update =
+            parseClientStreamLine(
+                "{\"recordType\":\"research\",\"tick\":14,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"techId\":\"AdvancedTraining\",\"remainingTicks\":60},{\"kind\":\"cancel\",\"buildingId\":1,\"techId\":\"Stimpack\",\"remainingTicks\":12}]}"
+            )
+
+        assertNotNull(update)
+        assertEquals(14, update?.researchActivity?.tick)
+        assertEquals(1, update?.researchActivity?.enqueue)
+        assertEquals(1, update?.researchActivity?.cancel)
+        assertNull(update?.snapshot)
     }
 
     @Test

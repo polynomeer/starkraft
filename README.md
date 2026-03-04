@@ -331,6 +331,7 @@ If a node depletes and a worker is reassigned, the consumer also prints a line l
 If workers are assigned to construction, the consumer also prints a line like `builders: total=2 f1=2 f2=0 targets=1`.
 The graphical client HUD also shows selected builder assignment state, e.g. `builders: active=1 targets=1`.
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
+The graphical client HUD also shows the latest streamed research event totals, e.g. `research events: e1/p2/c0/x1 @15`.
 
 Sample harvest script:
 `./gradlew :sim:run --args="--script sim/scripts/harvest.script --ticks 50 --noSleep"`

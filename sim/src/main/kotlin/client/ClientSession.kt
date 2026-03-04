@@ -7,7 +7,8 @@ import java.util.LinkedHashSet
 internal data class ClientSessionState(
     var snapshot: ClientSnapshot? = null,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
-    var lastAck: ClientCommandAck? = null
+    var lastAck: ClientCommandAck? = null,
+    var lastResearchActivity: ClientResearchActivity? = null
 )
 
 internal class ClientSession(
@@ -39,6 +40,12 @@ internal class ClientSession(
         val latestAck = update.ack
         if (latestAck != null && latestAck != state.lastAck) {
             state.lastAck = latestAck
+            changed = true
+        }
+
+        val latestResearchActivity = update.researchActivity
+        if (latestResearchActivity != null && latestResearchActivity != state.lastResearchActivity) {
+            state.lastResearchActivity = latestResearchActivity
             changed = true
         }
 

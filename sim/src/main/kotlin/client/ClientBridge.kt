@@ -3,6 +3,7 @@ package starkraft.sim.client
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import starkraft.sim.net.InputJson
@@ -35,9 +36,18 @@ internal data class ClientCommandAck(
     val reason: String? = null
 )
 
+internal data class ClientResearchActivity(
+    val tick: Int,
+    val enqueue: Int = 0,
+    val progress: Int = 0,
+    val complete: Int = 0,
+    val cancel: Int = 0
+)
+
 internal data class ClientStreamState(
     val snapshot: ClientSnapshot? = null,
-    val ack: ClientCommandAck? = null
+    val ack: ClientCommandAck? = null,
+    val researchActivity: ClientResearchActivity? = null
 )
 
 internal interface ClientStreamSubscription : Closeable {
@@ -140,15 +150,17 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
     override fun poll(): ClientStreamState? {
         var latestSnapshot: ClientSnapshot? = null
         var latestAck: ClientCommandAck? = null
+        var latestResearchActivity: ClientResearchActivity? = null
         while (true) {
             val line = file.readLine() ?: break
             if (line.isBlank()) continue
             val update = parseClientStreamLine(line) ?: continue
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.ack != null) latestAck = update.ack
+            if (update.researchActivity != null) latestResearchActivity = update.researchActivity
         }
-        if (latestSnapshot == null && latestAck == null) return null
-        return ClientStreamState(snapshot = latestSnapshot, ack = latestAck)
+        if (latestSnapshot == null && latestAck == null && latestResearchActivity == null) return null
+        return ClientStreamState(snapshot = latestSnapshot, ack = latestAck, researchActivity = latestResearchActivity)
     }
 
     override fun close() {
@@ -300,6 +312,31 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                         reason = obj["reason"]?.let { if (it is JsonNull) null else it.jsonPrimitive.content }
                     )
             )
+        "research" -> {
+            val events = obj["events"]?.jsonArray ?: return null
+            var enqueue = 0
+            var progress = 0
+            var complete = 0
+            var cancel = 0
+            for (event in events) {
+                when (event.jsonObject["kind"]?.jsonPrimitive?.content) {
+                    "enqueue" -> enqueue++
+                    "complete" -> complete++
+                    "cancel" -> cancel++
+                    else -> progress++
+                }
+            }
+            ClientStreamState(
+                researchActivity =
+                    ClientResearchActivity(
+                        tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        enqueue = enqueue,
+                        progress = progress,
+                        complete = complete,
+                        cancel = cancel
+                    )
+            )
+        }
         else -> null
     }
 }

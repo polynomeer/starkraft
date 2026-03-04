@@ -96,6 +96,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
+        formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
     )
@@ -155,6 +156,13 @@ internal fun buildResearchSummary(
             "idle"
         } else {
             activeTechs.entries.joinToString(" ") { "${it.key}x${it.value}" }
-        }
+    }
     return "research: labs=$researchBuildings queue=$queued active=$active"
 }
+
+internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
+    if (activity == null) {
+        "research events: none"
+    } else {
+        "research events: e${activity.enqueue}/p${activity.progress}/c${activity.complete}/x${activity.cancel} @${activity.tick}"
+    }
