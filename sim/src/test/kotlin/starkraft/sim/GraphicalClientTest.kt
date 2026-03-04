@@ -201,7 +201,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: m move   a attackMove   p patrol   h hold   x/t/y cancel   esc clear"
+                "keys: m move   a attackMove   p patrol   h hold   u/i queue   x/t/y cancel   esc clear"
             ),
             buildClientHudLines(
                 snapshot = snapshot,

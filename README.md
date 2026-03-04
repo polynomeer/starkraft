@@ -247,6 +247,8 @@ Client controls:
 - `R`: arm `ResourceDepot` placement preview
 - `G`: arm `GasDepot` placement preview
 - `H`: issue hold to the current selection immediately
+- `U`: queue `Train Marine` on the first selected training building
+- `I`: queue `Research AdvancedTraining` on the first selected research-capable building
 - `X`: cancel build on the first selected construction site
 - `T`: cancel train on the first selected producer queue
 - `Y`: cancel research on the first selected research queue

@@ -319,6 +319,14 @@ private class ClientPanel(
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelResearch", requestIds)?.let(session::append)
                     }
+                    KeyEvent.VK_U -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+                    }
+                    KeyEvent.VK_I -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
+                    }
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
                         groundMode = null

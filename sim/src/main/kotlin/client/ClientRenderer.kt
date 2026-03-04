@@ -424,7 +424,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: m move   a attackMove   p patrol   h hold   x/t/y cancel   esc clear"
+        "keys: m move   a attackMove   p patrol   h hold   u/i queue   x/t/y cancel   esc clear"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
