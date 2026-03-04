@@ -324,9 +324,17 @@ private class ClientPanel(
                     }
                     KeyEvent.VK_U -> {
                         val snapshot = session.state.snapshot ?: return
-                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Worker", requestIds)?.let(session::append)
                     }
                     KeyEvent.VK_I -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+                    }
+                    KeyEvent.VK_O -> {
+                        val snapshot = session.state.snapshot ?: return
+                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Zergling", requestIds)?.let(session::append)
+                    }
+                    KeyEvent.VK_L -> {
                         val snapshot = session.state.snapshot ?: return
                         buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
                     }
@@ -476,9 +484,17 @@ private class ClientPanel(
                 val snapshot = session.state.snapshot ?: return true
                 buildCancelIntent(snapshot, session.state.selectedIds, button.actionId, requestIds)?.let(session::append)
             }
+            "train:Worker" -> {
+                val snapshot = session.state.snapshot ?: return true
+                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Worker", requestIds)?.let(session::append)
+            }
             "train:Marine" -> {
                 val snapshot = session.state.snapshot ?: return true
                 buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+            }
+            "train:Zergling" -> {
+                val snapshot = session.state.snapshot ?: return true
+                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Zergling", requestIds)?.let(session::append)
             }
             "research:AdvancedTraining" -> {
                 val snapshot = session.state.snapshot ?: return true

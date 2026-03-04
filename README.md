@@ -250,8 +250,10 @@ Client controls:
 - `R`: arm `ResourceDepot` placement preview
 - `G`: arm `GasDepot` placement preview
 - `H`: issue hold to the current selection immediately
-- `U`: queue `Train Marine` on the first selected training building
-- `I`: queue `Research AdvancedTraining` on the first selected research-capable building
+- `U`: queue `Train Worker` on the first selected training building
+- `I`: queue `Train Marine` on the first selected training building
+- `O`: queue `Train Zergling` on the first selected training building
+- `L`: queue `Research AdvancedTraining` on the first selected research-capable building
 - `X`: cancel build on the first selected construction site
 - `T`: cancel train on the first selected producer queue
 - `Y`: cancel research on the first selected research queue
@@ -270,7 +272,7 @@ Client controls:
 - the build preview also shows structure name, footprint, clearance, and mineral/gas cost next to the ghost
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - the command panel also exposes cancel build/train/research actions for quick queue control
-- when a selected building supports it, the command panel also exposes `Train Marine` and `Research Adv`
+- when a selected building supports it, the command panel also exposes `Train Worker`, `Train Marine`, `Train Zergling`, and `Research Adv`
 - the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
 - left click on the minimap recenters the camera
 - ctrl + right click empty ground: issue `attackMove`

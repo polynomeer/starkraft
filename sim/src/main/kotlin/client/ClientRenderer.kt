@@ -385,8 +385,12 @@ internal fun buildCommandButtons(
             ClientCommandButton("Build GasDepot", "build:GasDepot"),
             ClientCommandButton("Clear", "clear")
         )
-    if (canTrain) buttons.add(4, ClientCommandButton("Train Marine", "train:Marine"))
-    if (canResearch) buttons.add(5, ClientCommandButton("Research Adv", "research:AdvancedTraining"))
+    if (canTrain) {
+        buttons.add(4, ClientCommandButton("Train Worker", "train:Worker"))
+        buttons.add(5, ClientCommandButton("Train Marine", "train:Marine"))
+        buttons.add(6, ClientCommandButton("Train Zergling", "train:Zergling"))
+    }
+    if (canResearch) buttons.add(if (canTrain) 7 else 4, ClientCommandButton("Research Adv", "research:AdvancedTraining"))
     return if (hasSelection) buttons else buttons.filter { it.actionId.startsWith("build:") || it.actionId == "clear" }
 }
 
@@ -428,7 +432,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction   3 observer   m/a/p/h/u/i/x/t/y   esc clear"
+        "keys: 1/2 faction   3 observer   m/a/p/h u/i/o train l research x/t/y cancel esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

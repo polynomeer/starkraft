@@ -201,7 +201,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction   3 observer   m/a/p/h/u/i/x/t/y   esc clear"
+                "keys: 1/2 faction   3 observer   m/a/p/h u/i/o train l research x/t/y cancel esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -327,7 +327,7 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Marine", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
             buildCommandButtons(true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
@@ -343,7 +343,7 @@ class GraphicalClientTest {
     @Test
     fun `locates command button by panel click`() {
         val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (12 * 34), hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (14 * 34), hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("clear", clear?.actionId)
@@ -391,7 +391,9 @@ class GraphicalClientTest {
             )
 
         val ids = ClientCommandIds("queue")
-        assertEquals("train", buildQueueIntent(snapshot, linkedSetOf(12, 13), "train", "Marine", ids)?.record?.commandType)
+        assertEquals("Worker", buildQueueIntent(snapshot, linkedSetOf(12, 13), "train", "Worker", ids)?.record?.typeId)
+        assertEquals("Marine", buildQueueIntent(snapshot, linkedSetOf(12, 13), "train", "Marine", ids)?.record?.typeId)
+        assertEquals("Zergling", buildQueueIntent(snapshot, linkedSetOf(12, 13), "train", "Zergling", ids)?.record?.typeId)
         assertEquals(12, buildQueueIntent(snapshot, linkedSetOf(12, 13), "research", "AdvancedTraining", ids)?.record?.buildingId)
     }
 
