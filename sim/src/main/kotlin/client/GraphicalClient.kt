@@ -149,6 +149,33 @@ internal fun buildCancelIntent(
     )
 }
 
+internal fun buildQueueIntent(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>,
+    commandType: String,
+    typeId: String,
+    requestIds: ClientCommandIds
+): ClientIntent.Command? {
+    val target =
+        snapshot.entities.firstOrNull { entity ->
+            if (entity.id !in selectedIds) return@firstOrNull false
+            when (commandType) {
+                "train" -> entity.supportsTraining == true
+                "research" -> entity.supportsResearch == true
+                else -> false
+            }
+        } ?: return null
+    return ClientIntent.Command(
+        InputJson.InputCommandRecord(
+            tick = snapshot.tick + 1,
+            commandType = commandType,
+            requestId = requestIds.nextRequestId(),
+            buildingId = target.id,
+            typeId = typeId
+        )
+    )
+}
+
 private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer()
@@ -405,7 +432,10 @@ private class ClientPanel(
         )
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
-        val button = commandButtonAt(width, e.x, e.y, session.state.selectedIds.isNotEmpty()) ?: return false
+        val snapshot = session.state.snapshot
+        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
+        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val button = commandButtonAt(width, e.x, e.y, session.state.selectedIds.isNotEmpty(), canTrain, canResearch) ?: return false
         when (button.actionId) {
             "move" -> {
                 groundMode = ClientGroundCommandMode.MOVE
@@ -429,6 +459,14 @@ private class ClientPanel(
             "cancelBuild", "cancelTrain", "cancelResearch" -> {
                 val snapshot = session.state.snapshot ?: return true
                 buildCancelIntent(snapshot, session.state.selectedIds, button.actionId, requestIds)?.let(session::append)
+            }
+            "train:Marine" -> {
+                val snapshot = session.state.snapshot ?: return true
+                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+            }
+            "research:AdvancedTraining" -> {
+                val snapshot = session.state.snapshot ?: return true
+                buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
             }
             "clear" -> {
                 session.state.selectedIds.clear()

@@ -215,7 +215,10 @@ internal class SwingClientRenderer(
         g.drawRect(panel.x, panel.y, panel.width, panel.height)
         g.color = Color.WHITE
         g.drawString("Commands", panel.x + 12, panel.y + 20)
-        val buttons = buildCommandButtons(state.selectedIds.isNotEmpty())
+        val snapshot = state.snapshot
+        val canTrain = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
+        val canResearch = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val buttons = buildCommandButtons(state.selectedIds.isNotEmpty(), canTrain, canResearch)
         for (i in buttons.indices) {
             val bounds = commandButtonBounds(width, i)
             g.color = Color(0x1B, 0x26, 0x31, 220)
@@ -308,6 +311,14 @@ internal fun commandButtonBounds(width: Int, index: Int): Rectangle {
 }
 
 internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButton> {
+    return buildCommandButtons(hasSelection, canTrain = hasSelection, canResearch = hasSelection)
+}
+
+internal fun buildCommandButtons(
+    hasSelection: Boolean,
+    canTrain: Boolean,
+    canResearch: Boolean
+): List<ClientCommandButton> {
     val buttons =
         mutableListOf(
             ClientCommandButton("Move", "move"),
@@ -322,11 +333,20 @@ internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButto
             ClientCommandButton("Build GasDepot", "build:GasDepot"),
             ClientCommandButton("Clear", "clear")
         )
+    if (canTrain) buttons.add(4, ClientCommandButton("Train Marine", "train:Marine"))
+    if (canResearch) buttons.add(5, ClientCommandButton("Research Adv", "research:AdvancedTraining"))
     return if (hasSelection) buttons else buttons.filter { it.actionId.startsWith("build:") || it.actionId == "clear" }
 }
 
-internal fun commandButtonAt(width: Int, x: Int, y: Int, hasSelection: Boolean): ClientCommandButton? {
-    val buttons = buildCommandButtons(hasSelection)
+internal fun commandButtonAt(
+    width: Int,
+    x: Int,
+    y: Int,
+    hasSelection: Boolean,
+    canTrain: Boolean = hasSelection,
+    canResearch: Boolean = hasSelection
+): ClientCommandButton? {
+    val buttons = buildCommandButtons(hasSelection, canTrain, canResearch)
     for (i in buttons.indices) {
         if (commandButtonBounds(width, i).contains(x, y)) return buttons[i]
     }

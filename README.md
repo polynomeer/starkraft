@@ -261,6 +261,7 @@ Client controls:
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - the command panel also exposes cancel build/train/research actions for quick queue control
+- when a selected building supports it, the command panel also exposes `Train Marine` and `Research Adv`
 - the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
 - left click on the minimap recenters the camera
 - ctrl + right click empty ground: issue `attackMove`

@@ -14,6 +14,7 @@ import starkraft.sim.client.applySelectionClick
 import starkraft.sim.client.buildHoldIntent
 import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildCancelIntent
+import starkraft.sim.client.buildQueueIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
@@ -323,8 +324,12 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
+            listOf("move", "attackMove", "patrol", "hold", "train:Marine", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            buildCommandButtons(true, canTrain = true, canResearch = true).map { it.actionId }
+        )
+        assertEquals(
             listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
-            buildCommandButtons(true).map { it.actionId }
+            buildCommandButtons(true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
             listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
@@ -334,12 +339,12 @@ class GraphicalClientTest {
 
     @Test
     fun `locates command button by panel click`() {
-        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (10 * 34), hasSelection = true)
+        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (12 * 34), hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("clear", clear?.actionId)
-        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true))
+        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true, canTrain = true, canResearch = true))
     }
 
     @Test
@@ -363,6 +368,28 @@ class GraphicalClientTest {
         assertEquals(12, buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelBuild", ids)?.record?.buildingId)
         assertEquals("cancel-2", buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelTrain", ids)?.record?.requestId)
         assertEquals(13, buildCancelIntent(snapshot, linkedSetOf(12, 13), "cancelResearch", ids)?.record?.buildingId)
+    }
+
+    @Test
+    fun `builds queue intents from selected buildings`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, supportsTraining = true, supportsResearch = true),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "ResourceDepot", archetype = "econDepot", x = 8f, y = 4f, dir = 0f, hp = 350, maxHp = 350, armor = 1)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        val ids = ClientCommandIds("queue")
+        assertEquals("train", buildQueueIntent(snapshot, linkedSetOf(12, 13), "train", "Marine", ids)?.record?.commandType)
+        assertEquals(12, buildQueueIntent(snapshot, linkedSetOf(12, 13), "research", "AdvancedTraining", ids)?.record?.buildingId)
     }
 
     @Test
