@@ -213,6 +213,11 @@ Minimal graphical client:
    Or over WebSocket endpoints:
    `./gradlew :sim:graphicalClient --args="ws://127.0.0.1:9101 ws://127.0.0.1:9102"`
 
+One-command local play:
+- `./gradlew :sim:play`
+- Optional custom workspace and tick limit:
+  `./gradlew :sim:play --args="/tmp/starkraft/my-play 10000"`
+
 Alternative client transports/renderers:
 - Text client over file stream:
   `./gradlew :sim:consoleClient --args="/tmp/starkraft/live/client-input.ndjson /tmp/starkraft/live/snapshots.ndjson"`
