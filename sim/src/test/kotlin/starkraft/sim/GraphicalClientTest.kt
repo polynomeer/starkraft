@@ -31,8 +31,10 @@ import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
+import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildTechSummary
+import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.ClientSessionState
@@ -164,6 +166,7 @@ class GraphicalClientTest {
                 "construction: sites=1 remaining=6 Depotx1",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
+                "rally: none",
                 "tech: AdvancedTrainingx1",
                 "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
                 "construction state: total=2 f1=2 f2=0 remaining=10 @15",
@@ -270,6 +273,28 @@ class GraphicalClientTest {
             buildResearchSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("research: none", buildResearchSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds rally summary from selected producers`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, rallyX = 14f, rallyY = 10f),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Factory", archetype = "producer", x = 8f, y = 4f, dir = 0f, hp = 250, maxHp = 250, armor = 1, rallyX = 14f, rallyY = 10f),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Marine", archetype = "infantry", x = 9f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("rally: 14.0,10.0x2", buildRallySummary(snapshot, linkedSetOf(12, 13, 14)))
+        assertEquals("rally: none", buildRallySummary(snapshot, linkedSetOf(14)))
     }
 
     @Test
@@ -383,6 +408,14 @@ class GraphicalClientTest {
         assertEquals(8, record.tick)
         assertEquals("units", record.selectionType)
         assertArrayEquals(intArrayOf(4, 9), record.units)
+    }
+
+    @Test
+    fun `computes health bar fill width safely`() {
+        assertEquals(10, healthBarFillWidth(20, 10, 20))
+        assertEquals(20, healthBarFillWidth(20, 50, 20))
+        assertEquals(0, healthBarFillWidth(20, 0, 20))
+        assertEquals(0, healthBarFillWidth(20, 10, 0))
     }
 
     @Test

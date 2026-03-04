@@ -26,6 +26,7 @@ internal class SwingClientRenderer(
         val effectiveCamera = camera.copy(baseTileSize = tileSize)
         drawGrid(graphics, snapshot, effectiveCamera)
         drawResources(graphics, snapshot, effectiveCamera)
+        drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawHud(graphics, height, state, snapshot, overlayLines)
     }
@@ -65,11 +66,43 @@ internal class SwingClientRenderer(
                 }
             val radius = if (entity.footprintWidth != null && entity.footprintHeight != null) 9 else 6
             g.fillOval(px - radius, py - radius, radius * 2, radius * 2)
+            drawHealthBar(g, px, py, radius, entity.hp, entity.maxHp)
             if (entity.id in selectedIds) {
                 g.color = selectionColor
                 g.stroke = BasicStroke(2f)
                 g.drawOval(px - radius - 4, py - radius - 4, (radius + 4) * 2, (radius + 4) * 2)
             }
+        }
+    }
+
+    private fun drawHealthBar(g: Graphics2D, px: Int, py: Int, radius: Int, hp: Int, maxHp: Int) {
+        val barWidth = radius * 2 + 4
+        val barHeight = 4
+        val x = px - (barWidth / 2)
+        val y = py - radius - 10
+        g.color = Color(0x20, 0x20, 0x20, 220)
+        g.fillRect(x, y, barWidth, barHeight)
+        g.color = when {
+            hp * 100 >= maxHp * 66 -> Color(0x45, 0xD4, 0x6B)
+            hp * 100 >= maxHp * 33 -> Color(0xE5, 0xB6, 0x34)
+            else -> Color(0xD7, 0x4A, 0x4A)
+        }
+        g.fillRect(x, y, healthBarFillWidth(barWidth, hp, maxHp), barHeight)
+    }
+
+    private fun drawRallyMarkers(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
+        g.color = Color(0x8D, 0xF1, 0x8B)
+        g.stroke = BasicStroke(1.5f)
+        for (entity in snapshot.entities) {
+            if (entity.id !in selectedIds) continue
+            val rallyX = entity.rallyX ?: continue
+            val rallyY = entity.rallyY ?: continue
+            val startX = camera.worldToScreenX(entity.x).toInt()
+            val startY = camera.worldToScreenY(entity.y).toInt()
+            val endX = camera.worldToScreenX(rallyX).toInt()
+            val endY = camera.worldToScreenY(rallyY).toInt()
+            g.drawLine(startX, startY, endX, endY)
+            g.drawOval(endX - 5, endY - 5, 10, 10)
         }
     }
 
@@ -100,6 +133,7 @@ internal fun buildClientHudLines(
         buildConstructionSummary(snapshot, state.selectedIds),
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
+        buildRallySummary(snapshot, state.selectedIds),
         buildTechSummary(snapshot),
         formatTickActivity(state.lastTickActivity),
         formatConstructionActivity(state.lastConstructionActivity),
@@ -110,6 +144,11 @@ internal fun buildClientHudLines(
         "right: move/attack/harvest   ctrl+right: attackMove",
         "keys: m move   a attackMove   p patrol   h hold   esc clear"
     )
+
+internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
+    if (barWidth <= 0 || hp <= 0 || maxHp <= 0) return 0
+    return ((barWidth.toLong() * hp.toLong()) / maxHp.toLong()).toInt().coerceIn(0, barWidth)
+}
 
 internal fun buildSelectionSummary(
     snapshot: ClientSnapshot,
@@ -168,6 +207,23 @@ internal fun buildResearchSummary(
             activeTechs.entries.joinToString(" ") { "${it.key}x${it.value}" }
     }
     return "research: labs=$researchBuildings queue=$queued active=$active"
+}
+
+internal fun buildRallySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "rally: none"
+    val rallies = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val x = entity.rallyX ?: continue
+        val y = entity.rallyY ?: continue
+        val key = "${"%.1f".format(x)},${"%.1f".format(y)}"
+        rallies[key] = (rallies[key] ?: 0) + 1
+    }
+    if (rallies.isEmpty()) return "rally: none"
+    return "rally: " + rallies.entries.joinToString(" ") { "${it.key}x${it.value}" }
 }
 
 internal fun buildTechSummary(snapshot: ClientSnapshot): String {
