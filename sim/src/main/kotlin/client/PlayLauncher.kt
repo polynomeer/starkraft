@@ -1,6 +1,7 @@
 package starkraft.sim.client
 
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.createDirectories
@@ -18,6 +19,18 @@ internal fun defaultPlayPaths(root: Path): PlayPaths =
         input = root.resolve("client-input.ndjson")
     )
 
+internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
+    SKIRMISH("skirmish", emptyList()),
+    ECONOMY("economy", listOf("--script", "sim/scripts/harvest-depot.script")),
+    GAS("gas", listOf("--script", "sim/scripts/harvest-gas-depot.script")),
+    SCRIPTED("scripted", listOf("--spawnScript", "sim/scripts/spawn.script", "--script", "sim/scripts/sample.script"));
+
+    companion object {
+        fun fromId(id: String?): PlayScenario =
+            entries.firstOrNull { it.id == id } ?: error("unknown scenario '${id ?: ""}'")
+    }
+}
+
 internal fun currentJavaBinary(): String =
     File(System.getProperty("java.home"), "bin/java").absolutePath
 
@@ -29,7 +42,8 @@ internal fun buildPlaySimCommand(
     classpath: String,
     snapshotPath: Path,
     inputPath: Path,
-    ticks: Int
+    ticks: Int,
+    scenario: PlayScenario
 ): List<String> =
     listOf(
         javaBin,
@@ -45,7 +59,7 @@ internal fun buildPlaySimCommand(
         "--noSleep",
         "--ticks",
         ticks.toString()
-    )
+    ) + scenario.simArgs
 
 internal fun buildPlayClientCommand(
     javaBin: String,
@@ -62,6 +76,13 @@ internal fun buildPlayClientCommand(
         inputPath.toString()
     )
 
+internal fun resetPlayFiles(paths: PlayPaths) {
+    Files.deleteIfExists(paths.snapshots)
+    Files.deleteIfExists(paths.input)
+    Files.createFile(paths.snapshots)
+    Files.createFile(paths.input)
+}
+
 fun main(args: Array<String>) {
     val root =
         if (args.isNotEmpty()) {
@@ -75,14 +96,21 @@ fun main(args: Array<String>) {
         } else {
             5000
         }
+    val scenario =
+        if (args.size >= 3) {
+            PlayScenario.fromId(args[2])
+        } else {
+            PlayScenario.SKIRMISH
+        }
 
     root.createDirectories()
     val paths = defaultPlayPaths(root)
+    resetPlayFiles(paths)
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
 
     val simProcess =
-        ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, ticks))
+        ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, ticks, scenario))
             .inheritIO()
             .start()
 

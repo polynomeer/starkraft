@@ -217,6 +217,14 @@ One-command local play:
 - `./gradlew :sim:play`
 - Optional custom workspace and tick limit:
   `./gradlew :sim:play --args="/tmp/starkraft/my-play 10000"`
+- Optional scenario preset:
+  `./gradlew :sim:play --args="/tmp/starkraft/my-play 10000 scripted"`
+  Supported presets:
+  - `skirmish`
+  - `economy`
+  - `gas`
+  - `scripted`
+  Each launch resets the play workspace NDJSON files so the next match starts cleanly.
 
 Alternative client transports/renderers:
 - Text client over file stream:
