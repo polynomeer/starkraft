@@ -19,6 +19,7 @@ import starkraft.sim.client.parseClientStreamLine
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
+import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.ClientSessionState
@@ -74,7 +75,24 @@ class GraphicalClientTest {
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30),
-                    EntitySnapshot(id = 12, faction = 1, typeId = "Depot", archetype = "producer", x = 7f, y = 4f, dir = 0f, hp = 400, maxHp = 400, armor = 1, researchQueueSize = 2, activeResearchTech = "AdvancedTraining", activeResearchRemainingTicks = 8)
+                    EntitySnapshot(
+                        id = 12,
+                        faction = 1,
+                        typeId = "Depot",
+                        archetype = "producer",
+                        x = 7f,
+                        y = 4f,
+                        dir = 0f,
+                        hp = 120,
+                        maxHp = 400,
+                        armor = 1,
+                        underConstruction = true,
+                        constructionRemainingTicks = 6,
+                        constructionTotalTicks = 10,
+                        researchQueueSize = 2,
+                        activeResearchTech = "AdvancedTraining",
+                        activeResearchRemainingTicks = 8
+                    )
                 ),
                 resourceNodes = emptyList()
             )
@@ -83,6 +101,7 @@ class GraphicalClientTest {
                 "tick=15 selected=3",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
+                "construction: sites=1 remaining=6 Depotx1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
@@ -166,6 +185,59 @@ class GraphicalClientTest {
             buildResearchSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("research: none", buildResearchSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds construction summary from selected sites`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(
+                        id = 12,
+                        faction = 1,
+                        typeId = "Depot",
+                        archetype = "producer",
+                        x = 7f,
+                        y = 4f,
+                        dir = 0f,
+                        hp = 120,
+                        maxHp = 400,
+                        armor = 1,
+                        underConstruction = true,
+                        constructionRemainingTicks = 6,
+                        constructionTotalTicks = 10
+                    ),
+                    EntitySnapshot(
+                        id = 13,
+                        faction = 1,
+                        typeId = "Factory",
+                        archetype = "producer",
+                        x = 8f,
+                        y = 4f,
+                        dir = 0f,
+                        hp = 80,
+                        maxHp = 300,
+                        armor = 1,
+                        underConstruction = true,
+                        constructionRemainingTicks = 4,
+                        constructionTotalTicks = 8
+                    ),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Marine", archetype = "infantry", x = 9f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "construction: sites=2 remaining=10 Depotx1 Factoryx1",
+            buildConstructionSummary(snapshot, linkedSetOf(12, 13, 14))
+        )
+        assertEquals("construction: none", buildConstructionSummary(snapshot, linkedSetOf(14)))
     }
 
     @Test

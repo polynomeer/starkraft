@@ -333,6 +333,7 @@ If workers are assigned to construction, the consumer also prints a line like `b
 If build placement and cancellation happened, the consumer also prints a line like `builds: placed=1 canceled=1 fail=1 reasons=invalidPlacement=1`.
 If buildings are under construction, the consumer also prints a line like `construction: total=1 f1=1 f2=0 remaining=6`.
 The graphical client HUD also shows selected builder assignment state, e.g. `builders: active=1 targets=1`.
+The graphical client HUD also shows selected construction progress, e.g. `construction: sites=1 remaining=6 Depotx1`.
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
 The graphical client HUD also shows the latest streamed research event totals, e.g. `research events: e1/p2/c0/x1 @15`.
 

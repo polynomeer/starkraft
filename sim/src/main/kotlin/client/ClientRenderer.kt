@@ -95,6 +95,7 @@ internal fun buildClientHudLines(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
+        buildConstructionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
@@ -158,6 +159,26 @@ internal fun buildResearchSummary(
             activeTechs.entries.joinToString(" ") { "${it.key}x${it.value}" }
     }
     return "research: labs=$researchBuildings queue=$queued active=$active"
+}
+
+internal fun buildConstructionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "construction: none"
+    var sites = 0
+    var remainingTicks = 0
+    val buildingTypes = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (!entity.underConstruction) continue
+        sites++
+        remainingTicks += entity.constructionRemainingTicks ?: 0
+        buildingTypes[entity.typeId] = (buildingTypes[entity.typeId] ?: 0) + 1
+    }
+    if (sites == 0) return "construction: none"
+    val kinds = buildingTypes.entries.joinToString(" ") { "${it.key}x${it.value}" }
+    return "construction: sites=$sites remaining=$remainingTicks $kinds"
 }
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
