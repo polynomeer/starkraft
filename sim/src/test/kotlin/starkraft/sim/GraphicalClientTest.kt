@@ -67,7 +67,7 @@ class GraphicalClientTest {
     fun `formats tick activity for hud`() {
         assertEquals("activity: none", formatTickActivity(null))
         assertEquals(
-            "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @12",
+            "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @12",
             formatTickActivity(
                 ClientTickActivity(
                     tick = 12,
@@ -75,6 +75,11 @@ class GraphicalClientTest {
                     buildsCancelled = 1,
                     buildFailures = 2,
                     buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
+                    trainsQueued = 2,
+                    trainsCompleted = 1,
+                    trainsCancelled = 1,
+                    trainFailures = 1,
+                    trainFailureReasons = "queueFull=1",
                     researchQueued = 1,
                     researchCancelled = 1,
                     researchFailures = 1,
@@ -126,7 +131,7 @@ class GraphicalClientTest {
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
-                "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
+                "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
                 "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
@@ -143,6 +148,11 @@ class GraphicalClientTest {
                         buildsCancelled = 1,
                         buildFailures = 2,
                         buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
+                        trainsQueued = 2,
+                        trainsCompleted = 1,
+                        trainsCancelled = 1,
+                        trainFailures = 1,
+                        trainFailureReasons = "queueFull=1",
                         researchQueued = 1,
                         researchCancelled = 1,
                         researchFailures = 1,
@@ -332,7 +342,7 @@ class GraphicalClientTest {
     fun `parses tick summary updates through shared bridge`() {
         val update =
             parseClientStreamLine(
-                "{\"recordType\":\"tickSummary\",\"tick\":14,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":2,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":1},\"researchQueued\":1,\"researchCancelled\":1,\"researchCompleted\":0,\"researchFailures\":1,\"researchFailureReasons\":{\"missingBuilding\":0,\"underConstruction\":0,\"invalidTech\":1,\"missingTech\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"alreadyUnlocked\":0,\"queueFull\":0,\"nothingToCancel\":0}}"
+                "{\"recordType\":\"tickSummary\",\"tick\":14,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":2,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":1},\"trainsQueued\":2,\"trainsCompleted\":1,\"trainsCancelled\":1,\"trainFailures\":1,\"trainFailureReasons\":{\"missingBuilding\":0,\"underConstruction\":0,\"missingTech\":0,\"invalidUnit\":0,\"invalidBuildTime\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"queueFull\":1,\"nothingToCancel\":0},\"researchQueued\":1,\"researchCancelled\":1,\"researchCompleted\":0,\"researchFailures\":1,\"researchFailureReasons\":{\"missingBuilding\":0,\"underConstruction\":0,\"invalidTech\":1,\"missingTech\":0,\"incompatibleProducer\":0,\"insufficientResources\":0,\"alreadyUnlocked\":0,\"queueFull\":0,\"nothingToCancel\":0}}"
             )
 
         assertNotNull(update)
@@ -341,6 +351,11 @@ class GraphicalClientTest {
         assertEquals(1, update?.tickActivity?.buildsCancelled)
         assertEquals(2, update?.tickActivity?.buildFailures)
         assertEquals("invalidPlacement=1,insufficientResources=1", update?.tickActivity?.buildFailureReasons)
+        assertEquals(2, update?.tickActivity?.trainsQueued)
+        assertEquals(1, update?.tickActivity?.trainsCompleted)
+        assertEquals(1, update?.tickActivity?.trainsCancelled)
+        assertEquals(1, update?.tickActivity?.trainFailures)
+        assertEquals("queueFull=1", update?.tickActivity?.trainFailureReasons)
         assertEquals(1, update?.tickActivity?.researchQueued)
         assertEquals(1, update?.tickActivity?.researchCancelled)
         assertEquals(1, update?.tickActivity?.researchFailures)

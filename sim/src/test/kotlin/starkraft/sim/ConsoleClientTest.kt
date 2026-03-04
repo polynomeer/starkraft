@@ -106,6 +106,11 @@ class ConsoleClientTest {
                             buildsCancelled = 1,
                             buildFailures = 2,
                             buildFailureReasons = "invalidPlacement=1,insufficientResources=1",
+                            trainsQueued = 2,
+                            trainsCompleted = 1,
+                            trainsCancelled = 1,
+                            trainFailures = 1,
+                            trainFailureReasons = "queueFull=1",
                             researchQueued = 1,
                             researchCancelled = 1,
                             researchFailures = 1,
@@ -115,7 +120,7 @@ class ConsoleClientTest {
             )
 
         assertEquals(
-            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
     }

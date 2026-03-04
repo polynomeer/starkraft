@@ -195,6 +195,8 @@ internal fun formatTickActivity(activity: ClientTickActivity?): String =
     } else {
         "activity: builds=${activity.builds}/x${activity.buildsCancelled} " +
             "buildFails=${activity.buildFailures}[${activity.buildFailureReasons}] " +
+            "train=q${activity.trainsQueued}/c${activity.trainsCompleted}/x${activity.trainsCancelled} " +
+            "trainFails=${activity.trainFailures}[${activity.trainFailureReasons}] " +
             "research=q${activity.researchQueued}/c${activity.researchCompleted}/x${activity.researchCancelled} " +
             "researchFails=${activity.researchFailures}[${activity.researchFailureReasons}] @${activity.tick}"
     }
