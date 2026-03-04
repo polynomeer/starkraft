@@ -49,6 +49,7 @@ import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
+import starkraft.sim.client.ResearchFailureCounts
 import starkraft.sim.client.renderResearchStateStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
@@ -319,6 +320,10 @@ fun main(args: Array<String>) {
     var totalTrainsCancelled = 0
     var totalTrainFailures = 0
     val totalTrainFailureReasons = TrainFailureCounterSet()
+    var totalResearchQueued = 0
+    var totalResearchCompleted = 0
+    var totalResearchFailures = 0
+    val totalResearchFailureReasons = ResearchFailureCounterSet()
     val totalResourceDeltas = ResourceDeltaCounterSet()
     var totalHarvestedMinerals = 0
     var totalHarvestedGas = 0
@@ -496,6 +501,10 @@ fun main(args: Array<String>) {
         totalTrainsCancelled += commandOutcomeCounters.trainsCancelled
         totalTrainFailures += commandOutcomeCounters.trainFailures
         totalTrainFailureReasons.add(commandOutcomeCounters.trainFailureReasons)
+        totalResearchQueued += commandOutcomeCounters.researchQueued
+        totalResearchCompleted += tickResearchCompleted
+        totalResearchFailures += commandOutcomeCounters.researchFailures
+        totalResearchFailureReasons.add(commandOutcomeCounters.researchFailureReasons)
         totalResourceDeltas.add(tickResourceDeltas)
         totalHarvestedMinerals += harvest.lastTickHarvestedMinerals
         totalHarvestedGas += harvest.lastTickHarvestedGas
@@ -532,6 +541,7 @@ fun main(args: Array<String>) {
                 combat,
                 commandOutcomeCounters,
                 tickTrainsCompleted,
+                tickResearchCompleted,
                 tickResourceDeltas,
                 tickHarvesterRetargets,
                 harvest,
@@ -548,15 +558,17 @@ fun main(args: Array<String>) {
             val outcomeSuffix =
                 renderCommandOutcomeLogSuffix(
                     commandOutcomeCounters,
-                tickTrainsCompleted,
-                harvest.lastTickPickupCount,
-                harvest.lastTickDepositCount,
-                harvest.lastTickPickupAmount,
-                harvest.lastTickDepositAmount,
-                tickHarvesterRetargets,
-                dropoffCounts.faction1,
-                dropoffCounts.faction2,
-                dropoffCounts.minerals,
+                    tickTrainsCompleted,
+                    tickResearchCompleted,
+                    world.researchQueues.size,
+                    harvest.lastTickPickupCount,
+                    harvest.lastTickDepositCount,
+                    harvest.lastTickPickupAmount,
+                    harvest.lastTickDepositAmount,
+                    tickHarvesterRetargets,
+                    dropoffCounts.faction1,
+                    dropoffCounts.faction2,
+                    dropoffCounts.minerals,
                     dropoffCounts.gas
                 )
             println(
@@ -613,6 +625,11 @@ fun main(args: Array<String>) {
             totalTrainsCancelled,
             totalTrainFailures,
             totalTrainFailureReasons,
+            totalResearchQueued,
+            totalResearchCompleted,
+            totalResearchFailures,
+            totalResearchFailureReasons,
+            world.researchQueues.size,
             totalHarvestedMinerals,
             totalHarvestedGas,
             totalDepletedNodes,
@@ -688,6 +705,11 @@ fun main(args: Array<String>) {
                 trainsCancelled = totalTrainsCancelled,
                 trainFailures = totalTrainFailures,
                 trainFailureReasons = totalTrainFailureReasons.toRecord(),
+                researchQueueBuildings = world.researchQueues.size,
+                researchQueued = totalResearchQueued,
+                researchCompleted = totalResearchCompleted,
+                researchFailures = totalResearchFailures,
+                researchFailureReasons = totalResearchFailureReasons.toRecord(),
                 mineralsSpent = totalResourceDeltas.mineralsSpent,
                 gasSpent = totalResourceDeltas.gasSpent,
                 mineralsRefunded = totalResourceDeltas.mineralsRefunded,
@@ -1732,6 +1754,7 @@ private fun emitTickSummaryRecord(
     combat: CombatSystem,
     commandOutcomeCounters: CommandOutcomeCounters,
     tickTrainsCompleted: Int,
+    tickResearchCompleted: Int,
     tickResourceDeltas: ResourceDeltaCounterSet,
     tickHarvesterRetargets: Int,
     harvest: ResourceHarvestSystem,
@@ -1775,6 +1798,11 @@ private fun emitTickSummaryRecord(
             trainsCancelled = commandOutcomeCounters.trainsCancelled,
             trainFailures = commandOutcomeCounters.trainFailures,
             trainFailureReasons = commandOutcomeCounters.trainFailureReasons.toRecord(),
+            researchQueueBuildings = world.researchQueues.size,
+            researchQueued = commandOutcomeCounters.researchQueued,
+            researchCompleted = tickResearchCompleted,
+            researchFailures = commandOutcomeCounters.researchFailures,
+            researchFailureReasons = commandOutcomeCounters.researchFailureReasons.toRecord(),
             mineralsSpent = tickResourceDeltas.mineralsSpent,
             gasSpent = tickResourceDeltas.gasSpent,
             mineralsRefunded = tickResourceDeltas.mineralsRefunded,
@@ -3448,6 +3476,40 @@ data class TrainFailureCounterSet(
         )
 }
 
+data class ResearchFailureCounterSet(
+    var missingBuilding: Int = 0,
+    var underConstruction: Int = 0,
+    var invalidTech: Int = 0,
+    var missingTech: Int = 0,
+    var incompatibleProducer: Int = 0,
+    var insufficientResources: Int = 0,
+    var alreadyUnlocked: Int = 0,
+    var queueFull: Int = 0
+) {
+    fun add(other: ResearchFailureCounterSet) {
+        missingBuilding += other.missingBuilding
+        underConstruction += other.underConstruction
+        invalidTech += other.invalidTech
+        missingTech += other.missingTech
+        incompatibleProducer += other.incompatibleProducer
+        insufficientResources += other.insufficientResources
+        alreadyUnlocked += other.alreadyUnlocked
+        queueFull += other.queueFull
+    }
+
+    fun toRecord(): ResearchFailureCounts =
+        ResearchFailureCounts(
+            missingBuilding = missingBuilding,
+            underConstruction = underConstruction,
+            invalidTech = invalidTech,
+            missingTech = missingTech,
+            incompatibleProducer = incompatibleProducer,
+            insufficientResources = insufficientResources,
+            alreadyUnlocked = alreadyUnlocked,
+            queueFull = queueFull
+        )
+}
+
 data class CommandOutcomeCounters(
     var builds: Int = 0,
     var buildFailures: Int = 0,
@@ -3455,12 +3517,17 @@ data class CommandOutcomeCounters(
     var trainsQueued: Int = 0,
     var trainsCancelled: Int = 0,
     var trainFailures: Int = 0,
-    val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet()
+    val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet(),
+    var researchQueued: Int = 0,
+    var researchFailures: Int = 0,
+    val researchFailureReasons: ResearchFailureCounterSet = ResearchFailureCounterSet()
 )
 
 internal fun renderCommandOutcomeLogSuffix(
     counters: CommandOutcomeCounters,
     trainsCompleted: Int,
+    researchCompleted: Int = 0,
+    researchQueueBuildings: Int = 0,
     harvestPickupCount: Int = 0,
     harvestDepositCount: Int = 0,
     harvestPickupAmount: Int = 0,
@@ -3481,6 +3548,12 @@ internal fun renderCommandOutcomeLogSuffix(
     }
     if (counters.trainFailures > 0) {
         parts.add("trainFails=${counters.trainFailures}[${formatTrainFailureReasons(counters.trainFailureReasons)}]")
+    }
+    if (counters.researchQueued > 0 || researchCompleted > 0 || researchQueueBuildings > 0) {
+        parts.add("research=q${counters.researchQueued}/c$researchCompleted queues=$researchQueueBuildings")
+    }
+    if (counters.researchFailures > 0) {
+        parts.add("researchFails=${counters.researchFailures}[${formatResearchFailureReasons(counters.researchFailureReasons)}]")
     }
     if (harvestPickupCount > 0 || harvestDepositCount > 0 || harvestPickupAmount > 0 || harvestDepositAmount > 0) {
         parts.add("cycles=p$harvestPickupCount/$harvestPickupAmount d$harvestDepositCount/$harvestDepositAmount")
@@ -3506,6 +3579,11 @@ internal fun renderAggregateOutcomeSummary(
     totalTrainsCancelled: Int,
     totalTrainFailures: Int,
     totalTrainFailureReasons: TrainFailureCounterSet,
+    totalResearchQueued: Int = 0,
+    totalResearchCompleted: Int = 0,
+    totalResearchFailures: Int = 0,
+    totalResearchFailureReasons: ResearchFailureCounterSet = ResearchFailureCounterSet(),
+    currentResearchQueueBuildings: Int = 0,
     totalHarvestedMinerals: Int = 0,
     totalHarvestedGas: Int = 0,
     totalDepletedNodes: Int = 0,
@@ -3533,6 +3611,10 @@ internal fun renderAggregateOutcomeSummary(
         totalTrainsCompleted == 0 &&
         totalTrainsCancelled == 0 &&
         totalTrainFailures == 0 &&
+        totalResearchQueued == 0 &&
+        totalResearchCompleted == 0 &&
+        totalResearchFailures == 0 &&
+        currentResearchQueueBuildings == 0 &&
         totalHarvestedMinerals == 0 &&
         totalHarvestedGas == 0 &&
         totalDepletedNodes == 0 &&
@@ -3563,6 +3645,12 @@ internal fun renderAggregateOutcomeSummary(
     parts.add("train=q$totalTrainsQueued/c$totalTrainsCompleted/x$totalTrainsCancelled")
     if (totalTrainFailures > 0) {
         parts.add("trainFails=$totalTrainFailures[${formatTrainFailureReasons(totalTrainFailureReasons)}]")
+    }
+    if (totalResearchQueued > 0 || totalResearchCompleted > 0 || currentResearchQueueBuildings > 0) {
+        parts.add("research=q$totalResearchQueued/c$totalResearchCompleted queues=$currentResearchQueueBuildings")
+    }
+    if (totalResearchFailures > 0) {
+        parts.add("researchFails=$totalResearchFailures[${formatResearchFailureReasons(totalResearchFailureReasons)}]")
     }
     if (totalHarvestedMinerals > 0 || totalHarvestedGas > 0 || totalDepletedNodes > 0 || totalChangedResourceNodes > 0) {
         parts.add(
@@ -3605,6 +3693,18 @@ internal fun formatTrainFailureReasons(reasons: TrainFailureCounterSet): String 
         reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" },
         reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" },
         reasons.nothingToCancel.takeIf { it > 0 }?.let { "nothingToCancel=$it" }
+    ).joinToString(",")
+
+internal fun formatResearchFailureReasons(reasons: ResearchFailureCounterSet): String =
+    listOfNotNull(
+        reasons.missingBuilding.takeIf { it > 0 }?.let { "missingBuilding=$it" },
+        reasons.underConstruction.takeIf { it > 0 }?.let { "underConstruction=$it" },
+        reasons.invalidTech.takeIf { it > 0 }?.let { "invalidTech=$it" },
+        reasons.missingTech.takeIf { it > 0 }?.let { "missingTech=$it" },
+        reasons.incompatibleProducer.takeIf { it > 0 }?.let { "incompatibleProducer=$it" },
+        reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" },
+        reasons.alreadyUnlocked.takeIf { it > 0 }?.let { "alreadyUnlocked=$it" },
+        reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" }
     ).joinToString(",")
 
 data class ResourceDeltaCounterSet(
@@ -4374,6 +4474,19 @@ fun issue(
                     gasCost = if (cmd.gasCost > 0) cmd.gasCost else (spec?.gasCost ?: 0)
                 )
             if (failure != null) {
+                if (outcomeCounters != null) {
+                    outcomeCounters.researchFailures++
+                    when (failure) {
+                        ResearchFailureReason.MISSING_BUILDING -> outcomeCounters.researchFailureReasons.missingBuilding++
+                        ResearchFailureReason.UNDER_CONSTRUCTION -> outcomeCounters.researchFailureReasons.underConstruction++
+                        ResearchFailureReason.INVALID_TECH -> outcomeCounters.researchFailureReasons.invalidTech++
+                        ResearchFailureReason.MISSING_TECH -> outcomeCounters.researchFailureReasons.missingTech++
+                        ResearchFailureReason.INCOMPATIBLE_PRODUCER -> outcomeCounters.researchFailureReasons.incompatibleProducer++
+                        ResearchFailureReason.INSUFFICIENT_RESOURCES -> outcomeCounters.researchFailureReasons.insufficientResources++
+                        ResearchFailureReason.ALREADY_UNLOCKED -> outcomeCounters.researchFailureReasons.alreadyUnlocked++
+                        ResearchFailureReason.QUEUE_FULL -> outcomeCounters.researchFailureReasons.queueFull++
+                    }
+                }
                 val reason =
                     when (failure) {
                         ResearchFailureReason.MISSING_BUILDING -> "missingBuilding"
@@ -4396,6 +4509,7 @@ fun issue(
                 )
                 emitCommandAck(false, reason = reason)
             } else {
+                if (outcomeCounters != null) outcomeCounters.researchQueued++
                 emitCommandAck(true)
             }
         }
