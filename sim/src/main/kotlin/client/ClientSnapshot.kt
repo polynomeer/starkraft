@@ -88,7 +88,8 @@ data class EntitySnapshot(
     val harvestTargetNodeId: Int? = null,
     val harvestCargoKind: String? = null,
     val harvestCargoAmount: Int? = null,
-    val harvestReturnTargetId: Int? = null
+    val harvestReturnTargetId: Int? = null,
+    val buildTargetId: Int? = null
 )
 
 @Serializable
@@ -365,6 +366,23 @@ data class ConstructionStateStreamRecord(
     val sequence: Long,
     val tick: Int,
     val entities: List<ConstructionStateEntityRecord>
+)
+
+@Serializable
+data class BuilderStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val archetype: String,
+    val targetBuildingId: Int
+)
+
+@Serializable
+data class BuilderStateStreamRecord(
+    val recordType: String = "builderState",
+    val sequence: Long,
+    val tick: Int,
+    val entities: List<BuilderStateEntityRecord>
 )
 
 @Serializable
@@ -875,6 +893,7 @@ fun buildClientSnapshot(
         val construction = world.constructionSites[id]
         val rally = world.rallyPoints[id]
         val harvester = world.harvesters[id]
+        val builder = world.builderTasks[id]
         val buildSpec = data?.buildSpec(tag.typeId)
         val trainSpec = data?.trainSpec(tag.typeId)
         val archetype = data?.buildingArchetype(tag.typeId) ?: data?.unitArchetype(tag.typeId)
@@ -928,7 +947,8 @@ fun buildClientSnapshot(
                 harvestTargetNodeId = harvester?.targetNodeId?.takeIf { it >= 0 },
                 harvestCargoKind = harvester?.cargoKind,
                 harvestCargoAmount = harvester?.cargoAmount?.takeIf { it > 0 },
-                harvestReturnTargetId = harvester?.returnTargetId?.takeIf { it >= 0 }
+                harvestReturnTargetId = harvester?.returnTargetId?.takeIf { it >= 0 },
+                buildTargetId = builder?.targetBuildingId?.takeIf { it >= 0 }
             )
         )
     }
@@ -1511,6 +1531,16 @@ fun renderConstructionStateStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ConstructionStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderBuilderStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    entities: List<BuilderStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = BuilderStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

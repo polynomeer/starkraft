@@ -11,6 +11,7 @@ import starkraft.sim.client.MapBlockedTileRecord
 import starkraft.sim.client.MapCostTileRecord
 import starkraft.sim.client.MapResourceNodeRecord
 import starkraft.sim.client.ConstructionStateEntityRecord
+import starkraft.sim.client.BuilderStateEntityRecord
 import starkraft.sim.client.DropoffStateEntityRecord
 import starkraft.sim.client.HarvestCycleEventRecord
 import starkraft.sim.client.HarvesterRetargetEventRecord
@@ -27,6 +28,7 @@ import starkraft.sim.client.VisionChangeEventRecord
 import starkraft.sim.client.renderCombatStreamRecordJson
 import starkraft.sim.client.renderClientSnapshotJson
 import starkraft.sim.client.renderBuildFailureStreamRecordJson
+import starkraft.sim.client.renderBuilderStateStreamRecordJson
 import starkraft.sim.client.renderCommandStreamRecordJson
 import starkraft.sim.client.renderCommandFailureStreamRecordJson
 import starkraft.sim.client.renderCommandAckStreamRecordJson
@@ -527,6 +529,7 @@ fun main(args: Array<String>) {
             emitHarvesterStateRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitProducerStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitConstructionStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
+            emitBuilderStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitResearchStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitDropoffStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
@@ -1464,6 +1467,42 @@ private fun emitConstructionStateRecord(
     entities.sortBy { it.entityId }
     emitSnapshotLine(
         renderConstructionStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitBuilderStateRecord(
+    world: World,
+    data: DataRepo,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || world.builderTasks.isEmpty()) return
+    val entities = ArrayList<BuilderStateEntityRecord>(world.builderTasks.size)
+    val ids = world.builderTasks.keys.sorted()
+    for (id in ids) {
+        val task = world.builderTasks[id] ?: continue
+        val tag = world.tags[id] ?: continue
+        val archetype = data.unitArchetype(tag.typeId) ?: "unit"
+        entities.add(
+            BuilderStateEntityRecord(
+                entityId = id,
+                faction = tag.faction,
+                typeId = tag.typeId,
+                archetype = archetype,
+                targetBuildingId = task.targetBuildingId
+            )
+        )
+    }
+    if (entities.isEmpty()) return
+    emitSnapshotLine(
+        renderBuilderStateStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             entities = entities,

@@ -4,8 +4,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.BuildFailureCounts
+import starkraft.sim.client.BuilderStateEntityRecord
 import starkraft.sim.client.buildClientSnapshot
 import starkraft.sim.client.renderBuildFailureStreamRecordJson
+import starkraft.sim.client.renderBuilderStateStreamRecordJson
 import starkraft.sim.client.CombatEventRecord
 import starkraft.sim.client.DamageEventRecord
 import starkraft.sim.client.DespawnEventRecord
@@ -77,6 +79,7 @@ import starkraft.sim.ecs.Harvester
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.BuildingFootprint
+import starkraft.sim.ecs.BuilderTask
 import starkraft.sim.ecs.ConstructionSite
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
@@ -126,6 +129,7 @@ class ClientSnapshotTest {
                 cargoAmount = 2,
                 returnTargetId = idB
             )
+        world.builderTasks[idC] = BuilderTask(idB)
         fog1.markVisible(1f, 2f, 2f)
         fog2.markVisible(4f, 5f, 3f)
         val data =
@@ -161,6 +165,7 @@ class ClientSnapshotTest {
         assertEquals("MineralField", entitiesById[idC]?.harvestCargoKind)
         assertEquals(2, entitiesById[idC]?.harvestCargoAmount)
         assertEquals(idB, entitiesById[idC]?.harvestReturnTargetId)
+        assertEquals(idB, entitiesById[idC]?.buildTargetId)
         assertEquals(1, snapshot.resourceNodes.size)
         assertEquals(nodeId, snapshot.resourceNodes.first().id)
         assertEquals("MineralField", snapshot.resourceNodes.first().kind)
@@ -448,10 +453,30 @@ class ClientSnapshotTest {
     }
 
     @Test
+    fun `renders builder state stream record json`() {
+        val json =
+            renderBuilderStateStreamRecordJson(
+                sequence = 17L,
+                tick = 5,
+                entities =
+                    listOf(
+                        BuilderStateEntityRecord(21, 1, "Worker", "worker", 41),
+                        BuilderStateEntityRecord(22, 2, "Drone", "worker", 44)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"builderState\",\"sequence\":17,\"tick\":5,\"entities\":[{\"entityId\":21,\"faction\":1,\"typeId\":\"Worker\",\"archetype\":\"worker\",\"targetBuildingId\":41},{\"entityId\":22,\"faction\":2,\"typeId\":\"Drone\",\"archetype\":\"worker\",\"targetBuildingId\":44}]}",
+            json
+        )
+    }
+
+    @Test
     fun `renders research state stream record json`() {
         val json =
             renderResearchStateStreamRecordJson(
-                sequence = 17L,
+                sequence = 18L,
                 tick = 5,
                 factions =
                     listOf(
@@ -467,7 +492,7 @@ class ClientSnapshotTest {
             )
 
         assertEquals(
-            "{\"recordType\":\"researchState\",\"sequence\":17,\"tick\":5,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\",\"ArmorUp\"]},{\"faction\":2,\"unlockedTechIds\":[\"Stimpack\"]}],\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":2,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":6},{\"entityId\":44,\"faction\":2,\"typeId\":\"Lab\",\"archetype\":\"tech\",\"queueSize\":1,\"activeTechId\":\"Stimpack\",\"activeRemainingTicks\":3}]}",
+            "{\"recordType\":\"researchState\",\"sequence\":18,\"tick\":5,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\",\"ArmorUp\"]},{\"faction\":2,\"unlockedTechIds\":[\"Stimpack\"]}],\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":2,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":6},{\"entityId\":44,\"faction\":2,\"typeId\":\"Lab\",\"archetype\":\"tech\",\"queueSize\":1,\"activeTechId\":\"Stimpack\",\"activeRemainingTicks\":3}]}",
             json
         )
     }
