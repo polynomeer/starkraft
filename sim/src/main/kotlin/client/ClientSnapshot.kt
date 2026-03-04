@@ -856,6 +856,22 @@ data class ProductionStreamRecord(
 )
 
 @Serializable
+data class ResearchEventRecord(
+    val kind: String,
+    val buildingId: Int,
+    val techId: String,
+    val remainingTicks: Int
+)
+
+@Serializable
+data class ResearchStreamRecord(
+    val recordType: String = "research",
+    val sequence: Long,
+    val tick: Int,
+    val events: List<ResearchEventRecord>
+)
+
+@Serializable
 data class CommandFailureStreamRecord(
     val recordType: String = "commandFailure",
     val sequence: Long,
@@ -2133,6 +2149,16 @@ fun renderProductionStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ProductionStreamRecord(sequence = sequence, tick = tick, events = events)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderResearchStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    events: List<ResearchEventRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ResearchStreamRecord(sequence = sequence, tick = tick, events = events)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

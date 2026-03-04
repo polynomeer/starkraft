@@ -315,6 +315,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--replayDump <path>` save a replay after script runs
 - `--labelDump` dump label→entity mappings
 - Building defs can declare `dropoffResourceKinds`; harvest return targeting prefers resource-compatible depots before generic drop-offs
+- Research queue activity now emits typed `research` NDJSON records with `enqueue`, `progress`, `complete`, and `cancel` events
 
 Sample spawn script:
 `./gradlew :sim:run --args="--spawnScript sim/scripts/spawn.script --script sim/scripts/sample.script --noSleep"`

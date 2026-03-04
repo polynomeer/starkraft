@@ -21,6 +21,7 @@ import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
 import starkraft.sim.client.ResearchStateEntityRecord
 import starkraft.sim.client.ResearchStateFactionRecord
+import starkraft.sim.client.ResearchEventRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.ResourceNodeEventRecord
@@ -53,6 +54,7 @@ import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.ResearchFailureCounts
 import starkraft.sim.client.renderResearchStateStreamRecordJson
+import starkraft.sim.client.renderResearchStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderResourceNodeStreamRecordJson
@@ -471,6 +473,7 @@ fun main(args: Array<String>) {
         occupancy.tick()
         construction.tick()
         research.tick()
+        emitResearchRecord(research, tick, resolvedSnapshotOutPath, streamSequence)
         production.tick()
         var tickResearchCompleted = 0
         var tickResearchCancelled = 0
@@ -1667,6 +1670,42 @@ private fun emitProductionRecord(
     }
     emitSnapshotLine(
         renderProductionStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            events = events,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitResearchRecord(
+    research: ResearchSystem,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null || research.lastTickEventCount == 0) return
+    val events = ArrayList<ResearchEventRecord>(research.lastTickEventCount)
+    for (i in 0 until research.lastTickEventCount) {
+        val kind =
+            when (research.eventKind(i)) {
+                ResearchSystem.EVENT_ENQUEUE -> "enqueue"
+                ResearchSystem.EVENT_COMPLETE -> "complete"
+                ResearchSystem.EVENT_CANCEL -> "cancel"
+                else -> "progress"
+            }
+        events.add(
+            ResearchEventRecord(
+                kind = kind,
+                buildingId = research.eventBuildingId(i),
+                techId = research.eventTechId(i) ?: "",
+                remainingTicks = research.eventRemainingTicks(i)
+            )
+        )
+    }
+    emitSnapshotLine(
+        renderResearchStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
             events = events,

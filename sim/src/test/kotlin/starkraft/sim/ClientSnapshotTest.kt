@@ -23,6 +23,7 @@ import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.ResearchEventRecord
 import starkraft.sim.client.ResearchStateEntityRecord
 import starkraft.sim.client.ResearchStateFactionRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
@@ -57,6 +58,7 @@ import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
 import starkraft.sim.client.renderResearchStateStreamRecordJson
+import starkraft.sim.client.renderResearchStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderResourceNodeStreamRecordJson
@@ -493,6 +495,27 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"researchState\",\"sequence\":18,\"tick\":5,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\",\"ArmorUp\"]},{\"faction\":2,\"unlockedTechIds\":[\"Stimpack\"]}],\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":2,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":6},{\"entityId\":44,\"faction\":2,\"typeId\":\"Lab\",\"archetype\":\"tech\",\"queueSize\":1,\"activeTechId\":\"Stimpack\",\"activeRemainingTicks\":3}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders research stream record json`() {
+        val json =
+            renderResearchStreamRecordJson(
+                sequence = 19L,
+                tick = 5,
+                events =
+                    listOf(
+                        ResearchEventRecord("enqueue", 41, "AdvancedTraining", 6),
+                        ResearchEventRecord("cancel", 41, "ArmorUp", 4),
+                        ResearchEventRecord("complete", 44, "Stimpack", 0)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"research\",\"sequence\":19,\"tick\":5,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":41,\"techId\":\"AdvancedTraining\",\"remainingTicks\":6},{\"kind\":\"cancel\",\"buildingId\":41,\"techId\":\"ArmorUp\",\"remainingTicks\":4},{\"kind\":\"complete\",\"buildingId\":44,\"techId\":\"Stimpack\",\"remainingTicks\":0}]}",
             json
         )
     }
