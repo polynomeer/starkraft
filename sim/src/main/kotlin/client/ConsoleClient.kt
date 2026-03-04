@@ -23,6 +23,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         snapshot.factions.joinToString(" ") { faction ->
             "f${faction.faction}=${faction.visibleTiles}"
         }
+    val researchSummary = buildResearchSummary(snapshot, state.selectedIds)
+    val researchActivity = formatResearchActivity(state.lastResearchActivity)
     return buildString {
         append("tick=")
         append(snapshot.tick)
@@ -35,6 +37,10 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(" visible[")
         append(factionSummary)
         append("] ")
+        append(researchSummary)
+        append(" ")
+        append(researchActivity)
+        append(" ")
         append(formatAckStatus(state.lastAck))
     }
 }
