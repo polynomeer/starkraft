@@ -18,6 +18,8 @@ import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.ResearchStateEntityRecord
+import starkraft.sim.client.ResearchStateFactionRecord
 import starkraft.sim.client.ResourceDeltaEventRecord
 import starkraft.sim.client.ResourceDeltaSummaryFactionRecord
 import starkraft.sim.client.ResourceNodeEventRecord
@@ -47,6 +49,7 @@ import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
+import starkraft.sim.client.renderResearchStateStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderResourceNodeStreamRecordJson
@@ -515,6 +518,7 @@ fun main(args: Array<String>) {
             emitHarvesterStateRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
             emitProducerStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitConstructionStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
+            emitResearchStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitDropoffStateRecord(world, data, tick, resolvedSnapshotOutPath, streamSequence)
             emitTickSummaryRecord(
                 world,
@@ -1440,6 +1444,55 @@ private fun emitConstructionStateRecord(
         renderConstructionStateStreamRecordJson(
             sequence = nextStreamSequence(streamSequence),
             tick = tick,
+            entities = entities,
+            pretty = false
+        ),
+        snapshotOutPath
+    )
+}
+
+private fun emitResearchStateRecord(
+    world: World,
+    data: DataRepo,
+    tick: Int,
+    snapshotOutPath: java.nio.file.Path?,
+    streamSequence: LongArray?
+) {
+    if (snapshotOutPath == null || streamSequence == null) return
+    if (world.researchQueues.isEmpty() && world.unlockedTechsByFaction.isEmpty()) return
+
+    val factions = ArrayList<ResearchStateFactionRecord>(world.unlockedTechsByFaction.size)
+    for (faction in world.unlockedTechsByFaction.keys.sorted()) {
+        val unlocked = world.unlockedTechs(faction).sorted()
+        if (unlocked.isEmpty()) continue
+        factions.add(ResearchStateFactionRecord(faction = faction, unlockedTechIds = unlocked))
+    }
+
+    val entities = ArrayList<ResearchStateEntityRecord>(world.researchQueues.size)
+    val ids = world.researchQueues.keys.sorted()
+    for (id in ids) {
+        val queue = world.researchQueues[id]?.items ?: continue
+        val tag = world.tags[id] ?: continue
+        val archetype = data.buildingArchetype(tag.typeId) ?: "genericBuilding"
+        entities.add(
+            ResearchStateEntityRecord(
+                entityId = id,
+                faction = tag.faction,
+                typeId = tag.typeId,
+                archetype = archetype,
+                queueSize = queue.size,
+                activeTechId = queue.firstOrNull()?.techId,
+                activeRemainingTicks = queue.firstOrNull()?.remainingTicks ?: 0
+            )
+        )
+    }
+
+    if (factions.isEmpty() && entities.isEmpty()) return
+    emitSnapshotLine(
+        renderResearchStateStreamRecordJson(
+            sequence = nextStreamSequence(streamSequence),
+            tick = tick,
+            factions = factions,
             entities = entities,
             pretty = false
         ),

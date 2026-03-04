@@ -21,6 +21,8 @@ import starkraft.sim.client.PathAssignedEventRecord
 import starkraft.sim.client.PathProgressEventRecord
 import starkraft.sim.client.ProductionEventRecord
 import starkraft.sim.client.ProducerStateEntityRecord
+import starkraft.sim.client.ResearchStateEntityRecord
+import starkraft.sim.client.ResearchStateFactionRecord
 import starkraft.sim.client.HarvesterStateEntityRecord
 import starkraft.sim.client.HarvesterRetargetEventRecord
 import starkraft.sim.client.HarvestCycleEventRecord
@@ -52,6 +54,7 @@ import starkraft.sim.client.renderProducerFailureStreamRecordJson
 import starkraft.sim.client.renderProducerStateStreamRecordJson
 import starkraft.sim.client.renderRallyFailureStreamRecordJson
 import starkraft.sim.client.renderRallyStreamRecordJson
+import starkraft.sim.client.renderResearchStateStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaStreamRecordJson
 import starkraft.sim.client.renderResourceDeltaSummaryStreamRecordJson
 import starkraft.sim.client.renderResourceNodeStreamRecordJson
@@ -77,6 +80,8 @@ import starkraft.sim.ecs.ConstructionSite
 import starkraft.sim.ecs.ProductionJob
 import starkraft.sim.ecs.ProductionQueue
 import starkraft.sim.ecs.RallyPoint
+import starkraft.sim.ecs.ResearchJob
+import starkraft.sim.ecs.ResearchQueue
 import starkraft.sim.ecs.ResourceNode
 import starkraft.sim.ecs.ResourceStockpile
 import starkraft.sim.ecs.Transform
@@ -102,11 +107,13 @@ class ClientSnapshotTest {
         world.orders[idA]?.items?.addLast(Order.Attack(idB))
         world.orders[idB]?.items?.addLast(Order.Move(9f, 9f))
         world.productionQueues[idB] = ProductionQueue(ArrayDeque(listOf(ProductionJob("Marine", 12), ProductionJob("Marine", 30))))
+        world.researchQueues[idB] = ResearchQueue(ArrayDeque(listOf(ResearchJob("AdvancedTraining", 6), ResearchJob("ArmorUp", 12))))
         world.constructionSites[idB] = ConstructionSite(remainingTicks = 5, totalTicks = 8, maxHp = 45)
         world.footprints[idB] = BuildingFootprint(tileX = 0, tileY = 1, width = 2, height = 3, clearance = 1)
         world.rallyPoints[idB] = RallyPoint(10f, 11f)
         world.stockpiles[1] = ResourceStockpile(150, 25)
         world.stockpiles[2] = ResourceStockpile(80, 10)
+        world.unlockTech(1, "AdvancedTraining")
         val nodeId = world.spawn(Transform(6f, 6f, 0f), UnitTag(0, "MineralField"), Health(1000, 1000, 0), null)
         world.resourceNodes[nodeId] = ResourceNode(remaining = 250)
         val idC = world.spawn(Transform(6.5f, 6f, 0f), UnitTag(1, "Worker"), Health(40, 40, 0), null)
@@ -124,7 +131,7 @@ class ClientSnapshotTest {
             DataRepo(
                 """{"list":[{"id":"Marine","archetype":"infantry","hp":45,"buildTicks":75,"producerTypes":["Depot"]},{"id":"Zergling","archetype":"lightMelee","hp":35,"buildTicks":55,"producerTypes":["Depot"]},{"id":"Worker","archetype":"worker","hp":40,"buildTicks":30,"producerTypes":["Depot"]}]}""",
                 """{"list":[]}""",
-                """{"list":[{"id":"Depot","archetype":"producer","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsRally":true,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
+                """{"list":[{"id":"Depot","archetype":"producer","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":3,"placementClearance":1,"supportsTraining":true,"supportsResearch":true,"supportsRally":true,"supportsDropoff":true,"dropoffResourceKinds":["minerals"],"productionQueueLimit":4,"rallyOffsetX":2.0,"rallyOffsetY":1.0,"mineralCost":100,"gasCost":0}]}"""
             )
 
         val snapshot = buildClientSnapshot(
@@ -163,6 +170,9 @@ class ClientSnapshotTest {
         assertEquals(2, entitiesById[idB]?.productionQueueSize)
         assertEquals("Marine", entitiesById[idB]?.activeProductionType)
         assertEquals(12, entitiesById[idB]?.activeProductionRemainingTicks)
+        assertEquals(2, entitiesById[idB]?.researchQueueSize)
+        assertEquals("AdvancedTraining", entitiesById[idB]?.activeResearchTech)
+        assertEquals(6, entitiesById[idB]?.activeResearchRemainingTicks)
         assertEquals(true, entitiesById[idB]?.underConstruction)
         assertEquals(5, entitiesById[idB]?.constructionRemainingTicks)
         assertEquals(8, entitiesById[idB]?.constructionTotalTicks)
@@ -170,6 +180,7 @@ class ClientSnapshotTest {
         assertEquals(3, entitiesById[idB]?.footprintHeight)
         assertEquals(1, entitiesById[idB]?.placementClearance)
         assertEquals(true, entitiesById[idB]?.supportsTraining)
+        assertEquals(true, entitiesById[idB]?.supportsResearch)
         assertEquals(true, entitiesById[idB]?.supportsRally)
         assertEquals(true, entitiesById[idB]?.supportsDropoff)
         assertEquals(listOf("minerals"), entitiesById[idB]?.dropoffResourceKinds)
@@ -184,9 +195,11 @@ class ClientSnapshotTest {
         assertEquals(150, snapshot.factions[0].minerals)
         assertEquals(25, snapshot.factions[0].gas)
         assertEquals(1, snapshot.factions[0].dropoffBuildings)
+        assertEquals(listOf("AdvancedTraining"), snapshot.factions[0].unlockedTechIds)
         assertEquals(80, snapshot.factions[1].minerals)
         assertEquals(10, snapshot.factions[1].gas)
         assertEquals(0, snapshot.factions[1].dropoffBuildings)
+        assertEquals(emptyList<String>(), snapshot.factions[1].unlockedTechIds)
     }
 
     @Test
@@ -429,6 +442,31 @@ class ClientSnapshotTest {
 
         assertEquals(
             "{\"recordType\":\"constructionState\",\"sequence\":16,\"tick\":5,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"hp\":120,\"maxHp\":400,\"remainingTicks\":6,\"totalTicks\":10},{\"entityId\":44,\"faction\":2,\"typeId\":\"Factory\",\"archetype\":\"producer\",\"hp\":50,\"maxHp\":300,\"remainingTicks\":2,\"totalTicks\":4}]}",
+            json
+        )
+    }
+
+    @Test
+    fun `renders research state stream record json`() {
+        val json =
+            renderResearchStateStreamRecordJson(
+                sequence = 17L,
+                tick = 5,
+                factions =
+                    listOf(
+                        ResearchStateFactionRecord(1, listOf("AdvancedTraining", "ArmorUp")),
+                        ResearchStateFactionRecord(2, listOf("Stimpack"))
+                    ),
+                entities =
+                    listOf(
+                        ResearchStateEntityRecord(41, 1, "Depot", "producer", 2, "AdvancedTraining", 6),
+                        ResearchStateEntityRecord(44, 2, "Lab", "tech", 1, "Stimpack", 3)
+                    ),
+                pretty = false
+            )
+
+        assertEquals(
+            "{\"recordType\":\"researchState\",\"sequence\":17,\"tick\":5,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\",\"ArmorUp\"]},{\"faction\":2,\"unlockedTechIds\":[\"Stimpack\"]}],\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":2,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":6},{\"entityId\":44,\"faction\":2,\"typeId\":\"Lab\",\"archetype\":\"tech\",\"queueSize\":1,\"activeTechId\":\"Stimpack\",\"activeRemainingTicks\":3}]}",
             json
         )
     }

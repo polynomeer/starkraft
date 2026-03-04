@@ -40,7 +40,8 @@ data class FactionSnapshot(
     val visibleTiles: Int,
     val minerals: Int = 0,
     val gas: Int = 0,
-    val dropoffBuildings: Int = 0
+    val dropoffBuildings: Int = 0,
+    val unlockedTechIds: List<String> = emptyList()
 )
 
 @Serializable
@@ -64,6 +65,9 @@ data class EntitySnapshot(
     val productionQueueSize: Int = 0,
     val activeProductionType: String? = null,
     val activeProductionRemainingTicks: Int = 0,
+    val researchQueueSize: Int = 0,
+    val activeResearchTech: String? = null,
+    val activeResearchRemainingTicks: Int = 0,
     val underConstruction: Boolean = false,
     val constructionRemainingTicks: Int? = null,
     val constructionTotalTicks: Int? = null,
@@ -71,6 +75,7 @@ data class EntitySnapshot(
     val footprintHeight: Int? = null,
     val placementClearance: Int? = null,
     val supportsTraining: Boolean? = null,
+    val supportsResearch: Boolean? = null,
     val supportsRally: Boolean? = null,
     val supportsDropoff: Boolean? = null,
     val dropoffResourceKinds: List<String> = emptyList(),
@@ -360,6 +365,32 @@ data class ConstructionStateStreamRecord(
     val sequence: Long,
     val tick: Int,
     val entities: List<ConstructionStateEntityRecord>
+)
+
+@Serializable
+data class ResearchStateFactionRecord(
+    val faction: Int,
+    val unlockedTechIds: List<String>
+)
+
+@Serializable
+data class ResearchStateEntityRecord(
+    val entityId: Int,
+    val faction: Int,
+    val typeId: String,
+    val archetype: String,
+    val queueSize: Int,
+    val activeTechId: String? = null,
+    val activeRemainingTicks: Int = 0
+)
+
+@Serializable
+data class ResearchStateStreamRecord(
+    val recordType: String = "researchState",
+    val sequence: Long,
+    val tick: Int,
+    val factions: List<ResearchStateFactionRecord>,
+    val entities: List<ResearchStateEntityRecord>
 )
 
 @Serializable
@@ -817,6 +848,7 @@ fun buildClientSnapshot(
         val orders = world.orders[id]?.items
         val path = world.pathFollows[id]
         val production = world.productionQueues[id]?.items
+        val research = world.researchQueues[id]?.items
         val footprint = world.footprints[id]
         val construction = world.constructionSites[id]
         val rally = world.rallyPoints[id]
@@ -848,6 +880,9 @@ fun buildClientSnapshot(
                 productionQueueSize = production?.size ?: 0,
                 activeProductionType = production?.firstOrNull()?.typeId,
                 activeProductionRemainingTicks = production?.firstOrNull()?.remainingTicks ?: 0,
+                researchQueueSize = research?.size ?: 0,
+                activeResearchTech = research?.firstOrNull()?.techId,
+                activeResearchRemainingTicks = research?.firstOrNull()?.remainingTicks ?: 0,
                 underConstruction = construction != null,
                 constructionRemainingTicks = construction?.remainingTicks,
                 constructionTotalTicks = construction?.totalTicks,
@@ -855,6 +890,7 @@ fun buildClientSnapshot(
                 footprintHeight = footprint?.height,
                 placementClearance = footprint?.clearance,
                 supportsTraining = buildSpec?.supportsTraining,
+                supportsResearch = buildSpec?.supportsResearch,
                 supportsRally = buildSpec?.supportsRally,
                 supportsDropoff = buildSpec?.supportsDropoff,
                 dropoffResourceKinds = buildSpec?.dropoffResourceKinds ?: emptyList(),
@@ -888,7 +924,8 @@ fun buildClientSnapshot(
                 visibleTiles = fog.visibleCount(),
                 minerals = stockpile?.minerals ?: 0,
                 gas = stockpile?.gas ?: 0,
-                dropoffBuildings = dropoffBuildings
+                dropoffBuildings = dropoffBuildings,
+                unlockedTechIds = world.unlockedTechs(faction).sorted()
             )
         )
     }
@@ -1452,6 +1489,17 @@ fun renderConstructionStateStreamRecordJson(
     pretty: Boolean = false
 ): String {
     val record = ConstructionStateStreamRecord(sequence = sequence, tick = tick, entities = entities)
+    return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
+}
+
+fun renderResearchStateStreamRecordJson(
+    sequence: Long,
+    tick: Int,
+    factions: List<ResearchStateFactionRecord>,
+    entities: List<ResearchStateEntityRecord>,
+    pretty: Boolean = false
+): String {
+    val record = ResearchStateStreamRecord(sequence = sequence, tick = tick, factions = factions, entities = entities)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 
