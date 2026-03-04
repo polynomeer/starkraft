@@ -168,6 +168,10 @@ private data class ReplayEvent(
             "harvestFaction" -> Command.HarvestFaction(tick, faction ?: 0, target ?: 0)
             "harvestType" -> Command.HarvestType(tick, typeId ?: "", target ?: 0)
             "harvestArchetype" -> Command.HarvestArchetype(tick, archetype ?: "", target ?: 0)
+            "construct" -> Command.Construct(tick, units, target ?: 0)
+            "constructFaction" -> Command.ConstructFaction(tick, faction ?: 0, target ?: 0)
+            "constructType" -> Command.ConstructType(tick, typeId ?: "", target ?: 0)
+            "constructArchetype" -> Command.ConstructArchetype(tick, archetype ?: "", target ?: 0)
             "spawnNode" -> Command.SpawnNode(tick, typeId ?: "", x ?: 0f, y ?: 0f, amount ?: 0, yieldPerTick ?: 0, label, labelId)
             "spawn" -> Command.Spawn(tick, faction ?: 0, typeId ?: "", x ?: 0f, y ?: 0f, vision, label, labelId)
             "build" ->
@@ -237,6 +241,10 @@ private data class ReplayEvent(
                 is Command.HarvestFaction -> ReplayEvent("harvestFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.HarvestType -> ReplayEvent("harvestType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
                 is Command.HarvestArchetype -> ReplayEvent("harvestArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
+                is Command.Construct -> ReplayEvent("construct", cmd.tick, cmd.units, null, null, cmd.target)
+                is Command.ConstructFaction -> ReplayEvent("constructFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
+                is Command.ConstructType -> ReplayEvent("constructType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
+                is Command.ConstructArchetype -> ReplayEvent("constructArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
                 is Command.SpawnNode ->
                     ReplayEvent(
                         type = "spawnNode",

@@ -12,6 +12,7 @@ class World {
     val repathCooldowns = mutableMapOf<EntityId, RepathCooldown>()
     val footprints = mutableMapOf<EntityId, BuildingFootprint>()
     val constructionSites = mutableMapOf<EntityId, ConstructionSite>()
+    val builderTasks = mutableMapOf<EntityId, BuilderTask>()
     val rallyPoints = mutableMapOf<EntityId, RallyPoint>()
     val productionQueues = mutableMapOf<EntityId, ProductionQueue>()
     val researchQueues = mutableMapOf<EntityId, ResearchQueue>()
@@ -71,8 +72,12 @@ class World {
         if (f != null) index.remove(id, f)
         transforms.remove(id); motions.remove(id); tags.remove(id); healths.remove(id);
         weapons.remove(id); orders.remove(id); visions.remove(id)
-        pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); constructionSites.remove(id); rallyPoints.remove(id); productionQueues.remove(id); researchQueues.remove(id); stucks.remove(id)
+        pathFollows.remove(id); repathCooldowns.remove(id); footprints.remove(id); constructionSites.remove(id); builderTasks.remove(id); rallyPoints.remove(id); productionQueues.remove(id); researchQueues.remove(id); stucks.remove(id)
         resourceNodes.remove(id); harvesters.remove(id); autoAttackTargets.remove(id)
+        val builderIterator = builderTasks.entries.iterator()
+        while (builderIterator.hasNext()) {
+            if (builderIterator.next().value.targetBuildingId == id) builderIterator.remove()
+        }
         if (typeId != null) {
             clearAutoTargetRefs(id)
         }

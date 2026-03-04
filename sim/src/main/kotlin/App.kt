@@ -2072,6 +2072,18 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.HarvestArchetype -> {
                     println("tick=$tick harvestArchetype archetype=${c.archetype} target=${c.target}")
                 }
+                is Command.Construct -> {
+                    println("tick=$tick construct units=${c.units.joinToString(",")} target=${c.target}")
+                }
+                is Command.ConstructFaction -> {
+                    println("tick=$tick constructFaction faction=${c.faction} target=${c.target}")
+                }
+                is Command.ConstructType -> {
+                    println("tick=$tick constructType type=${c.typeId} target=${c.target}")
+                }
+                is Command.ConstructArchetype -> {
+                    println("tick=$tick constructArchetype archetype=${c.archetype} target=${c.target}")
+                }
                 is Command.SpawnNode -> {
                     val label = c.label?.let { "@$it " } ?: ""
                     val yield = if (c.yieldPerTick > 0) " yield=${c.yieldPerTick}" else ""
@@ -2502,6 +2514,31 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown target id '${c.target}' in harvestArchetype at tick $tick")
                     }
                 }
+                is Command.Construct -> {
+                    if (!(c.units.size == 1 && c.units[0] == 0)) {
+                        for (id in c.units) if (id >= 0 && !existing.contains(id)) {
+                            error("Unknown unit id '$id' in construct at tick $tick")
+                        }
+                    }
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in construct at tick $tick")
+                    }
+                }
+                is Command.ConstructFaction -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in constructFaction at tick $tick")
+                    }
+                }
+                is Command.ConstructType -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in constructType at tick $tick")
+                    }
+                }
+                is Command.ConstructArchetype -> {
+                    if (c.target >= 0 && !existing.contains(c.target)) {
+                        error("Unknown target id '${c.target}' in constructArchetype at tick $tick")
+                    }
+                }
                 is Command.SpawnNode -> Unit
                 is Command.Spawn -> {
                     // Spawn adds new ids; no validation needed here.
@@ -2629,6 +2666,29 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '${c.target}' in harvestArchetype at tick $tick (spawn first)")
                     }
                 }
+                is Command.Construct -> {
+                    for (id in c.units) if (id < 0 && !defined.contains(id)) {
+                        error("Unknown label id '$id' in construct at tick $tick (spawn first)")
+                    }
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in construct at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.ConstructFaction -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in constructFaction at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.ConstructType -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in constructType at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.ConstructArchetype -> {
+                    if (c.target < 0 && !defined.contains(c.target)) {
+                        error("Unknown label id '${c.target}' in constructArchetype at tick $tick (spawn/build first)")
+                    }
+                }
                 is Command.Train -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in train at tick $tick (spawn/build first)")
@@ -2703,6 +2763,7 @@ private fun printPendingOrders(world: World) {
                 is Order.Move -> "move(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
                 is Order.Patrol -> "patrol(${String.format("%.2f", if (o.toB) o.bx else o.ax)},${String.format("%.2f", if (o.toB) o.by else o.ay)})"
                 is Order.AttackMove -> "attackMove(${String.format("%.2f", o.tx)},${String.format("%.2f", o.ty)})"
+                is Order.Construct -> "construct(${o.target})"
                 is Order.Hold -> "hold"
                 is Order.Attack -> "attack(${o.target})"
             }
@@ -2938,6 +2999,10 @@ internal fun buildCommandStats(
                     tickArchetype++
                     tickAttackArchetype++
                 }
+                is Command.Construct -> tickDirect++
+                is Command.ConstructFaction -> tickFaction++
+                is Command.ConstructType -> tickType++
+                is Command.ConstructArchetype -> tickArchetype++
                 is Command.Spawn -> tickSpawns++
                 is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
@@ -3075,6 +3140,10 @@ internal fun buildCommandStats(
                     archetype++
                     attackArchetype++
                 }
+                is Command.Construct -> direct++
+                is Command.ConstructFaction -> faction++
+                is Command.ConstructType -> type++
+                is Command.ConstructArchetype -> archetype++
                 is Command.Spawn -> spawns++
                 is Command.SpawnNode -> Unit
                 is Command.Build -> Unit
@@ -3895,6 +3964,38 @@ fun issue(
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
             emitCommandAck(true, appliedUnits = applied.size)
         }
+        is Command.Construct -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectDirectTargets(cmd.units, world, labelIdMap)
+            emitOrderAppliedRecord(cmd.tick, "construct", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignConstructors(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "construct", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.ConstructFaction -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectFactionTargets(cmd.faction, world)
+            emitOrderAppliedRecord(cmd.tick, "construct", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignConstructors(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "construct", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.ConstructType -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectTypeTargets(cmd.typeId, world)
+            emitOrderAppliedRecord(cmd.tick, "construct", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignConstructors(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "construct", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
+        is Command.ConstructArchetype -> {
+            val target = resolveLabelId(cmd.target, labelIdMap)
+            val applied = collectArchetypeTargets(cmd.archetype, world, data)
+            emitOrderAppliedRecord(cmd.tick, "construct", applied, target, null, null, snapshotOutPath, streamSequence)
+            assignConstructors(applied, target, world)
+            emitOrderQueueRecord(cmd.tick, "construct", applied, world, snapshotOutPath, streamSequence)
+            emitCommandAck(true, appliedUnits = applied.size)
+        }
         is Command.SpawnNode -> {
             require(RESOURCE_NODE_KINDS.contains(cmd.kind)) { "Unknown resource node kind '${cmd.kind}' in spawnNode command" }
             require(cmd.amount > 0) { "Invalid resource node amount '${cmd.amount}' in spawnNode command" }
@@ -4308,6 +4409,10 @@ private fun commandTypeName(cmd: Command): String =
         is Command.HarvestFaction -> "harvestFaction"
         is Command.HarvestType -> "harvestType"
         is Command.HarvestArchetype -> "harvestArchetype"
+        is Command.Construct -> "construct"
+        is Command.ConstructFaction -> "constructFaction"
+        is Command.ConstructType -> "constructType"
+        is Command.ConstructArchetype -> "constructArchetype"
         is Command.SpawnNode -> "spawnNode"
         is Command.Spawn -> "spawn"
         is Command.Build -> "build"
@@ -4379,6 +4484,15 @@ private fun assignHarvesters(units: IntArray, target: Int, world: World) {
         val unitId = units[i]
         world.harvesters[unitId] = Harvester(targetNodeId = target)
         world.orders[unitId]?.items?.addLast(Order.Move(nodeTransform.x, nodeTransform.y))
+    }
+}
+
+private fun assignConstructors(units: IntArray, target: Int, world: World) {
+    if (!world.constructionSites.containsKey(target)) return
+    for (i in units.indices) {
+        val unitId = units[i]
+        world.builderTasks[unitId] = BuilderTask(target)
+        world.orders[unitId]?.items?.addLast(Order.Construct(target))
     }
 }
 

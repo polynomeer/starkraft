@@ -65,6 +65,7 @@ This project is a headless, fixed-tick RTS simulation. The roadmap below is orde
    - `BuildingPlacementSystem` now covers headless placement/removal for rectangular footprints.
    - Placement clearance is data-driven in building defs, so spacing rules stay deterministic.
    - Building defs can also declare `buildTicks`; those buildings occupy immediately, gain HP over time, and do not satisfy tech prerequisites until construction completes.
+   - Construction now requires explicit worker assignment through `construct` orders instead of passively advancing from any nearby worker.
 
 13. **Resources**
    - Keep faction stockpiles in deterministic sim state.
@@ -129,6 +130,7 @@ Script syntax:
   Attack orders now chase their assigned target through pathfinding until the unit gets into weapon range.
 - `harvest <targetId|@label>` assign selection to harvest from a resource node
   Harvested cargo is delivered to the nearest same-faction building footprint.
+- `construct <targetId|@label>` assign selected workers to an unfinished building so its construction advances
 - `spawnNode [@label] <kind> <x> <y> <amount> [yield]` spawn a resource node (`MineralField`, `GasGeyser`)
   If `yield` is omitted, the node is uncapped and workers harvest at their own rate.
 - `spawn [@label] <faction> <typeId> <x> <y> [vision]` spawn a unit
@@ -141,6 +143,7 @@ Script syntax:
 - Unit and building defs can declare `requiredBuildingTypes`, and both `build` and `train` now fail deterministically with `missingTech` until the faction has those prerequisite buildings
 - Unit, building, and research defs can also declare `requiredResearchIds`, which unlock only after that faction finishes the corresponding research queue
 - `train` also fails with `underConstruction` when the producer building has not finished building yet
+- Buildings under construction only advance while a same-faction worker with an active `construct` order is in build range
 - Building defs can opt into research with `supportsResearch`; tech defs live in `/Users/hammac/Projects/starkraft/sim/src/main/resources/data/techs.json`
 - Building defs can also provide `placementClearance`, which reserves a buffer ring around footprints
 

@@ -1,7 +1,9 @@
 package starkraft.sim.ecs.path
 
 import kotlin.math.floor
+import kotlin.math.abs
 import starkraft.sim.ecs.Order
+import starkraft.sim.ecs.BuildingFootprint
 import starkraft.sim.ecs.PathFollow
 import starkraft.sim.ecs.World
 
@@ -101,6 +103,10 @@ class PathfindingSystem(
                     }
                     is Order.AttackMove -> floor(first.tx).toInt() to floor(first.ty).toInt()
                     is Order.Hold -> continue
+                    is Order.Construct -> {
+                        val footprint = world.footprints[first.target] ?: continue
+                        nearestFootprintApproachTile(sx, sy, footprint)
+                    }
                     is Order.Attack -> {
                         val targetTransform = world.transforms[first.target] ?: continue
                         floor(targetTransform.x).toInt() to floor(targetTransform.y).toInt()
@@ -151,5 +157,28 @@ class PathfindingSystem(
         assignedGoalXs[index] = goalX
         assignedGoalYs[index] = goalY
         lastTickAssignedCount = index + 1
+    }
+
+    private fun nearestFootprintApproachTile(sx: Int, sy: Int, footprint: BuildingFootprint): Pair<Int, Int> {
+        var bestX = footprint.tileX - 1
+        var bestY = footprint.tileY
+        var bestDist = Int.MAX_VALUE
+        val minX = footprint.tileX - 1
+        val minY = footprint.tileY - 1
+        val maxX = footprint.tileX + footprint.width
+        val maxY = footprint.tileY + footprint.height
+        for (y in minY..maxY) {
+            for (x in minX..maxX) {
+                val onBorder = x == minX || x == maxX || y == minY || y == maxY
+                if (!onBorder) continue
+                val dist = abs(sx - x) + abs(sy - y)
+                if (dist < bestDist) {
+                    bestDist = dist
+                    bestX = x
+                    bestY = y
+                }
+            }
+        }
+        return bestX to bestY
     }
 }

@@ -17,6 +17,7 @@ sealed interface Order {
     data class AttackMove(val tx: Float, val ty: Float) : Order;
     data class Patrol(val ax: Float, val ay: Float, val bx: Float, val by: Float, var toB: Boolean = true) : Order
     data object Hold : Order
+    data class Construct(val target: EntityId) : Order
     data class Attack(val target: EntityId) : Order
 }
 
@@ -83,6 +84,8 @@ data class ResearchJob(
 )
 
 data class ResearchQueue(val items: ArrayDeque<ResearchJob> = ArrayDeque())
+
+data class BuilderTask(var targetBuildingId: EntityId)
 
 data class StuckTracker(
     var lastX: Float = 0f,

@@ -141,8 +141,9 @@ class ConstructionSystem(
             val id = ids[i]
             val site = world.constructionSites[id] ?: continue
             val health = world.healths[id] ?: continue
-            if (site.remainingTicks > 0 && hasBuilder(id)) {
-                site.remainingTicks--
+            val builders = assignedBuilderCount(id)
+            if (site.remainingTicks > 0 && builders > 0) {
+                site.remainingTicks = (site.remainingTicks - builders).coerceAtLeast(0)
             }
             val progressedTicks = site.totalTicks - site.remainingTicks
             val targetHp = maxOf(1, (site.maxHp * progressedTicks + site.totalTicks - 1) / site.totalTicks)
@@ -157,22 +158,26 @@ class ConstructionSystem(
         }
     }
 
-    private fun hasBuilder(buildingId: Int): Boolean {
-        val buildingTag = world.tags[buildingId] ?: return false
-        val footprint = world.footprints[buildingId] ?: return false
+    private fun assignedBuilderCount(buildingId: Int): Int {
+        val buildingTag = world.tags[buildingId] ?: return 0
+        val footprint = world.footprints[buildingId] ?: return 0
         val minX = footprint.tileX.toFloat() - workerRange
         val minY = footprint.tileY.toFloat() - workerRange
         val maxX = (footprint.tileX + footprint.width).toFloat() + workerRange
         val maxY = (footprint.tileY + footprint.height).toFloat() + workerRange
-        for ((id, transform) in world.transforms) {
-            if (id == buildingId) continue
+        var count = 0
+        for ((id, task) in world.builderTasks) {
+            if (task.targetBuildingId != buildingId) continue
+            val transform = world.transforms[id] ?: continue
             val tag = world.tags[id] ?: continue
             if (tag.faction != buildingTag.faction) continue
             if ((world.healths[id]?.hp ?: 0) <= 0) continue
             if (data.unitArchetype(tag.typeId) != "worker") continue
+            val order = world.orders[id]?.items?.firstOrNull()
+            if (order !is Order.Construct || order.target != buildingId) continue
             if (transform.x < minX || transform.x > maxX || transform.y < minY || transform.y > maxY) continue
-            return true
+            count++
         }
-        return false
+        return count
     }
 }

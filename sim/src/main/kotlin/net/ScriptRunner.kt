@@ -134,6 +134,17 @@ object ScriptRunner {
                     }
                     out.add(harvestCommand(tick, selection!!, target))
                 }
+                "construct" -> {
+                    require(parts.size == 2) { "construct <targetId>" }
+                    require(selection != null) { "construct requires selection" }
+                    val token = parts[1]
+                    val target = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    out.add(constructCommand(tick, selection!!, target))
+                }
                 "spawn" -> {
                     require(parts.size in 5..7) { "spawn [@label] <faction> <typeId> <x> <y> [vision]" }
                     var idxStart = 1
@@ -278,6 +289,16 @@ object ScriptRunner {
             is Selection.Faction -> Command.AttackFaction(tick, selection.id, target)
             is Selection.Type -> Command.AttackType(tick, selection.typeId, target)
             is Selection.Archetype -> Command.AttackArchetype(tick, selection.archetype, target)
+        }
+    }
+
+    private fun constructCommand(tick: Int, selection: Selection, target: Int): Command {
+        return when (selection) {
+            is Selection.Units -> Command.Construct(tick, selection.ids, target)
+            is Selection.All -> Command.Construct(tick, ALL_UNITS, target)
+            is Selection.Faction -> Command.ConstructFaction(tick, selection.id, target)
+            is Selection.Type -> Command.ConstructType(tick, selection.typeId, target)
+            is Selection.Archetype -> Command.ConstructArchetype(tick, selection.archetype, target)
         }
     }
 

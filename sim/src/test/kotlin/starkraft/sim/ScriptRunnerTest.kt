@@ -113,6 +113,24 @@ class ScriptRunnerTest {
     }
 
     @Test
+    fun `parses construct commands`() {
+        val path = Files.createTempFile("starkraft-construct-script", ".script")
+        Files.writeString(
+            path,
+            """
+            tick 5
+            selectArchetype worker
+            construct @site
+            """.trimIndent()
+        )
+
+        val program = ScriptRunner.loadProgram(path)
+
+        assertEquals(1, program.commands.size)
+        assertEquals(Command.ConstructArchetype(5, "worker", -1), program.commands[0])
+    }
+
+    @Test
     fun `parses build commands`() {
         val path = Files.createTempFile("starkraft-build-script", ".script")
         Files.writeString(

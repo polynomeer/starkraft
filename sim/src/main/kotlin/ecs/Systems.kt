@@ -67,8 +67,20 @@ class MovementSystem(
             val q = world.orders[id]?.items ?: continue
             if (q.isNotEmpty()) {
                 val o = q.first()
-                if (o is Order.Move || o is Order.AttackMove || o is Order.Patrol) {
+                if (o is Order.Move || o is Order.AttackMove || o is Order.Patrol || o is Order.Construct) {
                     val pf = world.pathFollows[id]
+                    if (o is Order.Construct) {
+                        if (!world.constructionSites.containsKey(o.target)) {
+                            world.builderTasks.remove(id)
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            q.removeFirst()
+                            continue
+                        }
+                        if (isConstructTargetInRange(tr, o.target)) {
+                            world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
+                            continue
+                        }
+                    }
                     if (pf == null) {
                         tryEnqueuePath(id)
                         continue
@@ -79,6 +91,8 @@ class MovementSystem(
                         world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
                         if (o is Order.Patrol) {
                             o.toB = !o.toB
+                        } else if (o is Order.Construct) {
+                            // Stay assigned until construction completes or target is invalid.
                         } else {
                             q.removeFirst()
                         }
@@ -123,11 +137,13 @@ class MovementSystem(
                         recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
                         if (pf.index >= pf.length) {
                             world.pathFollows.remove(id)?.let { pathPool.recycle(it.nodes) }
-                            if (o is Order.Patrol) {
-                                o.toB = !o.toB
-                            } else {
-                                q.removeFirst()
-                            }
+                        if (o is Order.Patrol) {
+                            o.toB = !o.toB
+                        } else if (o is Order.Construct) {
+                            // Stay assigned until construction completes or target is invalid.
+                        } else {
+                            q.removeFirst()
+                        }
                         }
                     } else {
                         val step = min(speed, dist)
@@ -240,6 +256,15 @@ class MovementSystem(
         val dx = target.x - source.x
         val dy = target.y - source.y
         return dx * dx + dy * dy <= def.range * def.range
+    }
+
+    private fun isConstructTargetInRange(source: Transform, targetId: Int): Boolean {
+        val footprint = world.footprints[targetId] ?: return false
+        val minX = footprint.tileX.toFloat() - 1.5f
+        val minY = footprint.tileY.toFloat() - 1.5f
+        val maxX = (footprint.tileX + footprint.width).toFloat() + 1.5f
+        val maxY = (footprint.tileY + footprint.height).toFloat() + 1.5f
+        return source.x in minX..maxX && source.y in minY..maxY
     }
 
     private fun hasEnemyInRange(id: Int, source: Transform): Boolean {

@@ -192,9 +192,10 @@ class BuildingPlacementTest {
         val occ = OccupancyGrid(16, 16)
         val buildings = BuildingPlacementSystem(world, map, occ)
         val construction = ConstructionSystem(world, constructionData())
-        world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Worker"), Health(40, 40), null)
+        val workerId = world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Worker"), Health(40, 40), null)
 
         val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
+        issue(Command.Construct(0, intArrayOf(workerId), id), world, NullRecorder())
 
         assertEquals(1, world.healths[id]?.hp)
         assertTrue(world.constructionSites.containsKey(id))
@@ -218,10 +219,11 @@ class BuildingPlacementTest {
         val occ = OccupancyGrid(16, 16)
         val buildings = BuildingPlacementSystem(world, map, occ)
         val construction = ConstructionSystem(world, constructionData())
-        world.spawn(Transform(2.5f, 1.5f), UnitTag(1, "Worker"), Health(40, 40), null)
+        val workerId = world.spawn(Transform(2.5f, 1.5f), UnitTag(1, "Worker"), Health(40, 40), null)
 
         val depotId = buildings.place(faction = 1, typeId = "Depot", tileX = 2, tileY = 2, width = 2, height = 2, hp = 400, buildTicks = 2)
         assertNotNull(depotId)
+        issue(Command.Construct(0, intArrayOf(workerId), depotId!!), world, NullRecorder())
 
         val blocked =
             buildings.placeResult(
@@ -255,7 +257,7 @@ class BuildingPlacementTest {
     }
 
     @Test
-    fun `construction does not progress without nearby worker`() {
+    fun `construction does not progress without assigned worker`() {
         val world = World()
         val map = MapGrid(16, 16)
         val occ = OccupancyGrid(16, 16)
@@ -271,15 +273,16 @@ class BuildingPlacementTest {
     }
 
     @Test
-    fun `non worker units do not build structures`() {
+    fun `non worker units do not build structures when assigned`() {
         val world = World()
         val map = MapGrid(16, 16)
         val occ = OccupancyGrid(16, 16)
         val buildings = BuildingPlacementSystem(world, map, occ)
         val construction = ConstructionSystem(world, constructionData())
-        world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Marine"), Health(45, 45), null)
+        val marineId = world.spawn(Transform(4.5f, 3.5f), UnitTag(1, "Marine"), Health(45, 45), null)
 
         val id = buildings.place(faction = 1, typeId = "Depot", tileX = 4, tileY = 4, width = 2, height = 2, hp = 400, buildTicks = 4)!!
+        issue(Command.Construct(0, intArrayOf(marineId), id), world, NullRecorder())
 
         construction.tick()
 
