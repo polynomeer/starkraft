@@ -77,6 +77,11 @@ data class SnapshotStreamSummary(
     val productionProgressCount: Int = 0,
     val productionCompleteCount: Int = 0,
     val productionCancelCount: Int = 0,
+    val researchStateFactionCount: Int = 0,
+    val researchUnlockedCount: Int = 0,
+    val researchStateBuildingCount: Int = 0,
+    val researchStateQueuedCount: Int = 0,
+    val researchActiveTechs: Map<String, Int> = emptyMap(),
     val researchEnqueueCount: Int = 0,
     val researchProgressCount: Int = 0,
     val researchCompleteCount: Int = 0,
@@ -174,6 +179,11 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var productionProgressCount = 0
     var productionCompleteCount = 0
     var productionCancelCount = 0
+    var researchStateFactionCount = 0
+    var researchUnlockedCount = 0
+    var researchStateBuildingCount = 0
+    var researchStateQueuedCount = 0
+    var researchActiveTechs = linkedMapOf<String, Int>()
     var researchEnqueueCount = 0
     var researchProgressCount = 0
     var researchCompleteCount = 0
@@ -435,6 +445,21 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "researchState" -> {
+                val factions = obj.array("factions")
+                val entities = obj.array("entities")
+                researchStateFactionCount = factions.size
+                researchUnlockedCount = factions.sumOf { faction -> faction.stringArray("unlockedTechIds").size }
+                researchStateBuildingCount = entities.size
+                researchStateQueuedCount = 0
+                researchActiveTechs = linkedMapOf()
+                for (entity in entities) {
+                    researchStateQueuedCount += entity.int("queueSize") ?: 0
+                    entity.string("activeTechId")?.let { techId ->
+                        researchActiveTechs[techId] = (researchActiveTechs[techId] ?: 0) + 1
+                    }
+                }
+            }
             "research" -> {
                 val events = obj.array("events")
                 for (event in events) {
@@ -568,6 +593,11 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         productionProgressCount = productionProgressCount,
         productionCompleteCount = productionCompleteCount,
         productionCancelCount = productionCancelCount,
+        researchStateFactionCount = researchStateFactionCount,
+        researchUnlockedCount = researchUnlockedCount,
+        researchStateBuildingCount = researchStateBuildingCount,
+        researchStateQueuedCount = researchStateQueuedCount,
+        researchActiveTechs = researchActiveTechs,
         researchEnqueueCount = researchEnqueueCount,
         researchProgressCount = researchProgressCount,
         researchCompleteCount = researchCompleteCount,
@@ -653,6 +683,18 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
                 "maxQueue=${summary.maxProducerQueueLimit} " +
                 "prod=e${summary.productionEnqueueCount}/p${summary.productionProgressCount}/" +
                 "c${summary.productionCompleteCount}/x${summary.productionCancelCount}"
+        )
+    }
+    if (summary.researchStateBuildingCount > 0 || summary.researchUnlockedCount > 0 || summary.countsByType["researchState"] != null) {
+        val active =
+            if (summary.researchActiveTechs.isEmpty()) {
+                "idle"
+            } else {
+                summary.researchActiveTechs.entries.joinToString(",") { (techId, count) -> "$techId=$count" }
+            }
+        lines.add(
+            "researchState: factions=${summary.researchStateFactionCount} unlocked=${summary.researchUnlockedCount} " +
+                "buildings=${summary.researchStateBuildingCount} queue=${summary.researchStateQueuedCount} active=$active"
         )
     }
     if (

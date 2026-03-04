@@ -30,6 +30,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"harvesterRetarget\",\"sequence\":12,\"tick\":0,\"events\":[{\"workerId\":14,\"fromNodeId\":10,\"toNodeId\":9,\"resourceKind\":\"minerals\"},{\"workerId\":14,\"fromNodeId\":9,\"toNodeId\":11,\"resourceKind\":\"minerals\"}]}",
                     "{\"recordType\":\"harvestCycle\",\"sequence\":13,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2}]}",
                     "{\"recordType\":\"production\",\"sequence\":14,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null},{\"kind\":\"progress\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":74,\"spawnedEntityId\":null},{\"kind\":\"complete\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":0,\"spawnedEntityId\":9},{\"kind\":\"cancel\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":40,\"spawnedEntityId\":null}]}",
+                    "{\"recordType\":\"researchState\",\"sequence\":14,\"tick\":0,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\"]},{\"faction\":2,\"unlockedTechIds\":[]}],\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":2,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":59}]}",
                     "{\"recordType\":\"research\",\"sequence\":14,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"techId\":\"AdvancedTraining\",\"remainingTicks\":60},{\"kind\":\"progress\",\"buildingId\":1,\"techId\":\"AdvancedTraining\",\"remainingTicks\":59},{\"kind\":\"complete\",\"buildingId\":1,\"techId\":\"ArmorUp\",\"remainingTicks\":0},{\"kind\":\"cancel\",\"buildingId\":1,\"techId\":\"Stimpack\",\"remainingTicks\":12}]}",
                     "{\"recordType\":\"metrics\",\"sequence\":15,\"tick\":1,\"factions\":[{\"faction\":1,\"alive\":5,\"visibleTiles\":20,\"minerals\":150,\"gas\":25},{\"faction\":2,\"alive\":4,\"visibleTiles\":18,\"minerals\":80,\"gas\":10}],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
                     "{\"recordType\":\"pathAssigned\",\"sequence\":16,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28},{\"entityId\":8,\"pathLength\":6,\"goalX\":12,\"goalY\":10}]}",
@@ -43,7 +44,7 @@ class SnapshotStreamConsumerTest {
                 )
             )
 
-        assertEquals(27, summary.totalRecords)
+        assertEquals(28, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["resourceNode"])
@@ -60,6 +61,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.countsByType["harvesterRetarget"])
         assertEquals(1, summary.countsByType["harvestCycle"])
         assertEquals(1, summary.countsByType["production"])
+        assertEquals(1, summary.countsByType["researchState"])
         assertEquals(1, summary.countsByType["research"])
         assertEquals(1, summary.countsByType["metrics"])
         assertEquals(1, summary.countsByType["pathAssigned"])
@@ -127,6 +129,11 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.productionProgressCount)
         assertEquals(1, summary.productionCompleteCount)
         assertEquals(1, summary.productionCancelCount)
+        assertEquals(2, summary.researchStateFactionCount)
+        assertEquals(1, summary.researchUnlockedCount)
+        assertEquals(1, summary.researchStateBuildingCount)
+        assertEquals(2, summary.researchStateQueuedCount)
+        assertEquals(1, summary.researchActiveTechs["AdvancedTraining"])
         assertEquals(1, summary.researchEnqueueCount)
         assertEquals(1, summary.researchProgressCount)
         assertEquals(1, summary.researchCompleteCount)
@@ -182,6 +189,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"harvesterRetarget\",\"sequence\":12,\"tick\":0,\"events\":[{\"workerId\":13,\"fromNodeId\":10,\"toNodeId\":9,\"resourceKind\":\"minerals\"}]}",
                         "{\"recordType\":\"harvestCycle\",\"sequence\":13,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3}]}",
                         "{\"recordType\":\"production\",\"sequence\":14,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"typeId\":\"Marine\",\"remainingTicks\":75,\"spawnedEntityId\":null}]}",
+                        "{\"recordType\":\"researchState\",\"sequence\":14,\"tick\":0,\"factions\":[{\"faction\":1,\"unlockedTechIds\":[\"AdvancedTraining\"]}],\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"queueSize\":1,\"activeTechId\":\"AdvancedTraining\",\"activeRemainingTicks\":60}]}",
                         "{\"recordType\":\"research\",\"sequence\":14,\"tick\":0,\"events\":[{\"kind\":\"enqueue\",\"buildingId\":1,\"techId\":\"AdvancedTraining\",\"remainingTicks\":60},{\"kind\":\"cancel\",\"buildingId\":1,\"techId\":\"Stimpack\",\"remainingTicks\":12}]}",
                         "{\"recordType\":\"metrics\",\"sequence\":15,\"tick\":1,\"factions\":[],\"pathRequests\":3,\"pathSolved\":2,\"pathQueueSize\":7,\"avgPathLength\":6.5,\"replans\":2,\"replansBlocked\":1,\"replansStuck\":1}",
                         "{\"recordType\":\"pathAssigned\",\"sequence\":16,\"tick\":1,\"entities\":[{\"entityId\":7,\"pathLength\":9,\"goalX\":28,\"goalY\":28}]}",
@@ -214,6 +222,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("harvesterRetarget: events=1 workers=1 total=1"))
         assertTrue(text.contains("harvestCycle: pickup=1/3 deposit=1/3"))
         assertTrue(text.contains("prod=e1/p0/c0/x0"))
+        assertTrue(text.contains("researchState: factions=1 unlocked=1 buildings=1 queue=1 active=AdvancedTraining=1"))
         assertTrue(text.contains("research: e1/p0/c0/x1"))
         assertTrue(text.contains("combat: attacks=2 kills=1 damageEvents=2 damage=15 deathDespawns=1"))
         assertTrue(text.contains("pathing: req=3 solved=2 replans=2 assigned=1 progress=1 completed=1"))

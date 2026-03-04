@@ -206,6 +206,7 @@ Alternative client transports/renderers:
 - WebSocket bridge from ndjson files to websocket endpoints:
   `./gradlew :sim:webSocketClientBridge --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson 9101 9102"`
 The text client frame now includes selected research queue state and the latest streamed research event totals.
+The snapshot-stream consumer also summarizes `researchState` records, including unlocked tech count, active research buildings, queued jobs, and active tech ids when present.
 
 Client controls:
 - left click: select nearest faction 1 unit
