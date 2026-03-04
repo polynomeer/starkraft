@@ -307,6 +307,9 @@ private class ClientPanel(
                         groundMode = null
                         buildModeTypeId = null
                     }
+                    KeyEvent.VK_1 -> session.state.viewedFaction = 1
+                    KeyEvent.VK_2 -> session.state.viewedFaction = 2
+                    KeyEvent.VK_3 -> session.state.viewedFaction = null
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -390,6 +393,7 @@ private class ClientPanel(
                     attackMoveModifier = e.isControlDown,
                     forcedGroundCommandType = groundMode?.commandType,
                     additiveSelection = e.isShiftDown,
+                    viewedFaction = session.state.viewedFaction,
                     requestIds = requestIds
                 )
         ) {
@@ -412,6 +416,7 @@ private class ClientPanel(
             selectEntitiesInBox(
                 snapshot = snapshot,
                 selectedIds = session.state.selectedIds,
+                viewedFaction = session.state.viewedFaction,
                 startWorldX = camera.screenToWorldX(dragStartX.toFloat()),
                 startWorldY = camera.screenToWorldY(dragStartY.toFloat()),
                 endWorldX = camera.screenToWorldX(e.x.toFloat()),
@@ -438,7 +443,8 @@ private class ClientPanel(
     private fun buildOverlayLines(): List<String> =
         listOf(
             "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
-            "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}"
+            "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}",
+            "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}"
         )
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {

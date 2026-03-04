@@ -8,6 +8,7 @@ internal data class ClientSessionState(
     var snapshot: ClientSnapshot? = null,
     var mapState: ClientMapState? = null,
     var visionState: ClientVisionState? = null,
+    var viewedFaction: Int? = 1,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
     var lastAck: ClientCommandAck? = null,
     var lastConstructionActivity: ClientConstructionActivity? = null,

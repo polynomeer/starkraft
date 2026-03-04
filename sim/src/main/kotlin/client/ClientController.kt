@@ -26,6 +26,7 @@ internal class ClientCommandIds(prefix: String = "gc") {
 internal fun buildClientIntent(
     snapshot: ClientSnapshot,
     selectedIds: LinkedHashSet<Int>,
+    viewedFaction: Int?,
     worldX: Float,
     worldY: Float,
     leftClick: Boolean,
@@ -36,13 +37,18 @@ internal fun buildClientIntent(
     requestIds: ClientCommandIds
 ): ClientIntent? {
     if (leftClick) {
-        val selected = nearestEntity(snapshot, worldX, worldY) { it.faction == 1 }
+        val selected = nearestEntity(snapshot, worldX, worldY) { viewedFaction == null || it.faction == viewedFaction }
         applySelectionClick(selectedIds, selected?.id, additive = additiveSelection)
         return ClientIntent.Selection(buildUnitSelectionRecord(snapshot.tick + 1, selectedIds))
     }
     if (!rightClick || selectedIds.isEmpty()) return null
 
-    val enemy = nearestEntity(snapshot, worldX, worldY) { it.faction == 2 && distance(it.x, it.y, worldX, worldY) <= 0.8f }
+    val controlledFaction = selectedIds.asSequence().mapNotNull { id -> snapshot.entities.firstOrNull { it.id == id }?.faction }.firstOrNull()
+    val enemy =
+        nearestEntity(snapshot, worldX, worldY) {
+            val faction = it.faction
+            faction > 0 && faction != controlledFaction && distance(it.x, it.y, worldX, worldY) <= 0.8f
+        }
     if (enemy != null) {
         return ClientIntent.Command(
             InputJson.InputCommandRecord(
@@ -99,6 +105,7 @@ internal fun buildHoldIntent(
 internal fun selectEntitiesInBox(
     snapshot: ClientSnapshot,
     selectedIds: LinkedHashSet<Int>,
+    viewedFaction: Int?,
     startWorldX: Float,
     startWorldY: Float,
     endWorldX: Float,
@@ -112,7 +119,7 @@ internal fun selectEntitiesInBox(
     val hits =
         snapshot.entities
             .asSequence()
-            .filter { it.faction == 1 }
+            .filter { viewedFaction == null || it.faction == viewedFaction }
             .filter { it.x in minX..maxX && it.y in minY..maxY }
             .map { it.id }
             .sorted()

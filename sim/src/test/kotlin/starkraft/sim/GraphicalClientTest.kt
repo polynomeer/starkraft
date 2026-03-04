@@ -189,7 +189,7 @@ class GraphicalClientTest {
                 "construction: sites=1 remaining=6 Depotx1",
                 "tasks: build=1 gather=1 return=0",
                 "paths: active=1 remaining=5 goals=12,14x1",
-                "fog: visible=10 hidden=1014",
+                "fog: f1 visible=10 hidden=1014",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "rally: none",
@@ -201,7 +201,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: m move   a attackMove   p patrol   h hold   u/i queue   x/t/y cancel   esc clear"
+                "keys: 1/2 faction   3 observer   m/a/p/h/u/i/x/t/y   esc clear"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -650,9 +650,10 @@ class GraphicalClientTest {
                 resourceNodes = emptyList()
             )
 
-        assertEquals("Victory", buildGameState(victorySnapshot)?.title)
-        assertEquals("Defeat", buildGameState(defeatSnapshot)?.title)
-        assertEquals(null, buildGameState(victorySnapshot.copy(entities = victorySnapshot.entities + EntitySnapshot(id = 3, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 4f, y = 4f, dir = 0f, hp = 35, maxHp = 35, armor = 0))))
+        assertEquals("Victory", buildGameState(victorySnapshot, 1)?.title)
+        assertEquals("Victory", buildGameState(defeatSnapshot, 2)?.title)
+        assertEquals(null, buildGameState(victorySnapshot.copy(entities = victorySnapshot.entities + EntitySnapshot(id = 3, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 4f, y = 4f, dir = 0f, hp = 35, maxHp = 35, armor = 0)), 1))
+        assertEquals(null, buildGameState(victorySnapshot, null))
     }
 
     @Test
@@ -670,10 +671,10 @@ class GraphicalClientTest {
             )
 
         assertEquals(
-            "fog: visible=3 hidden=61",
-            buildFogSummary(snapshot, ClientVisionState(visibleTilesByFaction = mapOf(1 to setOf(1 to 1, 2 to 2, 3 to 3))))
+            "fog: f1 visible=3 hidden=61",
+            buildFogSummary(snapshot, ClientVisionState(visibleTilesByFaction = mapOf(1 to setOf(1 to 1, 2 to 2, 3 to 3))), 1)
         )
-        assertEquals("fog: unavailable", buildFogSummary(snapshot, null))
+        assertEquals("fog: observer", buildFogSummary(snapshot, null, null))
     }
 
     @Test
@@ -856,7 +857,7 @@ class GraphicalClientTest {
             )
         val selected = linkedSetOf(12)
 
-        val intent = selectEntitiesInBox(snapshot, selected, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = false)
+        val intent = selectEntitiesInBox(snapshot, selected, 1, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = false)
 
         assertEquals(linkedSetOf(4, 5), selected)
         assertArrayEquals(intArrayOf(4, 5), intent.record.units)
@@ -880,9 +881,33 @@ class GraphicalClientTest {
             )
         val selected = linkedSetOf(12)
 
-        selectEntitiesInBox(snapshot, selected, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = true)
+        selectEntitiesInBox(snapshot, selected, 1, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = true)
 
         assertEquals(linkedSetOf(12, 4, 5), selected)
+    }
+
+    @Test
+    fun `observer selection can select non-faction-one units`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 4.5f, y = 4.5f, dir = 0f, hp = 35, maxHp = 35, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        val selected = linkedSetOf<Int>()
+        val intent = selectEntitiesInBox(snapshot, selected, null, 4.4f, 4.4f, 4.6f, 4.6f, additiveSelection = false)
+
+        assertEquals(linkedSetOf(9), selected)
+        assertArrayEquals(intArrayOf(9), intent.record.units)
     }
 
     @Test
@@ -988,13 +1013,13 @@ class GraphicalClientTest {
         val ids = ClientCommandIds("test")
 
         val attackIntent =
-            buildClientIntent(snapshot, selected, 6f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 1, 6f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val harvestIntent =
-            buildClientIntent(snapshot, selected, 8f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 1, 8f, 4f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val moveIntent =
-            buildClientIntent(snapshot, selected, 10f, 10f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 1, 10f, 10f, leftClick = false, rightClick = true, attackMoveModifier = false, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
         val attackMoveIntent =
-            buildClientIntent(snapshot, selected, 11f, 10f, leftClick = false, rightClick = true, attackMoveModifier = true, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
+            buildClientIntent(snapshot, selected, 1, 11f, 10f, leftClick = false, rightClick = true, attackMoveModifier = true, forcedGroundCommandType = null, additiveSelection = false, requestIds = ids)
 
         val attack = (attackIntent as ClientIntent.Command).record
         val harvest = (harvestIntent as ClientIntent.Command).record
@@ -1037,6 +1062,7 @@ class GraphicalClientTest {
             buildClientIntent(
                 snapshot,
                 linkedSetOf(4),
+                1,
                 10f,
                 10f,
                 leftClick = false,

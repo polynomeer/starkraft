@@ -49,12 +49,12 @@ internal class SwingClientRenderer(
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawTaskMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawStatusMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
-        drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
-        drawFog(graphics, snapshot, state.visionState, effectiveCamera)
+        drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera, state.viewedFaction)
+        drawFog(graphics, snapshot, state.visionState, effectiveCamera, state.viewedFaction)
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
         drawCommandPanel(graphics, width, height, state)
         drawHud(graphics, height, state, snapshot, overlayLines)
-        drawGameStateOverlay(graphics, width, height, snapshot)
+        drawGameStateOverlay(graphics, width, height, snapshot, state.viewedFaction)
     }
 
     private fun drawGrid(g: Graphics2D, snapshot: ClientSnapshot, camera: CameraView) {
@@ -80,15 +80,16 @@ internal class SwingClientRenderer(
         }
     }
 
-    private fun drawEntities(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
+    private fun drawEntities(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView, viewedFaction: Int?) {
         for (entity in snapshot.entities) {
             val px = camera.worldToScreenX(entity.x).toInt()
             val py = camera.worldToScreenY(entity.y).toInt()
             g.color =
-                when (entity.faction) {
-                    1 -> friendlyColor
-                    2 -> enemyColor
-                    else -> neutralColor
+                when {
+                    entity.faction <= 0 -> neutralColor
+                    viewedFaction == null -> if (entity.faction == 1) friendlyColor else enemyColor
+                    entity.faction == viewedFaction -> friendlyColor
+                    else -> enemyColor
                 }
             val radius = if (entity.footprintWidth != null && entity.footprintHeight != null) 9 else 6
             g.fillOval(px - radius, py - radius, radius * 2, radius * 2)
@@ -199,9 +200,11 @@ internal class SwingClientRenderer(
         g: Graphics2D,
         snapshot: ClientSnapshot,
         visionState: ClientVisionState?,
-        camera: CameraView
+        camera: CameraView,
+        viewedFaction: Int?
     ) {
-        val visibleTiles = visionState?.visibleTiles(1)
+        val faction = viewedFaction ?: return
+        val visibleTiles = visionState?.visibleTiles(faction)
         if (visibleTiles == null) return
         val tilePixels = (camera.baseTileSize * camera.zoom).toInt().coerceAtLeast(1)
         g.color = Color(0x05, 0x08, 0x0D, 170)
@@ -298,9 +301,10 @@ internal class SwingClientRenderer(
         g: Graphics2D,
         width: Int,
         height: Int,
-        snapshot: ClientSnapshot
+        snapshot: ClientSnapshot,
+        viewedFaction: Int?
     ) {
-        val gameState = buildGameState(snapshot) ?: return
+        val gameState = buildGameState(snapshot, viewedFaction) ?: return
         val boxWidth = 260
         val boxHeight = 64
         val x = (width - boxWidth) / 2
@@ -412,7 +416,7 @@ internal fun buildClientHudLines(
         buildConstructionSummary(snapshot, state.selectedIds),
         buildTaskSummary(snapshot, state.selectedIds),
         buildPathSummary(snapshot, state.selectedIds),
-        buildFogSummary(snapshot, state.visionState),
+        buildFogSummary(snapshot, state.visionState, state.viewedFaction),
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         buildRallySummary(snapshot, state.selectedIds),
@@ -424,7 +428,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: m move   a attackMove   p patrol   h hold   u/i queue   x/t/y cancel   esc clear"
+        "keys: 1/2 faction   3 observer   m/a/p/h/u/i/x/t/y   esc clear"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
@@ -611,11 +615,13 @@ internal fun buildPathSummary(
 
 internal fun buildFogSummary(
     snapshot: ClientSnapshot,
-    visionState: ClientVisionState?
+    visionState: ClientVisionState?,
+    viewedFaction: Int?
 ): String {
-    val visibleTiles = visionState?.visibleTiles(1) ?: return "fog: unavailable"
+    val faction = viewedFaction ?: return "fog: observer"
+    val visibleTiles = visionState?.visibleTiles(faction) ?: return "fog: unavailable"
     val totalTiles = snapshot.mapWidth * snapshot.mapHeight
-    return "fog: visible=${visibleTiles.size} hidden=${(totalTiles - visibleTiles.size).coerceAtLeast(0)}"
+    return "fog: f$faction visible=${visibleTiles.size} hidden=${(totalTiles - visibleTiles.size).coerceAtLeast(0)}"
 }
 
 internal fun buildPreviewLabel(spec: BuildPreviewSpec?, valid: Boolean): BuildPreviewLabel? {
@@ -636,7 +642,7 @@ internal fun buildEntityStatusLabel(entity: EntitySnapshot): String? =
         else -> null
     }
 
-internal fun buildGameState(snapshot: ClientSnapshot): ClientGameState? {
+internal fun buildGameState(snapshot: ClientSnapshot, viewedFaction: Int?): ClientGameState? {
     var friendlyAlive = 0
     var enemyAlive = 0
     for (entity in snapshot.entities) {
@@ -646,9 +652,12 @@ internal fun buildGameState(snapshot: ClientSnapshot): ClientGameState? {
             2 -> enemyAlive++
         }
     }
+    if (viewedFaction == null) return null
     return when {
-        friendlyAlive > 0 && enemyAlive == 0 -> ClientGameState("Victory", "Enemy faction eliminated")
-        friendlyAlive == 0 && enemyAlive > 0 -> ClientGameState("Defeat", "Your faction has been eliminated")
+        viewedFaction == 1 && friendlyAlive > 0 && enemyAlive == 0 -> ClientGameState("Victory", "Enemy faction eliminated")
+        viewedFaction == 1 && friendlyAlive == 0 && enemyAlive > 0 -> ClientGameState("Defeat", "Your faction has been eliminated")
+        viewedFaction == 2 && enemyAlive > 0 && friendlyAlive == 0 -> ClientGameState("Victory", "Enemy faction eliminated")
+        viewedFaction == 2 && enemyAlive == 0 && friendlyAlive > 0 -> ClientGameState("Defeat", "Your faction has been eliminated")
         else -> null
     }
 }
