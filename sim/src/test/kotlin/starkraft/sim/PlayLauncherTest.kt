@@ -11,9 +11,11 @@ import starkraft.sim.client.buildPlayClientCommand
 import starkraft.sim.client.buildPlaySimCommand
 import starkraft.sim.client.parsePlayControlState
 import starkraft.sim.client.defaultPlayPaths
+import starkraft.sim.client.readPlayScenario
 import starkraft.sim.client.resetPlayFiles
 import starkraft.sim.client.renderPlayControlState
 import starkraft.sim.client.shouldRestartPlay
+import starkraft.sim.client.writePlayScenario
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -28,6 +30,7 @@ class PlayLauncherTest {
         assertEquals(Paths.get("/tmp/starkraft/play/snapshots.ndjson"), paths.snapshots)
         assertEquals(Paths.get("/tmp/starkraft/play/client-input.ndjson"), paths.input)
         assertEquals(Paths.get("/tmp/starkraft/play/play-control.txt"), paths.control)
+        assertEquals(Paths.get("/tmp/starkraft/play/play-scenario.txt"), paths.scenario)
     }
 
     @Test
@@ -88,7 +91,8 @@ class PlayLauncherTest {
                 classpath = "/cp",
                 snapshotPath = Paths.get("/tmp/snapshots.ndjson"),
                 inputPath = Paths.get("/tmp/client-input.ndjson"),
-                controlPath = Paths.get("/tmp/play-control.txt")
+                controlPath = Paths.get("/tmp/play-control.txt"),
+                scenarioPath = Paths.get("/tmp/play-scenario.txt")
             )
 
         assertEquals(
@@ -99,7 +103,8 @@ class PlayLauncherTest {
                 "starkraft.sim.client.GraphicalClientKt",
                 "/tmp/snapshots.ndjson",
                 "/tmp/client-input.ndjson",
-                "/tmp/play-control.txt"
+                "/tmp/play-control.txt",
+                "/tmp/play-scenario.txt"
             ),
             command
         )
@@ -107,20 +112,30 @@ class PlayLauncherTest {
 
     @Test
     fun `reset play files creates fresh workspace files`(@TempDir tempDir: Path) {
-        val paths = PlayPaths(tempDir, tempDir.resolve("snapshots.ndjson"), tempDir.resolve("client-input.ndjson"), tempDir.resolve("play-control.txt"))
+        val paths =
+            PlayPaths(
+                tempDir,
+                tempDir.resolve("snapshots.ndjson"),
+                tempDir.resolve("client-input.ndjson"),
+                tempDir.resolve("play-control.txt"),
+                tempDir.resolve("play-scenario.txt")
+            )
         Files.writeString(paths.snapshots, "stale")
         Files.writeString(paths.input, "stale")
         Files.writeString(paths.control, "stale")
+        Files.writeString(paths.scenario, "gas\n")
 
         resetPlayFiles(paths)
 
         assertTrue(Files.exists(paths.snapshots))
         assertTrue(Files.exists(paths.input))
         assertTrue(Files.exists(paths.control))
+        assertTrue(Files.exists(paths.scenario))
         assertEquals("", Files.readString(paths.snapshots))
         assertEquals("", Files.readString(paths.input))
         assertEquals(PlayScenario.SKIRMISH.id, PlayScenario.fromId("skirmish").id)
         assertEquals("paused=0\nspeed=1\n", Files.readString(paths.control))
+        assertEquals("gas\n", Files.readString(paths.scenario))
     }
 
     @Test
@@ -134,5 +149,22 @@ class PlayLauncherTest {
         val text = renderPlayControlState(starkraft.sim.client.PlayControlState(paused = true, speed = 3))
 
         assertEquals(starkraft.sim.client.PlayControlState(paused = true, speed = 3), parsePlayControlState(text))
+    }
+
+    @Test
+    fun `play scenario file round trips`(@TempDir tempDir: Path) {
+        val path = tempDir.resolve("play-scenario.txt")
+
+        writePlayScenario(path, PlayScenario.GAS)
+
+        assertEquals(PlayScenario.GAS, readPlayScenario(path, PlayScenario.SKIRMISH))
+        Files.writeString(path, "unknown\n")
+        assertEquals(PlayScenario.SKIRMISH, readPlayScenario(path, PlayScenario.SKIRMISH))
+    }
+
+    @Test
+    fun `play scenario cycles in a loop`() {
+        assertEquals(PlayScenario.ECONOMY, PlayScenario.cycle(PlayScenario.SKIRMISH, 1))
+        assertEquals(PlayScenario.SCRIPTED, PlayScenario.cycle(PlayScenario.SKIRMISH, -1))
     }
 }

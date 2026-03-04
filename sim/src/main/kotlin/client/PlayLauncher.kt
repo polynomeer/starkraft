@@ -10,7 +10,8 @@ data class PlayPaths(
     val root: Path,
     val snapshots: Path,
     val input: Path,
-    val control: Path
+    val control: Path,
+    val scenario: Path
 )
 
 internal fun defaultPlayPaths(root: Path): PlayPaths =
@@ -18,7 +19,8 @@ internal fun defaultPlayPaths(root: Path): PlayPaths =
         root = root,
         snapshots = root.resolve("snapshots.ndjson"),
         input = root.resolve("client-input.ndjson"),
-        control = root.resolve("play-control.txt")
+        control = root.resolve("play-control.txt"),
+        scenario = root.resolve("play-scenario.txt")
     )
 
 internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
@@ -30,7 +32,22 @@ internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
     companion object {
         fun fromId(id: String?): PlayScenario =
             entries.firstOrNull { it.id == id } ?: error("unknown scenario '${id ?: ""}'")
+
+        fun cycle(current: PlayScenario, delta: Int): PlayScenario {
+            val nextIndex = Math.floorMod(current.ordinal + delta, entries.size)
+            return entries[nextIndex]
+        }
     }
+}
+
+internal fun writePlayScenario(path: Path, scenario: PlayScenario) {
+    Files.writeString(path, scenario.id + "\n")
+}
+
+internal fun readPlayScenario(path: Path, fallback: PlayScenario): PlayScenario {
+    if (!Files.exists(path)) return fallback
+    val id = Files.readString(path).lineSequence().firstOrNull()?.trim().orEmpty()
+    return runCatching { PlayScenario.fromId(id) }.getOrDefault(fallback)
 }
 
 internal fun currentJavaBinary(): String =
@@ -70,7 +87,8 @@ internal fun buildPlayClientCommand(
     classpath: String,
     snapshotPath: Path,
     inputPath: Path,
-    controlPath: Path
+    controlPath: Path,
+    scenarioPath: Path
 ): List<String> =
     listOf(
         javaBin,
@@ -79,7 +97,8 @@ internal fun buildPlayClientCommand(
         "starkraft.sim.client.GraphicalClientKt",
         snapshotPath.toString(),
         inputPath.toString(),
-        controlPath.toString()
+        controlPath.toString(),
+        scenarioPath.toString()
     )
 
 internal fun resetPlayFiles(paths: PlayPaths) {
@@ -115,13 +134,15 @@ fun main(args: Array<String>) {
 
     root.createDirectories()
     val paths = defaultPlayPaths(root)
+    writePlayScenario(paths.scenario, scenario)
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
 
     while (true) {
+        val activeScenario = readPlayScenario(paths.scenario, scenario)
         resetPlayFiles(paths)
         val simProcess =
-            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, ticks, scenario))
+            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, ticks, activeScenario))
                 .inheritIO()
                 .start()
 
@@ -135,7 +156,7 @@ fun main(args: Array<String>) {
 
         try {
             val clientProcess =
-                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control))
+                ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, paths.scenario))
                     .inheritIO()
                     .start()
             val exitCode = clientProcess.waitFor()

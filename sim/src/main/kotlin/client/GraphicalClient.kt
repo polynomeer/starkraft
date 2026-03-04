@@ -185,6 +185,7 @@ private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer(),
     private val controlPath: Path? = null,
+    private val scenarioPath: Path? = null,
     private val requestRestart: () -> Unit = {}
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
@@ -200,10 +201,14 @@ private class ClientPanel(
     private var groundMode: ClientGroundCommandMode? = null
     private var buildModeTypeId: String? = null
     private var playControlState = PlayControlState()
+    private var playScenario = PlayScenario.SKIRMISH
 
     init {
         if (controlPath != null && Files.exists(controlPath)) {
             playControlState = parsePlayControlState(Files.readString(controlPath))
+        }
+        if (scenarioPath != null) {
+            playScenario = readPlayScenario(scenarioPath, PlayScenario.SKIRMISH)
         }
         background = Color(0x12, 0x18, 0x1F)
         preferredSize = Dimension(640, 640)
@@ -350,6 +355,8 @@ private class ClientPanel(
                     KeyEvent.VK_SPACE -> togglePause()
                     KeyEvent.VK_OPEN_BRACKET -> adjustSpeed(-1)
                     KeyEvent.VK_CLOSE_BRACKET -> adjustSpeed(1)
+                    KeyEvent.VK_F6 -> cycleScenario(-1)
+                    KeyEvent.VK_F7 -> cycleScenario(1)
                     KeyEvent.VK_F5 -> requestRestart()
                     KeyEvent.VK_ESCAPE -> {
                         session.state.selectedIds.clear()
@@ -466,7 +473,8 @@ private class ClientPanel(
             "camera: zoom=${"%.2f".format(camera.zoom)} pan=${camera.panX.toInt()}/${camera.panY.toInt()}",
             "mode: ${buildModeTypeId?.let { "build:$it" } ?: groundMode?.name?.lowercase()?.replace('_', '-') ?: "default"}",
             "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}",
-            formatPlayControlOverlay(playControlState)
+            formatPlayControlOverlay(playControlState),
+            "scenario: ${playScenario.id}"
         )
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
@@ -577,10 +585,17 @@ private class ClientPanel(
         val path = controlPath ?: return
         Files.writeString(path, renderPlayControlState(playControlState))
     }
+
+    private fun cycleScenario(delta: Int) {
+        val path = scenarioPath ?: return
+        playScenario = PlayScenario.cycle(playScenario, delta)
+        writePlayScenario(path, playScenario)
+        requestRestart()
+    }
 }
 
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt]" }
+    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt] [play-scenario.txt]" }
     val snapshotSpec = args[0]
     val inputSpec =
         if (args.size >= 2) {
@@ -590,10 +605,11 @@ fun main(args: Array<String>) {
             defaultClientInputPath(snapshotPath).toString()
         }
     val controlPath = if (args.size >= 3) Paths.get(args[2]).toAbsolutePath().normalize() else null
+    val scenarioPath = if (args.size >= 4) Paths.get(args[3]).toAbsolutePath().normalize() else null
 
     val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
     var restartRequested = false
-    val panel = ClientPanel(session, controlPath = controlPath) { restartRequested = true }
+    val panel = ClientPanel(session, controlPath = controlPath, scenarioPath = scenarioPath) { restartRequested = true }
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")
