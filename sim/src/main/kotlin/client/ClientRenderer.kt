@@ -16,6 +16,13 @@ internal interface ClientRenderer {
     fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView, overlayLines: List<String> = emptyList())
 }
 
+internal data class BuildPreviewLabel(
+    val title: String,
+    val cost: String,
+    val size: String,
+    val valid: Boolean
+)
+
 internal class SwingClientRenderer(
     private val tileSize: Int = 20
 ) : ClientRenderer {
@@ -568,6 +575,16 @@ internal fun buildFogSummary(
     val visibleTiles = visionState?.visibleTiles(1) ?: return "fog: unavailable"
     val totalTiles = snapshot.mapWidth * snapshot.mapHeight
     return "fog: visible=${visibleTiles.size} hidden=${(totalTiles - visibleTiles.size).coerceAtLeast(0)}"
+}
+
+internal fun buildPreviewLabel(spec: BuildPreviewSpec?, valid: Boolean): BuildPreviewLabel? {
+    if (spec == null) return null
+    return BuildPreviewLabel(
+        title = spec.typeId,
+        cost = "cost=${spec.mineralCost}/${spec.gasCost}",
+        size = "size=${spec.width}x${spec.height} clr=${spec.clearance}",
+        valid = valid
+    )
 }
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =

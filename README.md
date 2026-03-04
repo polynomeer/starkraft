@@ -259,6 +259,7 @@ Client controls:
 - selected builders and harvesters now render simple assignment lines, and the HUD summarizes build/gather/return tasks
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
+- the build preview also shows structure name, footprint, clearance, and mineral/gas cost next to the ghost
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - the command panel also exposes cancel build/train/research actions for quick queue control
 - when a selected building supports it, the command panel also exposes `Train Marine` and `Research Adv`

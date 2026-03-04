@@ -37,6 +37,7 @@ import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
 import starkraft.sim.client.buildFogSummary
+import starkraft.sim.client.buildPreviewLabel
 import starkraft.sim.client.miniMapBounds
 import starkraft.sim.client.miniMapPoint
 import starkraft.sim.client.miniMapViewport
@@ -660,6 +661,19 @@ class GraphicalClientTest {
         assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 1, 1))
         assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 2, 2))
         assertEquals(false, isBuildPreviewValid(mapState, snapshot, depot, 7, 4))
+    }
+
+    @Test
+    fun `build preview spec carries cost and label details`() {
+        val depot = buildPreviewSpec("Depot")
+        val label = buildPreviewLabel(depot, valid = true)
+
+        assertEquals(100, depot?.mineralCost)
+        assertEquals(0, depot?.gasCost)
+        assertEquals("Depot", label?.title)
+        assertEquals("cost=100/0", label?.cost)
+        assertEquals("size=2x2 clr=1", label?.size)
+        assertEquals(true, label?.valid)
     }
 
     @Test

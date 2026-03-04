@@ -76,14 +76,16 @@ internal data class BuildPreviewSpec(
     val typeId: String,
     val width: Int,
     val height: Int,
-    val clearance: Int
+    val clearance: Int,
+    val mineralCost: Int,
+    val gasCost: Int
 )
 
 internal fun buildPreviewSpec(typeId: String): BuildPreviewSpec? =
     when (typeId) {
-        "Depot" -> BuildPreviewSpec(typeId, 2, 2, 1)
-        "ResourceDepot" -> BuildPreviewSpec(typeId, 2, 2, 1)
-        "GasDepot" -> BuildPreviewSpec(typeId, 2, 2, 1)
+        "Depot" -> BuildPreviewSpec(typeId, 2, 2, 1, 100, 0)
+        "ResourceDepot" -> BuildPreviewSpec(typeId, 2, 2, 1, 75, 0)
+        "GasDepot" -> BuildPreviewSpec(typeId, 2, 2, 1, 90, 0)
         else -> null
     }
 
@@ -507,6 +509,14 @@ private class ClientPanel(
         g.fillRect(startX, startY, width, height)
         g.color = if (valid) Color(0x4A, 0xD7, 0x7D) else Color(0xD7, 0x4A, 0x4A)
         g.drawRect(startX, startY, width, height)
+        val label = buildPreviewLabel(spec, valid) ?: return
+        val labelX = startX
+        val labelY = (startY - 28).coerceAtLeast(18)
+        g.color = Color(0x10, 0x14, 0x19, 220)
+        g.fillRect(labelX - 4, labelY - 12, 156, 34)
+        g.color = if (label.valid) Color(0xE8, 0xF3, 0xEA) else Color(0xF7, 0xD0, 0xD0)
+        g.drawString(label.title, labelX, labelY)
+        g.drawString("${label.cost} ${label.size}", labelX, labelY + 14)
     }
 }
 
