@@ -24,6 +24,7 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
             "f${faction.faction}=${faction.visibleTiles}"
         }
     val researchSummary = buildResearchSummary(snapshot, state.selectedIds)
+    val tickActivity = formatTickActivity(state.lastTickActivity)
     val researchActivity = formatResearchActivity(state.lastResearchActivity)
     return buildString {
         append("tick=")
@@ -38,6 +39,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(factionSummary)
         append("] ")
         append(researchSummary)
+        append(" ")
+        append(tickActivity)
         append(" ")
         append(researchActivity)
         append(" ")

@@ -10,11 +10,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.ClientIntent
 import starkraft.sim.client.ClientResearchActivity
-import starkraft.sim.client.ClientStreamState
-import starkraft.sim.client.ClientStreamSubscription
 import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.ClientStreamState
+import starkraft.sim.client.ClientStreamSubscription
+import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FileClientInputSink
 import starkraft.sim.client.FactionSnapshot
@@ -79,7 +80,20 @@ class ClientSessionTest {
                         listOf(
                             ClientStreamState(snapshot = snapshot),
                             ClientStreamState(ack = starkraft.sim.client.ClientCommandAck(tick = 4, commandType = "move", requestId = "req-1", accepted = true)),
-                            ClientStreamState(researchActivity = ClientResearchActivity(tick = 5, enqueue = 1, cancel = 1))
+                            ClientStreamState(researchActivity = ClientResearchActivity(tick = 5, enqueue = 1, cancel = 1)),
+                            ClientStreamState(
+                                tickActivity =
+                                    ClientTickActivity(
+                                        tick = 5,
+                                        builds = 1,
+                                        buildsCancelled = 1,
+                                        buildFailures = 2,
+                                        researchQueued = 1,
+                                        researchCancelled = 1,
+                                        researchCompleted = 0,
+                                        researchFailures = 1
+                                    )
+                            )
                         )
                     )
                 ),
@@ -96,6 +110,12 @@ class ClientSessionTest {
             assertTrue(session.poll())
             assertEquals(1, session.state.lastResearchActivity?.enqueue)
             assertEquals(1, session.state.lastResearchActivity?.cancel)
+
+            assertTrue(session.poll())
+            assertEquals(1, session.state.lastTickActivity?.builds)
+            assertEquals(1, session.state.lastTickActivity?.buildsCancelled)
+            assertEquals(2, session.state.lastTickActivity?.buildFailures)
+            assertEquals(1, session.state.lastTickActivity?.researchQueued)
 
             assertFalse(session.poll())
         }

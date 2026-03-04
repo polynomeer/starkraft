@@ -8,6 +8,7 @@ import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.ReaderClientStreamSubscription
@@ -81,12 +82,13 @@ class ConsoleClientTest {
                         ),
                     selectedIds = linkedSetOf(7, 8),
                     lastAck = ClientCommandAck(tick = 9, commandType = "attackMove", requestId = "cli-5", accepted = true),
-                    lastResearchActivity = ClientResearchActivity(tick = 9, enqueue = 1, progress = 2, cancel = 1)
+                    lastResearchActivity = ClientResearchActivity(tick = 9, enqueue = 1, progress = 2, cancel = 1),
+                    lastTickActivity = ClientTickActivity(tick = 9, builds = 1, buildsCancelled = 1, buildFailures = 2, researchQueued = 1, researchCancelled = 1, researchFailures = 1)
                 )
             )
 
         assertEquals(
-            "tick=9 selected=2 entities=2 resources=0 visible[f1=6 f2=4] research: labs=1 queue=2 active=AdvancedTrainingx1 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 selected=2 entities=2 resources=0 visible[f1=6 f2=4] research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2 research=q1/c0/x1 researchFails=1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
     }

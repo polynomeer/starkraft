@@ -44,10 +44,22 @@ internal data class ClientResearchActivity(
     val cancel: Int = 0
 )
 
+internal data class ClientTickActivity(
+    val tick: Int,
+    val builds: Int = 0,
+    val buildsCancelled: Int = 0,
+    val buildFailures: Int = 0,
+    val researchQueued: Int = 0,
+    val researchCancelled: Int = 0,
+    val researchCompleted: Int = 0,
+    val researchFailures: Int = 0
+)
+
 internal data class ClientStreamState(
     val snapshot: ClientSnapshot? = null,
     val ack: ClientCommandAck? = null,
-    val researchActivity: ClientResearchActivity? = null
+    val researchActivity: ClientResearchActivity? = null,
+    val tickActivity: ClientTickActivity? = null
 )
 
 internal interface ClientStreamSubscription : Closeable {
@@ -151,6 +163,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
         var latestSnapshot: ClientSnapshot? = null
         var latestAck: ClientCommandAck? = null
         var latestResearchActivity: ClientResearchActivity? = null
+        var latestTickActivity: ClientTickActivity? = null
         while (true) {
             val line = file.readLine() ?: break
             if (line.isBlank()) continue
@@ -158,9 +171,15 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.ack != null) latestAck = update.ack
             if (update.researchActivity != null) latestResearchActivity = update.researchActivity
+            if (update.tickActivity != null) latestTickActivity = update.tickActivity
         }
-        if (latestSnapshot == null && latestAck == null && latestResearchActivity == null) return null
-        return ClientStreamState(snapshot = latestSnapshot, ack = latestAck, researchActivity = latestResearchActivity)
+        if (latestSnapshot == null && latestAck == null && latestResearchActivity == null && latestTickActivity == null) return null
+        return ClientStreamState(
+            snapshot = latestSnapshot,
+            ack = latestAck,
+            researchActivity = latestResearchActivity,
+            tickActivity = latestTickActivity
+        )
     }
 
     override fun close() {
@@ -337,6 +356,20 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                     )
             )
         }
+        "tickSummary" ->
+            ClientStreamState(
+                tickActivity =
+                    ClientTickActivity(
+                        tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        builds = obj["builds"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        buildsCancelled = obj["buildsCancelled"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        buildFailures = obj["buildFailures"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        researchQueued = obj["researchQueued"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        researchCancelled = obj["researchCancelled"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        researchCompleted = obj["researchCompleted"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        researchFailures = obj["researchFailures"]?.jsonPrimitive?.content?.toInt() ?: 0
+                    )
+            )
         else -> null
     }
 }

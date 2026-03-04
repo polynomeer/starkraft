@@ -97,6 +97,7 @@ internal fun buildClientHudLines(
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
+        formatTickActivity(state.lastTickActivity),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
         "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
@@ -186,4 +187,14 @@ internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
         "research events: none"
     } else {
         "research events: e${activity.enqueue}/p${activity.progress}/c${activity.complete}/x${activity.cancel} @${activity.tick}"
+    }
+
+internal fun formatTickActivity(activity: ClientTickActivity?): String =
+    if (activity == null) {
+        "activity: none"
+    } else {
+        "activity: builds=${activity.builds}/x${activity.buildsCancelled} " +
+            "buildFails=${activity.buildFailures} " +
+            "research=q${activity.researchQueued}/c${activity.researchCompleted}/x${activity.researchCancelled} " +
+            "researchFails=${activity.researchFailures} @${activity.tick}"
     }
