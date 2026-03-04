@@ -20,6 +20,7 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
+import javax.swing.ToolTipManager
 
 internal const val CLIENT_EXIT_RESTART = 75
 
@@ -215,6 +216,7 @@ private class ClientPanel(
         preferredSize = Dimension(640, 640)
         font = Font("Monospaced", Font.PLAIN, 12)
         isFocusable = true
+        ToolTipManager.sharedInstance().registerComponent(this)
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
                 requestFocusInWindow()
@@ -386,6 +388,25 @@ private class ClientPanel(
                 repaint()
             }
         })
+    }
+
+    override fun getToolTipText(event: MouseEvent): String? {
+        val snapshot = session.state.snapshot
+        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
+        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
+        val button =
+            commandButtonAt(
+                width,
+                event.x,
+                event.y,
+                catalog,
+                statusLineCount = statusLineCount,
+                hasSelection = session.state.selectedIds.isNotEmpty(),
+                canTrain = canTrain,
+                canResearch = canResearch
+            ) ?: return null
+        return commandButtonTooltip(button.actionId)
     }
 
     override fun paintComponent(graphics: Graphics) {

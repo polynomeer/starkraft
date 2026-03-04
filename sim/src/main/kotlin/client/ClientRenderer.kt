@@ -12,6 +12,27 @@ internal data class ClientCommandButton(
     val actionId: String
 )
 
+internal fun commandButtonTooltip(actionId: String): String? =
+    when {
+        actionId == "move" -> "Queue a move order with right click or ground mode"
+        actionId == "attackMove" -> "Advance and auto-engage enemies along the way"
+        actionId == "patrol" -> "Patrol between the current position and a target point"
+        actionId == "hold" -> "Hold position but still attack enemies already in range"
+        actionId == "cancelBuild" -> "Cancel the first selected construction site and refund its cost"
+        actionId == "cancelTrain" -> "Cancel the last queued training job on the first selected producer"
+        actionId == "cancelResearch" -> "Cancel the last queued research job on the first selected lab"
+        actionId.startsWith("build:") -> "Enter placement mode for ${actionId.removePrefix("build:")}"
+        actionId.startsWith("train:") -> "Queue ${actionId.removePrefix("train:")} on the first selected producer"
+        actionId.startsWith("research:") -> "Queue ${actionId.removePrefix("research:")} on the first selected research building"
+        actionId == "play:pause" -> "Toggle play pause and resume"
+        actionId == "play:slower" -> "Lower play speed by one step"
+        actionId == "play:faster" -> "Raise play speed by one step"
+        actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
+        actionId == "scenario:next" -> "Switch to the next play scenario and restart"
+        actionId == "clear" -> "Clear the current selection and command mode"
+        else -> null
+    }
+
 internal interface ClientRenderer {
     fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView, overlayLines: List<String> = emptyList())
 }

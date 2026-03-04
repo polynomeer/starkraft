@@ -58,6 +58,7 @@ import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.commandButtonAt
+import starkraft.sim.client.commandButtonTooltip
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.isBuildPreviewValid
@@ -404,6 +405,15 @@ class GraphicalClientTest {
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
+    }
+
+    @Test
+    fun `builds command button tooltips`() {
+        assertEquals("Advance and auto-engage enemies along the way", commandButtonTooltip("attackMove"))
+        assertEquals("Enter placement mode for GasDepot", commandButtonTooltip("build:GasDepot"))
+        assertEquals("Queue Marine on the first selected producer", commandButtonTooltip("train:Marine"))
+        assertEquals("Switch to the next play scenario and restart", commandButtonTooltip("scenario:next"))
+        assertEquals(null, commandButtonTooltip("unknown"))
     }
 
     @Test
