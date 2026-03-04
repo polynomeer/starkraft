@@ -52,6 +52,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
@@ -142,6 +143,21 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds scenario overlay lines`() {
+        assertEquals(
+            listOf(
+                "scenario menu: enter apply  tab close",
+                "  skirmish (current)",
+                "> economy",
+                "  gas",
+                "  scripted"
+            ),
+            buildScenarioOverlayLines(open = true, activeScenario = starkraft.sim.client.PlayScenario.SKIRMISH, selectedScenario = starkraft.sim.client.PlayScenario.ECONOMY)
+        )
+        assertEquals(emptyList<String>(), buildScenarioOverlayLines(open = false, activeScenario = starkraft.sim.client.PlayScenario.SKIRMISH, selectedScenario = starkraft.sim.client.PlayScenario.SKIRMISH))
+    }
+
+    @Test
     fun `formats tick activity for hud`() {
         assertEquals("activity: none", formatTickActivity(null))
         assertEquals(
@@ -228,7 +244,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] speed spc pause f5/f6/f7 esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] speed spc pause f5/f6/f7 tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,

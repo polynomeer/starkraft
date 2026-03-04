@@ -200,6 +200,8 @@ private class ClientPanel(
     private var buildModeTypeId: String? = null
     private var playControlState = PlayControlState()
     private var playScenario = PlayScenario.SKIRMISH
+    private var scenarioMenuOpen = false
+    private var scenarioMenuSelection = PlayScenario.SKIRMISH
 
     init {
         if (controlPath != null && Files.exists(controlPath)) {
@@ -207,6 +209,7 @@ private class ClientPanel(
         }
         if (scenarioPath != null) {
             playScenario = readPlayScenario(scenarioPath, PlayScenario.SKIRMISH)
+            scenarioMenuSelection = playScenario
         }
         background = Color(0x12, 0x18, 0x1F)
         preferredSize = Dimension(640, 640)
@@ -290,8 +293,8 @@ private class ClientPanel(
                 when (e.keyCode) {
                     KeyEvent.VK_LEFT -> camera = camera.copy(panX = camera.panX + delta)
                     KeyEvent.VK_RIGHT -> camera = camera.copy(panX = camera.panX - delta)
-                    KeyEvent.VK_UP -> camera = camera.copy(panY = camera.panY + delta)
-                    KeyEvent.VK_DOWN -> camera = camera.copy(panY = camera.panY - delta)
+                    KeyEvent.VK_UP -> if (scenarioMenuOpen) cycleScenarioMenu(-1) else camera = camera.copy(panY = camera.panY + delta)
+                    KeyEvent.VK_DOWN -> if (scenarioMenuOpen) cycleScenarioMenu(1) else camera = camera.copy(panY = camera.panY - delta)
                     KeyEvent.VK_W -> camera = camera.copy(panY = camera.panY + delta)
                     KeyEvent.VK_S -> camera = camera.copy(panY = camera.panY - delta)
                     KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS -> camera = zoomCameraAt(camera, width / 2f, height / 2f, 1.1f)
@@ -363,8 +366,17 @@ private class ClientPanel(
                     KeyEvent.VK_CLOSE_BRACKET -> adjustSpeed(1)
                     KeyEvent.VK_F6 -> cycleScenario(-1)
                     KeyEvent.VK_F7 -> cycleScenario(1)
+                    KeyEvent.VK_TAB -> toggleScenarioMenu()
+                    KeyEvent.VK_ENTER -> {
+                        if (scenarioMenuOpen) applyScenarioSelection()
+                    }
                     KeyEvent.VK_F5 -> requestRestart()
                     KeyEvent.VK_ESCAPE -> {
+                        if (scenarioMenuOpen) {
+                            scenarioMenuOpen = false
+                            repaint()
+                            return
+                        }
                         session.state.selectedIds.clear()
                         groundMode = null
                         buildModeTypeId = null
@@ -481,7 +493,7 @@ private class ClientPanel(
             "view: ${session.state.viewedFaction?.let { "faction $it" } ?: "observer"}",
             formatPlayControlOverlay(playControlState),
             "scenario: ${playScenario.id}"
-        )
+        ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
         val snapshot = session.state.snapshot
@@ -589,7 +601,27 @@ private class ClientPanel(
     private fun cycleScenario(delta: Int) {
         val path = scenarioPath ?: return
         playScenario = PlayScenario.cycle(playScenario, delta)
+        scenarioMenuSelection = playScenario
         writePlayScenario(path, playScenario)
+        requestRestart()
+    }
+
+    private fun toggleScenarioMenu() {
+        if (scenarioPath == null) return
+        scenarioMenuOpen = !scenarioMenuOpen
+        scenarioMenuSelection = playScenario
+    }
+
+    private fun cycleScenarioMenu(delta: Int) {
+        if (!scenarioMenuOpen) return
+        scenarioMenuSelection = PlayScenario.cycle(scenarioMenuSelection, delta)
+    }
+
+    private fun applyScenarioSelection() {
+        val path = scenarioPath ?: return
+        playScenario = scenarioMenuSelection
+        writePlayScenario(path, playScenario)
+        scenarioMenuOpen = false
         requestRestart()
     }
 }
@@ -654,6 +686,22 @@ private fun formatRequestIdSuffix(ack: ClientCommandAck): String = ack.requestId
 
 internal fun formatPlayControlOverlay(state: PlayControlState): String =
     "play: ${if (state.paused) "paused" else "running"} x${clampPlaySpeed(state.speed)}"
+
+internal fun buildScenarioOverlayLines(
+    open: Boolean,
+    activeScenario: PlayScenario,
+    selectedScenario: PlayScenario
+): List<String> {
+    if (!open) return emptyList()
+    val lines = ArrayList<String>(PlayScenario.entries.size + 2)
+    lines.add("scenario menu: enter apply  tab close")
+    for (scenario in PlayScenario.entries) {
+        val marker = if (scenario == selectedScenario) ">" else " "
+        val active = if (scenario == activeScenario) " (current)" else ""
+        lines.add("$marker ${scenario.id}$active")
+    }
+    return lines
+}
 
 internal fun buildUnitSelectionRecord(
     tick: Int,

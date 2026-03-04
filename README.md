@@ -254,6 +254,7 @@ Client controls:
 - `Space`: pause/resume `:sim:play`
 - `[` / `]`: decrease/increase `:sim:play` speed
 - `F6` / `F7`: switch `:sim:play` scenario and restart
+- `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view
