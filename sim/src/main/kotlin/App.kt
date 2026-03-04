@@ -323,6 +323,7 @@ fun main(args: Array<String>) {
     var totalTrainFailures = 0
     val totalTrainFailureReasons = TrainFailureCounterSet()
     var totalResearchQueued = 0
+    var totalResearchCancelled = 0
     var totalResearchCompleted = 0
     var totalResearchFailures = 0
     val totalResearchFailureReasons = ResearchFailureCounterSet()
@@ -471,8 +472,10 @@ fun main(args: Array<String>) {
         research.tick()
         production.tick()
         var tickResearchCompleted = 0
+        var tickResearchCancelled = 0
         for (i in 0 until research.lastTickEventCount) {
             if (research.eventKind(i) == ResearchSystem.EVENT_COMPLETE) tickResearchCompleted++
+            if (research.eventKind(i) == ResearchSystem.EVENT_CANCEL) tickResearchCancelled++
         }
         for (i in 0 until production.lastTickEventCount) {
             if (production.eventKind(i) == BuildingProductionSystem.EVENT_COMPLETE) tickTrainsCompleted++
@@ -504,6 +507,7 @@ fun main(args: Array<String>) {
         totalTrainFailures += commandOutcomeCounters.trainFailures
         totalTrainFailureReasons.add(commandOutcomeCounters.trainFailureReasons)
         totalResearchQueued += commandOutcomeCounters.researchQueued
+        totalResearchCancelled += commandOutcomeCounters.researchCancelled
         totalResearchCompleted += tickResearchCompleted
         totalResearchFailures += commandOutcomeCounters.researchFailures
         totalResearchFailureReasons.add(commandOutcomeCounters.researchFailureReasons)
@@ -544,6 +548,7 @@ fun main(args: Array<String>) {
                 combat,
                 commandOutcomeCounters,
                 tickTrainsCompleted,
+                tickResearchCancelled,
                 tickResearchCompleted,
                 tickResourceDeltas,
                 tickHarvesterRetargets,
@@ -562,6 +567,7 @@ fun main(args: Array<String>) {
                 renderCommandOutcomeLogSuffix(
                     commandOutcomeCounters,
                     tickTrainsCompleted,
+                    tickResearchCancelled,
                     tickResearchCompleted,
                     world.researchQueues.size,
                     harvest.lastTickPickupCount,
@@ -629,6 +635,7 @@ fun main(args: Array<String>) {
             totalTrainFailures,
             totalTrainFailureReasons,
             totalResearchQueued,
+            totalResearchCancelled,
             totalResearchCompleted,
             totalResearchFailures,
             totalResearchFailureReasons,
@@ -710,6 +717,7 @@ fun main(args: Array<String>) {
                 trainFailureReasons = totalTrainFailureReasons.toRecord(),
                 researchQueueBuildings = world.researchQueues.size,
                 researchQueued = totalResearchQueued,
+                researchCancelled = totalResearchCancelled,
                 researchCompleted = totalResearchCompleted,
                 researchFailures = totalResearchFailures,
                 researchFailureReasons = totalResearchFailureReasons.toRecord(),
@@ -1793,6 +1801,7 @@ private fun emitTickSummaryRecord(
     combat: CombatSystem,
     commandOutcomeCounters: CommandOutcomeCounters,
     tickTrainsCompleted: Int,
+    tickResearchCancelled: Int,
     tickResearchCompleted: Int,
     tickResourceDeltas: ResourceDeltaCounterSet,
     tickHarvesterRetargets: Int,
@@ -1839,6 +1848,7 @@ private fun emitTickSummaryRecord(
             trainFailureReasons = commandOutcomeCounters.trainFailureReasons.toRecord(),
             researchQueueBuildings = world.researchQueues.size,
             researchQueued = commandOutcomeCounters.researchQueued,
+            researchCancelled = tickResearchCancelled,
             researchCompleted = tickResearchCompleted,
             researchFailures = commandOutcomeCounters.researchFailures,
             researchFailureReasons = commandOutcomeCounters.researchFailureReasons.toRecord(),
@@ -2238,6 +2248,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                         "tick=$tick research building=${c.buildingId} tech=${c.techId} " +
                             "buildTicks=${c.buildTicks} minerals=${c.mineralCost} gas=${c.gasCost}"
                     )
+                }
+                is Command.CancelResearch -> {
+                    println("tick=$tick cancelResearch building=${c.buildingId}")
                 }
                 is Command.Rally -> {
                     println("tick=$tick rally building=${c.buildingId} x=${c.x} y=${c.y}")
@@ -2687,6 +2700,11 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in research at tick $tick")
                     }
                 }
+                is Command.CancelResearch -> {
+                    if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
+                        error("Unknown building id '${c.buildingId}' in cancelResearch at tick $tick")
+                    }
+                }
                 is Command.Rally -> {
                     if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
                         error("Unknown building id '${c.buildingId}' in rally at tick $tick")
@@ -2835,6 +2853,11 @@ private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.Research -> {
                     if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
                         error("Unknown label id '${c.buildingId}' in research at tick $tick (spawn/build first)")
+                    }
+                }
+                is Command.CancelResearch -> {
+                    if (c.buildingId < 0 && !defined.contains(c.buildingId)) {
+                        error("Unknown label id '${c.buildingId}' in cancelResearch at tick $tick (spawn/build first)")
                     }
                 }
                 is Command.Rally -> {
@@ -3143,6 +3166,7 @@ internal fun buildCommandStats(
                 is Command.CancelBuild -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Research -> Unit
+                is Command.CancelResearch -> Unit
                 is Command.Rally -> Unit
                 is Command.Harvest -> Unit
                 is Command.HarvestFaction -> Unit
@@ -3285,6 +3309,7 @@ internal fun buildCommandStats(
                 is Command.CancelBuild -> Unit
                 is Command.CancelTrain -> Unit
                 is Command.Research -> Unit
+                is Command.CancelResearch -> Unit
                 is Command.Rally -> Unit
                 is Command.Harvest -> Unit
                 is Command.HarvestFaction -> Unit
@@ -3538,7 +3563,8 @@ data class ResearchFailureCounterSet(
     var incompatibleProducer: Int = 0,
     var insufficientResources: Int = 0,
     var alreadyUnlocked: Int = 0,
-    var queueFull: Int = 0
+    var queueFull: Int = 0,
+    var nothingToCancel: Int = 0
 ) {
     fun add(other: ResearchFailureCounterSet) {
         missingBuilding += other.missingBuilding
@@ -3549,6 +3575,7 @@ data class ResearchFailureCounterSet(
         insufficientResources += other.insufficientResources
         alreadyUnlocked += other.alreadyUnlocked
         queueFull += other.queueFull
+        nothingToCancel += other.nothingToCancel
     }
 
     fun toRecord(): ResearchFailureCounts =
@@ -3560,7 +3587,8 @@ data class ResearchFailureCounterSet(
             incompatibleProducer = incompatibleProducer,
             insufficientResources = insufficientResources,
             alreadyUnlocked = alreadyUnlocked,
-            queueFull = queueFull
+            queueFull = queueFull,
+            nothingToCancel = nothingToCancel
         )
 }
 
@@ -3573,6 +3601,7 @@ data class CommandOutcomeCounters(
     var trainFailures: Int = 0,
     val trainFailureReasons: TrainFailureCounterSet = TrainFailureCounterSet(),
     var researchQueued: Int = 0,
+    var researchCancelled: Int = 0,
     var researchFailures: Int = 0,
     val researchFailureReasons: ResearchFailureCounterSet = ResearchFailureCounterSet()
 )
@@ -3580,6 +3609,7 @@ data class CommandOutcomeCounters(
 internal fun renderCommandOutcomeLogSuffix(
     counters: CommandOutcomeCounters,
     trainsCompleted: Int,
+    researchCancelled: Int = 0,
     researchCompleted: Int = 0,
     researchQueueBuildings: Int = 0,
     harvestPickupCount: Int = 0,
@@ -3603,8 +3633,8 @@ internal fun renderCommandOutcomeLogSuffix(
     if (counters.trainFailures > 0) {
         parts.add("trainFails=${counters.trainFailures}[${formatTrainFailureReasons(counters.trainFailureReasons)}]")
     }
-    if (counters.researchQueued > 0 || researchCompleted > 0 || researchQueueBuildings > 0) {
-        parts.add("research=q${counters.researchQueued}/c$researchCompleted queues=$researchQueueBuildings")
+    if (counters.researchQueued > 0 || researchCancelled > 0 || researchCompleted > 0 || researchQueueBuildings > 0) {
+        parts.add("research=q${counters.researchQueued}/c$researchCompleted/x$researchCancelled queues=$researchQueueBuildings")
     }
     if (counters.researchFailures > 0) {
         parts.add("researchFails=${counters.researchFailures}[${formatResearchFailureReasons(counters.researchFailureReasons)}]")
@@ -3634,6 +3664,7 @@ internal fun renderAggregateOutcomeSummary(
     totalTrainFailures: Int,
     totalTrainFailureReasons: TrainFailureCounterSet,
     totalResearchQueued: Int = 0,
+    totalResearchCancelled: Int = 0,
     totalResearchCompleted: Int = 0,
     totalResearchFailures: Int = 0,
     totalResearchFailureReasons: ResearchFailureCounterSet = ResearchFailureCounterSet(),
@@ -3666,6 +3697,7 @@ internal fun renderAggregateOutcomeSummary(
         totalTrainsCancelled == 0 &&
         totalTrainFailures == 0 &&
         totalResearchQueued == 0 &&
+        totalResearchCancelled == 0 &&
         totalResearchCompleted == 0 &&
         totalResearchFailures == 0 &&
         currentResearchQueueBuildings == 0 &&
@@ -3700,8 +3732,8 @@ internal fun renderAggregateOutcomeSummary(
     if (totalTrainFailures > 0) {
         parts.add("trainFails=$totalTrainFailures[${formatTrainFailureReasons(totalTrainFailureReasons)}]")
     }
-    if (totalResearchQueued > 0 || totalResearchCompleted > 0 || currentResearchQueueBuildings > 0) {
-        parts.add("research=q$totalResearchQueued/c$totalResearchCompleted queues=$currentResearchQueueBuildings")
+    if (totalResearchQueued > 0 || totalResearchCancelled > 0 || totalResearchCompleted > 0 || currentResearchQueueBuildings > 0) {
+        parts.add("research=q$totalResearchQueued/c$totalResearchCompleted/x$totalResearchCancelled queues=$currentResearchQueueBuildings")
     }
     if (totalResearchFailures > 0) {
         parts.add("researchFails=$totalResearchFailures[${formatResearchFailureReasons(totalResearchFailureReasons)}]")
@@ -3758,7 +3790,8 @@ internal fun formatResearchFailureReasons(reasons: ResearchFailureCounterSet): S
         reasons.incompatibleProducer.takeIf { it > 0 }?.let { "incompatibleProducer=$it" },
         reasons.insufficientResources.takeIf { it > 0 }?.let { "insufficientResources=$it" },
         reasons.alreadyUnlocked.takeIf { it > 0 }?.let { "alreadyUnlocked=$it" },
-        reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" }
+        reasons.queueFull.takeIf { it > 0 }?.let { "queueFull=$it" },
+        reasons.nothingToCancel.takeIf { it > 0 }?.let { "nothingToCancel=$it" }
     ).joinToString(",")
 
 data class ResourceDeltaCounterSet(
@@ -4562,6 +4595,7 @@ fun issue(
                         ResearchFailureReason.INSUFFICIENT_RESOURCES -> outcomeCounters.researchFailureReasons.insufficientResources++
                         ResearchFailureReason.ALREADY_UNLOCKED -> outcomeCounters.researchFailureReasons.alreadyUnlocked++
                         ResearchFailureReason.QUEUE_FULL -> outcomeCounters.researchFailureReasons.queueFull++
+                        ResearchFailureReason.NOTHING_TO_CANCEL -> outcomeCounters.researchFailureReasons.nothingToCancel++
                     }
                 }
                 val reason =
@@ -4574,6 +4608,7 @@ fun issue(
                         ResearchFailureReason.INSUFFICIENT_RESOURCES -> "insufficientResources"
                         ResearchFailureReason.ALREADY_UNLOCKED -> "alreadyUnlocked"
                         ResearchFailureReason.QUEUE_FULL -> "queueFull"
+                        ResearchFailureReason.NOTHING_TO_CANCEL -> "nothingToCancel"
                     }
                 emitCommandFailureRecord(
                     tick = cmd.tick,
@@ -4587,6 +4622,39 @@ fun issue(
                 emitCommandAck(false, reason = reason)
             } else {
                 if (outcomeCounters != null) outcomeCounters.researchQueued++
+                emitCommandAck(true)
+            }
+        }
+        is Command.CancelResearch -> {
+            val researchSystem = research ?: error("CancelResearch requires ResearchSystem")
+            val buildingId = resolveLabelId(cmd.buildingId, labelIdMap)
+            val failure = researchSystem.cancelLast(buildingId)
+            if (failure != null) {
+                if (outcomeCounters != null) {
+                    outcomeCounters.researchFailures++
+                    when (failure) {
+                        ResearchFailureReason.MISSING_BUILDING -> outcomeCounters.researchFailureReasons.missingBuilding++
+                        ResearchFailureReason.NOTHING_TO_CANCEL -> outcomeCounters.researchFailureReasons.nothingToCancel++
+                        else -> Unit
+                    }
+                }
+                val reason =
+                    when (failure) {
+                        ResearchFailureReason.MISSING_BUILDING -> "missingBuilding"
+                        ResearchFailureReason.NOTHING_TO_CANCEL -> "nothingToCancel"
+                        else -> error("Unexpected research cancel failure: $failure")
+                    }
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "cancelResearch",
+                    reason = reason,
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    buildingId = buildingId
+                )
+                emitCommandAck(false, reason = reason)
+            } else {
+                if (outcomeCounters != null) outcomeCounters.researchCancelled++
                 emitCommandAck(true)
             }
         }
@@ -4664,6 +4732,7 @@ private fun commandTypeName(cmd: Command): String =
         is Command.CancelBuild -> "cancelBuild"
         is Command.CancelTrain -> "cancelTrain"
         is Command.Research -> "research"
+        is Command.CancelResearch -> "cancelResearch"
         is Command.Rally -> "rally"
     }
 

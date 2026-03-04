@@ -268,6 +268,11 @@ class ReplayHashRecorder : Recorder {
                 mixInt(cmd.mineralCost)
                 mixInt(cmd.gasCost)
             }
+            is Command.CancelResearch -> {
+                mixInt(40)
+                mixInt(cmd.tick)
+                mixInt(cmd.buildingId)
+            }
             is Command.Rally -> {
                 mixInt(7)
                 mixInt(cmd.tick)

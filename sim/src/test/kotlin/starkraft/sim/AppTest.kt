@@ -164,19 +164,22 @@ class AppTest {
                         incompatibleProducer = 1
                     ),
                 researchQueued = 2,
+                researchCancelled = 1,
                 researchFailures = 2,
                 researchFailureReasons =
                     ResearchFailureCounterSet(
                         invalidTech = 1,
-                        alreadyUnlocked = 1
+                        alreadyUnlocked = 1,
+                        nothingToCancel = 1
                     )
             )
 
         assertEquals(
-            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] research=q2/c1 queues=1 researchFails=2[invalidTech=1,alreadyUnlocked=1] cycles=p2/3 d1/1 retargets=1 dropoffs=f1:1/f2:0 compat=m1/g0",
+            "  builds=1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q3/c2/x1 trainFails=2[incompatibleProducer=1,queueFull=1] research=q2/c1/x1 queues=1 researchFails=2[invalidTech=1,alreadyUnlocked=1,nothingToCancel=1] cycles=p2/3 d1/1 retargets=1 dropoffs=f1:1/f2:0 compat=m1/g0",
             renderCommandOutcomeLogSuffix(
                 counters,
                 trainsCompleted = 2,
+                researchCancelled = 1,
                 researchCompleted = 1,
                 researchQueueBuildings = 1,
                 harvestPickupCount = 2,
@@ -195,7 +198,7 @@ class AppTest {
     @Test
     fun `renders aggregate command outcome summary`() {
         assertEquals(
-            "command outcomes: builds=2 buildFails=1[invalidDefinition=1] train=q4/c3/x1 trainFails=2[missingBuilding=1,nothingToCancel=1] research=q2/c1 queues=1 researchFails=2[missingTech=1,queueFull=1]",
+            "command outcomes: builds=2 buildFails=1[invalidDefinition=1] train=q4/c3/x1 trainFails=2[missingBuilding=1,nothingToCancel=1] research=q2/c1/x1 queues=1 researchFails=2[missingTech=1,queueFull=1,nothingToCancel=1]",
             renderAggregateOutcomeSummary(
                 totalBuilds = 2,
                 totalBuildFailures = 1,
@@ -206,9 +209,10 @@ class AppTest {
                 totalTrainFailures = 2,
                 totalTrainFailureReasons = TrainFailureCounterSet(missingBuilding = 1, nothingToCancel = 1),
                 totalResearchQueued = 2,
+                totalResearchCancelled = 1,
                 totalResearchCompleted = 1,
                 totalResearchFailures = 2,
-                totalResearchFailureReasons = ResearchFailureCounterSet(missingTech = 1, queueFull = 1),
+                totalResearchFailureReasons = ResearchFailureCounterSet(missingTech = 1, queueFull = 1, nothingToCancel = 1),
                 currentResearchQueueBuildings = 1
             )
         )

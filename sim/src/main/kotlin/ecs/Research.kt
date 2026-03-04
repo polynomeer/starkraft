@@ -10,7 +10,8 @@ enum class ResearchFailureReason {
     INCOMPATIBLE_PRODUCER,
     INSUFFICIENT_RESOURCES,
     ALREADY_UNLOCKED,
-    QUEUE_FULL
+    QUEUE_FULL,
+    NOTHING_TO_CANCEL
 }
 
 class ResearchSystem(
@@ -93,6 +94,21 @@ class ResearchSystem(
         }
     }
 
+    fun cancelLast(buildingId: EntityId): ResearchFailureReason? {
+        if (!world.footprints.containsKey(buildingId)) return ResearchFailureReason.MISSING_BUILDING
+        val queue = world.researchQueues[buildingId] ?: return ResearchFailureReason.NOTHING_TO_CANCEL
+        val job = queue.items.removeLastOrNull() ?: return ResearchFailureReason.NOTHING_TO_CANCEL
+        if (resources != null) {
+            val faction = world.tags[buildingId]?.faction ?: return ResearchFailureReason.MISSING_BUILDING
+            resources.refund(faction, job.mineralCost, job.gasCost)
+        }
+        recordEvent(EVENT_CANCEL, buildingId, job.techId, job.remainingTicks)
+        if (queue.items.isEmpty()) {
+            world.researchQueues.remove(buildingId)
+        }
+        return null
+    }
+
     fun eventKind(index: Int): Byte = eventKinds[index]
 
     fun eventBuildingId(index: Int): Int = eventBuildingIds[index]
@@ -121,5 +137,6 @@ class ResearchSystem(
         const val EVENT_ENQUEUE: Byte = 1
         const val EVENT_PROGRESS: Byte = 2
         const val EVENT_COMPLETE: Byte = 3
+        const val EVENT_CANCEL: Byte = 4
     }
 }

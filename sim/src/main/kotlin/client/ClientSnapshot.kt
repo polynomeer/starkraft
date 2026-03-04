@@ -478,6 +478,7 @@ data class TickSummaryStreamRecord(
     val trainFailureReasons: TrainFailureCounts,
     val researchQueueBuildings: Int,
     val researchQueued: Int,
+    val researchCancelled: Int,
     val researchCompleted: Int,
     val researchFailures: Int,
     val researchFailureReasons: ResearchFailureCounts,
@@ -543,7 +544,8 @@ data class ResearchFailureCounts(
     val incompatibleProducer: Int,
     val insufficientResources: Int,
     val alreadyUnlocked: Int,
-    val queueFull: Int
+    val queueFull: Int,
+    val nothingToCancel: Int
 )
 
 @Serializable
@@ -791,6 +793,7 @@ data class SessionStatsStreamRecord(
     val trainFailureReasons: TrainFailureCounts,
     val researchQueueBuildings: Int,
     val researchQueued: Int,
+    val researchCancelled: Int,
     val researchCompleted: Int,
     val researchFailures: Int,
     val researchFailureReasons: ResearchFailureCounts,
@@ -1372,6 +1375,14 @@ fun renderCommandStreamRecordJson(
                     target = cmd.buildingId,
                     typeId = cmd.techId
                 )
+            is Command.CancelResearch ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "cancelResearch",
+                    requestId = requestId,
+                    target = cmd.buildingId
+                )
             is Command.Rally ->
                 CommandStreamRecord(
                     sequence = sequence,
@@ -1622,6 +1633,7 @@ fun renderTickSummaryStreamRecordJson(
     trainFailureReasons: TrainFailureCounts,
     researchQueueBuildings: Int,
     researchQueued: Int,
+    researchCancelled: Int,
     researchCompleted: Int,
     researchFailures: Int,
     researchFailureReasons: ResearchFailureCounts,
@@ -1687,6 +1699,7 @@ fun renderTickSummaryStreamRecordJson(
             trainFailureReasons = trainFailureReasons,
             researchQueueBuildings = researchQueueBuildings,
             researchQueued = researchQueued,
+            researchCancelled = researchCancelled,
             researchCompleted = researchCompleted,
             researchFailures = researchFailures,
             researchFailureReasons = researchFailureReasons,
@@ -1997,6 +2010,7 @@ fun renderSessionStatsStreamRecordJson(
     trainFailureReasons: TrainFailureCounts,
     researchQueueBuildings: Int,
     researchQueued: Int,
+    researchCancelled: Int,
     researchCompleted: Int,
     researchFailures: Int,
     researchFailureReasons: ResearchFailureCounts,
@@ -2061,6 +2075,7 @@ fun renderSessionStatsStreamRecordJson(
             trainFailureReasons = trainFailureReasons,
             researchQueueBuildings = researchQueueBuildings,
             researchQueued = researchQueued,
+            researchCancelled = researchCancelled,
             researchCompleted = researchCompleted,
             researchFailures = researchFailures,
             researchFailureReasons = researchFailureReasons,

@@ -103,4 +103,43 @@ class ResearchSystemTest {
             research.enqueueResult(depotId, "AdvancedTraining", 3, mineralCost = 75)
         )
     }
+
+    @Test
+    fun `cancel research refunds and removes queued job`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val repo = data()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val research = ResearchSystem(world, repo, resources)
+        resources.set(1, 500, 0)
+        val depotId = buildings.place(1, "Depot", 4, 4, 2, 2, 400, mineralCost = 100)!!
+
+        assertEquals(null, research.enqueueResult(depotId, "AdvancedTraining", 3, mineralCost = 75))
+        assertEquals(325, world.stockpiles[1]?.minerals)
+        research.clearTickEvents()
+
+        assertEquals(null, research.cancelLast(depotId))
+
+        assertEquals(400, world.stockpiles[1]?.minerals)
+        assertEquals(0, world.researchQueues.size)
+        assertEquals(1, research.lastTickEventCount)
+        assertEquals(ResearchSystem.EVENT_CANCEL, research.eventKind(0))
+    }
+
+    @Test
+    fun `cancel research fails when queue is empty`() {
+        val world = World()
+        val map = MapGrid(16, 16)
+        val occ = OccupancyGrid(16, 16)
+        val resources = ResourceSystem(world)
+        val repo = data()
+        val buildings = BuildingPlacementSystem(world, map, occ, resources)
+        val research = ResearchSystem(world, repo, resources)
+        resources.set(1, 500, 0)
+        val depotId = buildings.place(1, "Depot", 4, 4, 2, 2, 400, mineralCost = 100)!!
+
+        assertEquals(ResearchFailureReason.NOTHING_TO_CANCEL, research.cancelLast(depotId))
+    }
 }

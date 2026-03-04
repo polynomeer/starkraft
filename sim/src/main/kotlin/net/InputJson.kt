@@ -154,6 +154,7 @@ object InputJson {
                 "cancelTrain" -> Command.CancelTrain(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "cancelTrain buildingId"))
                 "cancelBuild" -> Command.CancelBuild(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "cancelBuild buildingId"))
                 "research" -> Command.Research(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "research buildingId"), record.typeId ?: error("research typeId is required"), record.amount ?: 0, record.minerals, record.gas)
+                "cancelResearch" -> Command.CancelResearch(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "cancelResearch buildingId"))
                 "rally" -> Command.Rally(record.tick, resolveEntityRef(record.buildingId, record.buildingLabel, ::labelId, "rally buildingId"), record.x ?: error("rally x is required"), record.y ?: error("rally y is required"))
                 else -> error("unsupported input commandType '${record.commandType}'")
             }

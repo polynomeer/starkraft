@@ -251,6 +251,16 @@ object ScriptRunner {
                     val gas = if (parts.size > 5) parts[5].toInt() else 0
                     out.add(Command.Research(tick, buildingId, techId, buildTicks, minerals, gas))
                 }
+                "cancelResearch" -> {
+                    require(parts.size == 2) { "cancelResearch <buildingId|@label>" }
+                    val token = parts[1]
+                    val buildingId = if (token.startsWith("@")) {
+                        labelId(token.substring(1), labelIds) { nextLabelId-- }
+                    } else {
+                        token.toInt()
+                    }
+                    out.add(Command.CancelResearch(tick, buildingId))
+                }
                 "rally" -> {
                     require(parts.size == 4) { "rally <buildingId|@label> <x> <y>" }
                     val token = parts[1]

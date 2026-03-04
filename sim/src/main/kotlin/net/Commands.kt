@@ -92,6 +92,10 @@ sealed interface Command {
         val mineralCost: Int = 0,
         val gasCost: Int = 0
     ) : Command
+    data class CancelResearch(
+        override val tick: Int,
+        val buildingId: Int
+    ) : Command
     data class Rally(
         override val tick: Int,
         val buildingId: Int,
