@@ -63,6 +63,19 @@ class ConsoleClientTest {
                                 listOf(
                                     EntitySnapshot(id = 7, faction = 1, typeId = "Marine", archetype = "infantry", x = 2f, y = 3f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                                     EntitySnapshot(
+                                        id = 9,
+                                        faction = 1,
+                                        typeId = "Worker",
+                                        archetype = "worker",
+                                        x = 3f,
+                                        y = 3f,
+                                        dir = 0f,
+                                        hp = 20,
+                                        maxHp = 20,
+                                        armor = 0,
+                                        buildTargetId = 8
+                                    ),
+                                    EntitySnapshot(
                                         id = 8,
                                         faction = 1,
                                         typeId = "Depot",
@@ -70,9 +83,12 @@ class ConsoleClientTest {
                                         x = 4f,
                                         y = 4f,
                                         dir = 0f,
-                                        hp = 600,
+                                        hp = 120,
                                         maxHp = 600,
                                         armor = 1,
+                                        underConstruction = true,
+                                        constructionRemainingTicks = 6,
+                                        constructionTotalTicks = 10,
                                         researchQueueSize = 2,
                                         activeResearchTech = "AdvancedTraining",
                                         activeResearchRemainingTicks = 8
@@ -80,7 +96,7 @@ class ConsoleClientTest {
                                 ),
                             resourceNodes = emptyList()
                         ),
-                    selectedIds = linkedSetOf(7, 8),
+                    selectedIds = linkedSetOf(7, 8, 9),
                     lastAck = ClientCommandAck(tick = 9, commandType = "attackMove", requestId = "cli-5", accepted = true),
                     lastResearchActivity = ClientResearchActivity(tick = 9, enqueue = 1, progress = 2, cancel = 1),
                     lastTickActivity = ClientTickActivity(tick = 9, builds = 1, buildsCancelled = 1, buildFailures = 2, researchQueued = 1, researchCancelled = 1, researchFailures = 1)
@@ -88,7 +104,7 @@ class ConsoleClientTest {
             )
 
         assertEquals(
-            "tick=9 selected=2 entities=2 resources=0 visible[f1=6 f2=4] research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2 research=q1/c0/x1 researchFails=1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 research: labs=1 queue=2 active=AdvancedTrainingx1 activity: builds=1/x1 buildFails=2 research=q1/c0/x1 researchFails=1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
     }

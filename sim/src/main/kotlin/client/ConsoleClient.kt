@@ -23,6 +23,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         snapshot.factions.joinToString(" ") { faction ->
             "f${faction.faction}=${faction.visibleTiles}"
         }
+    val builderSummary = buildBuilderSummary(snapshot, state.selectedIds)
+    val constructionSummary = buildConstructionSummary(snapshot, state.selectedIds)
     val researchSummary = buildResearchSummary(snapshot, state.selectedIds)
     val tickActivity = formatTickActivity(state.lastTickActivity)
     val researchActivity = formatResearchActivity(state.lastResearchActivity)
@@ -38,6 +40,10 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(" visible[")
         append(factionSummary)
         append("] ")
+        append(builderSummary)
+        append(" ")
+        append(constructionSummary)
+        append(" ")
         append(researchSummary)
         append(" ")
         append(tickActivity)
