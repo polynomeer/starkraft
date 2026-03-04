@@ -6,7 +6,7 @@ import java.awt.Graphics2D
 import java.util.LinkedHashMap
 
 internal interface ClientRenderer {
-    fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState)
+    fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView)
 }
 
 internal class SwingClientRenderer(
@@ -17,34 +17,35 @@ internal class SwingClientRenderer(
     private val neutralColor = Color(0xC8, 0xB0, 0x72)
     private val selectionColor = Color(0xF4, 0xE2, 0x71)
 
-    override fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState) {
+    override fun render(graphics: Graphics2D, width: Int, height: Int, state: ClientSessionState, camera: CameraView) {
         val snapshot = state.snapshot ?: run {
             graphics.color = Color.WHITE
             graphics.drawString("waiting for snapshots...", 16, 24)
             return
         }
-        drawGrid(graphics, snapshot)
-        drawResources(graphics, snapshot)
-        drawEntities(graphics, state.selectedIds, snapshot)
+        val effectiveCamera = camera.copy(baseTileSize = tileSize)
+        drawGrid(graphics, snapshot, effectiveCamera)
+        drawResources(graphics, snapshot, effectiveCamera)
+        drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawHud(graphics, height, state, snapshot)
     }
 
-    private fun drawGrid(g: Graphics2D, snapshot: ClientSnapshot) {
+    private fun drawGrid(g: Graphics2D, snapshot: ClientSnapshot, camera: CameraView) {
         g.color = Color(0x22, 0x2A, 0x33)
         for (x in 0..snapshot.mapWidth) {
-            val px = x * tileSize
-            g.drawLine(px, 0, px, snapshot.mapHeight * tileSize)
+            val px = camera.worldToScreenX(x.toFloat()).toInt()
+            g.drawLine(px, 0, px, camera.worldToScreenY(snapshot.mapHeight.toFloat()).toInt())
         }
         for (y in 0..snapshot.mapHeight) {
-            val py = y * tileSize
-            g.drawLine(0, py, snapshot.mapWidth * tileSize, py)
+            val py = camera.worldToScreenY(y.toFloat()).toInt()
+            g.drawLine(0, py, camera.worldToScreenX(snapshot.mapWidth.toFloat()).toInt(), py)
         }
     }
 
-    private fun drawResources(g: Graphics2D, snapshot: ClientSnapshot) {
+    private fun drawResources(g: Graphics2D, snapshot: ClientSnapshot, camera: CameraView) {
         for (node in snapshot.resourceNodes) {
-            val px = (node.x * tileSize).toInt()
-            val py = (node.y * tileSize).toInt()
+            val px = camera.worldToScreenX(node.x).toInt()
+            val py = camera.worldToScreenY(node.y).toInt()
             g.color = if (node.kind == "gas") Color(0x3A, 0xC4, 0x92) else neutralColor
             g.fillOval(px - 7, py - 7, 14, 14)
             g.color = Color.BLACK
@@ -52,10 +53,10 @@ internal class SwingClientRenderer(
         }
     }
 
-    private fun drawEntities(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot) {
+    private fun drawEntities(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
         for (entity in snapshot.entities) {
-            val px = (entity.x * tileSize).toInt()
-            val py = (entity.y * tileSize).toInt()
+            val px = camera.worldToScreenX(entity.x).toInt()
+            val py = camera.worldToScreenY(entity.y).toInt()
             g.color =
                 when (entity.faction) {
                     1 -> friendlyColor
@@ -104,7 +105,8 @@ internal fun buildClientHudLines(
         formatProductionActivity(state.lastProductionActivity),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
-        "left: select/drag   shift+left: add/remove/add-box   right: move/attack/harvest   ctrl+right: attackMove"
+        "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
+        "right: move/attack/harvest   ctrl+right: attackMove"
     )
 
 internal fun buildSelectionSummary(

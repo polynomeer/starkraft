@@ -13,6 +13,7 @@ import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientConstructionActivity
+import starkraft.sim.client.CameraView
 import starkraft.sim.client.ClientProductionActivity
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientTickActivity
@@ -31,6 +32,7 @@ import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.selectEntitiesInBox
+import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -166,7 +168,8 @@ class GraphicalClientTest {
                 "production events: e1/p2/c0/x1 @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
-                "left: select/drag   shift+left: add/remove/add-box   right: move/attack/harvest   ctrl+right: attackMove"
+                "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
+                "right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -377,6 +380,26 @@ class GraphicalClientTest {
         assertEquals(8, record.tick)
         assertEquals("units", record.selectionType)
         assertArrayEquals(intArrayOf(4, 9), record.units)
+    }
+
+    @Test
+    fun `camera converts between world and screen coordinates`() {
+        val camera = CameraView(panX = 40f, panY = 10f, zoom = 1.5f, baseTileSize = 20)
+
+        assertEquals(130f, camera.worldToScreenX(3f))
+        assertEquals(70f, camera.worldToScreenY(2f))
+        assertEquals(3f, camera.screenToWorldX(130f))
+        assertEquals(2f, camera.screenToWorldY(70f))
+    }
+
+    @Test
+    fun `zoom keeps cursor world position stable`() {
+        val camera = CameraView(panX = 20f, panY = 30f, zoom = 1f, baseTileSize = 20)
+
+        val zoomed = zoomCameraAt(camera, screenX = 120f, screenY = 90f, zoomFactor = 1.5f)
+
+        assertEquals(camera.screenToWorldX(120f), zoomed.screenToWorldX(120f))
+        assertEquals(camera.screenToWorldY(90f), zoomed.screenToWorldY(90f))
     }
 
     @Test

@@ -9,6 +9,9 @@ import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseWheelEvent
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.LinkedHashSet
@@ -16,6 +19,32 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
+
+internal data class CameraView(
+    val panX: Float = 0f,
+    val panY: Float = 0f,
+    val zoom: Float = 1f,
+    val baseTileSize: Int = 20
+) {
+    val tileSize: Float get() = baseTileSize * zoom
+
+    fun worldToScreenX(worldX: Float): Float = (worldX * tileSize) + panX
+    fun worldToScreenY(worldY: Float): Float = (worldY * tileSize) + panY
+    fun screenToWorldX(screenX: Float): Float = (screenX - panX) / tileSize
+    fun screenToWorldY(screenY: Float): Float = (screenY - panY) / tileSize
+}
+
+internal fun zoomCameraAt(camera: CameraView, screenX: Float, screenY: Float, zoomFactor: Float): CameraView {
+    val clampedZoom = (camera.zoom * zoomFactor).coerceIn(0.5f, 3.0f)
+    if (clampedZoom == camera.zoom) return camera
+    val worldX = camera.screenToWorldX(screenX)
+    val worldY = camera.screenToWorldY(screenY)
+    val next = camera.copy(zoom = clampedZoom)
+    return next.copy(
+        panX = screenX - (worldX * next.tileSize),
+        panY = screenY - (worldY * next.tileSize)
+    )
+}
 
 private class ClientPanel(
     private val session: ClientSession,
@@ -28,13 +57,25 @@ private class ClientPanel(
     private var dragCurrentX = 0
     private var dragCurrentY = 0
     private var draggingSelection = false
+    private var panningCamera = false
+    private var panLastX = 0
+    private var panLastY = 0
+    private var camera = CameraView()
 
     init {
         background = Color(0x12, 0x18, 0x1F)
         preferredSize = Dimension(640, 640)
         font = Font("Monospaced", Font.PLAIN, 12)
+        isFocusable = true
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
+                requestFocusInWindow()
+                if (SwingUtilities.isMiddleMouseButton(e)) {
+                    panningCamera = true
+                    panLastX = e.x
+                    panLastY = e.y
+                    return
+                }
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     dragStartX = e.x
                     dragStartY = e.y
@@ -47,6 +88,10 @@ private class ClientPanel(
             }
 
             override fun mouseReleased(e: MouseEvent) {
+                if (SwingUtilities.isMiddleMouseButton(e)) {
+                    panningCamera = false
+                    return
+                }
                 if (!SwingUtilities.isLeftMouseButton(e)) return
                 val wasDragging = draggingSelection
                 draggingSelection = false
@@ -63,9 +108,43 @@ private class ClientPanel(
         })
         addMouseMotionListener(object : MouseAdapter() {
             override fun mouseDragged(e: MouseEvent) {
+                if (panningCamera) {
+                    camera =
+                        camera.copy(
+                            panX = camera.panX + (e.x - panLastX),
+                            panY = camera.panY + (e.y - panLastY)
+                        )
+                    panLastX = e.x
+                    panLastY = e.y
+                    repaint()
+                    return
+                }
                 if (!draggingSelection) return
                 dragCurrentX = e.x
                 dragCurrentY = e.y
+                repaint()
+            }
+        })
+        addMouseWheelListener { e: MouseWheelEvent ->
+            requestFocusInWindow()
+            val factor = if (e.preciseWheelRotation < 0.0) 1.1f else 0.9f
+            camera = zoomCameraAt(camera, e.x.toFloat(), e.y.toFloat(), factor)
+            repaint()
+        }
+        addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                val delta = 24f
+                camera =
+                    when (e.keyCode) {
+                        KeyEvent.VK_LEFT, KeyEvent.VK_A -> camera.copy(panX = camera.panX + delta)
+                        KeyEvent.VK_RIGHT, KeyEvent.VK_D -> camera.copy(panX = camera.panX - delta)
+                        KeyEvent.VK_UP, KeyEvent.VK_W -> camera.copy(panY = camera.panY + delta)
+                        KeyEvent.VK_DOWN, KeyEvent.VK_S -> camera.copy(panY = camera.panY - delta)
+                        KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS -> zoomCameraAt(camera, width / 2f, height / 2f, 1.1f)
+                        KeyEvent.VK_MINUS -> zoomCameraAt(camera, width / 2f, height / 2f, 0.9f)
+                        KeyEvent.VK_0 -> CameraView()
+                        else -> return
+                    }
                 repaint()
             }
         })
@@ -75,7 +154,7 @@ private class ClientPanel(
         super.paintComponent(graphics)
         val g = graphics as Graphics2D
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        renderer.render(g, width, height, session.state)
+        renderer.render(g, width, height, session.state, camera)
         if (draggingSelection && isSelectionDrag()) {
             drawSelectionBox(g)
         }
@@ -83,8 +162,8 @@ private class ClientPanel(
 
     private fun handleMouse(e: MouseEvent) {
         val snapshot = session.state.snapshot ?: return
-        val worldX = e.x.toFloat() / tileSize.toFloat()
-        val worldY = e.y.toFloat() / tileSize.toFloat()
+        val worldX = camera.screenToWorldX(e.x.toFloat())
+        val worldY = camera.screenToWorldY(e.y.toFloat())
         when (
             val intent =
                 buildClientIntent(
@@ -114,10 +193,10 @@ private class ClientPanel(
             selectEntitiesInBox(
                 snapshot = snapshot,
                 selectedIds = session.state.selectedIds,
-                startWorldX = dragStartX.toFloat() / tileSize.toFloat(),
-                startWorldY = dragStartY.toFloat() / tileSize.toFloat(),
-                endWorldX = e.x.toFloat() / tileSize.toFloat(),
-                endWorldY = e.y.toFloat() / tileSize.toFloat(),
+                startWorldX = camera.screenToWorldX(dragStartX.toFloat()),
+                startWorldY = camera.screenToWorldY(dragStartY.toFloat()),
+                endWorldX = camera.screenToWorldX(e.x.toFloat()),
+                endWorldY = camera.screenToWorldY(e.y.toFloat()),
                 additiveSelection = e.isShiftDown
             )
         session.append(intent)

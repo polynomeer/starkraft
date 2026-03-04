@@ -237,6 +237,9 @@ Client controls:
 - left drag: box-select faction 1 units
 - shift + left click: add/remove the nearest faction 1 unit from the current selection
 - shift + left drag: add a box selection to the current selection
+- middle drag or `WASD` / arrow keys: pan the camera
+- mouse wheel or `+` / `-`: zoom
+- `0`: reset camera
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
