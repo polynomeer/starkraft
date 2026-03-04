@@ -35,6 +35,7 @@ internal class SwingClientRenderer(
         drawPathMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
+        drawFog(graphics, snapshot, state.visionState, effectiveCamera)
         drawCommandPanel(graphics, width, height, state)
         drawHud(graphics, height, state, snapshot, overlayLines)
     }
@@ -131,6 +132,26 @@ internal class SwingClientRenderer(
         }
     }
 
+    private fun drawFog(
+        g: Graphics2D,
+        snapshot: ClientSnapshot,
+        visionState: ClientVisionState?,
+        camera: CameraView
+    ) {
+        val visibleTiles = visionState?.visibleTiles(1)
+        if (visibleTiles == null) return
+        val tilePixels = (camera.baseTileSize * camera.zoom).toInt().coerceAtLeast(1)
+        g.color = Color(0x05, 0x08, 0x0D, 170)
+        for (y in 0 until snapshot.mapHeight) {
+            for (x in 0 until snapshot.mapWidth) {
+                if ((x to y) in visibleTiles) continue
+                val left = camera.worldToScreenX(x.toFloat()).toInt()
+                val top = camera.worldToScreenY(y.toFloat()).toInt()
+                g.fillRect(left, top, tilePixels, tilePixels)
+            }
+        }
+    }
+
     private fun drawHud(
         g: Graphics2D,
         height: Int,
@@ -213,6 +234,7 @@ internal fun buildClientHudLines(
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildPathSummary(snapshot, state.selectedIds),
+        buildFogSummary(snapshot, state.visionState),
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         buildRallySummary(snapshot, state.selectedIds),
@@ -387,6 +409,15 @@ internal fun buildPathSummary(
     if (active == 0) return "paths: none"
     return "paths: active=$active remaining=$remaining goals=" +
         goals.entries.joinToString(" ") { "${it.key}x${it.value}" }
+}
+
+internal fun buildFogSummary(
+    snapshot: ClientSnapshot,
+    visionState: ClientVisionState?
+): String {
+    val visibleTiles = visionState?.visibleTiles(1) ?: return "fog: unavailable"
+    val totalTiles = snapshot.mapWidth * snapshot.mapHeight
+    return "fog: visible=${visibleTiles.size} hidden=${(totalTiles - visibleTiles.size).coerceAtLeast(0)}"
 }
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =

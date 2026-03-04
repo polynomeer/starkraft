@@ -85,9 +85,17 @@ internal data class ClientMapState(
     val staticOccupancyTiles: Set<Pair<Int, Int>> = emptySet()
 )
 
+internal data class ClientVisionChange(
+    val faction: Int,
+    val x: Int,
+    val y: Int,
+    val visible: Boolean
+)
+
 internal data class ClientStreamState(
     val snapshot: ClientSnapshot? = null,
     val mapState: ClientMapState? = null,
+    val visionChanges: List<ClientVisionChange> = emptyList(),
     val ack: ClientCommandAck? = null,
     val constructionActivity: ClientConstructionActivity? = null,
     val productionActivity: ClientProductionActivity? = null,
@@ -195,6 +203,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
     override fun poll(): ClientStreamState? {
         var latestSnapshot: ClientSnapshot? = null
         var latestMapState: ClientMapState? = null
+        val visionChanges = ArrayList<ClientVisionChange>()
         var latestAck: ClientCommandAck? = null
         var latestConstructionActivity: ClientConstructionActivity? = null
         var latestProductionActivity: ClientProductionActivity? = null
@@ -206,16 +215,18 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
             val update = parseClientStreamLine(line) ?: continue
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.mapState != null) latestMapState = update.mapState
+            if (update.visionChanges.isNotEmpty()) visionChanges += update.visionChanges
             if (update.ack != null) latestAck = update.ack
             if (update.constructionActivity != null) latestConstructionActivity = update.constructionActivity
             if (update.productionActivity != null) latestProductionActivity = update.productionActivity
             if (update.researchActivity != null) latestResearchActivity = update.researchActivity
             if (update.tickActivity != null) latestTickActivity = update.tickActivity
         }
-        if (latestSnapshot == null && latestMapState == null && latestAck == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
+        if (latestSnapshot == null && latestMapState == null && visionChanges.isEmpty() && latestAck == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
         return ClientStreamState(
             snapshot = latestSnapshot,
             mapState = latestMapState,
+            visionChanges = visionChanges,
             ack = latestAck,
             constructionActivity = latestConstructionActivity,
             productionActivity = latestProductionActivity,
@@ -382,6 +393,19 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                 snapshot = clientBridgeJson.decodeFromJsonElement(ClientSnapshot.serializer(), snapshot)
             )
         }
+        "vision" ->
+            ClientStreamState(
+                visionChanges =
+                    obj["changes"]?.jsonArray?.mapNotNull { change ->
+                        val changeObj = change.jsonObject
+                        ClientVisionChange(
+                            faction = changeObj["faction"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null,
+                            x = changeObj["x"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null,
+                            y = changeObj["y"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null,
+                            visible = changeObj["visible"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
+                        )
+                    } ?: emptyList()
+            )
         "commandAck" ->
             ClientStreamState(
                 ack =

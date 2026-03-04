@@ -33,6 +33,7 @@ import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
 import starkraft.sim.client.buildCommandButtons
+import starkraft.sim.client.buildFogSummary
 import starkraft.sim.client.buildPathSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
@@ -44,6 +45,7 @@ import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.isBuildPreviewValid
+import starkraft.sim.client.ClientVisionState
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -175,6 +177,7 @@ class GraphicalClientTest {
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "paths: active=1 remaining=5 goals=12,14x1",
+                "fog: visible=10 hidden=1014",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "rally: none",
@@ -191,6 +194,7 @@ class GraphicalClientTest {
             buildClientHudLines(
                 snapshot = snapshot,
                 state = ClientSessionState(
+                    visionState = ClientVisionState(visibleTilesByFaction = mapOf(1 to (0 until 10).map { it to 0 }.toSet())),
                     selectedIds = linkedSetOf(4, 11, 12),
                     lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true),
                     lastConstructionActivity = ClientConstructionActivity(tick = 15, total = 2, faction1 = 2, faction2 = 0, remainingTicks = 10),
@@ -454,6 +458,27 @@ class GraphicalClientTest {
 
         assertEquals("paths: active=2 remaining=10 goals=14,10x2", buildPathSummary(snapshot, linkedSetOf(12, 13, 14)))
         assertEquals("paths: none", buildPathSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds fog summary from streamed vision state`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "fog: visible=3 hidden=61",
+            buildFogSummary(snapshot, ClientVisionState(visibleTilesByFaction = mapOf(1 to setOf(1 to 1, 2 to 2, 3 to 3))))
+        )
+        assertEquals("fog: unavailable", buildFogSummary(snapshot, null))
     }
 
     @Test
@@ -794,5 +819,18 @@ class GraphicalClientTest {
         assertEquals(32, update?.mapState?.width)
         assertTrue((6 to 14) in (update?.mapState?.blockedTiles ?: emptySet()))
         assertTrue((7 to 8) in (update?.mapState?.staticOccupancyTiles ?: emptySet()))
+    }
+
+    @Test
+    fun `parses vision updates through shared bridge`() {
+        val update =
+            parseClientStreamLine(
+                "{\"recordType\":\"vision\",\"tick\":14,\"changes\":[{\"faction\":1,\"x\":6,\"y\":14,\"visible\":true},{\"faction\":1,\"x\":7,\"y\":15,\"visible\":false}]}"
+            )
+
+        assertNotNull(update)
+        assertEquals(2, update?.visionChanges?.size)
+        assertEquals(6, update?.visionChanges?.first()?.x)
+        assertEquals(false, update?.visionChanges?.last()?.visible)
     }
 }

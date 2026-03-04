@@ -7,6 +7,7 @@ import java.util.LinkedHashSet
 internal data class ClientSessionState(
     var snapshot: ClientSnapshot? = null,
     var mapState: ClientMapState? = null,
+    var visionState: ClientVisionState? = null,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
     var lastAck: ClientCommandAck? = null,
     var lastConstructionActivity: ClientConstructionActivity? = null,
@@ -45,6 +46,14 @@ internal class ClientSession(
         if (latestMapState != null && latestMapState != state.mapState) {
             state.mapState = latestMapState
             changed = true
+        }
+
+        if (update.visionChanges.isNotEmpty()) {
+            val nextVisionState = applyVisionChanges(state.visionState, update.visionChanges)
+            if (nextVisionState != state.visionState) {
+                state.visionState = nextVisionState
+                changed = true
+            }
         }
 
         val latestAck = update.ack
@@ -99,4 +108,34 @@ internal class ClientSession(
         }
         state.selectedIds.retainAll(liveIds)
     }
+}
+
+internal data class ClientVisionState(
+    val visibleTilesByFaction: Map<Int, Set<Pair<Int, Int>>> = emptyMap()
+) {
+    fun visibleTiles(faction: Int): Set<Pair<Int, Int>> = visibleTilesByFaction[faction] ?: emptySet()
+}
+
+internal fun applyVisionChanges(
+    current: ClientVisionState?,
+    changes: List<ClientVisionChange>
+): ClientVisionState {
+    val next = LinkedHashMap<Int, LinkedHashSet<Pair<Int, Int>>>()
+    current?.visibleTilesByFaction?.forEach { (faction, tiles) ->
+        next[faction] = LinkedHashSet(tiles)
+    }
+    for (change in changes) {
+        val visibleTiles = next.getOrPut(change.faction) { LinkedHashSet() }
+        val tile = change.x to change.y
+        if (change.visible) {
+            visibleTiles.add(tile)
+        } else {
+            visibleTiles.remove(tile)
+        }
+    }
+    val normalized = LinkedHashMap<Int, Set<Pair<Int, Int>>>(next.size)
+    for ((faction, tiles) in next) {
+        normalized[faction] = tiles
+    }
+    return ClientVisionState(visibleTilesByFaction = normalized)
 }

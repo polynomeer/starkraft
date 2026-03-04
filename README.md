@@ -253,6 +253,7 @@ Client controls:
 - right click empty ground: issue `move`
 - selected producers render rally markers, and entities now show simple health bars in the graphical client
 - selected units with active paths render path-goal markers and a path summary in the HUD
+- the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
 - ctrl + right click empty ground: issue `attackMove`
@@ -380,6 +381,7 @@ The graphical and console clients also show selected production queue state, e.g
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
 The graphical and console clients also show unlocked faction tech, e.g. `tech: AdvancedTrainingx1`.
 The graphical and console clients also show the latest tick-level build/train/research outcome pressure, including failure reasons, e.g. `activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15`.
+The graphical client HUD also shows current fog coverage, e.g. `fog: visible=42 hidden=982`.
 The console client frame also shows selected builder and construction summaries, e.g. `builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1`.
 The graphical and console clients also show the latest streamed construction totals, e.g. `construction state: total=2 f1=2 f2=0 remaining=10 @15`.
 The graphical and console clients also show the latest streamed production event totals, e.g. `production events: e1/p2/c0/x1 @15`.

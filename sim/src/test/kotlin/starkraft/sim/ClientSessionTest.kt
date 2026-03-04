@@ -15,6 +15,7 @@ import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.ClientVisionChange
 import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.ClientStreamState
 import starkraft.sim.client.ClientStreamSubscription
@@ -83,6 +84,7 @@ class ClientSessionTest {
                         listOf(
                             ClientStreamState(snapshot = snapshot),
                             ClientStreamState(mapState = ClientMapState(width = 16, height = 16, blockedTiles = setOf(1 to 1))),
+                            ClientStreamState(visionChanges = listOf(ClientVisionChange(faction = 1, x = 2, y = 3, visible = true))),
                             ClientStreamState(ack = starkraft.sim.client.ClientCommandAck(tick = 4, commandType = "move", requestId = "req-1", accepted = true)),
                             ClientStreamState(constructionActivity = ClientConstructionActivity(tick = 5, total = 2, faction1 = 2, remainingTicks = 10)),
                             ClientStreamState(productionActivity = ClientProductionActivity(tick = 5, enqueue = 1, progress = 2, cancel = 1)),
@@ -120,6 +122,9 @@ class ClientSessionTest {
             assertTrue(session.poll())
             assertEquals(16, session.state.mapState?.width)
             assertTrue((1 to 1) in (session.state.mapState?.blockedTiles ?: emptySet()))
+
+            assertTrue(session.poll())
+            assertEquals(setOf(2 to 3), session.state.visionState?.visibleTiles(1))
 
             assertTrue(session.poll())
             assertEquals("req-1", session.state.lastAck?.requestId)
