@@ -26,6 +26,7 @@ internal class SwingClientRenderer(
         val effectiveCamera = camera.copy(baseTileSize = tileSize)
         drawGrid(graphics, snapshot, effectiveCamera)
         drawResources(graphics, snapshot, effectiveCamera)
+        drawPathMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawRallyMarkers(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawEntities(graphics, state.selectedIds, snapshot, effectiveCamera)
         drawHud(graphics, height, state, snapshot, overlayLines)
@@ -106,6 +107,23 @@ internal class SwingClientRenderer(
         }
     }
 
+    private fun drawPathMarkers(g: Graphics2D, selectedIds: Set<Int>, snapshot: ClientSnapshot, camera: CameraView) {
+        g.color = Color(0x79, 0xD7, 0xF2)
+        g.stroke = BasicStroke(1.5f)
+        for (entity in snapshot.entities) {
+            if (entity.id !in selectedIds) continue
+            val goalX = entity.pathGoalX ?: continue
+            val goalY = entity.pathGoalY ?: continue
+            if (entity.pathRemainingNodes <= 0) continue
+            val startX = camera.worldToScreenX(entity.x).toInt()
+            val startY = camera.worldToScreenY(entity.y).toInt()
+            val endX = camera.worldToScreenX(goalX + 0.5f).toInt()
+            val endY = camera.worldToScreenY(goalY + 0.5f).toInt()
+            g.drawLine(startX, startY, endX, endY)
+            g.drawRect(endX - 4, endY - 4, 8, 8)
+        }
+    }
+
     private fun drawHud(
         g: Graphics2D,
         height: Int,
@@ -131,6 +149,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
+        buildPathSummary(snapshot, state.selectedIds),
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         buildRallySummary(snapshot, state.selectedIds),
@@ -282,6 +301,29 @@ internal fun buildConstructionSummary(
     if (sites == 0) return "construction: none"
     val kinds = buildingTypes.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "construction: sites=$sites remaining=$remainingTicks $kinds"
+}
+
+internal fun buildPathSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "paths: none"
+    var active = 0
+    var remaining = 0
+    val goals = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.pathRemainingNodes <= 0) continue
+        active++
+        remaining += entity.pathRemainingNodes
+        val gx = entity.pathGoalX ?: continue
+        val gy = entity.pathGoalY ?: continue
+        val key = "$gx,$gy"
+        goals[key] = (goals[key] ?: 0) + 1
+    }
+    if (active == 0) return "paths: none"
+    return "paths: active=$active remaining=$remaining goals=" +
+        goals.entries.joinToString(" ") { "${it.key}x${it.value}" }
 }
 
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =

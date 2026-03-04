@@ -29,6 +29,7 @@ import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.buildClientHudLines
 import starkraft.sim.client.buildBuilderSummary
 import starkraft.sim.client.buildConstructionSummary
+import starkraft.sim.client.buildPathSummary
 import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
@@ -153,7 +154,10 @@ class GraphicalClientTest {
                         activeProductionRemainingTicks = 9,
                         researchQueueSize = 2,
                         activeResearchTech = "AdvancedTraining",
-                        activeResearchRemainingTicks = 8
+                        activeResearchRemainingTicks = 8,
+                        pathRemainingNodes = 5,
+                        pathGoalX = 12,
+                        pathGoalY = 14
                     )
                 ),
                 resourceNodes = emptyList()
@@ -164,6 +168,7 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
+                "paths: active=1 remaining=5 goals=12,14x1",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "rally: none",
@@ -399,6 +404,28 @@ class GraphicalClientTest {
             buildConstructionSummary(snapshot, linkedSetOf(12, 13, 14))
         )
         assertEquals("construction: none", buildConstructionSummary(snapshot, linkedSetOf(14)))
+    }
+
+    @Test
+    fun `builds path summary from selected units`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 12, faction = 1, typeId = "Marine", archetype = "infantry", x = 7f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, pathRemainingNodes = 6, pathGoalX = 14, pathGoalY = 10),
+                    EntitySnapshot(id = 13, faction = 1, typeId = "Worker", archetype = "worker", x = 8f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, pathRemainingNodes = 4, pathGoalX = 14, pathGoalY = 10),
+                    EntitySnapshot(id = 14, faction = 1, typeId = "Marine", archetype = "infantry", x = 9f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("paths: active=2 remaining=10 goals=14,10x2", buildPathSummary(snapshot, linkedSetOf(12, 13, 14)))
+        assertEquals("paths: none", buildPathSummary(snapshot, linkedSetOf(14)))
     }
 
     @Test

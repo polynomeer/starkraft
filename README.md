@@ -249,6 +249,7 @@ Client controls:
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
 - selected producers render rally markers, and entities now show simple health bars in the graphical client
+- selected units with active paths render path-goal markers and a path summary in the HUD
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
