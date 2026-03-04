@@ -383,6 +383,8 @@ internal fun buildCommandButtons(
             ClientCommandButton("Build Depot", "build:Depot"),
             ClientCommandButton("Build ResourceDepot", "build:ResourceDepot"),
             ClientCommandButton("Build GasDepot", "build:GasDepot"),
+            ClientCommandButton("Prev Scenario", "scenario:prev"),
+            ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Clear", "clear")
         )
     if (canTrain) {
@@ -391,7 +393,13 @@ internal fun buildCommandButtons(
         buttons.add(6, ClientCommandButton("Train Zergling", "train:Zergling"))
     }
     if (canResearch) buttons.add(if (canTrain) 7 else 4, ClientCommandButton("Research Adv", "research:AdvancedTraining"))
-    return if (hasSelection) buttons else buttons.filter { it.actionId.startsWith("build:") || it.actionId == "clear" }
+    return if (hasSelection) {
+        buttons
+    } else {
+        buttons.filter {
+            it.actionId.startsWith("build:") || it.actionId.startsWith("scenario:") || it.actionId == "clear"
+        }
+    }
 }
 
 internal fun commandButtonAt(

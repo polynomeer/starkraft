@@ -334,15 +334,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(false).map { it.actionId }
         )
     }
@@ -350,9 +350,11 @@ class GraphicalClientTest {
     @Test
     fun `locates command button by panel click`() {
         val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (14 * 34), hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (16 * 34), hasSelection = true, canTrain = true, canResearch = true)
+        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (15 * 34), hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
+        assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true, canTrain = true, canResearch = true))
     }

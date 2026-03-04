@@ -527,6 +527,8 @@ private class ClientPanel(
                 groundMode = null
                 buildModeTypeId = null
             }
+            "scenario:prev" -> cycleScenario(-1)
+            "scenario:next" -> cycleScenario(1)
             else -> {
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")

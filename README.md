@@ -279,6 +279,7 @@ Client controls:
 - selected producers render rally markers, and entities now show simple health bars in the graphical client
 - selected units with active paths render path-goal markers and a path summary in the HUD
 - selected builders and harvesters now render simple assignment lines, and the HUD summarizes build/gather/return tasks
+- the command panel also exposes `Prev Scenario` / `Next Scenario` for `:sim:play`
 - selected buildings now render compact status labels for construction, training, and research progress
 - the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
