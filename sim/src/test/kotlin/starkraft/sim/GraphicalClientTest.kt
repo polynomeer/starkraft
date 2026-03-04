@@ -20,9 +20,12 @@ import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
+import starkraft.sim.client.ClientBuildCatalogEntry
+import starkraft.sim.client.ClientCatalog
 import starkraft.sim.client.ClientConstructionActivity
 import starkraft.sim.client.CameraView
 import starkraft.sim.client.ClientProductionActivity
+import starkraft.sim.client.ClientQueueCatalogEntry
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.formatAckStatus
@@ -65,6 +68,23 @@ import starkraft.sim.client.ResourceNodeSnapshot
 import java.nio.file.Paths
 
 class GraphicalClientTest {
+    private val testCatalog =
+        ClientCatalog(
+            buildOptions = listOf(
+                ClientBuildCatalogEntry("Depot", "Depot", 2, 2, 1, 100, 0),
+                ClientBuildCatalogEntry("ResourceDepot", "ResourceDepot", 2, 2, 1, 75, 0),
+                ClientBuildCatalogEntry("GasDepot", "GasDepot", 2, 2, 1, 90, 0)
+            ),
+            trainOptions = listOf(
+                ClientQueueCatalogEntry("Worker", "Worker"),
+                ClientQueueCatalogEntry("Marine", "Marine"),
+                ClientQueueCatalogEntry("Zergling", "Zergling")
+            ),
+            researchOptions = listOf(
+                ClientQueueCatalogEntry("AdvancedTraining", "AdvancedTraining")
+            )
+        )
+
     @Test
     fun `default client input path is adjacent to snapshot file`() {
         val snapshotPath = Paths.get("/tmp/starkraft/live/snapshots.ndjson")
@@ -335,28 +355,28 @@ class GraphicalClientTest {
     fun `builds command panel buttons for selection state`() {
         assertEquals(
             listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
-            buildCommandButtons(true, canTrain = true, canResearch = true).map { it.actionId }
+            buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
             listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
-            buildCommandButtons(true, canTrain = false, canResearch = false).map { it.actionId }
+            buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
             listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "scenario:prev", "scenario:next", "clear"),
-            buildCommandButtons(false).map { it.actionId }
+            buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
 
     @Test
     fun `locates command button by panel click`() {
-        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (16 * 34), hasSelection = true, canTrain = true, canResearch = true)
-        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (15 * 34), hasSelection = true, canTrain = true, canResearch = true)
+        val move = commandButtonAt(width = 640, x = 640 - 150, y = 50, catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (16 * 34), catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
+        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 50 + (15 * 34), catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("clear", clear?.actionId)
-        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, hasSelection = true, canTrain = true, canResearch = true))
+        assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, hasSelection = true, canTrain = true, canResearch = true))
     }
 
     @Test

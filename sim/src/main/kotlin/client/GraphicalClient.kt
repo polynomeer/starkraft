@@ -85,11 +85,8 @@ internal data class BuildPreviewSpec(
 )
 
 internal fun buildPreviewSpec(typeId: String): BuildPreviewSpec? =
-    when (typeId) {
-        "Depot" -> BuildPreviewSpec(typeId, 2, 2, 1, 100, 0)
-        "ResourceDepot" -> BuildPreviewSpec(typeId, 2, 2, 1, 75, 0)
-        "GasDepot" -> BuildPreviewSpec(typeId, 2, 2, 1, 90, 0)
-        else -> null
+    defaultClientCatalog().buildOptions.firstOrNull { it.typeId == typeId }?.let {
+        BuildPreviewSpec(it.typeId, it.width, it.height, it.clearance, it.mineralCost, it.gasCost)
     }
 
 internal fun isBuildPreviewValid(
@@ -184,6 +181,7 @@ internal fun buildQueueIntent(
 private class ClientPanel(
     private val session: ClientSession,
     private val renderer: ClientRenderer = SwingClientRenderer(),
+    private val catalog: ClientCatalog = defaultClientCatalog(),
     private val controlPath: Path? = null,
     private val scenarioPath: Path? = null,
     private val requestRestart: () -> Unit = {}
@@ -338,19 +336,27 @@ private class ClientPanel(
                     }
                     KeyEvent.VK_U -> {
                         val snapshot = session.state.snapshot ?: return
-                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Worker", requestIds)?.let(session::append)
+                        catalog.trainOptions.getOrNull(0)?.let {
+                            buildQueueIntent(snapshot, session.state.selectedIds, "train", it.typeId, requestIds)?.let(session::append)
+                        }
                     }
                     KeyEvent.VK_I -> {
                         val snapshot = session.state.snapshot ?: return
-                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
+                        catalog.trainOptions.getOrNull(1)?.let {
+                            buildQueueIntent(snapshot, session.state.selectedIds, "train", it.typeId, requestIds)?.let(session::append)
+                        }
                     }
                     KeyEvent.VK_O -> {
                         val snapshot = session.state.snapshot ?: return
-                        buildQueueIntent(snapshot, session.state.selectedIds, "train", "Zergling", requestIds)?.let(session::append)
+                        catalog.trainOptions.getOrNull(2)?.let {
+                            buildQueueIntent(snapshot, session.state.selectedIds, "train", it.typeId, requestIds)?.let(session::append)
+                        }
                     }
                     KeyEvent.VK_L -> {
                         val snapshot = session.state.snapshot ?: return
-                        buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
+                        catalog.researchOptions.firstOrNull()?.let {
+                            buildQueueIntent(snapshot, session.state.selectedIds, "research", it.typeId, requestIds)?.let(session::append)
+                        }
                     }
                     KeyEvent.VK_SPACE -> togglePause()
                     KeyEvent.VK_OPEN_BRACKET -> adjustSpeed(-1)
@@ -481,7 +487,7 @@ private class ClientPanel(
         val snapshot = session.state.snapshot
         val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
         val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
-        val button = commandButtonAt(width, e.x, e.y, session.state.selectedIds.isNotEmpty(), canTrain, canResearch) ?: return false
+        val button = commandButtonAt(width, e.x, e.y, catalog, session.state.selectedIds.isNotEmpty(), canTrain, canResearch) ?: return false
         when (button.actionId) {
             "move" -> {
                 groundMode = ClientGroundCommandMode.MOVE
@@ -506,22 +512,6 @@ private class ClientPanel(
                 val snapshot = session.state.snapshot ?: return true
                 buildCancelIntent(snapshot, session.state.selectedIds, button.actionId, requestIds)?.let(session::append)
             }
-            "train:Worker" -> {
-                val snapshot = session.state.snapshot ?: return true
-                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Worker", requestIds)?.let(session::append)
-            }
-            "train:Marine" -> {
-                val snapshot = session.state.snapshot ?: return true
-                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Marine", requestIds)?.let(session::append)
-            }
-            "train:Zergling" -> {
-                val snapshot = session.state.snapshot ?: return true
-                buildQueueIntent(snapshot, session.state.selectedIds, "train", "Zergling", requestIds)?.let(session::append)
-            }
-            "research:AdvancedTraining" -> {
-                val snapshot = session.state.snapshot ?: return true
-                buildQueueIntent(snapshot, session.state.selectedIds, "research", "AdvancedTraining", requestIds)?.let(session::append)
-            }
             "clear" -> {
                 session.state.selectedIds.clear()
                 groundMode = null
@@ -533,6 +523,14 @@ private class ClientPanel(
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")
                     groundMode = null
+                } else if (button.actionId.startsWith("train:")) {
+                    val snapshot = session.state.snapshot ?: return true
+                    val typeId = button.actionId.removePrefix("train:")
+                    buildQueueIntent(snapshot, session.state.selectedIds, "train", typeId, requestIds)?.let(session::append)
+                } else if (button.actionId.startsWith("research:")) {
+                    val snapshot = session.state.snapshot ?: return true
+                    val typeId = button.actionId.removePrefix("research:")
+                    buildQueueIntent(snapshot, session.state.selectedIds, "research", typeId, requestIds)?.let(session::append)
                 }
             }
         }

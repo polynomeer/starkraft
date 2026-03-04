@@ -249,7 +249,7 @@ internal class SwingClientRenderer(
         val snapshot = state.snapshot
         val canTrain = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
         val canResearch = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
-        val buttons = buildCommandButtons(state.selectedIds.isNotEmpty(), canTrain, canResearch)
+        val buttons = buildCommandButtons(defaultClientCatalog(), state.selectedIds.isNotEmpty(), canTrain, canResearch)
         for (i in buttons.indices) {
             val bounds = commandButtonBounds(width, i)
             g.color = Color(0x1B, 0x26, 0x31, 220)
@@ -363,10 +363,11 @@ internal fun commandButtonBounds(width: Int, index: Int): Rectangle {
 }
 
 internal fun buildCommandButtons(hasSelection: Boolean): List<ClientCommandButton> {
-    return buildCommandButtons(hasSelection, canTrain = hasSelection, canResearch = hasSelection)
+    return buildCommandButtons(defaultClientCatalog(), hasSelection, canTrain = hasSelection, canResearch = hasSelection)
 }
 
 internal fun buildCommandButtons(
+    catalog: ClientCatalog,
     hasSelection: Boolean,
     canTrain: Boolean,
     canResearch: Boolean
@@ -380,19 +381,24 @@ internal fun buildCommandButtons(
             ClientCommandButton("Cancel Build", "cancelBuild"),
             ClientCommandButton("Cancel Train", "cancelTrain"),
             ClientCommandButton("Cancel Research", "cancelResearch"),
-            ClientCommandButton("Build Depot", "build:Depot"),
-            ClientCommandButton("Build ResourceDepot", "build:ResourceDepot"),
-            ClientCommandButton("Build GasDepot", "build:GasDepot"),
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Clear", "clear")
         )
-    if (canTrain) {
-        buttons.add(4, ClientCommandButton("Train Worker", "train:Worker"))
-        buttons.add(5, ClientCommandButton("Train Marine", "train:Marine"))
-        buttons.add(6, ClientCommandButton("Train Zergling", "train:Zergling"))
+    for ((index, option) in catalog.buildOptions.withIndex()) {
+        buttons.add(7 + index, ClientCommandButton("Build ${option.label}", "build:${option.typeId}"))
     }
-    if (canResearch) buttons.add(if (canTrain) 7 else 4, ClientCommandButton("Research Adv", "research:AdvancedTraining"))
+    if (canTrain) {
+        for ((index, option) in catalog.trainOptions.withIndex()) {
+            buttons.add(4 + index, ClientCommandButton("Train ${option.label}", "train:${option.typeId}"))
+        }
+    }
+    if (canResearch) {
+        val insertAt = 4 + if (canTrain) catalog.trainOptions.size else 0
+        for ((index, option) in catalog.researchOptions.withIndex()) {
+            buttons.add(insertAt + index, ClientCommandButton("Research ${option.label}", "research:${option.typeId}"))
+        }
+    }
     return if (hasSelection) {
         buttons
     } else {
@@ -406,11 +412,12 @@ internal fun commandButtonAt(
     width: Int,
     x: Int,
     y: Int,
+    catalog: ClientCatalog,
     hasSelection: Boolean,
     canTrain: Boolean = hasSelection,
     canResearch: Boolean = hasSelection
 ): ClientCommandButton? {
-    val buttons = buildCommandButtons(hasSelection, canTrain, canResearch)
+    val buttons = buildCommandButtons(catalog, hasSelection, canTrain, canResearch)
     for (i in buttons.indices) {
         if (commandButtonBounds(width, i).contains(x, y)) return buttons[i]
     }
