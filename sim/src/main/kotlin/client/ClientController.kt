@@ -73,6 +73,34 @@ internal fun buildClientIntent(
     )
 }
 
+internal fun selectEntitiesInBox(
+    snapshot: ClientSnapshot,
+    selectedIds: LinkedHashSet<Int>,
+    startWorldX: Float,
+    startWorldY: Float,
+    endWorldX: Float,
+    endWorldY: Float,
+    additiveSelection: Boolean
+): ClientIntent.Selection {
+    val minX = minOf(startWorldX, endWorldX)
+    val maxX = maxOf(startWorldX, endWorldX)
+    val minY = minOf(startWorldY, endWorldY)
+    val maxY = maxOf(startWorldY, endWorldY)
+    val hits =
+        snapshot.entities
+            .asSequence()
+            .filter { it.faction == 1 }
+            .filter { it.x in minX..maxX && it.y in minY..maxY }
+            .map { it.id }
+            .sorted()
+            .toList()
+    if (!additiveSelection) {
+        selectedIds.clear()
+    }
+    selectedIds.addAll(hits)
+    return ClientIntent.Selection(buildUnitSelectionRecord(snapshot.tick + 1, selectedIds))
+}
+
 internal fun nearestEntity(
     snapshot: ClientSnapshot,
     x: Float,

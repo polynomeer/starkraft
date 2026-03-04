@@ -104,7 +104,7 @@ internal fun buildClientHudLines(
         formatProductionActivity(state.lastProductionActivity),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
-        "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
+        "left: select/drag   shift+left: add/remove/add-box   right: move/attack/harvest   ctrl+right: attackMove"
     )
 
 internal fun buildSelectionSummary(

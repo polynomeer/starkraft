@@ -30,6 +30,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildTechSummary
+import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -165,7 +166,7 @@ class GraphicalClientTest {
                 "production events: e1/p2/c0/x1 @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
-                "left: select   shift+left: add/remove   right: move/attack/harvest   ctrl+right: attackMove"
+                "left: select/drag   shift+left: add/remove/add-box   right: move/attack/harvest   ctrl+right: attackMove"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -393,6 +394,54 @@ class GraphicalClientTest {
 
         applySelectionClick(selected, clickedId = null, additive = false)
         assertEquals(linkedSetOf<Int>(), selected)
+    }
+
+    @Test
+    fun `selects friendly units in drag box`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 5, faction = 1, typeId = "Worker", archetype = "worker", x = 5f, y = 5f, dir = 0f, hp = 20, maxHp = 20, armor = 0),
+                    EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "lightMelee", x = 4.5f, y = 4.5f, dir = 0f, hp = 35, maxHp = 35, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+        val selected = linkedSetOf(12)
+
+        val intent = selectEntitiesInBox(snapshot, selected, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = false)
+
+        assertEquals(linkedSetOf(4, 5), selected)
+        assertArrayEquals(intArrayOf(4, 5), intent.record.units)
+    }
+
+    @Test
+    fun `adds drag box selection when additive`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 5, faction = 1, typeId = "Worker", archetype = "worker", x = 5f, y = 5f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+        val selected = linkedSetOf(12)
+
+        selectEntitiesInBox(snapshot, selected, 3.5f, 3.5f, 5.2f, 5.2f, additiveSelection = true)
+
+        assertEquals(linkedSetOf(12, 4, 5), selected)
     }
 
     @Test

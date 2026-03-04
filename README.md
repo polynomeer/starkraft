@@ -234,7 +234,9 @@ The snapshot-stream consumer also summarizes `researchState` records, including 
 
 Client controls:
 - left click: select nearest faction 1 unit
+- left drag: box-select faction 1 units
 - shift + left click: add/remove the nearest faction 1 unit from the current selection
+- shift + left drag: add a box selection to the current selection
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`

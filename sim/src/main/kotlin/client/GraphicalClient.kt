@@ -23,6 +23,11 @@ private class ClientPanel(
 ) : JPanel() {
     private val requestIds = ClientCommandIds()
     private val tileSize = 20
+    private var dragStartX = 0
+    private var dragStartY = 0
+    private var dragCurrentX = 0
+    private var dragCurrentY = 0
+    private var draggingSelection = false
 
     init {
         background = Color(0x12, 0x18, 0x1F)
@@ -30,7 +35,38 @@ private class ClientPanel(
         font = Font("Monospaced", Font.PLAIN, 12)
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    dragStartX = e.x
+                    dragStartY = e.y
+                    dragCurrentX = e.x
+                    dragCurrentY = e.y
+                    draggingSelection = true
+                    return
+                }
                 handleMouse(e)
+            }
+
+            override fun mouseReleased(e: MouseEvent) {
+                if (!SwingUtilities.isLeftMouseButton(e)) return
+                val wasDragging = draggingSelection
+                draggingSelection = false
+                if (!wasDragging) return
+                dragCurrentX = e.x
+                dragCurrentY = e.y
+                if (isSelectionDrag()) {
+                    handleSelectionBox(e)
+                } else {
+                    handleMouse(e)
+                }
+                repaint()
+            }
+        })
+        addMouseMotionListener(object : MouseAdapter() {
+            override fun mouseDragged(e: MouseEvent) {
+                if (!draggingSelection) return
+                dragCurrentX = e.x
+                dragCurrentY = e.y
+                repaint()
             }
         })
     }
@@ -40,6 +76,9 @@ private class ClientPanel(
         val g = graphics as Graphics2D
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         renderer.render(g, width, height, session.state)
+        if (draggingSelection && isSelectionDrag()) {
+            drawSelectionBox(g)
+        }
     }
 
     private fun handleMouse(e: MouseEvent) {
@@ -67,6 +106,35 @@ private class ClientPanel(
             is ClientIntent.Command -> session.append(intent)
             null -> return
         }
+    }
+
+    private fun handleSelectionBox(e: MouseEvent) {
+        val snapshot = session.state.snapshot ?: return
+        val intent =
+            selectEntitiesInBox(
+                snapshot = snapshot,
+                selectedIds = session.state.selectedIds,
+                startWorldX = dragStartX.toFloat() / tileSize.toFloat(),
+                startWorldY = dragStartY.toFloat() / tileSize.toFloat(),
+                endWorldX = e.x.toFloat() / tileSize.toFloat(),
+                endWorldY = e.y.toFloat() / tileSize.toFloat(),
+                additiveSelection = e.isShiftDown
+            )
+        session.append(intent)
+    }
+
+    private fun isSelectionDrag(): Boolean =
+        kotlin.math.abs(dragCurrentX - dragStartX) >= 6 || kotlin.math.abs(dragCurrentY - dragStartY) >= 6
+
+    private fun drawSelectionBox(g: Graphics2D) {
+        val minX = minOf(dragStartX, dragCurrentX)
+        val minY = minOf(dragStartY, dragCurrentY)
+        val width = kotlin.math.abs(dragCurrentX - dragStartX)
+        val height = kotlin.math.abs(dragCurrentY - dragStartY)
+        g.color = Color(0xF4, 0xE2, 0x71, 48)
+        g.fillRect(minX, minY, width, height)
+        g.color = Color(0xF4, 0xE2, 0x71)
+        g.drawRect(minX, minY, width, height)
     }
 }
 
