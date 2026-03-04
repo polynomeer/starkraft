@@ -338,6 +338,7 @@ The graphical and console clients also show selected production queue state, e.g
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
 The graphical and console clients also show the latest tick-level build/train/research outcome pressure, including failure reasons, e.g. `activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15`.
 The console client frame also shows selected builder and construction summaries, e.g. `builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1`.
+The graphical and console clients also show the latest streamed construction totals, e.g. `construction state: total=2 f1=2 f2=0 remaining=10 @15`.
 The graphical and console clients also show the latest streamed production event totals, e.g. `production events: e1/p2/c0/x1 @15`.
 The graphical client HUD also shows the latest streamed research event totals, e.g. `research events: e1/p2/c0/x1 @15`.
 

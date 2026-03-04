@@ -28,6 +28,7 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
     val productionSummary = buildProductionSummary(snapshot, state.selectedIds)
     val researchSummary = buildResearchSummary(snapshot, state.selectedIds)
     val tickActivity = formatTickActivity(state.lastTickActivity)
+    val constructionActivity = formatConstructionActivity(state.lastConstructionActivity)
     val productionActivity = formatProductionActivity(state.lastProductionActivity)
     val researchActivity = formatResearchActivity(state.lastResearchActivity)
     return buildString {
@@ -51,6 +52,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(researchSummary)
         append(" ")
         append(tickActivity)
+        append(" ")
+        append(constructionActivity)
         append(" ")
         append(productionActivity)
         append(" ")

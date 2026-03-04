@@ -12,10 +12,12 @@ import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.defaultClientInputPath
 import starkraft.sim.client.ClientCommandAck
+import starkraft.sim.client.ClientConstructionActivity
 import starkraft.sim.client.ClientProductionActivity
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.formatAckStatus
+import starkraft.sim.client.formatConstructionActivity
 import starkraft.sim.client.formatProductionActivity
 import starkraft.sim.client.formatResearchActivity
 import starkraft.sim.client.formatTickActivity
@@ -72,6 +74,15 @@ class GraphicalClientTest {
         assertEquals(
             "production events: e1/p2/c0/x1 @12",
             formatProductionActivity(ClientProductionActivity(tick = 12, enqueue = 1, progress = 2, complete = 0, cancel = 1))
+        )
+    }
+
+    @Test
+    fun `formats construction activity for hud`() {
+        assertEquals("construction state: none", formatConstructionActivity(null))
+        assertEquals(
+            "construction state: total=2 f1=1 f2=1 remaining=8 @12",
+            formatConstructionActivity(ClientConstructionActivity(tick = 12, total = 2, faction1 = 1, faction2 = 1, remainingTicks = 8))
         )
     }
 
@@ -148,6 +159,7 @@ class GraphicalClientTest {
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
                 "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
+                "construction state: total=2 f1=2 f2=0 remaining=10 @15",
                 "production events: e1/p2/c0/x1 @15",
                 "research events: e1/p2/c0/x1 @15",
                 "last ack: ok move[cli-9] @15",
@@ -158,6 +170,7 @@ class GraphicalClientTest {
                 state = ClientSessionState(
                     selectedIds = linkedSetOf(4, 11, 12),
                     lastAck = ClientCommandAck(tick = 15, commandType = "move", requestId = "cli-9", accepted = true),
+                    lastConstructionActivity = ClientConstructionActivity(tick = 15, total = 2, faction1 = 2, faction2 = 0, remainingTicks = 10),
                     lastProductionActivity = ClientProductionActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1),
                     lastResearchActivity = ClientResearchActivity(tick = 15, enqueue = 1, progress = 2, cancel = 1),
                     lastTickActivity = ClientTickActivity(
@@ -392,6 +405,22 @@ class GraphicalClientTest {
         assertEquals(14, update?.productionActivity?.tick)
         assertEquals(1, update?.productionActivity?.enqueue)
         assertEquals(1, update?.productionActivity?.cancel)
+        assertNull(update?.snapshot)
+    }
+
+    @Test
+    fun `parses construction state updates through shared bridge`() {
+        val update =
+            parseClientStreamLine(
+                "{\"recordType\":\"constructionState\",\"tick\":14,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"remainingTicks\":6},{\"entityId\":42,\"faction\":2,\"typeId\":\"Factory\",\"remainingTicks\":2}]}"
+            )
+
+        assertNotNull(update)
+        assertEquals(14, update?.constructionActivity?.tick)
+        assertEquals(2, update?.constructionActivity?.total)
+        assertEquals(1, update?.constructionActivity?.faction1)
+        assertEquals(1, update?.constructionActivity?.faction2)
+        assertEquals(8, update?.constructionActivity?.remainingTicks)
         assertNull(update?.snapshot)
     }
 

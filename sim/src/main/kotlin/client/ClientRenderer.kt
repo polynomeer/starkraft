@@ -99,6 +99,7 @@ internal fun buildClientHudLines(
         buildProductionSummary(snapshot, state.selectedIds),
         buildResearchSummary(snapshot, state.selectedIds),
         formatTickActivity(state.lastTickActivity),
+        formatConstructionActivity(state.lastConstructionActivity),
         formatProductionActivity(state.lastProductionActivity),
         formatResearchActivity(state.lastResearchActivity),
         formatAckStatus(state.lastAck),
@@ -223,6 +224,13 @@ internal fun formatProductionActivity(activity: ClientProductionActivity?): Stri
         "production events: none"
     } else {
         "production events: e${activity.enqueue}/p${activity.progress}/c${activity.complete}/x${activity.cancel} @${activity.tick}"
+    }
+
+internal fun formatConstructionActivity(activity: ClientConstructionActivity?): String =
+    if (activity == null) {
+        "construction state: none"
+    } else {
+        "construction state: total=${activity.total} f1=${activity.faction1} f2=${activity.faction2} remaining=${activity.remainingTicks} @${activity.tick}"
     }
 
 internal fun formatTickActivity(activity: ClientTickActivity?): String =

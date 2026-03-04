@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.ClientIntent
+import starkraft.sim.client.ClientConstructionActivity
 import starkraft.sim.client.ClientProductionActivity
 import starkraft.sim.client.ClientResearchActivity
 import starkraft.sim.client.ClientSession
@@ -81,6 +82,7 @@ class ClientSessionTest {
                         listOf(
                             ClientStreamState(snapshot = snapshot),
                             ClientStreamState(ack = starkraft.sim.client.ClientCommandAck(tick = 4, commandType = "move", requestId = "req-1", accepted = true)),
+                            ClientStreamState(constructionActivity = ClientConstructionActivity(tick = 5, total = 2, faction1 = 2, remainingTicks = 10)),
                             ClientStreamState(productionActivity = ClientProductionActivity(tick = 5, enqueue = 1, progress = 2, cancel = 1)),
                             ClientStreamState(researchActivity = ClientResearchActivity(tick = 5, enqueue = 1, cancel = 1)),
                             ClientStreamState(
@@ -115,6 +117,10 @@ class ClientSessionTest {
 
             assertTrue(session.poll())
             assertEquals("req-1", session.state.lastAck?.requestId)
+
+            assertTrue(session.poll())
+            assertEquals(2, session.state.lastConstructionActivity?.total)
+            assertEquals(10, session.state.lastConstructionActivity?.remainingTicks)
 
             assertTrue(session.poll())
             assertEquals(1, session.state.lastProductionActivity?.enqueue)
