@@ -53,6 +53,10 @@ data class SnapshotStreamSummary(
     val builderFaction1Count: Int = 0,
     val builderFaction2Count: Int = 0,
     val builderTargetCount: Int = 0,
+    val constructionCount: Int = 0,
+    val constructionFaction1Count: Int = 0,
+    val constructionFaction2Count: Int = 0,
+    val constructionRemainingTicks: Int = 0,
     val maxProducerQueueLimit: Int = 0,
     val harvesterCount: Int = 0,
     val harvesterGatherCount: Int = 0,
@@ -142,6 +146,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var builderFaction1Count = 0
     var builderFaction2Count = 0
     var builderTargetCount = 0
+    var constructionCount = 0
+    var constructionFaction1Count = 0
+    var constructionFaction2Count = 0
+    var constructionRemainingTicks = 0
     var maxProducerQueueLimit = 0
     var harvesterCount = 0
     var harvesterGatherCount = 0
@@ -346,6 +354,20 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
                     }
                 }
             }
+            "constructionState" -> {
+                val entities = obj.array("entities")
+                constructionCount = entities.size
+                constructionFaction1Count = 0
+                constructionFaction2Count = 0
+                constructionRemainingTicks = 0
+                for (entity in entities) {
+                    constructionRemainingTicks += entity.int("remainingTicks") ?: 0
+                    when (entity.int("faction")) {
+                        1 -> constructionFaction1Count++
+                        2 -> constructionFaction2Count++
+                    }
+                }
+            }
             "harvesterState" -> {
                 val entities = obj.array("entities")
                 harvesterCount = entities.size
@@ -504,6 +526,10 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         builderFaction1Count = builderFaction1Count,
         builderFaction2Count = builderFaction2Count,
         builderTargetCount = builderTargetCount,
+        constructionCount = constructionCount,
+        constructionFaction1Count = constructionFaction1Count,
+        constructionFaction2Count = constructionFaction2Count,
+        constructionRemainingTicks = constructionRemainingTicks,
         maxProducerQueueLimit = maxProducerQueueLimit,
         harvesterCount = harvesterCount,
         harvesterGatherCount = harvesterGatherCount,
@@ -629,6 +655,13 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
         lines.add(
             "builders: total=${summary.builderCount} f1=${summary.builderFaction1Count} " +
                 "f2=${summary.builderFaction2Count} targets=${summary.builderTargetCount}"
+        )
+    }
+    if (summary.constructionCount > 0 || summary.countsByType["constructionState"] != null) {
+        lines.add(
+            "construction: total=${summary.constructionCount} " +
+                "f1=${summary.constructionFaction1Count} f2=${summary.constructionFaction2Count} " +
+                "remaining=${summary.constructionRemainingTicks}"
         )
     }
     if (summary.harvesterCount > 0 || summary.countsByType["harvesterState"] != null) {

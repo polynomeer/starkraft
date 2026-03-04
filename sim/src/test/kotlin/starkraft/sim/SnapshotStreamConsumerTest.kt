@@ -25,6 +25,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"producerState\",\"sequence\":9,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"dropoffResourceKinds\":[\"minerals\"],\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0},{\"entityId\":2,\"faction\":2,\"typeId\":\"GasDepot\",\"archetype\":\"gasDepot\",\"supportsTraining\":false,\"supportsRally\":false,\"supportsDropoff\":true,\"dropoffResourceKinds\":[\"gas\"],\"productionQueueLimit\":0,\"defaultRallyOffsetX\":0.0,\"defaultRallyOffsetY\":0.0}]}",
                     "{\"recordType\":\"dropoffState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":25.0,\"y\":5.0},{\"entityId\":12,\"faction\":2,\"typeId\":\"ResourceDepot\",\"archetype\":\"econDepot\",\"x\":7.0,\"y\":6.0}]}",
                     "{\"recordType\":\"builderState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":21,\"faction\":1,\"typeId\":\"Worker\",\"archetype\":\"worker\",\"targetBuildingId\":41},{\"entityId\":22,\"faction\":2,\"typeId\":\"Drone\",\"archetype\":\"worker\",\"targetBuildingId\":44},{\"entityId\":23,\"faction\":1,\"typeId\":\"Worker\",\"archetype\":\"worker\",\"targetBuildingId\":41}]}",
+                    "{\"recordType\":\"constructionState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"hp\":120,\"maxHp\":400,\"remainingTicks\":6,\"totalTicks\":10},{\"entityId\":44,\"faction\":2,\"typeId\":\"Factory\",\"archetype\":\"producer\",\"hp\":50,\"maxHp\":300,\"remainingTicks\":2,\"totalTicks\":4}]}",
                     "{\"recordType\":\"harvesterState\",\"sequence\":11,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":2,\"returnTargetId\":1},{\"entityId\":14,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"gather\",\"targetNodeId\":11,\"cargoKind\":null,\"cargoAmount\":0,\"returnTargetId\":null}]}",
                     "{\"recordType\":\"harvesterRetarget\",\"sequence\":12,\"tick\":0,\"events\":[{\"workerId\":14,\"fromNodeId\":10,\"toNodeId\":9,\"resourceKind\":\"minerals\"},{\"workerId\":14,\"fromNodeId\":9,\"toNodeId\":11,\"resourceKind\":\"minerals\"}]}",
                     "{\"recordType\":\"harvestCycle\",\"sequence\":13,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":2}]}",
@@ -42,7 +43,7 @@ class SnapshotStreamConsumerTest {
                 )
             )
 
-        assertEquals(26, summary.totalRecords)
+        assertEquals(27, summary.totalRecords)
         assertEquals(1, summary.countsByType["sessionStart"])
         assertEquals(1, summary.countsByType["mapState"])
         assertEquals(1, summary.countsByType["resourceNode"])
@@ -54,6 +55,7 @@ class SnapshotStreamConsumerTest {
         assertEquals(1, summary.countsByType["producerState"])
         assertEquals(1, summary.countsByType["dropoffState"])
         assertEquals(1, summary.countsByType["builderState"])
+        assertEquals(1, summary.countsByType["constructionState"])
         assertEquals(1, summary.countsByType["harvesterState"])
         assertEquals(1, summary.countsByType["harvesterRetarget"])
         assertEquals(1, summary.countsByType["harvestCycle"])
@@ -100,6 +102,10 @@ class SnapshotStreamConsumerTest {
         assertEquals(2, summary.builderFaction1Count)
         assertEquals(1, summary.builderFaction2Count)
         assertEquals(2, summary.builderTargetCount)
+        assertEquals(2, summary.constructionCount)
+        assertEquals(1, summary.constructionFaction1Count)
+        assertEquals(1, summary.constructionFaction2Count)
+        assertEquals(8, summary.constructionRemainingTicks)
         assertEquals(3, summary.maxProducerQueueLimit)
         assertEquals(2, summary.harvesterCount)
         assertEquals(1, summary.harvesterGatherCount)
@@ -166,6 +172,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"producerState\",\"sequence\":9,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"supportsTraining\":true,\"supportsRally\":true,\"supportsDropoff\":true,\"dropoffResourceKinds\":[\"minerals\"],\"productionQueueLimit\":3,\"defaultRallyOffsetX\":4.0,\"defaultRallyOffsetY\":0.0}]}",
                         "{\"recordType\":\"dropoffState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":1,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"x\":25.0,\"y\":5.0}]}",
                         "{\"recordType\":\"builderState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":21,\"faction\":1,\"typeId\":\"Worker\",\"archetype\":\"worker\",\"targetBuildingId\":41},{\"entityId\":22,\"faction\":1,\"typeId\":\"Worker\",\"archetype\":\"worker\",\"targetBuildingId\":41}]}",
+                        "{\"recordType\":\"constructionState\",\"sequence\":10,\"tick\":0,\"entities\":[{\"entityId\":41,\"faction\":1,\"typeId\":\"Depot\",\"archetype\":\"producer\",\"hp\":120,\"maxHp\":400,\"remainingTicks\":6,\"totalTicks\":10}]}",
                         "{\"recordType\":\"harvesterState\",\"sequence\":11,\"tick\":0,\"entities\":[{\"entityId\":13,\"faction\":1,\"typeId\":\"Worker\",\"phase\":\"return\",\"targetNodeId\":9,\"cargoKind\":\"MineralField\",\"cargoAmount\":3,\"returnTargetId\":1}]}",
                         "{\"recordType\":\"harvesterRetarget\",\"sequence\":12,\"tick\":0,\"events\":[{\"workerId\":13,\"fromNodeId\":10,\"toNodeId\":9,\"resourceKind\":\"minerals\"}]}",
                         "{\"recordType\":\"harvestCycle\",\"sequence\":13,\"tick\":0,\"events\":[{\"kind\":\"pickup\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3},{\"kind\":\"deposit\",\"workerId\":13,\"nodeId\":9,\"dropoffId\":1,\"resourceKind\":\"minerals\",\"amount\":3}]}",
@@ -196,6 +203,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("producers: total=1 training=1 rally=1 dropoff=1 minerals=1 gas=0 maxQueue=3"))
         assertTrue(text.contains("dropoffs: total=1 f1=1 f2=0"))
         assertTrue(text.contains("builders: total=2 f1=2 f2=0 targets=1"))
+        assertTrue(text.contains("construction: total=1 f1=1 f2=0 remaining=6"))
         assertTrue(text.contains("harvesters: total=1 gather=0 return=1 cargo=3"))
         assertTrue(text.contains("harvesterRetarget: events=1 workers=1 total=1"))
         assertTrue(text.contains("harvestCycle: pickup=1/3 deposit=1/3"))
