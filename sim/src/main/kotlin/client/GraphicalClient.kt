@@ -697,6 +697,7 @@ private class ClientPanel(
             "select:harvesters" -> selectHarvesters()
             "select:returningHarvesters" -> selectReturningHarvesters()
             "select:cargoHarvesters" -> selectCargoHarvesters()
+            "groups:clear" -> clearControlGroups()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {

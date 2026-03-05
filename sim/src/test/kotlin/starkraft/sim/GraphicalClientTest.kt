@@ -446,15 +446,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -507,7 +507,8 @@ class GraphicalClientTest {
         val harvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (37 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val returningHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (38 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val cargoHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (39 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (40 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clearGroups = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (40 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (41 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
@@ -530,6 +531,7 @@ class GraphicalClientTest {
         assertEquals("select:harvesters", harvesters?.actionId)
         assertEquals("select:returningHarvesters", returningHarvesters?.actionId)
         assertEquals("select:cargoHarvesters", cargoHarvesters?.actionId)
+        assertEquals("groups:clear", clearGroups?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
     }
@@ -559,6 +561,7 @@ class GraphicalClientTest {
         assertEquals("Select worker units currently harvesting or returning cargo", commandButtonTooltip("select:harvesters"))
         assertEquals("Select worker units currently returning cargo", commandButtonTooltip("select:returningHarvesters"))
         assertEquals("Select worker units currently carrying cargo", commandButtonTooltip("select:cargoHarvesters"))
+        assertEquals("Clear all control groups", commandButtonTooltip("groups:clear"))
         assertEquals(null, commandButtonTooltip("unknown"))
     }
 

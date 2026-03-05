@@ -50,6 +50,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "select:harvesters" -> "Select worker units currently harvesting or returning cargo"
         actionId == "select:returningHarvesters" -> "Select worker units currently returning cargo"
         actionId == "select:cargoHarvesters" -> "Select worker units currently carrying cargo"
+        actionId == "groups:clear" -> "Clear all control groups"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -494,6 +495,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Harvesters", "select:harvesters"),
             ClientCommandButton("Returning", "select:returningHarvesters"),
             ClientCommandButton("Cargo", "select:cargoHarvesters"),
+            ClientCommandButton("Clear Groups", "groups:clear"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -520,6 +522,7 @@ internal fun buildCommandButtons(
                 it.actionId.startsWith("scenario:") ||
                 it.actionId.startsWith("help:") ||
                 it.actionId.startsWith("select:") ||
+                it.actionId.startsWith("groups:") ||
                 it.actionId == "clear"
         }
     }

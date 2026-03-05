@@ -296,6 +296,7 @@ Client controls:
 - command panel includes `Harvesters` for economy-unit selection
 - command panel includes `Returning` to focus returning workers
 - command panel includes `Cargo` to focus loaded workers
+- command panel includes `Clear Groups` (same effect as `Alt+0`)
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view
