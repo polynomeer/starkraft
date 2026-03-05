@@ -62,6 +62,21 @@ class ProtocolModelsTest {
     }
 
     @Test
+    fun `snapshot envelope round trip matches golden`() {
+        val envelope =
+            ProtocolEnvelope(
+                simVersion = "1.0.0",
+                message = ProtocolMessage.Snapshot(tick = 480, worldHash = 123456789L)
+            )
+
+        val json = codec.encodeToString(envelope)
+        val golden = loadSharedGolden("shared-protocol/golden/v1-snapshot-envelope.json")
+
+        assertEquals(golden, json)
+        assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
+    }
+
+    @Test
     fun `schema file exists for protocol v1`() {
         val cwd = java.nio.file.Paths.get("").toAbsolutePath().normalize()
         val direct = cwd.resolve("shared-protocol/schema/rts-protocol-v1.schema.json").normalize()

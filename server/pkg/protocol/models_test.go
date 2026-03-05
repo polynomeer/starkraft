@@ -73,6 +73,23 @@ func TestCompatibilityMatrix(t *testing.T) {
 	}
 }
 
+func TestSnapshotEnvelopeRoundTripGolden(t *testing.T) {
+	msg := SnapshotMessage{Type: "snapshot", Tick: 480, WorldHash: 123456789}
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal snapshot: %v", err)
+	}
+	env := ProtocolEnvelope{ProtocolVersion: CurrentProtocolVersion, SimVersion: "1.0.0", Message: msgRaw}
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal envelope: %v", err)
+	}
+	golden := loadGolden(t, "v1-snapshot-envelope.json")
+	if string(raw) != golden {
+		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
+	}
+}
+
 func loadGolden(t *testing.T, file string) string {
 	t.Helper()
 	candidates := []string{
