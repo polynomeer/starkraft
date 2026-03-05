@@ -93,6 +93,7 @@ import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionWeaponSummary
 import starkraft.sim.client.buildSelectionPathSummary
 import starkraft.sim.client.buildSelectionOrderSummary
+import starkraft.sim.client.buildSelectionPhaseSummary
 import starkraft.sim.client.buildSelectionTargetSummary
 import starkraft.sim.client.buildSelectionRallySummary
 import starkraft.sim.client.buildSelectionStructureSummary
@@ -362,6 +363,7 @@ class GraphicalClientTest {
                 "selection weapons: Riflex1 unarmed=2",
                 "selection paths: active=1 avg=5.0 topGoal=12,14",
                 "orders: queued=3 active=movex1 attackMovex1",
+                "selection phases: gather=0 return=1 build=1 train=1 research=1",
                 "selection targets: build=1 harvestNodes=1 return=0",
                 "selection rally: configured=1/1 top=14,10",
                 "selection structures: total=1 constructing=1 area=4",
@@ -738,6 +740,29 @@ class GraphicalClientTest {
         assertEquals("selection paths: active=2 avg=3.0 topGoal=9,9", buildSelectionPathSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection paths: none", buildSelectionPathSummary(snapshot, emptySet()))
         assertEquals("selection paths: none", buildSelectionPathSummary(snapshot, linkedSetOf(3)))
+    }
+
+    @Test
+    fun `builds selection phase summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Worker", x = 1f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestPhase = "gather"),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestPhase = "return", buildTargetId = 50),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Depot", x = 3f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, productionQueueSize = 1, researchQueueSize = 2)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection phases: gather=1 return=1 build=1 train=1 research=1", buildSelectionPhaseSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection phases: none", buildSelectionPhaseSummary(snapshot, emptySet()))
+        assertEquals("selection phases: idle", buildSelectionPhaseSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

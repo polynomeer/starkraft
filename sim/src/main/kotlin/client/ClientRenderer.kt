@@ -636,6 +636,7 @@ internal fun buildClientHudLines(
         buildSelectionWeaponSummary(snapshot, state.selectedIds),
         buildSelectionPathSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
+        buildSelectionPhaseSummary(snapshot, state.selectedIds),
         buildSelectionTargetSummary(snapshot, state.selectedIds),
         buildSelectionRallySummary(snapshot, state.selectedIds),
         buildSelectionStructureSummary(snapshot, state.selectedIds),
@@ -802,6 +803,32 @@ internal fun buildSelectionOrderSummary(
     if (active.isEmpty()) return "orders: queued=$queued active=none"
     val activeSummary = active.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "orders: queued=$queued active=$activeSummary"
+}
+
+internal fun buildSelectionPhaseSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection phases: none"
+    var gather = 0
+    var returning = 0
+    var constructing = 0
+    var training = 0
+    var researching = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        when (entity.harvestPhase) {
+            "gather" -> gather++
+            "return" -> returning++
+        }
+        if (entity.buildTargetId != null) constructing++
+        if (entity.productionQueueSize > 0 || entity.activeProductionType != null) training++
+        if (entity.researchQueueSize > 0 || entity.activeResearchTech != null) researching++
+    }
+    if (gather == 0 && returning == 0 && constructing == 0 && training == 0 && researching == 0) {
+        return "selection phases: idle"
+    }
+    return "selection phases: gather=$gather return=$returning build=$constructing train=$training research=$researching"
 }
 
 internal fun buildSelectionStructureSummary(
