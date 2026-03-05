@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://starkraft.dev/schema/data-defs-v1.schema.json",
+  "title": "Starkraft Data Defs v1",
+  "type": "object",
+  "required": ["list"],
+  "properties": {
+    "list": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "description": "Container schema shared by units/buildings/techs/weapons. Field-level and cross-reference validation is enforced by tools data validate."
+}

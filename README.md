@@ -6,10 +6,10 @@ The `sim` module is complete as a deterministic headless RTS sandbox.
 
 Current repository layout:
 - `sim/` deterministic simulation core (authoritative rules)
-- `server/` planned authoritative host module (scaffold)
-- `client/` planned client module (scaffold)
-- `tools/` planned offline tools module (scaffold)
-- `shared-protocol/` planned protocol schemas/models (scaffold)
+- `server/` authoritative host module
+- `client/` headless client module
+- `tools/` replay/map/data utility CLIs
+- `shared-protocol/` protocol schemas/models
 - `scripts/` developer smoke scripts
 - `.github/workflows/` CI pipeline
 

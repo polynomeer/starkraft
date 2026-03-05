@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://starkraft.dev/schema/map-v1.schema.json",
+  "title": "Starkraft Map v1",
+  "type": "object",
+  "required": ["schema", "id", "width", "height"],
+  "properties": {
+    "schema": { "type": "integer", "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "blockedTiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tile" }
+    },
+    "weightedTiles": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          { "$ref": "#/$defs/tile" },
+          {
+            "type": "object",
+            "required": ["cost"],
+            "properties": {
+              "cost": { "type": "number", "minimum": 1.0 }
+            }
+          }
+        ]
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "x", "y", "amount", "yieldPerTick"],
+        "properties": {
+          "kind": { "type": "string", "minLength": 1 },
+          "x": { "type": "integer", "minimum": 0 },
+          "y": { "type": "integer", "minimum": 0 },
+          "amount": { "type": "integer", "minimum": 1 },
+          "yieldPerTick": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "spawns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["faction", "x", "y"],
+        "properties": {
+          "faction": { "type": "integer", "minimum": 1 },
+          "x": { "type": "integer", "minimum": 0 },
+          "y": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tile": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
