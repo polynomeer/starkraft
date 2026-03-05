@@ -29,6 +29,11 @@ jobs:
       - name: Smoke run sim
         run: ./gradlew --no-daemon :sim:run --args="--ticks 20 --noSleep"
 
+      - name: Smoke run graphical client in headless mode
+        run: |
+          ./gradlew --no-daemon :sim:run --args="--ticks 20 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-snapshots.ndjson"
+          ./gradlew --no-daemon :sim:graphicalClient --args="--headless --headlessTicks 20 /tmp/starkraft-snapshots.ndjson /tmp/starkraft-client-input.ndjson"
+
   server-build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
