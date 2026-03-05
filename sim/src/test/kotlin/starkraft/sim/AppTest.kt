@@ -1,6 +1,7 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -18,6 +19,7 @@ import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
 import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayMetadata
+import starkraft.sim.replay.ReplayIO
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -983,6 +985,26 @@ class AppTest {
         assertEquals("paused=0\nspeed=1\n", Files.readString(controlPath))
         Files.writeString(controlPath, "paused=1\nspeed=3\n")
         assertEquals(starkraft.sim.client.PlayControlState(paused = true, speed = 3), readPlayControlState(controlPath))
+    }
+
+    @Test
+    fun `report only validation failure does not create play control file`(@TempDir tempDir: Path) {
+        val replayPath = tempDir.resolve("empty.replay.json")
+        val controlPath = tempDir.resolve("play-control.txt")
+        ReplayIO.save(replayPath, emptyList())
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                main(
+                    arrayOf(
+                        "--replay", replayPath.toString(),
+                        "--replayMetaJson",
+                        "--playControlFile", controlPath.toString()
+                    )
+                )
+            }
+        assertTrue(ex.message!!.contains("--replayMetaJson cannot be combined with --playControlFile"))
+        assertFalse(Files.exists(controlPath))
     }
 
     @Test
