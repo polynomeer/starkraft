@@ -24,6 +24,7 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
             "f${faction.faction}=${faction.visibleTiles}"
         }
     val viewSummary = buildViewedFactionSummary(state.viewedFaction)
+    val economySummary = buildEconomySummary(snapshot, state.viewedFaction)
     val selectionHudSummary = buildSelectionSummary(snapshot, state.selectedIds).replaceFirst("selection:", "selection hud:")
     val builderSummary = buildBuilderSummary(snapshot, state.selectedIds)
     val constructionSummary = buildConstructionSummary(snapshot, state.selectedIds)
@@ -48,6 +49,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(" visible[")
         append(factionSummary)
         append("] ")
+        append(economySummary)
+        append(" ")
         append(selectionHudSummary)
         append(" ")
         append(builderSummary)

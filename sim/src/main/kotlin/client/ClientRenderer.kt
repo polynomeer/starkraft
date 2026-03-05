@@ -594,6 +594,7 @@ internal fun buildClientHudLines(
 ): List<String> =
     listOf(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
+        buildEconomySummary(snapshot, state.viewedFaction),
         buildSelectionSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
@@ -704,6 +705,12 @@ internal fun buildTechSummary(snapshot: ClientSnapshot): String {
     }
     if (techs.isEmpty()) return "tech: none"
     return "tech: " + techs.entries.joinToString(" ") { "${it.key}x${it.value}" }
+}
+
+internal fun buildEconomySummary(snapshot: ClientSnapshot, viewedFaction: Int?): String {
+    if (viewedFaction == null) return "economy: observer"
+    val faction = snapshot.factions.firstOrNull { it.faction == viewedFaction } ?: return "economy: f$viewedFaction missing"
+    return "economy: f${faction.faction} minerals=${faction.minerals} gas=${faction.gas} dropoffs=${faction.dropoffBuildings}"
 }
 
 internal fun buildProductionSummary(

@@ -88,6 +88,7 @@ import starkraft.sim.client.buildHelpOverlayLines
 import starkraft.sim.client.buildStartOverlayLines
 import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
+import starkraft.sim.client.buildEconomySummary
 import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.isCommandButtonActive
 import starkraft.sim.client.commandButtonAt
@@ -276,7 +277,16 @@ class GraphicalClientTest {
                 buildVersion = "test-build",
                 mapWidth = 32,
                 mapHeight = 32,
-                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10, unlockedTechIds = listOf("AdvancedTraining"))),
+                factions = listOf(
+                    FactionSnapshot(
+                        faction = 1,
+                        visibleTiles = 10,
+                        minerals = 300,
+                        gas = 60,
+                        dropoffBuildings = 1,
+                        unlockedTechIds = listOf("AdvancedTraining")
+                    )
+                ),
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
@@ -311,6 +321,7 @@ class GraphicalClientTest {
         assertEquals(
             listOf(
                 "tick=15 selected=3",
+                "economy: f1 minerals=300 gas=60 dropoffs=1",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
@@ -358,6 +369,25 @@ class GraphicalClientTest {
                 )
             )
         )
+    }
+
+    @Test
+    fun `builds economy summary for viewed faction`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10, minerals = 125, gas = 40, dropoffBuildings = 2)),
+                entities = emptyList(),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("economy: f1 minerals=125 gas=40 dropoffs=2", buildEconomySummary(snapshot, 1))
+        assertEquals("economy: observer", buildEconomySummary(snapshot, null))
+        assertEquals("economy: f2 missing", buildEconomySummary(snapshot, 2))
     }
 
     @Test
