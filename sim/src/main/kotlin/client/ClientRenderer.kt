@@ -300,7 +300,7 @@ internal class SwingClientRenderer(
         g.drawString("Commands", panel.x + 12, panel.y + 20)
         val statusLines = buildCommandPanelStatusLines(overlayLines)
         for (i in statusLines.indices) {
-            g.drawString(statusLines[i], panel.x + 12, panel.y + 38 + (i * 14))
+            g.drawString(fitCommandPanelStatusLine(statusLines[i]), panel.x + 12, panel.y + 38 + (i * 14))
         }
         val snapshot = state.snapshot
         val canTrain = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
@@ -415,6 +415,11 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
             it.startsWith("view:") ||
             it.startsWith("notice:")
     }
+
+internal fun fitCommandPanelStatusLine(line: String, maxChars: Int = 24): String {
+    if (maxChars < 4 || line.length <= maxChars) return line
+    return "${line.substring(0, maxChars - 3)}..."
+}
 
 internal fun isCommandButtonActive(actionId: String, overlayLines: List<String>): Boolean {
     val mode = overlayLines.firstOrNull { it.startsWith("mode:") }?.removePrefix("mode: ")?.trim()

@@ -92,6 +92,7 @@ import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.isCommandButtonActive
 import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.commandButtonTooltip
+import starkraft.sim.client.fitCommandPanelStatusLine
 import starkraft.sim.client.selectEntitiesInBox
 import starkraft.sim.client.zoomCameraAt
 import starkraft.sim.client.isBuildPreviewValid
@@ -476,6 +477,14 @@ class GraphicalClientTest {
             listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "hint: Queue a move order with right click or ground mode", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"),
             buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "hint: Queue a move order with right click or ground mode", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
+    }
+
+    @Test
+    fun `fits long command panel status lines`() {
+        assertEquals("short line", fitCommandPanelStatusLine("short line"))
+        assertEquals("hint: Queue a move or...", fitCommandPanelStatusLine("hint: Queue a move order with right click or ground mode"))
+        assertEquals("a...", fitCommandPanelStatusLine("abcdef", maxChars = 4))
+        assertEquals("abcdef", fitCommandPanelStatusLine("abcdef", maxChars = 3))
     }
 
     @Test
