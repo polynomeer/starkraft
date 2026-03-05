@@ -1088,6 +1088,9 @@ internal fun validateCliSemantics(
     if (compactJson && !replayStatsJson && !replayMetaJson && !snapshotJson) {
         error("--compactJson requires --replayStatsJson, --replayMetaJson, or --snapshotJson")
     }
+    if (snapshotEvery != null && snapshotOutPath == null) {
+        error("--snapshotEvery requires --snapshotOut")
+    }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
     }
@@ -1170,7 +1173,7 @@ internal fun buildAppUsageText(): String =
         "  --replayDump <path>         Dump replay after script/input run",
         "Output/validation:",
         "  --snapshotOut <path>        Write snapshot/stream NDJSON",
-        "  --snapshotEvery <n>         Snapshot cadence in ticks",
+        "  --snapshotEvery <n>         Snapshot cadence in ticks (requires --snapshotOut)",
         "  --snapshotJson              Print final client snapshot JSON",
         "  --compactJson               Print JSON outputs in compact form",
         "  --playControlFile <path>    Use external pause/speed control file",

@@ -37,6 +37,7 @@ class AppTest {
         assertTrue(help.contains("--strictReplayMeta"))
         assertTrue(help.contains("--replayStatsJson"))
         assertTrue(help.contains("--snapshotJson"))
+        assertTrue(help.contains("requires --snapshotOut"))
         assertTrue(help.contains("standalone: no --replay/--inputJson/--ticks"))
         assertTrue(help.contains("--compactJson"))
         assertTrue(help.contains("--playControlFile <path>"))
@@ -551,6 +552,33 @@ class AppTest {
             scriptValidate = false,
             scriptDryRun = false
         )
+    }
+
+    @Test
+    fun `cli semantic validator requires snapshotOut for snapshotEvery`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = "sim/scripts/sample.script",
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    snapshotEvery = 5
+                )
+            }
+        assertTrue(ex.message!!.contains("--snapshotEvery requires --snapshotOut"))
     }
 
     @Test
