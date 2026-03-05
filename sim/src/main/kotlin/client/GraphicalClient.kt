@@ -546,6 +546,7 @@ private class ClientPanel(
             "scenario: ${playScenario.id}",
             "preset: quick"
         ) + listOfNotNull(
+            selectionHudLine(),
             presetAvailabilityLine(),
             currentNoticeLine()
         ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection) +
@@ -763,6 +764,13 @@ private class ClientPanel(
         val quick = Files.exists(presetFilePath(presetsDir, "quick"))
         val alt = Files.exists(presetFilePath(presetsDir, "alt"))
         return formatPresetAvailability(quick, alt)
+    }
+
+    private fun selectionHudLine(): String? {
+        val snapshot = session.state.snapshot ?: return null
+        val selected = session.state.selectedIds
+        if (selected.isEmpty()) return null
+        return "selection hud: ${buildSelectionSummary(snapshot, selected).removePrefix("selection: ")}"
     }
 
     private fun isPresetAvailable(name: String): Boolean {

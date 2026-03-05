@@ -427,8 +427,8 @@ class GraphicalClientTest {
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
-            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
+            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }
 
