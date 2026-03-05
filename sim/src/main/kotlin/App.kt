@@ -1330,10 +1330,11 @@ internal fun buildAppUsageText(): String =
         "  --scriptValidate            Parse+validate script(s) and exit",
         "  --scriptDryRun              Validate and print script selections/commands",
         "                               (standalone: no runtime/replay/output flags)",
-        "  --dumpWorldHash             Print final world hash",
+        "  --dumpWorldHash             Print final world hash (runtime only)",
         "  --printEntities             Print alive entities at end",
         "  --printOrders               Print pending orders at end",
         "  --labelDump                 Print script label to entity mappings",
+        "                               (runtime-only flags are rejected in report-only modes)",
         "  --version                   Print sim build/version context",
         "  --help, -h                  Show this help"
     ).joinToString("\n")

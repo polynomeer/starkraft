@@ -43,6 +43,7 @@ class AppTest {
         assertTrue(help.contains("--snapshotJson"))
         assertTrue(help.contains("requires --snapshotOut"))
         assertTrue(help.contains("standalone: no runtime/replay/output flags"))
+        assertTrue(help.contains("runtime-only flags are rejected in report-only modes"))
         assertTrue(help.contains("--compactJson"))
         assertTrue(help.contains("--playControlFile <path>"))
         assertTrue(help.contains("--version"))
