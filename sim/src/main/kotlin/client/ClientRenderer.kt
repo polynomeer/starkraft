@@ -633,6 +633,7 @@ internal fun buildClientHudLines(
         buildSelectionVisionSummary(snapshot, state.selectedIds),
         buildSelectionCargoSummary(snapshot, state.selectedIds),
         buildSelectionMobilitySummary(snapshot, state.selectedIds),
+        buildSelectionWeaponSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionStructureSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
@@ -889,6 +890,27 @@ internal fun buildSelectionMobilitySummary(
     if (selected == 0) return "selection mobility: none"
     stationary = (selected - moving).coerceAtLeast(0)
     return "selection mobility: moving=$moving pathing=$pathing stationary=$stationary"
+}
+
+internal fun buildSelectionWeaponSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection weapons: none"
+    val counts = LinkedHashMap<String, Int>()
+    var unarmed = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val weapon = entity.weaponId
+        if (weapon == null) {
+            unarmed++
+        } else {
+            counts[weapon] = (counts[weapon] ?: 0) + 1
+        }
+    }
+    if (counts.isEmpty()) return "selection weapons: none"
+    val armed = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
+    return "selection weapons: $armed unarmed=$unarmed"
 }
 
 internal fun buildSelectionCombatSummary(

@@ -90,6 +90,7 @@ import starkraft.sim.client.buildSelectionDurabilitySummary
 import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionMobilitySummary
+import starkraft.sim.client.buildSelectionWeaponSummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionStructureSummary
 import starkraft.sim.client.buildSelectionCombatSummary
@@ -352,6 +353,7 @@ class GraphicalClientTest {
                 "selection vision: avg=6.0 min=5.0 max=7.0",
                 "selection cargo: loaded=1 minerals=6 gas=0",
                 "selection mobility: moving=2 pathing=1 stationary=1",
+                "selection weapons: Riflex1 unarmed=2",
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection structures: total=1 constructing=1 area=4",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
@@ -681,6 +683,29 @@ class GraphicalClientTest {
         assertEquals("selection mobility: moving=2 pathing=1 stationary=1", buildSelectionMobilitySummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection mobility: none", buildSelectionMobilitySummary(snapshot, emptySet()))
         assertEquals("selection mobility: none", buildSelectionMobilitySummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection weapon summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0, weaponId = "Rifle"),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Tank", x = 2f, y = 1f, dir = 0f, hp = 60, maxHp = 60, armor = 1, weaponId = "Cannon"),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Worker", x = 3f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection weapons: Riflex1 Cannonx1 unarmed=1", buildSelectionWeaponSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, emptySet()))
+        assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, linkedSetOf(3)))
     }
 
     @Test
