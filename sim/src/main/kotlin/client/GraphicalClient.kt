@@ -209,6 +209,7 @@ private class ClientPanel(
     private var helpOverlayOpen = false
     private var noticeMessage: String? = null
     private var noticeUntilNanos: Long = 0L
+    private val controlGroups = arrayOfNulls<IntArray>(10)
 
     init {
         if (controlPath != null && Files.exists(controlPath)) {
@@ -316,6 +317,16 @@ private class ClientPanel(
                         KeyEvent.VK_L, KeyEvent.VK_ENTER -> loadPreset(presetMenuSelection)
                         KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB, KeyEvent.VK_F10 -> presetMenuOpen = false
                         else -> return
+                    }
+                    repaint()
+                    return
+                }
+                val group = controlGroupFromKeyCode(e.keyCode)
+                if (group != null) {
+                    if (e.isShiftDown) {
+                        assignControlGroup(group)
+                    } else {
+                        recallControlGroup(group)
                     }
                     repaint()
                     return
@@ -975,6 +986,28 @@ private class ClientPanel(
         showNotice("selected researchers (${ids.size})")
     }
 
+    private fun assignControlGroup(group: Int) {
+        assignControlGroupSlot(controlGroups, group, session.state.selectedIds)
+        showNotice("group $group set (${session.state.selectedIds.size})")
+    }
+
+    private fun recallControlGroup(group: Int) {
+        val snapshot = session.state.snapshot ?: return
+        val ids = recallControlGroupSlot(controlGroups, group, snapshot)
+        if (ids.isEmpty()) {
+            showNotice("group $group empty")
+            return
+        }
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("group $group recalled (${ids.size})")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -1093,9 +1126,21 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: v select combat units",
         "help: n select producer buildings",
         "help: z select training buildings  c select research buildings",
+        "help: shift+4..9 set group  4..9 recall group",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
+
+internal fun controlGroupFromKeyCode(keyCode: Int): Int? =
+    when (keyCode) {
+        KeyEvent.VK_4 -> 4
+        KeyEvent.VK_5 -> 5
+        KeyEvent.VK_6 -> 6
+        KeyEvent.VK_7 -> 7
+        KeyEvent.VK_8 -> 8
+        KeyEvent.VK_9 -> 9
+        else -> null
+    }
 
 internal fun buildUnitSelectionRecord(
     tick: Int,
@@ -1288,6 +1333,33 @@ internal fun collectResearchSelectionIds(
         if (faction != null && entity.faction != faction) continue
         if (entity.supportsResearch != true) continue
         out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun assignControlGroupSlot(
+    groups: Array<IntArray?>,
+    group: Int,
+    selectedIds: Set<Int>
+) {
+    if (group !in groups.indices) return
+    groups[group] = selectedIds.toIntArray()
+}
+
+internal fun recallControlGroupSlot(
+    groups: Array<IntArray?>,
+    group: Int,
+    snapshot: ClientSnapshot
+): IntArray {
+    if (group !in groups.indices) return IntArray(0)
+    val stored = groups[group] ?: return IntArray(0)
+    val out = IntArray(stored.size)
+    var count = 0
+    for (i in stored.indices) {
+        val id = stored[i]
+        if (snapshot.entities.any { it.id == id }) {
+            out[count++] = id
+        }
     }
     return out.copyOf(count)
 }

@@ -271,6 +271,8 @@ Client controls:
 - `N`: select producer buildings (optionally scoped to viewed faction 1/2)
 - `Z`: select buildings that can train units
 - `C`: select buildings that can research tech
+- `Shift+4..9`: assign control groups
+- `4..9`: recall control groups
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - command panel includes `Select View` to do the same faction-wide selection
 - command panel includes `Select Type` for type-based selection

@@ -30,6 +30,9 @@ import starkraft.sim.client.collectCombatSelectionIds
 import starkraft.sim.client.collectProducerSelectionIds
 import starkraft.sim.client.collectTrainingSelectionIds
 import starkraft.sim.client.collectResearchSelectionIds
+import starkraft.sim.client.controlGroupFromKeyCode
+import starkraft.sim.client.assignControlGroupSlot
+import starkraft.sim.client.recallControlGroupSlot
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -208,6 +211,7 @@ class GraphicalClientTest {
                 "help: v select combat units",
                 "help: n select producer buildings",
                 "help: z select training buildings  c select research buildings",
+                "help: shift+4..9 set group  4..9 recall group",
                 "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
@@ -302,7 +306,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y z/c [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+                "keys: 1/2 faction 3 observer 4-9 group recall shift+4-9 set m/a/p/h u/i/o/l x/t/y z/c [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -951,6 +955,36 @@ class GraphicalClientTest {
         assertArrayEquals(intArrayOf(5), collectResearchSelectionIds(snapshot.copy(entities = snapshot.entities.map {
             if (it.id == 5) it.copy(supportsResearch = true) else it
         }), null))
+    }
+
+    @Test
+    fun `maps control group key codes`() {
+        assertEquals(4, controlGroupFromKeyCode(java.awt.event.KeyEvent.VK_4))
+        assertEquals(9, controlGroupFromKeyCode(java.awt.event.KeyEvent.VK_9))
+        assertEquals(null, controlGroupFromKeyCode(java.awt.event.KeyEvent.VK_3))
+    }
+
+    @Test
+    fun `stores and recalls control group ids`() {
+        val groups = arrayOfNulls<IntArray>(10)
+        assignControlGroupSlot(groups, 5, linkedSetOf(4, 9))
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 6, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertArrayEquals(intArrayOf(4), recallControlGroupSlot(groups, 5, snapshot))
+        assertArrayEquals(intArrayOf(), recallControlGroupSlot(groups, 4, snapshot))
     }
 
     @Test
