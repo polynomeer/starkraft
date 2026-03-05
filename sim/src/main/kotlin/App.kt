@@ -325,6 +325,7 @@ fun main(args: Array<String>) {
     val visionPrevTeam2 = BooleanArray(fog2.width * fog2.height)
     validateCliSemantics(
         replayPath = replayPath,
+        tickLimit = tickLimit,
         replayTicks = replayTicks,
         scriptPath = scriptPath,
         inputJsonPath = inputJsonPath,
@@ -979,6 +980,7 @@ internal fun validateCliArgs(args: Array<String>) {
 
 internal fun validateCliSemantics(
     replayPath: String?,
+    tickLimit: Int?,
     replayTicks: Int?,
     scriptPath: String?,
     inputJsonPath: String?,
@@ -994,6 +996,9 @@ internal fun validateCliSemantics(
     scriptValidate: Boolean,
     scriptDryRun: Boolean
 ) {
+    if (tickLimit != null && replayTicks != null) {
+        error("--ticks cannot be combined with --replayTicks")
+    }
     val baseSources =
         listOfNotNull(
             replayPath?.let { "replay" },

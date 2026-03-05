@@ -131,6 +131,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = "sim/scripts/sample.script",
                     inputJsonPath = null,
@@ -156,6 +157,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -178,6 +180,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -203,6 +206,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -225,6 +229,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -247,6 +252,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = 5,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -272,6 +278,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -294,6 +301,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -340,6 +348,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    tickLimit = null,
                     replayTicks = 10,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -360,11 +369,38 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator rejects ticks with replayTicks`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = 100,
+                    replayTicks = 10,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ex.message!!.contains("--ticks cannot be combined with --replayTicks"))
+    }
+
+    @Test
     fun `cli semantic validator requires json output mode for compactJson`() {
         val ex =
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    tickLimit = null,
                     replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
@@ -385,6 +421,7 @@ class AppTest {
 
         validateCliSemantics(
             replayPath = "a.replay",
+            tickLimit = null,
             replayTicks = null,
             scriptPath = null,
             inputJsonPath = null,

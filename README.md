@@ -384,6 +384,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--replayValidateOnly` load/validate replay and exit
   This is validation-only mode and cannot be combined with replay stats/meta output flags or `--replayTicks`.
 - `--replayTicks <n>` requires `--replay` and runs only the first `n` replay ticks
+  It cannot be combined with `--ticks`.
 - Base command sources are mutually exclusive: use only one of `--replay`, `--script`, or `--inputJson`
 - `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks
 - `--replayStatsJson` print replay stats as JSON, including per-tick selector splits and action breakdowns
