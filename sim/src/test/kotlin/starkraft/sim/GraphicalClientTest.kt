@@ -31,6 +31,7 @@ import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.formatAckStatus
 import starkraft.sim.client.formatConstructionActivity
 import starkraft.sim.client.formatPlayControlOverlay
+import starkraft.sim.client.formatPresetAvailability
 import starkraft.sim.client.formatProductionActivity
 import starkraft.sim.client.formatResearchActivity
 import starkraft.sim.client.formatTickActivity
@@ -143,6 +144,11 @@ class GraphicalClientTest {
     fun `formats play control overlay`() {
         assertEquals("play: running x1", formatPlayControlOverlay(starkraft.sim.client.PlayControlState()))
         assertEquals("play: paused x4", formatPlayControlOverlay(starkraft.sim.client.PlayControlState(paused = true, speed = 4)))
+    }
+
+    @Test
+    fun `formats preset availability line`() {
+        assertEquals("presets: quick=ready alt=missing", formatPresetAvailability(quickAvailable = true, altAvailable = false))
     }
 
     @Test
@@ -393,8 +399,8 @@ class GraphicalClientTest {
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "notice: preset loaded: quick"),
-            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "notice: preset loaded: quick", "view: faction 1"))
+            listOf("play: paused x2", "scenario: gas", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }
 

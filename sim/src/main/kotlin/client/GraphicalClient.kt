@@ -520,7 +520,10 @@ private class ClientPanel(
             formatPlayControlOverlay(playControlState),
             "scenario: ${playScenario.id}",
             "preset: quick"
-        ) + listOfNotNull(currentNoticeLine()) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
+        ) + listOfNotNull(
+            presetAvailabilityLine(),
+            currentNoticeLine()
+        ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
         val snapshot = session.state.snapshot
@@ -706,6 +709,14 @@ private class ClientPanel(
             null
         }
     }
+
+    private fun presetAvailabilityLine(): String? {
+        val root = playRoot ?: return null
+        val presetsDir = root.resolve("presets")
+        val quick = Files.exists(presetFilePath(presetsDir, "quick"))
+        val alt = Files.exists(presetFilePath(presetsDir, "alt"))
+        return formatPresetAvailability(quick, alt)
+    }
 }
 
 fun main(args: Array<String>) {
@@ -769,6 +780,9 @@ private fun formatRequestIdSuffix(ack: ClientCommandAck): String = ack.requestId
 
 internal fun formatPlayControlOverlay(state: PlayControlState): String =
     "play: ${if (state.paused) "paused" else "running"} x${clampPlaySpeed(state.speed)}"
+
+internal fun formatPresetAvailability(quickAvailable: Boolean, altAvailable: Boolean): String =
+    "presets: quick=${if (quickAvailable) "ready" else "missing"} alt=${if (altAvailable) "ready" else "missing"}"
 
 internal fun buildScenarioOverlayLines(
     open: Boolean,
