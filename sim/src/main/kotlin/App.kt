@@ -477,6 +477,16 @@ fun main(args: Array<String>) {
         )
         return
     }
+    if ((replayStats || replayStatsJson) && replayPath != null) {
+        val stats = buildCommandStats(commandsByTick, replayMeta)
+        if (replayStats) {
+            printCommandStats(stats)
+        }
+        if (replayStatsJson) {
+            println(renderCommandStatsJson(stats, pretty = !compactJson))
+        }
+        return
+    }
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
     }
@@ -791,16 +801,6 @@ fun main(args: Array<String>) {
 
     if (labelDump) {
         printLabelMappings(labelMap, labelIdMap)
-    }
-
-    if (replayStats || replayStatsJson) {
-        val stats = buildCommandStats(commandsByTick, replayMeta)
-        if (replayStats) {
-            printCommandStats(stats)
-        }
-        if (replayStatsJson) {
-            println(renderCommandStatsJson(stats, pretty = !compactJson))
-        }
     }
 
     if (snapshotJson) {

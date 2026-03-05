@@ -391,7 +391,8 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks
 - `--replayStatsJson` print replay stats as JSON, including per-tick selector splits and action breakdowns
   Stats flags now also emit a zeroed summary for empty replays (instead of printing nothing).
-  Stats modes are report-only and cannot be combined with runtime/snapshot/output flags.
+  Stats modes are report-only and exit before simulation ticks.
+  They cannot be combined with runtime/snapshot/output flags.
 - `--compactJson` render `--replayStatsJson` and `--replayMetaJson` on one line for smaller machine-facing output
   `--compactJson` requires at least one JSON output mode (`--replayStatsJson`, `--replayMetaJson`, or `--snapshotJson`).
 - `--replayMetaJson` is exclusive with `--replayStats`/`--replayStatsJson` (metadata-only output mode)
