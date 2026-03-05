@@ -2,7 +2,9 @@ package authoritative
 
 import (
 	"encoding/json"
+	"os"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +15,7 @@ import (
 
 func TestWebSocketHandshakeAndSnapshot(t *testing.T) {
 	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
 	ts := httptest.NewServer(srv.Handler())
 	defer ts.Close()
 
@@ -41,6 +44,7 @@ func TestWebSocketHandshakeAndSnapshot(t *testing.T) {
 
 func TestRoomStepBroadcastsIncreasingTicks(t *testing.T) {
 	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
 	ts := httptest.NewServer(srv.Handler())
 	defer ts.Close()
 
@@ -73,6 +77,7 @@ func TestRoomStepBroadcastsIncreasingTicks(t *testing.T) {
 
 func TestCommandValidationAndAck(t *testing.T) {
 	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
 	ts := httptest.NewServer(srv.Handler())
 	defer ts.Close()
 
@@ -161,6 +166,66 @@ func TestCommandValidationAndAck(t *testing.T) {
 	}
 	if badAck.Accepted || badAck.Reason == "" {
 		t.Fatalf("expected rejected ack, got %+v", badAck)
+	}
+}
+
+func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {
+	replayPath := filepath.Join(t.TempDir(), "room.replay.jsonl")
+	srv := NewServer(Config{
+		SimVersion: "test",
+		BuildHash:  "build-1",
+		TickInterval: 20 * time.Millisecond,
+		ReplayPath: replayPath,
+		KeyframeEvery: 1,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	x, y := 6.0, 7.0
+	req := "r-10"
+	batchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch", Tick: 1,
+		Commands: []protocol.WireCommand{{CommandType: "move", RequestID: &req, UnitIDs: []int{1}, X: &x, Y: &y}},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
+		t.Fatalf("write batch: %v", err)
+	}
+	srv.stepRooms()
+	_ = readEnvelope(t, conn) // commandAck
+	_ = readEnvelope(t, conn) // snapshot
+
+	if err := srv.Close(); err != nil {
+		t.Fatalf("close replay: %v", err)
+	}
+	content, err := os.ReadFile(replayPath)
+	if err != nil {
+		t.Fatalf("read replay: %v", err)
+	}
+	text := string(content)
+	if !strings.Contains(text, "\"recordType\":\"header\"") {
+		t.Fatalf("replay missing header record: %s", text)
+	}
+	if !strings.Contains(text, "\"recordType\":\"command\"") {
+		t.Fatalf("replay missing command record: %s", text)
+	}
+	if !strings.Contains(text, "\"recordType\":\"keyframe\"") {
+		t.Fatalf("replay missing keyframe record: %s", text)
 	}
 }
 

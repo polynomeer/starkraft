@@ -80,6 +80,7 @@ func (r *room) step() tickResult {
 type commandAckRecord struct {
 	clientID string
 	ack      protocol.CommandAckMessage
+	command  protocol.WireCommand
 }
 
 type tickResult struct {
@@ -135,6 +136,7 @@ func (r *room) applyPendingLocked() []commandAckRecord {
 			if perClientCount[qb.clientID] > r.maxCommandsPerTickPerClient {
 				acks = append(acks, commandAckRecord{
 					clientID: qb.clientID,
+					command: cmd,
 					ack: protocol.CommandAckMessage{
 						Type: "commandAck", Tick: r.tick, RequestID: cmd.RequestID,
 						CommandType: cmd.CommandType, Accepted: false, Reason: "rateLimit",
@@ -145,6 +147,7 @@ func (r *room) applyPendingLocked() []commandAckRecord {
 			accepted, reason := r.applyCommandLocked(qb.clientID, cmd)
 			acks = append(acks, commandAckRecord{
 				clientID: qb.clientID,
+				command: cmd,
 				ack: protocol.CommandAckMessage{
 					Type: "commandAck", Tick: r.tick, RequestID: cmd.RequestID,
 					CommandType: cmd.CommandType, Accepted: accepted, Reason: reason,

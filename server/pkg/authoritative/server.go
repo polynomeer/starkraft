@@ -19,6 +19,8 @@ type Config struct {
 	SimVersion  string
 	BuildHash   string
 	TickInterval time.Duration
+	ReplayPath string
+	KeyframeEvery int
 }
 
 type Server struct {
@@ -28,6 +30,7 @@ type Server struct {
 	nextID   int
 	mu       sync.Mutex
 	httpSrv  *http.Server
+	replay   *ReplayWriter
 }
 
 type clientConn struct {
@@ -47,15 +50,30 @@ func NewServer(cfg Config) *Server {
 	if cfg.SimVersion == "" {
 		cfg.SimVersion = "dev"
 	}
-	return &Server{
+	s := &Server{
 		cfg: cfg,
 		upgrader: websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
 		rooms: make(map[string]*room),
 	}
+	if cfg.ReplayPath != "" {
+		replay, err := NewReplayWriter(cfg.ReplayPath)
+		if err == nil {
+			s.replay = replay
+			_ = s.replay.WriteHeader(cfg.SimVersion, cfg.BuildHash, protocol.CurrentProtocolVersion, int(cfg.TickInterval/time.Millisecond))
+		} else {
+			log.Printf("replay disabled: %v", err)
+		}
+	}
+	return s
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	s.httpSrv = &http.Server{Addr: s.cfg.Addr, Handler: s.Handler()}
+	defer func() {
+		if s.replay != nil {
+			_ = s.replay.Close()
+		}
+	}()
 
 	ticker := time.NewTicker(s.cfg.TickInterval)
 	defer ticker.Stop()
@@ -93,6 +111,15 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWS)
 	return mux
+}
+
+func (s *Server) Close() error {
+	if s.replay != nil {
+		err := s.replay.Close()
+		s.replay = nil
+		return err
+	}
+	return nil
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -204,9 +231,15 @@ func (s *Server) stepRooms() {
 			if c == nil {
 				continue
 			}
+			if s.replay != nil {
+				_ = s.replay.WriteCommand(ack.clientID, ack.command, ack.ack)
+			}
 			if err := c.sendEnvelope(ack.ack); err != nil {
 				log.Printf("command ack send failed: %v", err)
 			}
+		}
+		if s.replay != nil && s.cfg.KeyframeEvery > 0 && result.snapshot.Tick%s.cfg.KeyframeEvery == 0 {
+			_ = s.replay.WriteKeyframe(result.snapshot.Tick, result.snapshot.WorldHash, result.snapshot.Units)
 		}
 		for _, c := range clients {
 			if err := c.sendEnvelope(msg); err != nil {

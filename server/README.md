@@ -31,6 +31,12 @@ cd server
 go run ./cmd/server
 ```
 
+Replay output (optional):
+
+```bash
+STARKRAFT_REPLAY_PATH=/tmp/starkraft-room.replay.jsonl go run ./cmd/server
+```
+
 ## Run tests
 
 ```bash
