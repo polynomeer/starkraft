@@ -754,6 +754,33 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator rejects dump world hash in report only modes`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = true,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    dumpWorldHash = true
+                )
+            }
+        assertTrue(ex.message!!.contains("--dumpWorldHash cannot be combined"))
+    }
+
+    @Test
     fun `cli numeric validator accepts valid bounds`() {
         validateCliNumericSemantics(tickLimit = 0, replayTicks = 0, snapshotEvery = 1)
     }

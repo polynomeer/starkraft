@@ -340,6 +340,7 @@ fun main(args: Array<String>) {
         compactJson = compactJson,
         scriptValidate = scriptValidate,
         scriptDryRun = scriptDryRun,
+        dumpWorldHash = dumpWorldHash,
         recordPath = recordPath,
         replayOutPath = replayOutPath,
         replayDumpPath = replayDumpPath,
@@ -1020,6 +1021,7 @@ internal fun validateCliSemantics(
     compactJson: Boolean,
     scriptValidate: Boolean,
     scriptDryRun: Boolean,
+    dumpWorldHash: Boolean = false,
     recordPath: String? = null,
     replayOutPath: String? = null,
     replayDumpPath: String? = null,
@@ -1119,6 +1121,9 @@ internal fun validateCliSemantics(
     }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
+    }
+    if (dumpWorldHash && (scriptValidate || scriptDryRun || replayValidateOnly || replayMetaJson || replayStats || replayStatsJson)) {
+        error("--dumpWorldHash cannot be combined with validation/report-only modes")
     }
     if (
         replayDumpPath != null &&

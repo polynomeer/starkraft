@@ -401,6 +401,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--snapshotJson` print a final read-only client snapshot JSON for renderer/frontend integration
+- `--dumpWorldHash` prints the final world hash after simulation and cannot be combined with validation/report-only modes
 - Snapshots expose faction minerals/gas, unlocked tech ids, per-faction drop-off building counts, resource nodes with remaining amounts, a dedicated `dropoffEntityIds` list, plus entity archetypes, production state, research state, construction progress, active builder assignments, building extents, placement clearance, building capabilities/queue limits, drop-off resource compatibility, default rally offsets, current rally point, and harvester cargo/return state when present
   Periodic summaries now also carry research queue counts plus research failure breakdowns, so HUD-style clients do not need to reconstruct them from raw command failures.
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
