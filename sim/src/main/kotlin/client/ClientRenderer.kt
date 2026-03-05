@@ -626,6 +626,7 @@ internal fun buildClientHudLines(
         buildEconomySummary(snapshot, state.viewedFaction),
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
+        buildSelectionPositionSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
         buildSelectionCargoSummary(snapshot, state.selectedIds),
@@ -686,6 +687,36 @@ internal fun buildSelectionArchetypeSummary(
     if (counts.isEmpty()) return "selection roles: none"
     val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection roles: $summary"
+}
+
+internal fun buildSelectionPositionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection pos: none"
+    var count = 0
+    var sumX = 0f
+    var sumY = 0f
+    var minX = Float.MAX_VALUE
+    var minY = Float.MAX_VALUE
+    var maxX = -Float.MAX_VALUE
+    var maxY = -Float.MAX_VALUE
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        count++
+        sumX += entity.x
+        sumY += entity.y
+        if (entity.x < minX) minX = entity.x
+        if (entity.y < minY) minY = entity.y
+        if (entity.x > maxX) maxX = entity.x
+        if (entity.y > maxY) maxY = entity.y
+    }
+    if (count == 0) return "selection pos: none"
+    val cx = sumX / count.toFloat()
+    val cy = sumY / count.toFloat()
+    val spanX = (maxX - minX).coerceAtLeast(0f)
+    val spanY = (maxY - minY).coerceAtLeast(0f)
+    return "selection pos: center=${"%.1f".format(cx)},${"%.1f".format(cy)} span=${"%.1f".format(spanX)}x${"%.1f".format(spanY)}"
 }
 
 internal fun buildSelectionHealthSummary(

@@ -83,6 +83,7 @@ import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
+import starkraft.sim.client.buildSelectionPositionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionCargoSummary
@@ -337,6 +338,7 @@ class GraphicalClientTest {
                 "economy: f1 minerals=300 gas=60 dropoffs=1",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection roles: infantryx1 workerx1 producerx1",
+                "selection pos: center=5.7,4.0 span=3.0x0.0",
                 "selection hp: 185/465 (39%)",
                 "selection vision: avg=6.0 min=5.0 max=7.0",
                 "selection cargo: loaded=1 minerals=6 gas=0",
@@ -533,6 +535,28 @@ class GraphicalClientTest {
         assertEquals("selection roles: infantryx1 workerx1", buildSelectionArchetypeSummary(snapshot, linkedSetOf(1, 2)))
         assertEquals("selection roles: none", buildSelectionArchetypeSummary(snapshot, emptySet()))
         assertEquals("selection roles: none", buildSelectionArchetypeSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection position summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 3f, y = 2f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection pos: center=2.0,1.5 span=2.0x1.0", buildSelectionPositionSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection pos: none", buildSelectionPositionSummary(snapshot, emptySet()))
+        assertEquals("selection pos: none", buildSelectionPositionSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test
