@@ -629,6 +629,7 @@ internal fun buildClientHudLines(
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionClassSummary(snapshot, state.selectedIds),
         buildSelectionPositionSummary(snapshot, state.selectedIds),
+        buildSelectionDensitySummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionDurabilitySummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
@@ -766,6 +767,33 @@ internal fun buildSelectionPositionSummary(
     val spanX = (maxX - minX).coerceAtLeast(0f)
     val spanY = (maxY - minY).coerceAtLeast(0f)
     return "selection pos: center=${"%.1f".format(cx)},${"%.1f".format(cy)} span=${"%.1f".format(spanX)}x${"%.1f".format(spanY)}"
+}
+
+internal fun buildSelectionDensitySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection density: none"
+    var count = 0
+    var minX = Float.MAX_VALUE
+    var minY = Float.MAX_VALUE
+    var maxX = -Float.MAX_VALUE
+    var maxY = -Float.MAX_VALUE
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        count++
+        if (entity.x < minX) minX = entity.x
+        if (entity.y < minY) minY = entity.y
+        if (entity.x > maxX) maxX = entity.x
+        if (entity.y > maxY) maxY = entity.y
+    }
+    if (count == 0) return "selection density: none"
+    val width = (maxX - minX).coerceAtLeast(0f)
+    val height = (maxY - minY).coerceAtLeast(0f)
+    val area = (width * height).coerceAtLeast(0f)
+    if (area <= 0f) return "selection density: units=$count compact"
+    val density = count.toFloat() / area
+    return "selection density: units=$count perTile=${"%.2f".format(density)} area=${"%.1f".format(area)}"
 }
 
 internal fun buildSelectionHealthSummary(

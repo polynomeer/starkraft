@@ -483,6 +483,7 @@ The graphical and console clients also show selected faction mix, e.g. `selectio
 The graphical and console clients also show selected archetype counts, e.g. `selection roles: infantryx4 workerx2`.
 The graphical and console clients also show coarse selected class mix, e.g. `selection classes: workers=2 combat=4 structures=1 other=0`.
 The graphical and console clients also show selected position centroid/span, e.g. `selection pos: center=5.7,4.0 span=3.0x0.0`.
+The graphical and console clients also show selected formation density, e.g. `selection density: units=3 perTile=1.50 area=2.0`.
 The graphical and console clients also show selected vision spread, e.g. `selection vision: avg=6.0 min=5.0 max=7.0`.
 The graphical and console clients also show selected durability, e.g. `selection durability: avgArmor=0.5 damaged=1/2`.
 The graphical and console clients also show selected carried resources, e.g. `selection cargo: loaded=2 minerals=5 gas=3`.
