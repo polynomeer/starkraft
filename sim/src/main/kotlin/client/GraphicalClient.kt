@@ -367,6 +367,9 @@ private class ClientPanel(
                     KeyEvent.VK_F11 -> {
                         selectAllVisible()
                     }
+                    KeyEvent.VK_F12 -> {
+                        selectIdleWorkers()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -629,6 +632,7 @@ private class ClientPanel(
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
             "select:all" -> selectAllVisible()
+            "select:idleWorkers" -> selectIdleWorkers()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -873,6 +877,19 @@ private class ClientPanel(
         showNotice("selected all (${ids.size})")
     }
 
+    private fun selectIdleWorkers() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectIdleWorkerSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected idle workers (${ids.size})")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -986,6 +1003,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
         "help: f2 select viewed faction  f3 select selected type  f4 archetype",
         "help: f11 select all units",
+        "help: f12 select idle workers",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1089,6 +1107,23 @@ internal fun collectAllSelectionIds(
     var count = 0
     for (i in snapshot.entities.indices) {
         out[count++] = snapshot.entities[i].id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectIdleWorkerSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.archetype != "worker") continue
+        if (entity.buildTargetId != null) continue
+        if (entity.harvestPhase != null) continue
+        out[count++] = entity.id
     }
     return out.copyOf(count)
 }
