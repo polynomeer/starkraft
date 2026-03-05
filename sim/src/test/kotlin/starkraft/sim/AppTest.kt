@@ -511,6 +511,56 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator keeps replay stats modes report-only`() {
+        val ticksConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = 100,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = true,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ticksConflict.message!!.contains("cannot be combined with --ticks"))
+
+        val snapshotConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = true,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    snapshotOutPath = "/tmp/out.ndjson"
+                )
+            }
+        assertTrue(snapshotConflict.message!!.contains("cannot be combined with --snapshotOut"))
+    }
+
+    @Test
     fun `cli numeric validator enforces non-negative and positive bounds`() {
         val ticksEx =
             assertThrows(IllegalStateException::class.java) {

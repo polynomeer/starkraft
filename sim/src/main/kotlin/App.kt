@@ -1087,6 +1087,18 @@ internal fun validateCliSemantics(
     if (replayMetaJson && replayStatsJson) {
         error("--replayMetaJson cannot be combined with --replayStatsJson")
     }
+    if (replayStats || replayStatsJson) {
+        if (tickLimit != null) error("--replayStats/--replayStatsJson cannot be combined with --ticks")
+        if (replayTicks != null) error("--replayStats/--replayStatsJson cannot be combined with --replayTicks")
+        if (snapshotJson) error("--replayStats/--replayStatsJson cannot be combined with --snapshotJson")
+        if (snapshotOutPath != null) error("--replayStats/--replayStatsJson cannot be combined with --snapshotOut")
+        if (snapshotEvery != null) error("--replayStats/--replayStatsJson cannot be combined with --snapshotEvery")
+        if (recordPath != null) error("--replayStats/--replayStatsJson cannot be combined with --record")
+        if (replayOutPath != null) error("--replayStats/--replayStatsJson cannot be combined with --replayOut")
+        if (replayDumpPath != null) error("--replayStats/--replayStatsJson cannot be combined with --replayDump")
+        if (spawnScriptPath != null) error("--replayStats/--replayStatsJson cannot be combined with --spawnScript")
+        if (inputTailPath != null) error("--replayStats/--replayStatsJson cannot be combined with --inputTail")
+    }
     if (replayMetaJson) {
         if (tickLimit != null) error("--replayMetaJson cannot be combined with --ticks")
         if (replayTicks != null) error("--replayMetaJson cannot be combined with --replayTicks")
