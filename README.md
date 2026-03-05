@@ -269,6 +269,8 @@ Client controls:
 - `F`: select damaged units (optionally scoped to viewed faction 1/2)
 - `V`: select combat-capable units (optionally scoped to viewed faction 1/2)
 - `N`: select producer buildings (optionally scoped to viewed faction 1/2)
+- `Z`: select buildings that can train units
+- `C`: select buildings that can research tech
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - command panel includes `Select View` to do the same faction-wide selection
 - command panel includes `Select Type` for type-based selection
@@ -278,6 +280,7 @@ Client controls:
 - command panel includes `Damaged` for quick retreat/regroup control
 - command panel includes `Combat` for quick army selection
 - command panel includes `Producers` for quick production control
+- command panel includes `Trainers` and `Researchers` for queue management
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view

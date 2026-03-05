@@ -379,6 +379,12 @@ private class ClientPanel(
                     KeyEvent.VK_N -> {
                         selectProducers()
                     }
+                    KeyEvent.VK_Z -> {
+                        selectTrainingBuildings()
+                    }
+                    KeyEvent.VK_C -> {
+                        selectResearchBuildings()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -645,6 +651,8 @@ private class ClientPanel(
             "select:damaged" -> selectDamagedUnits()
             "select:combat" -> selectCombatUnits()
             "select:producers" -> selectProducers()
+            "select:trainers" -> selectTrainingBuildings()
+            "select:researchers" -> selectResearchBuildings()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -941,6 +949,32 @@ private class ClientPanel(
         showNotice("selected producers (${ids.size})")
     }
 
+    private fun selectTrainingBuildings() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectTrainingSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected trainers (${ids.size})")
+    }
+
+    private fun selectResearchBuildings() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectResearchSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected researchers (${ids.size})")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -1058,6 +1092,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: f select damaged units",
         "help: v select combat units",
         "help: n select producer buildings",
+        "help: z select training buildings  c select research buildings",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1222,6 +1257,36 @@ internal fun collectProducerSelectionIds(
         val entity = snapshot.entities[i]
         if (faction != null && entity.faction != faction) continue
         if (entity.archetype != "producer") continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectTrainingSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.supportsTraining != true) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectResearchSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.supportsResearch != true) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)
