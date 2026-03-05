@@ -375,7 +375,7 @@ internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
     Rectangle(width - 176, 12, 164, height - 24)
 
 internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<String> =
-    overlayLines.filter { it.startsWith("play:") || it.startsWith("scenario:") }
+    overlayLines.filter { it.startsWith("play:") || it.startsWith("scenario:") || it.startsWith("notice:") }
 
 internal fun buildStartOverlayLines(tick: Int, overlayLines: List<String>): List<String> {
     if (tick > 50) return emptyList()

@@ -290,6 +290,7 @@ Client controls:
 - hovering command panel buttons shows short tooltip help for the action
 - the command panel also exposes `Save/Load Quick` and `Save/Load Alt` preset actions
 - an early-match startup overlay now highlights key controls plus current play state/scenario
+- preset save/load now shows a short in-client `notice:` status line for success/missing preset feedback
 - build/train/research actions in the client are sourced from the sim data defs, rather than being hardcoded only in the UI
 - selected buildings now render compact status labels for construction, training, and research progress
 - the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left

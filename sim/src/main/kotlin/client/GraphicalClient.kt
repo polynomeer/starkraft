@@ -204,6 +204,8 @@ private class ClientPanel(
     private var playScenario = PlayScenario.SKIRMISH
     private var scenarioMenuOpen = false
     private var scenarioMenuSelection = PlayScenario.SKIRMISH
+    private var noticeMessage: String? = null
+    private var noticeUntilNanos: Long = 0L
 
     init {
         if (controlPath != null && Files.exists(controlPath)) {
@@ -518,7 +520,7 @@ private class ClientPanel(
             formatPlayControlOverlay(playControlState),
             "scenario: ${playScenario.id}",
             "preset: quick"
-        ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
+        ) + listOfNotNull(currentNoticeLine()) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
         val snapshot = session.state.snapshot
@@ -671,17 +673,38 @@ private class ClientPanel(
     private fun savePreset(name: String) {
         val root = playRoot ?: return
         savePlayPreset(root.resolve("presets"), name, PlayPresetState(playScenario, playControlState))
+        showNotice("preset saved: $name")
     }
 
     private fun loadPreset(name: String) {
         val root = playRoot ?: return
-        val preset = loadPlayPreset(root.resolve("presets"), name, playScenario) ?: return
+        val preset = loadPlayPreset(root.resolve("presets"), name, playScenario)
+        if (preset == null) {
+            showNotice("preset missing: $name")
+            return
+        }
         playScenario = preset.scenario
         scenarioMenuSelection = preset.scenario
         playControlState = preset.control
         scenarioPath?.let { writePlayScenario(it, playScenario) }
         writePlayControl()
+        showNotice("preset loaded: $name")
         requestRestart()
+    }
+
+    private fun showNotice(message: String) {
+        noticeMessage = message
+        noticeUntilNanos = System.nanoTime() + 2_000_000_000L
+    }
+
+    private fun currentNoticeLine(): String? {
+        val message = noticeMessage ?: return null
+        return if (System.nanoTime() <= noticeUntilNanos) {
+            "notice: $message"
+        } else {
+            noticeMessage = null
+            null
+        }
     }
 }
 

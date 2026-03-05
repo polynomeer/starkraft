@@ -392,6 +392,10 @@ class GraphicalClientTest {
             listOf("play: paused x2", "scenario: gas"),
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
+        assertEquals(
+            listOf("play: paused x2", "scenario: gas", "notice: preset loaded: quick"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "notice: preset loaded: quick", "view: faction 1"))
+        )
     }
 
     @Test
