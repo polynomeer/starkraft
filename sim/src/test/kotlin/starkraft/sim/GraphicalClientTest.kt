@@ -1052,6 +1052,8 @@ class GraphicalClientTest {
         groups[4] = intArrayOf(1, 2, 3)
         groups[6] = intArrayOf(7)
         assertEquals("4=3 6=1", formatControlGroupSummary(groups))
+        assertEquals("4=3 *6=1", formatControlGroupSummary(groups, highlightedGroup = 6))
+        assertEquals("*4=3 6=1", formatControlGroupSummary(groups, highlightedGroup = 4))
         assertEquals(null, formatControlGroupSummary(arrayOfNulls(10)))
     }
 

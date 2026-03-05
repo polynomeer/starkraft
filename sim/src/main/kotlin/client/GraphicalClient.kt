@@ -858,7 +858,7 @@ private class ClientPanel(
     }
 
     private fun controlGroupSummaryLine(): String? {
-        val summary = formatControlGroupSummary(controlGroups)
+        val summary = formatControlGroupSummary(controlGroups, lastGroupRecall)
         return summary?.let { "groups: $it" }
     }
 
@@ -1560,12 +1560,16 @@ internal fun recallControlGroupSlot(
     return out.copyOf(count)
 }
 
-internal fun formatControlGroupSummary(groups: Array<IntArray?>): String? {
+internal fun formatControlGroupSummary(
+    groups: Array<IntArray?>,
+    highlightedGroup: Int? = null
+): String? {
     val parts = ArrayList<String>(6)
     for (group in 4..9) {
         val size = groups.getOrNull(group)?.size ?: 0
         if (size <= 0) continue
-        parts.add("$group=$size")
+        val prefix = if (highlightedGroup == group) "*" else ""
+        parts.add("${prefix}${group}=$size")
     }
     if (parts.isEmpty()) return null
     return parts.joinToString(" ")
