@@ -39,6 +39,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
         actionId == "select:selectedType" -> "Select all units matching the first selected unit type"
         actionId == "select:selectedArchetype" -> "Select all units matching the first selected unit archetype"
+        actionId == "select:all" -> "Select all units on the current snapshot"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -471,6 +472,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Select View", "select:viewFaction"),
             ClientCommandButton("Select Type", "select:selectedType"),
             ClientCommandButton("Select Role", "select:selectedArchetype"),
+            ClientCommandButton("Select All", "select:all"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -542,7 +544,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

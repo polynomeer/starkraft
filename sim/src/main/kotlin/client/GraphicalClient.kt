@@ -364,6 +364,9 @@ private class ClientPanel(
                     KeyEvent.VK_F4 -> {
                         selectSelectedArchetype()
                     }
+                    KeyEvent.VK_F11 -> {
+                        selectAllVisible()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -625,6 +628,7 @@ private class ClientPanel(
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
+            "select:all" -> selectAllVisible()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -856,6 +860,19 @@ private class ClientPanel(
         showNotice("selected ${ids.size} $archetype")
     }
 
+    private fun selectAllVisible() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectAllSelectionIds(snapshot)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildAllSelectionRecord(snapshot.tick + 1)
+            )
+        )
+        showNotice("selected all (${ids.size})")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -968,6 +985,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: f1 close  tab scenario menu  f10 preset menu",
         "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
         "help: f2 select viewed faction  f3 select selected type  f4 archetype",
+        "help: f11 select all units",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1012,6 +1030,14 @@ internal fun buildArchetypeSelectionRecord(
         archetype = archetype
     )
 
+internal fun buildAllSelectionRecord(
+    tick: Int
+): InputJson.InputSelectionRecord =
+    InputJson.InputSelectionRecord(
+        tick = tick,
+        selectionType = "all"
+    )
+
 internal fun collectFactionSelectionIds(
     snapshot: ClientSnapshot,
     faction: Int
@@ -1052,6 +1078,17 @@ internal fun collectArchetypeSelectionIds(
         val entity = snapshot.entities[i]
         if (entity.faction != faction || entity.archetype != archetype) continue
         out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectAllSelectionIds(
+    snapshot: ClientSnapshot
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        out[count++] = snapshot.entities[i].id
     }
     return out.copyOf(count)
 }
