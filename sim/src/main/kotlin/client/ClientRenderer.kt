@@ -630,6 +630,7 @@ internal fun buildClientHudLines(
         buildSelectionClassSummary(snapshot, state.selectedIds),
         buildSelectionPositionSummary(snapshot, state.selectedIds),
         buildSelectionDensitySummary(snapshot, state.selectedIds),
+        buildSelectionVisibilitySummary(snapshot, state),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionDurabilitySummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
@@ -794,6 +795,27 @@ internal fun buildSelectionDensitySummary(
     if (area <= 0f) return "selection density: units=$count compact"
     val density = count.toFloat() / area
     return "selection density: units=$count perTile=${"%.2f".format(density)} area=${"%.1f".format(area)}"
+}
+
+internal fun buildSelectionVisibilitySummary(
+    snapshot: ClientSnapshot,
+    state: ClientSessionState
+): String {
+    if (state.selectedIds.isEmpty()) return "selection visibility: none"
+    val faction = state.viewedFaction ?: return "selection visibility: observer"
+    val visibleTiles = state.visionState?.visibleTiles(faction) ?: return "selection visibility: unknown"
+    var visible = 0
+    var hidden = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in state.selectedIds) continue
+        val tile = entity.x.toInt() to entity.y.toInt()
+        if (tile in visibleTiles) {
+            visible++
+        } else {
+            hidden++
+        }
+    }
+    return "selection visibility: visible=$visible hidden=$hidden"
 }
 
 internal fun buildSelectionHealthSummary(

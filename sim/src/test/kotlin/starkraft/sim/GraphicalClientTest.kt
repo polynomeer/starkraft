@@ -87,6 +87,7 @@ import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionClassSummary
 import starkraft.sim.client.buildSelectionPositionSummary
 import starkraft.sim.client.buildSelectionDensitySummary
+import starkraft.sim.client.buildSelectionVisibilitySummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionDurabilitySummary
 import starkraft.sim.client.buildSelectionVisionSummary
@@ -361,6 +362,7 @@ class GraphicalClientTest {
                 "selection classes: workers=1 combat=1 structures=1 other=0",
                 "selection pos: center=5.7,4.0 span=3.0x0.0",
                 "selection density: units=3 compact",
+                "selection visibility: visible=0 hidden=3",
                 "selection hp: 185/465 (39%)",
                 "selection durability: avgArmor=0.3 damaged=1/3",
                 "selection vision: avg=6.0 min=5.0 max=7.0",
@@ -612,6 +614,34 @@ class GraphicalClientTest {
         assertEquals("selection density: units=2 perTile=1.00 area=2.0", buildSelectionDensitySummary(snapshot, linkedSetOf(1, 2)))
         assertEquals("selection density: none", buildSelectionDensitySummary(snapshot, emptySet()))
         assertEquals("selection density: none", buildSelectionDensitySummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection visibility summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 4f, y = 4f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+        val state =
+            ClientSessionState(
+                selectedIds = linkedSetOf(1, 2),
+                viewedFaction = 1,
+                visionState = ClientVisionState(visibleTilesByFaction = mapOf(1 to setOf(1 to 1)))
+            )
+
+        assertEquals("selection visibility: visible=1 hidden=1", buildSelectionVisibilitySummary(snapshot, state))
+        assertEquals("selection visibility: observer", buildSelectionVisibilitySummary(snapshot, state.copy(viewedFaction = null)))
+        assertEquals("selection visibility: none", buildSelectionVisibilitySummary(snapshot, state.copy(selectedIds = linkedSetOf())))
     }
 
     @Test
