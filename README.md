@@ -267,6 +267,7 @@ Client controls:
 - `F11`: select all units from the current snapshot
 - `F12`: select idle workers (optionally scoped to viewed faction 1/2)
 - `F`: select damaged units (optionally scoped to viewed faction 1/2)
+- `V`: select combat-capable units (optionally scoped to viewed faction 1/2)
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - command panel includes `Select View` to do the same faction-wide selection
 - command panel includes `Select Type` for type-based selection
@@ -274,6 +275,7 @@ Client controls:
 - command panel includes `Select All` for full snapshot selection
 - command panel includes `Idle Workers` for quick economy control
 - command panel includes `Damaged` for quick retreat/regroup control
+- command panel includes `Combat` for quick army selection
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view

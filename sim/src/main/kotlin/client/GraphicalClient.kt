@@ -373,6 +373,9 @@ private class ClientPanel(
                     KeyEvent.VK_F -> {
                         selectDamagedUnits()
                     }
+                    KeyEvent.VK_V -> {
+                        selectCombatUnits()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -637,6 +640,7 @@ private class ClientPanel(
             "select:all" -> selectAllVisible()
             "select:idleWorkers" -> selectIdleWorkers()
             "select:damaged" -> selectDamagedUnits()
+            "select:combat" -> selectCombatUnits()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -907,6 +911,19 @@ private class ClientPanel(
         showNotice("selected damaged (${ids.size})")
     }
 
+    private fun selectCombatUnits() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectCombatSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected combat (${ids.size})")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -1022,6 +1039,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: f11 select all units",
         "help: f12 select idle workers",
         "help: f select damaged units",
+        "help: v select combat units",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1156,6 +1174,21 @@ internal fun collectDamagedSelectionIds(
         val entity = snapshot.entities[i]
         if (faction != null && entity.faction != faction) continue
         if (entity.hp >= entity.maxHp) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectCombatSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.weaponId == null) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)
