@@ -1,7 +1,9 @@
 package authoritative
 
 import (
+	"context"
 	"encoding/json"
+	"net"
 	"os"
 	"net/http/httptest"
 	"path/filepath"
@@ -226,6 +228,46 @@ func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {
 	}
 	if !strings.Contains(text, "\"recordType\":\"keyframe\"") {
 		t.Fatalf("replay missing keyframe record: %s", text)
+	}
+}
+
+func TestServerRunAdvancesTicksOverTime(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 10 * time.Millisecond})
+	defer srv.Close()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		_ = srv.RunOnListener(ctx, ln)
+	}()
+
+	wsURL := "ws://" + ln.Addr().String() + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // snapshot tick 0
+
+	var last protocol.SnapshotMessage
+	for i := 0; i < 4; i++ {
+		env := readEnvelope(t, conn)
+		if err := json.Unmarshal(env.Message, &last); err != nil {
+			t.Fatalf("decode snapshot: %v", err)
+		}
+	}
+	if last.Tick < 3 {
+		t.Fatalf("expected tick progression, got tick=%d", last.Tick)
 	}
 }
 

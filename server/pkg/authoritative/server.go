@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -68,7 +69,15 @@ func NewServer(cfg Config) *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	s.httpSrv = &http.Server{Addr: s.cfg.Addr, Handler: s.Handler()}
+	ln, err := net.Listen("tcp", s.cfg.Addr)
+	if err != nil {
+		return err
+	}
+	return s.RunOnListener(ctx, ln)
+}
+
+func (s *Server) RunOnListener(ctx context.Context, ln net.Listener) error {
+	s.httpSrv = &http.Server{Addr: ln.Addr().String(), Handler: s.Handler()}
 	defer func() {
 		if s.replay != nil {
 			_ = s.replay.Close()
@@ -90,7 +99,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		if err := s.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := s.httpSrv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
 		close(errCh)
