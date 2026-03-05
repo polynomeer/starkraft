@@ -368,6 +368,7 @@ fun main(args: Array<String>) {
         if (scriptDryRun) {
             println("script dry run ok")
         }
+        printScriptSelections(selectionEventsByTick)
         printScriptCommands(commandsByTick)
         return
     }
@@ -965,7 +966,7 @@ internal fun buildAppUsageText(): String =
         "  --snapshotOut <path>        Write snapshot/stream NDJSON",
         "  --snapshotEvery <n>         Snapshot cadence in ticks",
         "  --scriptValidate            Parse+validate script(s) and exit",
-        "  --scriptDryRun              Validate and print parsed script commands",
+        "  --scriptDryRun              Validate and print parsed script selections/commands",
         "  --dumpWorldHash             Print final world hash",
         "  --printEntities             Print alive entities at end",
         "  --printOrders               Print pending orders at end",
@@ -2385,6 +2386,30 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
         }
     }
 }
+
+private fun printScriptSelections(selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>) {
+    println("script selections:")
+    for (tick in selectionEventsByTick.indices) {
+        val events = selectionEventsByTick[tick]
+        for (i in 0 until events.size) {
+            println(formatScriptSelection(events[i]))
+        }
+    }
+}
+
+internal fun formatScriptSelection(event: ScriptRunner.SelectionEvent): String =
+    when (val selection = event.selection) {
+        is ScriptRunner.Selection.Units ->
+            "tick=${event.tick} select units=${selection.ids.joinToString(",")}"
+        is ScriptRunner.Selection.All ->
+            "tick=${event.tick} selectAll"
+        is ScriptRunner.Selection.Faction ->
+            "tick=${event.tick} selectFaction faction=${selection.id}"
+        is ScriptRunner.Selection.Type ->
+            "tick=${event.tick} selectType type=${selection.typeId}"
+        is ScriptRunner.Selection.Archetype ->
+            "tick=${event.tick} selectArchetype archetype=${selection.archetype}"
+    }
 
 internal fun validateSpawnTypes(commandsByTick: Array<ArrayList<Command>>, data: DataRepo) {
     for (tick in commandsByTick.indices) {

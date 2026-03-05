@@ -16,6 +16,7 @@ import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.World
 import starkraft.sim.net.Command
+import starkraft.sim.net.ScriptRunner
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Files
 import java.nio.file.Path
@@ -30,6 +31,30 @@ class AppTest {
         assertTrue(help.contains("--replay <path>"))
         assertTrue(help.contains("--replayValidateOnly"))
         assertTrue(help.contains("--help, -h"))
+    }
+
+    @Test
+    fun `formats script selection events for dry run output`() {
+        assertEquals(
+            "tick=3 select units=1,2",
+            formatScriptSelection(ScriptRunner.SelectionEvent(3, ScriptRunner.Selection.Units(intArrayOf(1, 2))))
+        )
+        assertEquals(
+            "tick=4 selectAll",
+            formatScriptSelection(ScriptRunner.SelectionEvent(4, ScriptRunner.Selection.All))
+        )
+        assertEquals(
+            "tick=5 selectFaction faction=2",
+            formatScriptSelection(ScriptRunner.SelectionEvent(5, ScriptRunner.Selection.Faction(2)))
+        )
+        assertEquals(
+            "tick=6 selectType type=Marine",
+            formatScriptSelection(ScriptRunner.SelectionEvent(6, ScriptRunner.Selection.Type("Marine")))
+        )
+        assertEquals(
+            "tick=7 selectArchetype archetype=worker",
+            formatScriptSelection(ScriptRunner.SelectionEvent(7, ScriptRunner.Selection.Archetype("worker")))
+        )
     }
 
     @Test

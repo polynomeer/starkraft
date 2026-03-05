@@ -178,7 +178,7 @@ Other flags:
 - `--inputJson <path>` load machine-readable client input as JSON or NDJSON with `commands` and optional `selections`
 - `--inputTail <path>` live-read appended NDJSON input records each tick
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
-- `--scriptDryRun` parse, validate, and print script commands without running
+- `--scriptDryRun` parse, validate, and print script selections plus commands without running
 - Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
 
 Example client-input file:
