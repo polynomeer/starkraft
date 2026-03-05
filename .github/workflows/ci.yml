@@ -50,3 +50,42 @@ jobs:
 
       - name: Test server packages
         run: go test ./...
+
+  client-build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: client/go.mod
+
+      - name: Build client packages
+        run: go build ./...
+
+      - name: Test client packages
+        run: go test ./...
+
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [server-build-test, client-build-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Run server + bots smoke
+        run: ./scripts/e2e_server_bots_smoke.sh

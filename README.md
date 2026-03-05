@@ -138,6 +138,9 @@ Use `./gradlew :sim:run` with JDK 17.
 Quick smoke check:
 `./scripts/smoke_run.sh`
 
+Authoritative stack smoke check (server + 2 bots + replay):
+`./scripts/e2e_server_bots_smoke.sh`
+
 ### Headless Script Input
 You can run a simple command script with:
 `./gradlew :sim:run --args="--script sim/scripts/sample.script --noSleep"`
