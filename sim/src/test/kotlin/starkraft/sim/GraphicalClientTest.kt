@@ -54,6 +54,7 @@ import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildScenarioOverlayLines
+import starkraft.sim.client.buildStartOverlayLines
 import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
@@ -391,6 +392,19 @@ class GraphicalClientTest {
             listOf("play: paused x2", "scenario: gas"),
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
+    }
+
+    @Test
+    fun `builds start overlay lines for early ticks`() {
+        assertEquals(
+            listOf(
+                "Match start: LMB select, RMB command, Tab scenario menu",
+                "play: running x1",
+                "scenario: skirmish"
+            ),
+            buildStartOverlayLines(20, listOf("play: running x1", "scenario: skirmish"))
+        )
+        assertEquals(emptyList<String>(), buildStartOverlayLines(80, listOf("play: running x1", "scenario: skirmish")))
     }
 
     @Test

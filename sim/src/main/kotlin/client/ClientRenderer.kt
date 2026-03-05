@@ -79,6 +79,7 @@ internal class SwingClientRenderer(
         drawMiniMap(graphics, width, height, snapshot, state.selectedIds, effectiveCamera)
         drawCommandPanel(graphics, width, height, state, overlayLines)
         drawHud(graphics, height, state, snapshot, overlayLines)
+        drawStartOverlay(graphics, snapshot, overlayLines)
         drawGameStateOverlay(graphics, width, height, snapshot, state.viewedFaction)
     }
 
@@ -347,6 +348,27 @@ internal class SwingClientRenderer(
         g.drawString(gameState.title, x + 12, y + 24)
         g.drawString(gameState.detail, x + 12, y + 44)
     }
+
+    private fun drawStartOverlay(
+        g: Graphics2D,
+        snapshot: ClientSnapshot,
+        overlayLines: List<String>
+    ) {
+        val lines = buildStartOverlayLines(snapshot.tick, overlayLines)
+        if (lines.isEmpty()) return
+        val x = 168
+        val y = 16
+        val width = 350
+        val height = 18 + (lines.size * 14)
+        g.color = Color(0x0A, 0x0E, 0x13, 205)
+        g.fillRoundRect(x, y, width, height, 10, 10)
+        g.color = Color(0x6C, 0x82, 0x96)
+        g.drawRoundRect(x, y, width, height, 10, 10)
+        g.color = Color(0xE4, 0xED, 0xF6)
+        for (i in lines.indices) {
+            g.drawString(lines[i], x + 10, y + 18 + (i * 14))
+        }
+    }
 }
 
 internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
@@ -354,6 +376,12 @@ internal fun commandPanelBounds(width: Int, height: Int): Rectangle =
 
 internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<String> =
     overlayLines.filter { it.startsWith("play:") || it.startsWith("scenario:") }
+
+internal fun buildStartOverlayLines(tick: Int, overlayLines: List<String>): List<String> {
+    if (tick > 50) return emptyList()
+    val status = buildCommandPanelStatusLines(overlayLines)
+    return listOf("Match start: LMB select, RMB command, Tab scenario menu") + status
+}
 
 internal fun miniMapBounds(width: Int, height: Int): Rectangle =
     Rectangle(12, 12, minOf(144, width / 4), minOf(144, height / 4))
