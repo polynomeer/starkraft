@@ -176,6 +176,32 @@ class AppTest {
     }
 
     @Test
+    fun `cli numeric validator enforces non-negative and positive bounds`() {
+        val ticksEx =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliNumericSemantics(tickLimit = -1, replayTicks = null, snapshotEvery = null)
+            }
+        assertTrue(ticksEx.message!!.contains("--ticks must be >= 0"))
+
+        val replayTicksEx =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliNumericSemantics(tickLimit = null, replayTicks = -3, snapshotEvery = null)
+            }
+        assertTrue(replayTicksEx.message!!.contains("--replayTicks must be >= 0"))
+
+        val snapshotEveryEx =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliNumericSemantics(tickLimit = null, replayTicks = null, snapshotEvery = 0)
+            }
+        assertTrue(snapshotEveryEx.message!!.contains("--snapshotEvery must be > 0"))
+    }
+
+    @Test
+    fun `cli numeric validator accepts valid bounds`() {
+        validateCliNumericSemantics(tickLimit = 0, replayTicks = 0, snapshotEvery = 1)
+    }
+
+    @Test
     fun `selection validator rejects unknown entity id`() {
         val world = World()
         world.spawn(Transform(1f, 1f), UnitTag(1, "Marine"), Health(10, 10), null)

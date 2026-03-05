@@ -340,6 +340,11 @@ fun main(args: Array<String>) {
         scriptValidate = scriptValidate,
         scriptDryRun = scriptDryRun
     )
+    validateCliNumericSemantics(
+        tickLimit = tickLimit,
+        replayTicks = replayTicks,
+        snapshotEvery = snapshotEvery
+    )
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
@@ -1062,6 +1067,22 @@ internal fun validateCliSemantics(
     }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
+    }
+}
+
+internal fun validateCliNumericSemantics(
+    tickLimit: Int?,
+    replayTicks: Int?,
+    snapshotEvery: Int?
+) {
+    if (tickLimit != null && tickLimit < 0) {
+        error("--ticks must be >= 0 (was $tickLimit)")
+    }
+    if (replayTicks != null && replayTicks < 0) {
+        error("--replayTicks must be >= 0 (was $replayTicks)")
+    }
+    if (snapshotEvery != null && snapshotEvery <= 0) {
+        error("--snapshotEvery must be > 0 (was $snapshotEvery)")
     }
 }
 
