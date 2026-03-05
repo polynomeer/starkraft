@@ -28,6 +28,7 @@ type Server struct {
 	cfg      Config
 	upgrader websocket.Upgrader
 	rooms    map[string]*room
+	roomMatchEnded map[string]bool
 	nextID   int
 	mu       sync.Mutex
 	httpSrv  *http.Server
@@ -55,6 +56,7 @@ func NewServer(cfg Config) *Server {
 		cfg: cfg,
 		upgrader: websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
 		rooms: make(map[string]*room),
+		roomMatchEnded: make(map[string]bool),
 	}
 	if cfg.ReplayPath != "" {
 		replay, err := NewReplayWriter(cfg.ReplayPath)
@@ -153,7 +155,10 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		ServerTickMs: int(s.cfg.TickInterval / time.Millisecond), ProtocolVersion: protocol.CurrentProtocolVersion,
 	})
 	snap := room.snapshot()
-	_ = client.sendEnvelope(protocol.SnapshotMessage{Type: "snapshot", Tick: snap.Tick, WorldHash: snap.WorldHash, Units: snap.Units})
+	_ = client.sendEnvelope(protocol.SnapshotMessage{
+		Type: "snapshot", Tick: snap.Tick, WorldHash: snap.WorldHash, Units: snap.Units,
+		MatchEnded: snap.MatchEnded, WinnerID: snap.WinnerID,
+	})
 
 	for {
 		var env protocol.ProtocolEnvelope
@@ -226,7 +231,10 @@ func (s *Server) stepRooms() {
 
 	for _, rm := range rooms {
 		result := rm.step()
-		msg := protocol.SnapshotMessage{Type: "snapshot", Tick: result.snapshot.Tick, WorldHash: result.snapshot.WorldHash, Units: result.snapshot.Units}
+		msg := protocol.SnapshotMessage{
+			Type: "snapshot", Tick: result.snapshot.Tick, WorldHash: result.snapshot.WorldHash, Units: result.snapshot.Units,
+			MatchEnded: result.snapshot.MatchEnded, WinnerID: result.snapshot.WinnerID,
+		}
 		rm.mu.Lock()
 		clients := make([]*clientConn, 0, len(rm.clients))
 		byID := make(map[string]*clientConn, len(rm.clients))
@@ -249,6 +257,10 @@ func (s *Server) stepRooms() {
 		}
 		if s.replay != nil && s.cfg.KeyframeEvery > 0 && result.snapshot.Tick%s.cfg.KeyframeEvery == 0 {
 			_ = s.replay.WriteKeyframe(result.snapshot.Tick, result.snapshot.WorldHash, result.snapshot.Units)
+		}
+		if s.replay != nil && result.matchEnded && !s.roomMatchEnded[rm.id] {
+			_ = s.replay.WriteMatchEnd(result.snapshot.Tick, result.snapshot.WinnerID)
+			s.roomMatchEnded[rm.id] = true
 		}
 		for _, c := range clients {
 			if err := c.sendEnvelope(msg); err != nil {

@@ -28,11 +28,13 @@ type HandshakeAckMessage struct {
 
 // WireCommand is an opaque command shell that carries type/request id.
 type WireCommand struct {
-	CommandType string  `json:"commandType"`
-	RequestID   *string `json:"requestId,omitempty"`
-	UnitIDs     []int   `json:"unitIds,omitempty"`
-	X           *float64 `json:"x,omitempty"`
-	Y           *float64 `json:"y,omitempty"`
+	CommandType  string   `json:"commandType"`
+	RequestID    *string  `json:"requestId,omitempty"`
+	UnitIDs      []int    `json:"unitIds,omitempty"`
+	X            *float64 `json:"x,omitempty"`
+	Y            *float64 `json:"y,omitempty"`
+	TargetUnitID *int     `json:"targetUnitId,omitempty"`
+	UnitType     *string  `json:"unitType,omitempty"`
 }
 
 type CommandBatchMessage struct {
@@ -51,10 +53,12 @@ type CommandAckMessage struct {
 }
 
 type SnapshotMessage struct {
-	Type      string `json:"type"`
-	Tick      int    `json:"tick"`
-	WorldHash int64  `json:"worldHash"`
-	Units     []SnapshotUnit `json:"units,omitempty"`
+	Type       string   `json:"type"`
+	Tick       int      `json:"tick"`
+	WorldHash  int64    `json:"worldHash"`
+	Units      []SnapshotUnit `json:"units,omitempty"`
+	MatchEnded bool     `json:"matchEnded,omitempty"`
+	WinnerID   *string  `json:"winnerId,omitempty"`
 }
 
 type SnapshotUnit struct {
@@ -63,6 +67,7 @@ type SnapshotUnit struct {
 	TypeID  string  `json:"typeId"`
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
+	HP      int     `json:"hp"`
 }
 
 type ProtocolCompatibility int

@@ -39,6 +39,12 @@ type replayKeyframeRecord struct {
 	Units      []protocol.SnapshotUnit `json:"units"`
 }
 
+type replayMatchEndRecord struct {
+	RecordType string  `json:"recordType"`
+	Tick       int     `json:"tick"`
+	WinnerID   *string `json:"winnerId,omitempty"`
+}
+
 func NewReplayWriter(path string) (*ReplayWriter, error) {
 	f, err := os.Create(path)
 	if err != nil {
@@ -66,6 +72,10 @@ func (r *ReplayWriter) WriteKeyframe(tick int, worldHash int64, units []protocol
 	copyUnits := make([]protocol.SnapshotUnit, len(units))
 	copy(copyUnits, units)
 	return r.write(replayKeyframeRecord{RecordType: "keyframe", Tick: tick, WorldHash: worldHash, Units: copyUnits})
+}
+
+func (r *ReplayWriter) WriteMatchEnd(tick int, winnerID *string) error {
+	return r.write(replayMatchEndRecord{RecordType: "matchEnd", Tick: tick, WinnerID: winnerID})
 }
 
 func (r *ReplayWriter) write(v any) error {
