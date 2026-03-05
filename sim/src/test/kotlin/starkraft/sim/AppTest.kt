@@ -135,6 +135,8 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = false,
                     replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -158,6 +160,8 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = false,
                     replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -178,6 +182,8 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = false,
                     replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = true,
                     scriptDryRun = false
                 )
@@ -201,6 +207,8 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = false,
                     replayMetaJson = true,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -221,6 +229,8 @@ class AppTest {
                     replayStats = true,
                     replayStatsJson = false,
                     replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -244,6 +254,8 @@ class AppTest {
                     replayStats = true,
                     replayStatsJson = false,
                     replayMetaJson = true,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -264,6 +276,8 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = true,
                     replayMetaJson = true,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
@@ -308,11 +322,56 @@ class AppTest {
                     replayStats = false,
                     replayStatsJson = false,
                     replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
                     scriptValidate = false,
                     scriptDryRun = false
                 )
             }
         assertTrue(ex.message!!.contains("--replayTicks requires --replay"))
+    }
+
+    @Test
+    fun `cli semantic validator requires json output mode for compactJson`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = true,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ex.message!!.contains("--compactJson requires"))
+
+        validateCliSemantics(
+            replayPath = "a.replay",
+            replayTicks = null,
+            scriptPath = null,
+            inputJsonPath = null,
+            spawnScriptPath = null,
+            replayValidateOnly = false,
+            strictReplayHash = false,
+            strictReplayMeta = false,
+            replayStats = false,
+            replayStatsJson = true,
+            replayMetaJson = false,
+            snapshotJson = false,
+            compactJson = true,
+            scriptValidate = false,
+            scriptDryRun = false
+        )
     }
 
     @Test

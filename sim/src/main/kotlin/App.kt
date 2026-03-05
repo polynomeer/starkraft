@@ -335,6 +335,8 @@ fun main(args: Array<String>) {
         replayStats = replayStats,
         replayStatsJson = replayStatsJson,
         replayMetaJson = replayMetaJson,
+        snapshotJson = snapshotJson,
+        compactJson = compactJson,
         scriptValidate = scriptValidate,
         scriptDryRun = scriptDryRun
     )
@@ -986,6 +988,8 @@ internal fun validateCliSemantics(
     replayStats: Boolean,
     replayStatsJson: Boolean,
     replayMetaJson: Boolean,
+    snapshotJson: Boolean,
+    compactJson: Boolean,
     scriptValidate: Boolean,
     scriptDryRun: Boolean
 ) {
@@ -1021,6 +1025,9 @@ internal fun validateCliSemantics(
     }
     if (replayMetaJson && replayStatsJson) {
         error("--replayMetaJson cannot be combined with --replayStatsJson")
+    }
+    if (compactJson && !replayStatsJson && !replayMetaJson && !snapshotJson) {
+        error("--compactJson requires --replayStatsJson, --replayMetaJson, or --snapshotJson")
     }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
