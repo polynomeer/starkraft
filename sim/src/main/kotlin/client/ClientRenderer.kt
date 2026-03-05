@@ -634,6 +634,7 @@ internal fun buildClientHudLines(
         buildSelectionCargoSummary(snapshot, state.selectedIds),
         buildSelectionMobilitySummary(snapshot, state.selectedIds),
         buildSelectionWeaponSummary(snapshot, state.selectedIds),
+        buildSelectionPathSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionTargetSummary(snapshot, state.selectedIds),
         buildSelectionRallySummary(snapshot, state.selectedIds),
@@ -913,6 +914,33 @@ internal fun buildSelectionWeaponSummary(
     if (counts.isEmpty()) return "selection weapons: none"
     val armed = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection weapons: $armed unarmed=$unarmed"
+}
+
+internal fun buildSelectionPathSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection paths: none"
+    var active = 0
+    var totalRemaining = 0
+    val goals = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val remaining = entity.pathRemainingNodes
+        if (remaining <= 0) continue
+        active++
+        totalRemaining += remaining
+        val gx = entity.pathGoalX
+        val gy = entity.pathGoalY
+        if (gx != null && gy != null) {
+            val key = "$gx,$gy"
+            goals[key] = (goals[key] ?: 0) + 1
+        }
+    }
+    if (active == 0) return "selection paths: none"
+    val avgRemaining = totalRemaining.toFloat() / active.toFloat()
+    val topGoal = goals.entries.maxByOrNull { it.value }?.key ?: "n/a"
+    return "selection paths: active=$active avg=${"%.1f".format(avgRemaining)} topGoal=$topGoal"
 }
 
 internal fun buildSelectionTargetSummary(

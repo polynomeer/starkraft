@@ -487,6 +487,7 @@ The graphical and console clients also show selected durability, e.g. `selection
 The graphical and console clients also show selected carried resources, e.g. `selection cargo: loaded=2 minerals=5 gas=3`.
 The graphical and console clients also show selected movement posture, e.g. `selection mobility: moving=2 pathing=1 stationary=1`.
 The graphical and console clients also show selected weapon mix, e.g. `selection weapons: Riflex3 Cannonx1 unarmed=2`.
+The graphical and console clients also show selected path convergence, e.g. `selection paths: active=2 avg=3.0 topGoal=9,9`.
 The graphical and console clients also show selected order pressure, e.g. `orders: queued=3 active=movex2 attackMovex1`.
 The graphical and console clients also show selected target fan-out, e.g. `selection targets: build=1 harvestNodes=2 return=1`.
 The graphical and console clients also show selected rally configuration fan-out, e.g. `selection rally: configured=2/3 top=14,10`.

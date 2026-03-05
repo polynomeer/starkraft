@@ -91,6 +91,7 @@ import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionWeaponSummary
+import starkraft.sim.client.buildSelectionPathSummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionTargetSummary
 import starkraft.sim.client.buildSelectionRallySummary
@@ -359,6 +360,7 @@ class GraphicalClientTest {
                 "selection cargo: loaded=1 minerals=6 gas=0",
                 "selection mobility: moving=2 pathing=1 stationary=1",
                 "selection weapons: Riflex1 unarmed=2",
+                "selection paths: active=1 avg=5.0 topGoal=12,14",
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection targets: build=1 harvestNodes=1 return=0",
                 "selection rally: configured=1/1 top=14,10",
@@ -713,6 +715,29 @@ class GraphicalClientTest {
         assertEquals("selection weapons: Riflex1 Cannonx1 unarmed=1", buildSelectionWeaponSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, emptySet()))
         assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, linkedSetOf(3)))
+    }
+
+    @Test
+    fun `builds selection path summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0, pathRemainingNodes = 4, pathGoalX = 9, pathGoalY = 9),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, pathRemainingNodes = 2, pathGoalX = 9, pathGoalY = 9),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Depot", x = 3f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection paths: active=2 avg=3.0 topGoal=9,9", buildSelectionPathSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection paths: none", buildSelectionPathSummary(snapshot, emptySet()))
+        assertEquals("selection paths: none", buildSelectionPathSummary(snapshot, linkedSetOf(3)))
     }
 
     @Test
