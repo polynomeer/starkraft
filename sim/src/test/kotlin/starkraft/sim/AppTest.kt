@@ -138,6 +138,8 @@ class AppTest {
                 validateCliArgs(arrayOf("--noSleep", "--noSleep"))
             }
         assertTrue(duplicateToggle.message!!.contains("Duplicate option"))
+
+        validateCliArgs(arrayOf("--ticks", "-1"))
     }
 
     @Test

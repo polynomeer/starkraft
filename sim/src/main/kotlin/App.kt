@@ -942,6 +942,12 @@ private fun parseSnapshotEvery(args: Array<String>): Int? {
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
 
+private fun isOptionToken(token: String): Boolean {
+    if (!token.startsWith("-")) return false
+    val key = token.substringBefore("=")
+    return CLI_FLAGS_WITH_VALUE.contains(key) || CLI_TOGGLE_FLAGS.contains(key)
+}
+
 internal fun validateCliArgs(args: Array<String>) {
     val seenOptions = HashSet<String>(args.size)
     var i = 0
@@ -964,7 +970,7 @@ internal fun validateCliArgs(args: Array<String>) {
                         error("Missing value for option '$key'")
                     }
                     val value = args[i + 1]
-                    if (value.isBlank() || value.startsWith("-")) {
+                    if (value.isBlank() || isOptionToken(value)) {
                         error("Missing value for option '$key'")
                     }
                     i += 2
