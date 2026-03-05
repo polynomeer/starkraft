@@ -187,6 +187,7 @@ fun main(args: Array<String>) {
     val occupancy = OccupancySystem(world, occ)
     val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
+    val victory = VictorySystem(world)
     val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
     val fog2 = FogGrid(64, 64, 0.25f)
     val visionSys = VisionSystem(world, fog1, fog2)
@@ -630,6 +631,7 @@ fun main(args: Array<String>) {
         emitDamageRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitCombatRecord(combat, tick, resolvedSnapshotOutPath, streamSequence)
         emitDespawnRecord(world, tick, resolvedSnapshotOutPath, streamSequence)
+        victory.tick()
         visionSys.tick()
         totalPathRequests += pathing.lastTickRequests
         totalPathSolved += pathing.lastTickSolved
@@ -734,6 +736,11 @@ fun main(args: Array<String>) {
                     "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}$outcomeSuffix"
             )
         }
+        if (world.matchEnded) {
+            println("tick=$tick  match ended winnerFaction=${world.winnerFaction}")
+            tick++
+            break
+        }
         tick++
         waitForNextTick(noSleep, resolvedPlayControlPath)
     }
@@ -805,6 +812,9 @@ fun main(args: Array<String>) {
         )
     if (finalOutcomeSummary != null) {
         println(finalOutcomeSummary)
+    }
+    if (world.matchEnded) {
+        println("match result: winnerFaction=${world.winnerFaction}")
     }
 
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
@@ -3457,6 +3467,8 @@ private fun hashWorldForReplay(world: World): Long {
         val w = world.weapons[id]
         mix((w?.cooldownTicks ?: 0).toLong())
     }
+    mix(if (world.matchEnded) 1L else 0L)
+    mix((world.winnerFaction ?: -1).toLong())
     return h
 }
 

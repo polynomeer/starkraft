@@ -19,6 +19,7 @@ Completed scope:
 - combat, fog-of-war, attack-move, hold, and patrol
 - buildings, construction, production, research, and tech prerequisites
 - economy with stockpiles, harvesting, drop-offs, and retargeting
+- victory detection (last surviving faction wins) and match-end state
 - replay, benchmark, golden determinism checks, and snapshot/replay tooling
 - client-facing snapshot, event stream, live input, and minimal graphical/console clients
 

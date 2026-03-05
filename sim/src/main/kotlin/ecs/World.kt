@@ -22,6 +22,8 @@ class World {
     val resourceNodes = mutableMapOf<EntityId, ResourceNode>()
     val harvesters = mutableMapOf<EntityId, Harvester>()
     val autoAttackTargets = mutableMapOf<EntityId, EntityId>()
+    var matchEnded: Boolean = false
+    var winnerFaction: Int? = null
 
     val index = FactionIndex(this) // NEW
     val aliveSnapshot = AliveSnapshot(IntArray(64), 0)
