@@ -102,6 +102,7 @@ import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionAlertSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
 import starkraft.sim.client.buildSelectionQueueSummary
+import starkraft.sim.client.buildSelectionEtaSummary
 import starkraft.sim.client.buildCommandAffordanceSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
@@ -374,6 +375,7 @@ class GraphicalClientTest {
                 "selection alerts: lowHp=1 idleWorkers=0",
                 "capabilities: train=1 research=1 rally=1 dropoff=1",
                 "selection queues: prod=2@1 research=2@1",
+                "selection eta: prod=9.0 research=8.0 build=6.0",
                 "commands: move=on train=on research=on viewSelect=on",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
@@ -858,6 +860,29 @@ class GraphicalClientTest {
         assertEquals("selection queues: prod=2@1 research=3@1", buildSelectionQueueSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, emptySet()))
         assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection eta summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, activeProductionType = "Marine", activeProductionRemainingTicks = 12),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Lab", x = 2f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, activeResearchTech = "Stimpack", activeResearchRemainingTicks = 8),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Factory", x = 3f, y = 1f, dir = 0f, hp = 100, maxHp = 200, armor = 1, constructionRemainingTicks = 6)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection eta: prod=12.0 research=8.0 build=6.0", buildSelectionEtaSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection eta: none", buildSelectionEtaSummary(snapshot, emptySet()))
+        assertEquals("selection eta: none", buildSelectionEtaSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

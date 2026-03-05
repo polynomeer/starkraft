@@ -496,6 +496,7 @@ The graphical and console clients also show selected warning signals, e.g. `sele
 The graphical and console clients also show selected rally configuration fan-out, e.g. `selection rally: configured=2/3 top=14,10`.
 The graphical and console clients also show selected structure footprint totals, e.g. `selection structures: total=2 constructing=1 area=10`.
 The graphical and console clients also show selected production/research queue pressure, e.g. `selection queues: prod=2@1 research=3@1`.
+The graphical and console clients also show selected average remaining work times, e.g. `selection eta: prod=9.0 research=8.0 build=6.0`.
 The graphical client HUD also shows aggregate selected HP, e.g. `selection hp: 185/465 (39%)`.
 The graphical and console clients also show selected combat readiness, e.g. `selection combat: armed=2 ready=1 cooling=1 unarmed=1 nextReady=4`.
 The graphical and console clients also show selected capability counts, e.g. `capabilities: train=1 research=1 rally=0 dropoff=1`.

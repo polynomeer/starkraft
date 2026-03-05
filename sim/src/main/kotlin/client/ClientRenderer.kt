@@ -645,6 +645,7 @@ internal fun buildClientHudLines(
         buildSelectionAlertSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
         buildSelectionQueueSummary(snapshot, state.selectedIds),
+        buildSelectionEtaSummary(snapshot, state.selectedIds),
         buildCommandAffordanceSummary(snapshot, state.selectedIds, state.viewedFaction),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
@@ -1150,6 +1151,40 @@ internal fun buildSelectionQueueSummary(
     }
     if (productionTotal == 0 && researchTotal == 0) return "selection queues: none"
     return "selection queues: prod=$productionTotal@$productionActive research=$researchTotal@$researchActive"
+}
+
+internal fun buildSelectionEtaSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection eta: none"
+    var prodCount = 0
+    var prodRemaining = 0
+    var researchCount = 0
+    var researchRemaining = 0
+    var buildCount = 0
+    var buildRemaining = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.activeProductionType != null) {
+            prodCount++
+            prodRemaining += entity.activeProductionRemainingTicks
+        }
+        if (entity.activeResearchTech != null) {
+            researchCount++
+            researchRemaining += entity.activeResearchRemainingTicks
+        }
+        val remainingBuild = entity.constructionRemainingTicks
+        if (remainingBuild != null && remainingBuild > 0) {
+            buildCount++
+            buildRemaining += remainingBuild
+        }
+    }
+    if (prodCount == 0 && researchCount == 0 && buildCount == 0) return "selection eta: none"
+    val prodAvg = if (prodCount > 0) (prodRemaining.toFloat() / prodCount.toFloat()) else 0f
+    val researchAvg = if (researchCount > 0) (researchRemaining.toFloat() / researchCount.toFloat()) else 0f
+    val buildAvg = if (buildCount > 0) (buildRemaining.toFloat() / buildCount.toFloat()) else 0f
+    return "selection eta: prod=${"%.1f".format(prodAvg)} research=${"%.1f".format(researchAvg)} build=${"%.1f".format(buildAvg)}"
 }
 
 internal fun buildCommandAffordanceSummary(
