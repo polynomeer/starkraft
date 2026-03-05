@@ -4,6 +4,11 @@
 
 The `sim` module is complete as a deterministic headless RTS sandbox.
 
+Current repository layout:
+- `sim/` deterministic simulation core (authoritative rules)
+- `scripts/` developer smoke scripts
+- `.github/workflows/` CI pipeline
+
 Completed scope:
 - fixed-tick deterministic simulation loop
 - movement, pathfinding, replanning, and occupancy
@@ -125,6 +130,9 @@ positions.
 
 ## Running
 Use `./gradlew :sim:run` with JDK 17.
+
+Quick smoke check:
+`./scripts/smoke_run.sh`
 
 ### Headless Script Input
 You can run a simple command script with:
