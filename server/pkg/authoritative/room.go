@@ -32,6 +32,8 @@ type room struct {
 	matchEnded                 bool
 	winnerID                   string
 	maxTicks                   int
+	maxPastTickSkew            int
+	maxFutureTickSkew          int
 }
 
 type queuedBatch struct {
@@ -50,6 +52,8 @@ func newRoom(id string) *room {
 		maxUnitsPerClient:          64,
 		nextUnitID:                 3,
 		maxTicks:                   600,
+		maxPastTickSkew:            2,
+		maxFutureTickSkew:          2,
 	}
 	// Deterministic seed state for MVP networking.
 	r.units[1] = unitState{id: 1, ownerID: "player-1", typeID: "Worker", x: 2, y: 2, hp: 40}
@@ -147,6 +151,19 @@ func (r *room) applyPendingLocked() []commandAckRecord {
 	acks := make([]commandAckRecord, 0, len(r.pendingBatches)*2)
 	perClientCount := make(map[string]int, len(r.pendingBatches))
 	for _, qb := range r.pendingBatches {
+		if !r.batchTickAcceptedLocked(qb.batch.Tick) {
+			for _, cmd := range qb.batch.Commands {
+				acks = append(acks, commandAckRecord{
+					clientID: qb.clientID,
+					command:  cmd,
+					ack: protocol.CommandAckMessage{
+						Type: "commandAck", Tick: r.tick, RequestID: cmd.RequestID,
+						CommandType: cmd.CommandType, Accepted: false, Reason: "invalidTick",
+					},
+				})
+			}
+			continue
+		}
 		for _, cmd := range qb.batch.Commands {
 			perClientCount[qb.clientID]++
 			if r.matchEnded {
@@ -184,6 +201,16 @@ func (r *room) applyPendingLocked() []commandAckRecord {
 	}
 	r.updateWinnerLocked()
 	return acks
+}
+
+func (r *room) batchTickAcceptedLocked(batchTick int) bool {
+	if batchTick < r.tick-r.maxPastTickSkew {
+		return false
+	}
+	if batchTick > r.tick+r.maxFutureTickSkew {
+		return false
+	}
+	return true
 }
 
 func (r *room) applyCommandLocked(clientID string, cmd protocol.WireCommand) (bool, string) {

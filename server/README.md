@@ -23,6 +23,7 @@ Protocol package scaffold is implemented.
   - ownership checks
   - bounds checks
   - per-tick rate limiting
+  - accepted tick window checks (reject stale/far-future command batches)
 - transport/input hardening
   - websocket read-size cap (`MaxReadBytes`, default 64 KiB)
   - command batch cap (`MaxBatchCommands`, default 64)
