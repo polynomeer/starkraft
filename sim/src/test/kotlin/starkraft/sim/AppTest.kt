@@ -104,6 +104,12 @@ class AppTest {
                 validateCliArgs(arrayOf("--ticks"))
             }
         assertTrue(missing.message!!.contains("Missing value"))
+
+        val toggleWithValue =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--noSleep=true"))
+            }
+        assertTrue(toggleWithValue.message!!.contains("does not accept a value"))
     }
 
     @Test

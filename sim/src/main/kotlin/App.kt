@@ -1017,9 +1017,9 @@ internal fun validateCliArgs(args: Array<String>) {
                     i += 2
                 }
             }
-            CLI_TOGGLE_FLAGS.contains(raw) -> {
-                if (raw.contains("=")) {
-                    error("Option '$raw' does not accept a value")
+            CLI_TOGGLE_FLAGS.contains(key) -> {
+                if (raw != key) {
+                    error("Option '$key' does not accept a value")
                 }
                 i++
             }
