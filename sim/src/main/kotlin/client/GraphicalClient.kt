@@ -206,6 +206,7 @@ private class ClientPanel(
     private var scenarioMenuSelection = PlayScenario.SKIRMISH
     private var presetMenuOpen = false
     private var presetMenuSelection = "quick"
+    private var helpOverlayOpen = false
     private var noticeMessage: String? = null
     private var noticeUntilNanos: Long = 0L
 
@@ -299,6 +300,11 @@ private class ClientPanel(
                 val delta = 24f
                 if (e.keyCode == KeyEvent.VK_F10) {
                     togglePresetMenu()
+                    repaint()
+                    return
+                }
+                if (e.keyCode == KeyEvent.VK_F1) {
+                    helpOverlayOpen = !helpOverlayOpen
                     repaint()
                     return
                 }
@@ -548,7 +554,7 @@ private class ClientPanel(
                 selectedSlot = presetMenuSelection,
                 quickAvailable = isPresetAvailable("quick"),
                 altAvailable = isPresetAvailable("alt")
-            )
+            ) + buildHelpOverlayLines(helpOverlayOpen)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
         val snapshot = session.state.snapshot
@@ -605,6 +611,7 @@ private class ClientPanel(
             "preset:save:alt" -> savePreset("alt")
             "preset:load:alt" -> loadPreset("alt")
             "preset:menu" -> togglePresetMenu()
+            "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -861,6 +868,15 @@ internal fun buildPresetOverlayLines(
         "preset menu: s save  l/enter load  f10 close",
         line("quick", quickAvailable),
         line("alt", altAvailable)
+    )
+}
+
+internal fun buildHelpOverlayLines(open: Boolean): List<String> {
+    if (!open) return emptyList()
+    return listOf(
+        "help: f1 close  tab scenario menu  f10 preset menu",
+        "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
+        "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
 

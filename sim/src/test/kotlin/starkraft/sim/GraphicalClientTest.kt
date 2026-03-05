@@ -56,6 +56,7 @@ import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
+import starkraft.sim.client.buildHelpOverlayLines
 import starkraft.sim.client.buildStartOverlayLines
 import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
@@ -181,6 +182,19 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds help overlay lines`() {
+        assertEquals(
+            listOf(
+                "help: f1 close  tab scenario menu  f10 preset menu",
+                "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
+                "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
+            ),
+            buildHelpOverlayLines(open = true)
+        )
+        assertEquals(emptyList<String>(), buildHelpOverlayLines(open = false))
+    }
+
+    @Test
     fun `formats tick activity for hud`() {
         assertEquals("activity: none", formatTickActivity(null))
         assertEquals(
@@ -267,7 +281,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -393,15 +407,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -413,8 +427,8 @@ class GraphicalClientTest {
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
-            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
+            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }
 
@@ -439,7 +453,8 @@ class GraphicalClientTest {
         val presetMenu = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (21 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val scenarioMenu = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (22 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (24 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (25 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val help = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (25 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (26 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
@@ -447,6 +462,7 @@ class GraphicalClientTest {
         assertEquals("preset:menu", presetMenu?.actionId)
         assertEquals("scenario:menu", scenarioMenu?.actionId)
         assertEquals("scenario:next", scenarioNext?.actionId)
+        assertEquals("help:toggle", help?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
     }
@@ -461,6 +477,7 @@ class GraphicalClientTest {
         assertEquals("Open the preset menu to save/load quick or alt slots", commandButtonTooltip("preset:menu"))
         assertEquals("Open the scenario picker to restart into another setup", commandButtonTooltip("scenario:menu"))
         assertEquals("Switch to the next play scenario and restart", commandButtonTooltip("scenario:next"))
+        assertEquals("Toggle in-game help and key hints", commandButtonTooltip("help:toggle"))
         assertEquals(null, commandButtonTooltip("unknown"))
     }
 

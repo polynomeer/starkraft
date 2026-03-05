@@ -32,6 +32,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "preset:save:alt" -> "Save the current scenario and speed into preset alt"
         actionId == "preset:load:alt" -> "Load preset alt and restart into it"
         actionId == "preset:menu" -> "Open the preset menu to save/load quick or alt slots"
+        actionId == "help:toggle" -> "Toggle in-game help and key hints"
         actionId == "scenario:menu" -> "Open the scenario picker to restart into another setup"
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
@@ -382,6 +383,7 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
             it.startsWith("scenario:") ||
             it.startsWith("preset menu:") ||
             it.startsWith("presets:") ||
+            it.startsWith("help:") ||
             it.startsWith("notice:")
     }
 
@@ -461,6 +463,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Scenario Menu", "scenario:menu"),
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
+            ClientCommandButton("Help", "help:toggle"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -485,6 +488,7 @@ internal fun buildCommandButtons(
                 it.actionId.startsWith("play:") ||
                 it.actionId.startsWith("preset:") ||
                 it.actionId.startsWith("scenario:") ||
+                it.actionId.startsWith("help:") ||
                 it.actionId == "clear"
         }
     }
@@ -530,7 +534,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
