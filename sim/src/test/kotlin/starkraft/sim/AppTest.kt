@@ -37,6 +37,7 @@ class AppTest {
         assertTrue(help.contains("--strictReplayMeta"))
         assertTrue(help.contains("--replayStatsJson"))
         assertTrue(help.contains("--snapshotJson"))
+        assertTrue(help.contains("standalone: no --replay/--inputJson/--ticks"))
         assertTrue(help.contains("--compactJson"))
         assertTrue(help.contains("--playControlFile <path>"))
         assertTrue(help.contains("--version"))
@@ -212,6 +213,55 @@ class AppTest {
                 )
             }
         assertTrue(scriptFlagEx.message!!.contains("require --script or --spawnScript"))
+    }
+
+    @Test
+    fun `cli semantic validator rejects runtime flags during script validate modes`() {
+        val replayConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = "sim/scripts/spawn.script",
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = true,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(replayConflict.message!!.contains("cannot be combined with --replay"))
+
+        val ticksConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    tickLimit = 10,
+                    replayTicks = null,
+                    scriptPath = "sim/scripts/sample.script",
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = true
+                )
+            }
+        assertTrue(ticksConflict.message!!.contains("cannot be combined with --ticks"))
     }
 
     @Test

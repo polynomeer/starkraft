@@ -1048,6 +1048,17 @@ internal fun validateCliSemantics(
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
     }
+    if (scriptValidate || scriptDryRun) {
+        if (replayPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replay")
+        if (inputJsonPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --inputJson")
+        if (tickLimit != null) error("--scriptValidate/--scriptDryRun cannot be combined with --ticks")
+        if (replayTicks != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayTicks")
+        if (replayValidateOnly) error("--scriptValidate/--scriptDryRun cannot be combined with --replayValidateOnly")
+        if (replayStats) error("--scriptValidate/--scriptDryRun cannot be combined with --replayStats")
+        if (replayStatsJson) error("--scriptValidate/--scriptDryRun cannot be combined with --replayStatsJson")
+        if (replayMetaJson) error("--scriptValidate/--scriptDryRun cannot be combined with --replayMetaJson")
+        if (snapshotJson) error("--scriptValidate/--scriptDryRun cannot be combined with --snapshotJson")
+    }
 }
 
 internal fun validateCliNumericSemantics(
@@ -1098,7 +1109,8 @@ internal fun buildAppUsageText(): String =
         "  --compactJson               Print JSON outputs in compact form",
         "  --playControlFile <path>    Use external pause/speed control file",
         "  --scriptValidate            Parse+validate script(s) and exit",
-        "  --scriptDryRun              Validate and print parsed script selections/commands",
+        "  --scriptDryRun              Validate and print script selections/commands",
+        "                               (standalone: no --replay/--inputJson/--ticks)",
         "  --dumpWorldHash             Print final world hash",
         "  --printEntities             Print alive entities at end",
         "  --printOrders               Print pending orders at end",
