@@ -650,6 +650,10 @@ private class ClientPanel(
                 canTrain = canTrain,
                 canResearch = canResearch
             ) ?: return false
+        if (!isCommandButtonEnabled(button.actionId, session.state.selectedIds.isNotEmpty(), canTrain, canResearch, session.state.viewedFaction)) {
+            showNotice("command unavailable")
+            return true
+        }
         when (button.actionId) {
             "move" -> {
                 groundMode = ClientGroundCommandMode.MOVE
@@ -894,7 +898,9 @@ private class ClientPanel(
                 canTrain = canTrain,
                 canResearch = canResearch
             ) ?: return null
-        return commandButtonTooltip(button.actionId)
+        val tooltip = commandButtonTooltip(button.actionId) ?: return null
+        val enabled = isCommandButtonEnabled(button.actionId, session.state.selectedIds.isNotEmpty(), canTrain, canResearch, session.state.viewedFaction)
+        return if (enabled) tooltip else "$tooltip (unavailable)"
     }
 
     private fun presetAvailabilityLine(): String? {

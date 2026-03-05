@@ -309,11 +309,21 @@ internal class SwingClientRenderer(
         for (i in buttons.indices) {
             val bounds = commandButtonBounds(width, i, statusLines.size)
             val active = isCommandButtonActive(buttons[i].actionId, overlayLines)
-            g.color = if (active) Color(0x2E, 0x4C, 0x38, 228) else Color(0x1B, 0x26, 0x31, 220)
+            val enabled = isCommandButtonEnabled(buttons[i].actionId, state.selectedIds.isNotEmpty(), canTrain, canResearch, state.viewedFaction)
+            g.color =
+                when {
+                    !enabled -> Color(0x14, 0x1B, 0x22, 180)
+                    active -> Color(0x2E, 0x4C, 0x38, 228)
+                    else -> Color(0x1B, 0x26, 0x31, 220)
+                }
             g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
-            g.color = if (active) Color(0x7F, 0xCE, 0x92) else Color(0x61, 0x71, 0x80)
+            g.color = if (enabled) {
+                if (active) Color(0x7F, 0xCE, 0x92) else Color(0x61, 0x71, 0x80)
+            } else {
+                Color(0x42, 0x4F, 0x5A)
+            }
             g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
-            g.color = Color.WHITE
+            g.color = if (enabled) Color.WHITE else Color(0x8C, 0x97, 0xA1)
             g.drawString(buttons[i].label, bounds.x + 10, bounds.y + 21)
         }
     }
@@ -438,6 +448,25 @@ internal fun isCommandButtonActive(actionId: String, overlayLines: List<String>)
         else -> false
     }
 }
+
+internal fun isCommandButtonEnabled(
+    actionId: String,
+    hasSelection: Boolean,
+    canTrain: Boolean,
+    canResearch: Boolean,
+    viewedFaction: Int?
+): Boolean =
+    when {
+        actionId.startsWith("train:") -> canTrain
+        actionId.startsWith("research:") -> canResearch
+        actionId == "move" || actionId == "attackMove" || actionId == "patrol" || actionId == "hold" -> hasSelection
+        actionId == "cancelBuild" || actionId == "cancelTrain" || actionId == "cancelResearch" -> hasSelection
+        actionId == "select:selectedType" || actionId == "select:selectedArchetype" -> hasSelection
+        actionId == "select:viewFaction" -> viewedFaction != null
+        actionId == "view:centerSelection" -> hasSelection
+        actionId == "view:centerFaction" -> viewedFaction != null
+        else -> true
+    }
 
 internal fun buildStartOverlayLines(tick: Int, overlayLines: List<String>): List<String> {
     if (tick > 50) return emptyList()

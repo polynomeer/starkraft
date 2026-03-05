@@ -93,6 +93,7 @@ import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.buildEconomySummary
 import starkraft.sim.client.healthBarFillWidth
 import starkraft.sim.client.isCommandButtonActive
+import starkraft.sim.client.isCommandButtonEnabled
 import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.commandButtonTooltip
 import starkraft.sim.client.fitCommandPanelStatusLine
@@ -587,6 +588,19 @@ class GraphicalClientTest {
         assertTrue(isCommandButtonActive("help:toggle", overlay))
         assertFalse(isCommandButtonActive("move", overlay))
         assertFalse(isCommandButtonActive("view:observer", overlay))
+    }
+
+    @Test
+    fun `evaluates command button availability`() {
+        assertFalse(isCommandButtonEnabled("move", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = 1))
+        assertTrue(isCommandButtonEnabled("move", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1))
+        assertFalse(isCommandButtonEnabled("train:Marine", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1))
+        assertTrue(isCommandButtonEnabled("train:Marine", hasSelection = true, canTrain = true, canResearch = false, viewedFaction = 1))
+        assertFalse(isCommandButtonEnabled("research:AdvancedTraining", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1))
+        assertFalse(isCommandButtonEnabled("select:viewFaction", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = null))
+        assertTrue(isCommandButtonEnabled("select:viewFaction", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = 2))
+        assertFalse(isCommandButtonEnabled("view:centerFaction", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = null))
+        assertTrue(isCommandButtonEnabled("view:centerFaction", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = 1))
     }
 
     @Test

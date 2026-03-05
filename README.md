@@ -251,6 +251,7 @@ Client controls:
 - command panel status now includes a `selection hud` line with selected type counts
 - command panel status now includes current command mode (e.g. `mode: attack-move`)
 - command panel buttons now highlight active mode/view/menu toggles (build mode, view target, help/menu open)
+- unavailable command buttons now render dimmed and show tooltip `(unavailable)` context
 - command panel status now includes in-panel scenario menu guidance while the menu is open
 - hovering command panel buttons now mirrors their tooltip into a `hint:` status line
 - command panel status lines are width-fitted with ellipsis to keep the panel readable
