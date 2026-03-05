@@ -36,6 +36,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "scenario:menu" -> "Open the scenario picker to restart into another setup"
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
+        actionId == "view:centerSelection" -> "Center camera on the current selection"
         actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
         actionId == "select:selectedType" -> "Select all units matching the first selected unit type"
         actionId == "select:selectedArchetype" -> "Select all units matching the first selected unit archetype"
@@ -481,6 +482,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Help", "help:toggle"),
+            ClientCommandButton("Center", "view:centerSelection"),
             ClientCommandButton("Select View", "select:viewFaction"),
             ClientCommandButton("Select Type", "select:selectedType"),
             ClientCommandButton("Select Role", "select:selectedArchetype"),
@@ -523,6 +525,7 @@ internal fun buildCommandButtons(
                 it.actionId.startsWith("help:") ||
                 it.actionId.startsWith("select:") ||
                 it.actionId.startsWith("groups:") ||
+                it.actionId.startsWith("view:") ||
                 it.actionId == "clear"
         }
     }

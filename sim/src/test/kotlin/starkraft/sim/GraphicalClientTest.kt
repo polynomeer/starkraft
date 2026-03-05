@@ -446,15 +446,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "view:centerSelection", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "view:centerSelection", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "view:centerSelection", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "select:trainers", "select:researchers", "select:construction", "select:harvesters", "select:returningHarvesters", "select:cargoHarvesters", "groups:clear", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -493,22 +493,23 @@ class GraphicalClientTest {
         val scenarioMenu = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (22 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (24 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val help = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (25 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val selectView = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (26 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val selectType = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (27 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val selectArchetype = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (28 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val selectAll = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (29 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val idleWorkers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (30 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val damaged = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (31 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val combat = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (32 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val producers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (33 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val trainers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (34 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val researchers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (35 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val construction = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (36 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val harvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (37 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val returningHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (38 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val cargoHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (39 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clearGroups = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (40 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (41 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val center = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (26 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val selectView = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (27 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val selectType = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (28 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val selectArchetype = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (29 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val selectAll = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (30 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val idleWorkers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (31 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val damaged = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (32 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val combat = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (33 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val producers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (34 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val trainers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (35 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val researchers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (36 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val construction = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (37 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val harvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (38 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val returningHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (39 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val cargoHarvesters = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (40 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clearGroups = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (41 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (42 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
@@ -517,6 +518,7 @@ class GraphicalClientTest {
         assertEquals("scenario:menu", scenarioMenu?.actionId)
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("help:toggle", help?.actionId)
+        assertEquals("view:centerSelection", center?.actionId)
         assertEquals("select:viewFaction", selectView?.actionId)
         assertEquals("select:selectedType", selectType?.actionId)
         assertEquals("select:selectedArchetype", selectArchetype?.actionId)
@@ -547,6 +549,7 @@ class GraphicalClientTest {
         assertEquals("Open the scenario picker to restart into another setup", commandButtonTooltip("scenario:menu"))
         assertEquals("Switch to the next play scenario and restart", commandButtonTooltip("scenario:next"))
         assertEquals("Toggle in-game help and key hints", commandButtonTooltip("help:toggle"))
+        assertEquals("Center camera on the current selection", commandButtonTooltip("view:centerSelection"))
         assertEquals("Select all units for the currently viewed faction", commandButtonTooltip("select:viewFaction"))
         assertEquals("Select all units matching the first selected unit type", commandButtonTooltip("select:selectedType"))
         assertEquals("Select all units matching the first selected unit archetype", commandButtonTooltip("select:selectedArchetype"))

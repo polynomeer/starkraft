@@ -683,6 +683,7 @@ private class ClientPanel(
             "preset:load:alt" -> loadPreset("alt")
             "preset:menu" -> togglePresetMenu()
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
+            "view:centerSelection" -> centerOnSelection()
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
@@ -880,6 +881,22 @@ private class ClientPanel(
             )
         )
         showNotice("selected ${ids.size} units (f$faction)")
+    }
+
+    private fun centerOnSelection() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = session.state.selectedIds
+        if (ids.isEmpty()) {
+            showNotice("no selection to center")
+            return
+        }
+        val center = computeSelectionCentroid(snapshot, ids.toIntArray())
+        if (center == null) {
+            showNotice("selection not found")
+            return
+        }
+        camera = centerCameraOnWorld(camera, width, height, center.first, center.second)
+        showNotice("camera centered")
     }
 
     private fun selectSelectedType() {
