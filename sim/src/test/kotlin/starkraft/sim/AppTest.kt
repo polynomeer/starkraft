@@ -236,6 +236,28 @@ class AppTest {
                 )
             }
         assertTrue(statsConflict.message!!.contains("cannot be combined"))
+
+        val ticksConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    replayTicks = 5,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ticksConflict.message!!.contains("cannot be combined"))
     }
 
     @Test

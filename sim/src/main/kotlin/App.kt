@@ -1020,6 +1020,9 @@ internal fun validateCliSemantics(
     if (replayValidateOnly && replayStatsJson) {
         error("--replayValidateOnly cannot be combined with --replayStatsJson")
     }
+    if (replayValidateOnly && replayTicks != null) {
+        error("--replayValidateOnly cannot be combined with --replayTicks")
+    }
     if (replayMetaJson && replayStats) {
         error("--replayMetaJson cannot be combined with --replayStats")
     }
