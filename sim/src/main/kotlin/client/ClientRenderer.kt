@@ -627,6 +627,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
+        buildSelectionVisionSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
@@ -724,6 +725,28 @@ internal fun buildSelectionOrderSummary(
     if (active.isEmpty()) return "orders: queued=$queued active=none"
     val activeSummary = active.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "orders: queued=$queued active=$activeSummary"
+}
+
+internal fun buildSelectionVisionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection vision: none"
+    var count = 0
+    var total = 0f
+    var min = Float.MAX_VALUE
+    var max = 0f
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val range = entity.visionRange ?: continue
+        count++
+        total += range
+        if (range < min) min = range
+        if (range > max) max = range
+    }
+    if (count == 0) return "selection vision: none"
+    val avg = total / count.toFloat()
+    return "selection vision: avg=${"%.1f".format(avg)} min=${"%.1f".format(min)} max=${"%.1f".format(max)}"
 }
 
 internal fun buildSelectionCombatSummary(

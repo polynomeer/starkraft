@@ -84,6 +84,7 @@ import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionHealthSummary
+import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
@@ -295,9 +296,9 @@ class GraphicalClientTest {
                     )
                 ),
                 entities = listOf(
-                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 3, orderQueueSize = 1, activeOrder = "move"),
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 3, visionRange = 6f, orderQueueSize = 1, activeOrder = "move"),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
-                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30, harvestPhase = "gather", harvestTargetNodeId = 40, orderQueueSize = 2, activeOrder = "attackMove"),
+                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, visionRange = 5f, buildTargetId = 30, harvestPhase = "gather", harvestTargetNodeId = 40, orderQueueSize = 2, activeOrder = "attackMove"),
                     EntitySnapshot(
                         id = 12,
                         faction = 1,
@@ -318,6 +319,7 @@ class GraphicalClientTest {
                         researchQueueSize = 2,
                         activeResearchTech = "AdvancedTraining",
                         activeResearchRemainingTicks = 8,
+                        visionRange = 7f,
                         supportsTraining = true,
                         supportsResearch = true,
                         supportsDropoff = true,
@@ -335,6 +337,7 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection roles: infantryx1 workerx1 producerx1",
                 "selection hp: 185/465 (39%)",
+                "selection vision: avg=6.0 min=5.0 max=7.0",
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
@@ -551,6 +554,28 @@ class GraphicalClientTest {
         assertEquals("orders: queued=3 active=movex1 attackMovex1", buildSelectionOrderSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("orders: none", buildSelectionOrderSummary(snapshot, emptySet()))
         assertEquals("orders: none", buildSelectionOrderSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection vision summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0, visionRange = 6f),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, visionRange = 5f)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection vision: avg=5.5 min=5.0 max=6.0", buildSelectionVisionSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, emptySet()))
+        assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test
