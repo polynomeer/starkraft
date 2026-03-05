@@ -384,7 +384,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--record <path>` save recorded commands after a run as replay JSON
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
-  This is validation-only mode and cannot be combined with ticks, replay slices/stats/meta, snapshot output flags, or replay write flags.
+  This is validation-only mode and cannot be combined with ticks, replay slices/stats/meta, snapshot output flags, replay write flags, `--spawnScript`, or `--inputTail`.
 - `--replayTicks <n>` requires `--replay` and runs only the first `n` replay ticks
   It cannot be combined with `--ticks`.
 - Base command sources are mutually exclusive: use only one of `--replay`, `--script`, or `--inputJson`

@@ -1062,6 +1062,12 @@ internal fun validateCliSemantics(
     if (replayValidateOnly && replayTicks != null) {
         error("--replayValidateOnly cannot be combined with --replayTicks")
     }
+    if (replayValidateOnly && spawnScriptPath != null) {
+        error("--replayValidateOnly cannot be combined with --spawnScript")
+    }
+    if (replayValidateOnly && inputTailPath != null) {
+        error("--replayValidateOnly cannot be combined with --inputTail")
+    }
     if (replayValidateOnly && tickLimit != null) {
         error("--replayValidateOnly cannot be combined with --ticks")
     }

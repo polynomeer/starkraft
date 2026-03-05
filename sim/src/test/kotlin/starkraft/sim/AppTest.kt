@@ -409,6 +409,30 @@ class AppTest {
                 )
             }
         assertTrue(recordConflict.message!!.contains("cannot be combined with --record"))
+
+        val tailConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    inputTailPath = "/tmp/input.ndjson"
+                )
+            }
+        assertTrue(tailConflict.message!!.contains("cannot be combined with --inputTail"))
     }
 
     @Test
