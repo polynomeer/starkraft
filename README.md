@@ -302,6 +302,7 @@ Client controls:
 - command panel includes `Clear Groups` (same effect as `Alt+0`)
 - command panel includes `Center` to move camera to current selection
 - command panel includes `Center View` to move camera to viewed faction
+- command panel includes `View F1/F2/Obs` quick view mode switches
 - command panel includes `Dropoffs` to focus deposit buildings
 - `1`: view/control faction 1
 - `2`: view/control faction 2

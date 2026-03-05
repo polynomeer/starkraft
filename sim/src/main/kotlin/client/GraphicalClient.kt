@@ -698,6 +698,18 @@ private class ClientPanel(
                 camera = CameraView()
                 showNotice("camera reset")
             }
+            "view:faction1" -> {
+                session.state.viewedFaction = 1
+                showNotice("view faction 1")
+            }
+            "view:faction2" -> {
+                session.state.viewedFaction = 2
+                showNotice("view faction 2")
+            }
+            "view:observer" -> {
+                session.state.viewedFaction = null
+                showNotice("view observer")
+            }
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
