@@ -380,6 +380,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands
+- `--spawnScript` must be different from `--script` (same file is rejected)
 - `--help` / `-h` print CLI option summary and exit
 - `--version` print sim build/map version context and exit
 - `--record <path>` save recorded commands after a run as replay JSON

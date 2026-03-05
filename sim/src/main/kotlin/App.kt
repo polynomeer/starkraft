@@ -367,6 +367,10 @@ fun main(args: Array<String>) {
         snapshotOutPath = snapshotOutPath,
         inputTailPath = inputTailPath
     )
+    validateScriptPathConflicts(
+        scriptPath = scriptPath,
+        spawnScriptPath = spawnScriptPath
+    )
     validateInputOutputPathConflicts(
         replayPath = replayPath,
         recordPath = recordPath,
@@ -1277,6 +1281,18 @@ internal fun validateLivePathConflicts(
     val inputPath = Paths.get(inputTailPath).toAbsolutePath().normalize().toString()
     if (snapshotPath == inputPath) {
         error("Live path conflict '$snapshotPath': --snapshotOut and --inputTail")
+    }
+}
+
+internal fun validateScriptPathConflicts(
+    scriptPath: String?,
+    spawnScriptPath: String?
+) {
+    if (scriptPath == null || spawnScriptPath == null) return
+    val script = Paths.get(scriptPath).toAbsolutePath().normalize().toString()
+    val spawn = Paths.get(spawnScriptPath).toAbsolutePath().normalize().toString()
+    if (script == spawn) {
+        error("Script path conflict '$script': --script and --spawnScript")
     }
 }
 

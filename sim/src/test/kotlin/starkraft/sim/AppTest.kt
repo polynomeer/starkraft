@@ -988,6 +988,25 @@ class AppTest {
     }
 
     @Test
+    fun `script path conflict validator rejects same script and spawn script`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateScriptPathConflicts(
+                    scriptPath = "/tmp/sample.script",
+                    spawnScriptPath = "/tmp/sample.script"
+                )
+            }
+        assertTrue(ex.message!!.contains("Script path conflict"))
+        assertTrue(ex.message!!.contains("--script"))
+        assertTrue(ex.message!!.contains("--spawnScript"))
+
+        validateScriptPathConflicts(
+            scriptPath = "/tmp/main.script",
+            spawnScriptPath = "/tmp/spawn.script"
+        )
+    }
+
+    @Test
     fun `option parsers parse valid numeric flags`() {
         assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))
