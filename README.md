@@ -489,6 +489,7 @@ The graphical and console clients also show selected movement posture, e.g. `sel
 The graphical and console clients also show selected weapon mix, e.g. `selection weapons: Riflex3 Cannonx1 unarmed=2`.
 The graphical and console clients also show selected order pressure, e.g. `orders: queued=3 active=movex2 attackMovex1`.
 The graphical and console clients also show selected target fan-out, e.g. `selection targets: build=1 harvestNodes=2 return=1`.
+The graphical and console clients also show selected rally configuration fan-out, e.g. `selection rally: configured=2/3 top=14,10`.
 The graphical and console clients also show selected structure footprint totals, e.g. `selection structures: total=2 constructing=1 area=10`.
 The graphical and console clients also show selected production/research queue pressure, e.g. `selection queues: prod=2@1 research=3@1`.
 The graphical client HUD also shows aggregate selected HP, e.g. `selection hp: 185/465 (39%)`.

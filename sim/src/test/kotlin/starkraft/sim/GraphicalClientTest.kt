@@ -93,6 +93,7 @@ import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionWeaponSummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionTargetSummary
+import starkraft.sim.client.buildSelectionRallySummary
 import starkraft.sim.client.buildSelectionStructureSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
@@ -333,7 +334,10 @@ class GraphicalClientTest {
                         visionRange = 7f,
                         supportsTraining = true,
                         supportsResearch = true,
+                        supportsRally = true,
                         supportsDropoff = true,
+                        rallyX = 14f,
+                        rallyY = 10f,
                         pathRemainingNodes = 5,
                         pathGoalX = 12,
                         pathGoalY = 14
@@ -357,9 +361,10 @@ class GraphicalClientTest {
                 "selection weapons: Riflex1 unarmed=2",
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection targets: build=1 harvestNodes=1 return=0",
+                "selection rally: configured=1/1 top=14,10",
                 "selection structures: total=1 constructing=1 area=4",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
-                "capabilities: train=1 research=1 rally=0 dropoff=1",
+                "capabilities: train=1 research=1 rally=1 dropoff=1",
                 "selection queues: prod=2@1 research=2@1",
                 "commands: move=on train=on research=on viewSelect=on",
                 "builders: active=1 targets=1",
@@ -369,7 +374,7 @@ class GraphicalClientTest {
                 "fog: f1 visible=10 hidden=1014",
                 "production: labs=1 queue=2 active=Marinex1",
                 "research: labs=1 queue=2 active=AdvancedTrainingx1",
-                "rally: none",
+                "rally: 14.0,10.0x1",
                 "tech: AdvancedTrainingx1",
                 "activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15",
                 "construction state: total=2 f1=2 f2=0 remaining=10 @15",
@@ -731,6 +736,29 @@ class GraphicalClientTest {
         assertEquals("selection targets: build=1 harvestNodes=1 return=1", buildSelectionTargetSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection targets: none", buildSelectionTargetSummary(snapshot, emptySet()))
         assertEquals("selection targets: none", buildSelectionTargetSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection rally summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, supportsRally = true, rallyX = 10f, rallyY = 12f),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Factory", x = 3f, y = 1f, dir = 0f, hp = 300, maxHp = 300, armor = 2, supportsRally = true),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Marine", x = 2f, y = 2f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection rally: configured=1/2 top=10,12", buildSelectionRallySummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection rally: none", buildSelectionRallySummary(snapshot, emptySet()))
+        assertEquals("selection rally: none", buildSelectionRallySummary(snapshot, linkedSetOf(3)))
     }
 
     @Test

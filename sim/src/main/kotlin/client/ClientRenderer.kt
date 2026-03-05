@@ -636,6 +636,7 @@ internal fun buildClientHudLines(
         buildSelectionWeaponSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionTargetSummary(snapshot, state.selectedIds),
+        buildSelectionRallySummary(snapshot, state.selectedIds),
         buildSelectionStructureSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
@@ -932,6 +933,30 @@ internal fun buildSelectionTargetSummary(
         return "selection targets: none"
     }
     return "selection targets: build=${buildTargets.size} harvestNodes=${harvestNodes.size} return=${returnTargets.size}"
+}
+
+internal fun buildSelectionRallySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection rally: none"
+    var capable = 0
+    var configured = 0
+    val points = LinkedHashMap<String, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.supportsRally != true) continue
+        capable++
+        val x = entity.rallyX ?: continue
+        val y = entity.rallyY ?: continue
+        configured++
+        val key = "${x.toInt()},${y.toInt()}"
+        points[key] = (points[key] ?: 0) + 1
+    }
+    if (capable == 0) return "selection rally: none"
+    if (configured == 0) return "selection rally: configured=0/$capable"
+    val top = points.entries.maxByOrNull { it.value }?.key ?: "n/a"
+    return "selection rally: configured=$configured/$capable top=$top"
 }
 
 internal fun buildSelectionCombatSummary(
