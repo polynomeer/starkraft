@@ -641,6 +641,7 @@ internal fun buildClientHudLines(
         buildSelectionRallySummary(snapshot, state.selectedIds),
         buildSelectionStructureSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
+        buildSelectionAlertSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
         buildSelectionQueueSummary(snapshot, state.selectedIds),
         buildCommandAffordanceSummary(snapshot, state.selectedIds, state.viewedFaction),
@@ -1043,6 +1044,40 @@ internal fun buildSelectionCombatSummary(
     if (armed == 0 && unarmed == 0) return "selection combat: none"
     val nextReady = if (cooling > 0) minCooldown else 0
     return "selection combat: armed=$armed ready=$ready cooling=$cooling unarmed=$unarmed nextReady=$nextReady"
+}
+
+internal fun buildSelectionAlertSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection alerts: none"
+    var selected = 0
+    var lowHp = 0
+    var idleWorkers = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        selected++
+        if (entity.maxHp > 0) {
+            val hpPct = (entity.hp.toFloat() * 100f) / entity.maxHp.toFloat()
+            if (hpPct < 50f) {
+                lowHp++
+            }
+        }
+        val idleWorker =
+            entity.archetype == "worker" &&
+                entity.activeOrder == null &&
+                entity.harvestPhase == null &&
+                entity.buildTargetId == null
+        if (idleWorker) {
+            idleWorkers++
+        }
+    }
+    if (selected == 0) return "selection alerts: none"
+    return if (lowHp == 0 && idleWorkers == 0) {
+        "selection alerts: none"
+    } else {
+        "selection alerts: lowHp=$lowHp idleWorkers=$idleWorkers"
+    }
 }
 
 internal fun buildSelectionCapabilitySummary(

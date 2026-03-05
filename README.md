@@ -491,6 +491,7 @@ The graphical and console clients also show selected path convergence, e.g. `sel
 The graphical and console clients also show selected order pressure, e.g. `orders: queued=3 active=movex2 attackMovex1`.
 The graphical and console clients also show selected task phases, e.g. `selection phases: gather=1 return=1 build=1 train=1 research=1`.
 The graphical and console clients also show selected target fan-out, e.g. `selection targets: build=1 harvestNodes=2 return=1`.
+The graphical and console clients also show selected warning signals, e.g. `selection alerts: lowHp=2 idleWorkers=1`.
 The graphical and console clients also show selected rally configuration fan-out, e.g. `selection rally: configured=2/3 top=14,10`.
 The graphical and console clients also show selected structure footprint totals, e.g. `selection structures: total=2 constructing=1 area=10`.
 The graphical and console clients also show selected production/research queue pressure, e.g. `selection queues: prod=2@1 research=3@1`.

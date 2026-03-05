@@ -98,6 +98,7 @@ import starkraft.sim.client.buildSelectionTargetSummary
 import starkraft.sim.client.buildSelectionRallySummary
 import starkraft.sim.client.buildSelectionStructureSummary
 import starkraft.sim.client.buildSelectionCombatSummary
+import starkraft.sim.client.buildSelectionAlertSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
 import starkraft.sim.client.buildSelectionQueueSummary
 import starkraft.sim.client.buildCommandAffordanceSummary
@@ -368,6 +369,7 @@ class GraphicalClientTest {
                 "selection rally: configured=1/1 top=14,10",
                 "selection structures: total=1 constructing=1 area=4",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
+                "selection alerts: lowHp=1 idleWorkers=0",
                 "capabilities: train=1 research=1 rally=1 dropoff=1",
                 "selection queues: prod=2@1 research=2@1",
                 "commands: move=on train=on research=on viewSelect=on",
@@ -763,6 +765,28 @@ class GraphicalClientTest {
         assertEquals("selection phases: gather=1 return=1 build=1 train=1 research=1", buildSelectionPhaseSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection phases: none", buildSelectionPhaseSummary(snapshot, emptySet()))
         assertEquals("selection phases: idle", buildSelectionPhaseSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection alert summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", archetype = "infantry", x = 1f, y = 1f, dir = 0f, hp = 10, maxHp = 40, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", archetype = "worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection alerts: lowHp=1 idleWorkers=1", buildSelectionAlertSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection alerts: none", buildSelectionAlertSummary(snapshot, emptySet()))
+        assertEquals("selection alerts: none", buildSelectionAlertSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test
