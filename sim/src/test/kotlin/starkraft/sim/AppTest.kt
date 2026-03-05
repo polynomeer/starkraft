@@ -336,6 +336,54 @@ class AppTest {
                 )
             }
         assertTrue(ticksConflict.message!!.contains("cannot be combined"))
+
+        val snapshotOutConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    snapshotOutPath = "/tmp/out.ndjson"
+                )
+            }
+        assertTrue(snapshotOutConflict.message!!.contains("cannot be combined with --snapshotOut"))
+
+        val recordConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    recordPath = "/tmp/record.replay"
+                )
+            }
+        assertTrue(recordConflict.message!!.contains("cannot be combined with --record"))
     }
 
     @Test

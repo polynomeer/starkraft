@@ -339,7 +339,12 @@ fun main(args: Array<String>) {
         snapshotJson = snapshotJson,
         compactJson = compactJson,
         scriptValidate = scriptValidate,
-        scriptDryRun = scriptDryRun
+        scriptDryRun = scriptDryRun,
+        recordPath = recordPath,
+        replayOutPath = replayOutPath,
+        replayDumpPath = replayDumpPath,
+        snapshotOutPath = snapshotOutPath,
+        snapshotEvery = snapshotEvery
     )
     validateCliNumericSemantics(
         tickLimit = tickLimit,
@@ -1007,7 +1012,12 @@ internal fun validateCliSemantics(
     snapshotJson: Boolean,
     compactJson: Boolean,
     scriptValidate: Boolean,
-    scriptDryRun: Boolean
+    scriptDryRun: Boolean,
+    recordPath: String? = null,
+    replayOutPath: String? = null,
+    replayDumpPath: String? = null,
+    snapshotOutPath: String? = null,
+    snapshotEvery: Int? = null
 ) {
     if (tickLimit != null && replayTicks != null) {
         error("--ticks cannot be combined with --replayTicks")
@@ -1041,6 +1051,27 @@ internal fun validateCliSemantics(
     }
     if (replayValidateOnly && replayTicks != null) {
         error("--replayValidateOnly cannot be combined with --replayTicks")
+    }
+    if (replayValidateOnly && tickLimit != null) {
+        error("--replayValidateOnly cannot be combined with --ticks")
+    }
+    if (replayValidateOnly && snapshotJson) {
+        error("--replayValidateOnly cannot be combined with --snapshotJson")
+    }
+    if (replayValidateOnly && snapshotOutPath != null) {
+        error("--replayValidateOnly cannot be combined with --snapshotOut")
+    }
+    if (replayValidateOnly && snapshotEvery != null) {
+        error("--replayValidateOnly cannot be combined with --snapshotEvery")
+    }
+    if (replayValidateOnly && recordPath != null) {
+        error("--replayValidateOnly cannot be combined with --record")
+    }
+    if (replayValidateOnly && replayOutPath != null) {
+        error("--replayValidateOnly cannot be combined with --replayOut")
+    }
+    if (replayValidateOnly && replayDumpPath != null) {
+        error("--replayValidateOnly cannot be combined with --replayDump")
     }
     if (replayMetaJson && replayStats) {
         error("--replayMetaJson cannot be combined with --replayStats")
