@@ -3,3 +3,4 @@ plugins {
 }
 rootProject.name = "starkraft"
 include("sim")
+include("tools")
