@@ -23,6 +23,11 @@ Completed scope:
 - replay, benchmark, golden determinism checks, and snapshot/replay tooling
 - client-facing snapshot, event stream, live input, and minimal graphical/console clients
 
+Release/process assets:
+- versioned protocol baseline (`shared-protocol/schema/rts-protocol-v1.schema.json`)
+- changelog tracking (`CHANGELOG.md`)
+- packaging script for sim/server/client artifacts (`scripts/release_package.sh`)
+
 Out of scope for this module:
 - a polished game UI
 - art, audio, menus, and campaign content
