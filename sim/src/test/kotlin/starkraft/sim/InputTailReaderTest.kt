@@ -51,4 +51,33 @@ class InputTailReaderTest {
             assertEquals("cli-2", commandRequestIds[move])
         }
     }
+
+    @Test
+    fun `poll drops oversized invalid and rate-limited records`() {
+        val path = Files.createTempFile("starkraft-tail-limits", ".ndjson")
+        val commandsByTick = ArrayList<ArrayList<Command>>()
+        val selectionsByTick = ArrayList<ArrayList<ScriptRunner.SelectionEvent>>()
+        val commandRequestIds = IdentityHashMap<Command, String>()
+
+        InputTailReader.open(path, maxLineLength = 64, maxRecordsPerPoll = 1).use { reader ->
+            val oversized = "{\"tick\":0,\"commandType\":\"move\",\"units\":[1],\"x\":1.0,\"y\":2.0,\"pad\":\"" + "x".repeat(128) + "\"}"
+            Files.writeString(
+                path,
+                """
+                {"tick":0,"commandType":"move","units":[1],"x":1.0,"y":2.0}
+                {"tick":0,"commandType":"move","units":[1],"x":2.0,"y":3.0}
+                {"tick":0,"commandType":"move",
+                $oversized
+                """.trimIndent() + "\n",
+                StandardOpenOption.APPEND
+            )
+
+            reader.poll(commandsByTick, selectionsByTick, commandRequestIds)
+
+            assertEquals(1, reader.lastPollAcceptedRecords)
+            assertEquals(1, reader.lastPollDroppedRateLimited)
+            assertEquals(1, reader.lastPollDroppedInvalid)
+            assertEquals(1, reader.lastPollDroppedOversized)
+        }
+    }
 }

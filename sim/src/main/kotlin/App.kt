@@ -450,6 +450,10 @@ fun main(args: Array<String>) {
     var totalHarvestPickupAmount = 0
     var totalHarvestDepositAmount = 0
     var totalHarvesterRetargets = 0
+    var totalInputAccepted = 0
+    var totalInputDroppedOversized = 0
+    var totalInputDroppedInvalid = 0
+    var totalInputDroppedRateLimited = 0
 
     if ((scriptValidate || scriptDryRun) && (scriptPath != null || spawnScriptPath != null)) {
         validateSpawnTypes(commandsByTick, data)
@@ -543,6 +547,12 @@ fun main(args: Array<String>) {
     var tick = 0
     while (tick < totalTicks) {
         inputTailReader?.poll(liveCommandsByTick, liveSelectionEventsByTick, liveCommandRequestIds)
+        if (inputTailReader != null) {
+            totalInputAccepted += inputTailReader.lastPollAcceptedRecords
+            totalInputDroppedOversized += inputTailReader.lastPollDroppedOversized
+            totalInputDroppedInvalid += inputTailReader.lastPollDroppedInvalid
+            totalInputDroppedRateLimited += inputTailReader.lastPollDroppedRateLimited
+        }
         val commandOutcomeCounters = CommandOutcomeCounters()
         var tickTrainsCompleted = 0
         world.clearRemovedEvents()
@@ -733,7 +743,8 @@ fun main(args: Array<String>) {
                     "nodeRemaining=${world.resourceNodes[mineralNodeId]?.remaining ?: 0} " +
                     "pathReq=${pathing.lastTickRequests} pathSolved=${pathing.lastTickSolved} queue=${pathQueue.size} avgLen=${"%.2f".format(pathing.lastTickAvgPathLen)} " +
                     "replans=${movement.lastTickReplans} " +
-                    "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck}$outcomeSuffix"
+                    "blocked=${movement.lastTickReplansBlocked} stuck=${movement.lastTickReplansStuck} " +
+                    "inputAccepted=$totalInputAccepted inputDropped=${totalInputDroppedOversized + totalInputDroppedInvalid + totalInputDroppedRateLimited}$outcomeSuffix"
             )
         }
         if (world.matchEnded) {
@@ -815,6 +826,13 @@ fun main(args: Array<String>) {
     }
     if (world.matchEnded) {
         println("match result: winnerFaction=${world.winnerFaction}")
+    }
+    if (totalInputAccepted > 0 || totalInputDroppedOversized > 0 || totalInputDroppedInvalid > 0 || totalInputDroppedRateLimited > 0) {
+        println(
+            "input summary: accepted=$totalInputAccepted " +
+                "droppedOversized=$totalInputDroppedOversized droppedInvalid=$totalInputDroppedInvalid " +
+                "droppedRateLimited=$totalInputDroppedRateLimited"
+        )
     }
 
     if (dumpWorldHash && replayPath == null && scriptPath == null) {
