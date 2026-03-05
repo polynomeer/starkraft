@@ -125,6 +125,18 @@ class AppTest {
                 validateCliArgs(arrayOf("--noSleep=true"))
             }
         assertTrue(toggleWithValue.message!!.contains("does not accept a value"))
+
+        val duplicateValue =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--ticks", "10", "--ticks", "20"))
+            }
+        assertTrue(duplicateValue.message!!.contains("Duplicate option"))
+
+        val duplicateToggle =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--noSleep", "--noSleep"))
+            }
+        assertTrue(duplicateToggle.message!!.contains("Duplicate option"))
     }
 
     @Test

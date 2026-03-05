@@ -943,12 +943,16 @@ private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
 
 internal fun validateCliArgs(args: Array<String>) {
+    val seenOptions = HashSet<String>(args.size)
     var i = 0
     while (i < args.size) {
         val raw = args[i]
         val key = raw.substringBefore("=")
         when {
             CLI_FLAGS_WITH_VALUE.contains(key) -> {
+                if (!seenOptions.add(key)) {
+                    error("Duplicate option '$key'")
+                }
                 if (raw.contains("=")) {
                     val value = raw.substringAfter("=")
                     if (value.isBlank()) {
@@ -967,6 +971,9 @@ internal fun validateCliArgs(args: Array<String>) {
                 }
             }
             CLI_TOGGLE_FLAGS.contains(key) -> {
+                if (!seenOptions.add(key)) {
+                    error("Duplicate option '$key'")
+                }
                 if (raw != key) {
                     error("Option '$key' does not accept a value")
                 }
