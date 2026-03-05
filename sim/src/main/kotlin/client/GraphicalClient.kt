@@ -361,6 +361,9 @@ private class ClientPanel(
                     KeyEvent.VK_F3 -> {
                         selectSelectedType()
                     }
+                    KeyEvent.VK_F4 -> {
+                        selectSelectedArchetype()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -621,6 +624,7 @@ private class ClientPanel(
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
+            "select:selectedArchetype" -> selectSelectedArchetype()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -823,6 +827,35 @@ private class ClientPanel(
         showNotice("selected ${ids.size} ${selected.typeId}")
     }
 
+    private fun selectSelectedArchetype() {
+        val snapshot = session.state.snapshot ?: return
+        val firstSelectedId = session.state.selectedIds.firstOrNull()
+        if (firstSelectedId == null) {
+            showNotice("select a unit first")
+            return
+        }
+        val selected = snapshot.entities.firstOrNull { it.id == firstSelectedId }
+        if (selected == null) {
+            showNotice("selected unit missing")
+            return
+        }
+        val archetype = selected.archetype
+        if (archetype.isNullOrBlank()) {
+            showNotice("selected unit has no archetype")
+            return
+        }
+        val faction = session.state.viewedFaction ?: selected.faction
+        val ids = collectArchetypeSelectionIds(snapshot, archetype, faction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildArchetypeSelectionRecord(snapshot.tick + 1, archetype)
+            )
+        )
+        showNotice("selected ${ids.size} $archetype")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -934,7 +967,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
     return listOf(
         "help: f1 close  tab scenario menu  f10 preset menu",
         "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
-        "help: f2 select viewed faction  f3 select selected type",
+        "help: f2 select viewed faction  f3 select selected type  f4 archetype",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -969,6 +1002,16 @@ internal fun buildTypeSelectionRecord(
         typeId = typeId
     )
 
+internal fun buildArchetypeSelectionRecord(
+    tick: Int,
+    archetype: String
+): InputJson.InputSelectionRecord =
+    InputJson.InputSelectionRecord(
+        tick = tick,
+        selectionType = "archetype",
+        archetype = archetype
+    )
+
 internal fun collectFactionSelectionIds(
     snapshot: ClientSnapshot,
     faction: Int
@@ -993,6 +1036,21 @@ internal fun collectTypeSelectionIds(
     for (i in snapshot.entities.indices) {
         val entity = snapshot.entities[i]
         if (entity.faction != faction || entity.typeId != typeId) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectArchetypeSelectionIds(
+    snapshot: ClientSnapshot,
+    archetype: String,
+    faction: Int
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (entity.faction != faction || entity.archetype != archetype) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)
