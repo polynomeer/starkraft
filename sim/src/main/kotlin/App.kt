@@ -339,7 +339,11 @@ fun main(args: Array<String>) {
         compactJson = compactJson,
         scriptValidate = scriptValidate,
         scriptDryRun = scriptDryRun,
+        noSleep = noSleep,
         dumpWorldHash = dumpWorldHash,
+        printEntities = printEntities,
+        printOrders = printOrders,
+        labelDump = labelDump,
         recordPath = recordPath,
         replayOutPath = replayOutPath,
         replayDumpPath = replayDumpPath,
@@ -1022,7 +1026,11 @@ internal fun validateCliSemantics(
     compactJson: Boolean,
     scriptValidate: Boolean,
     scriptDryRun: Boolean,
+    noSleep: Boolean = false,
     dumpWorldHash: Boolean = false,
+    printEntities: Boolean = false,
+    printOrders: Boolean = false,
+    labelDump: Boolean = false,
     recordPath: String? = null,
     replayOutPath: String? = null,
     replayDumpPath: String? = null,
@@ -1094,6 +1102,18 @@ internal fun validateCliSemantics(
     if (replayValidateOnly && playControlPath != null) {
         error("--replayValidateOnly cannot be combined with --playControlFile")
     }
+    if (replayValidateOnly && noSleep) {
+        error("--replayValidateOnly cannot be combined with --noSleep")
+    }
+    if (replayValidateOnly && printEntities) {
+        error("--replayValidateOnly cannot be combined with --printEntities")
+    }
+    if (replayValidateOnly && printOrders) {
+        error("--replayValidateOnly cannot be combined with --printOrders")
+    }
+    if (replayValidateOnly && labelDump) {
+        error("--replayValidateOnly cannot be combined with --labelDump")
+    }
     if (replayMetaJson && replayStats) {
         error("--replayMetaJson cannot be combined with --replayStats")
     }
@@ -1112,6 +1132,10 @@ internal fun validateCliSemantics(
         if (spawnScriptPath != null) error("--replayStats/--replayStatsJson cannot be combined with --spawnScript")
         if (inputTailPath != null) error("--replayStats/--replayStatsJson cannot be combined with --inputTail")
         if (playControlPath != null) error("--replayStats/--replayStatsJson cannot be combined with --playControlFile")
+        if (noSleep) error("--replayStats/--replayStatsJson cannot be combined with --noSleep")
+        if (printEntities) error("--replayStats/--replayStatsJson cannot be combined with --printEntities")
+        if (printOrders) error("--replayStats/--replayStatsJson cannot be combined with --printOrders")
+        if (labelDump) error("--replayStats/--replayStatsJson cannot be combined with --labelDump")
     }
     if (replayMetaJson) {
         if (tickLimit != null) error("--replayMetaJson cannot be combined with --ticks")
@@ -1125,6 +1149,10 @@ internal fun validateCliSemantics(
         if (spawnScriptPath != null) error("--replayMetaJson cannot be combined with --spawnScript")
         if (inputTailPath != null) error("--replayMetaJson cannot be combined with --inputTail")
         if (playControlPath != null) error("--replayMetaJson cannot be combined with --playControlFile")
+        if (noSleep) error("--replayMetaJson cannot be combined with --noSleep")
+        if (printEntities) error("--replayMetaJson cannot be combined with --printEntities")
+        if (printOrders) error("--replayMetaJson cannot be combined with --printOrders")
+        if (labelDump) error("--replayMetaJson cannot be combined with --labelDump")
     }
     if (compactJson && !replayStatsJson && !replayMetaJson && !snapshotJson) {
         error("--compactJson requires --replayStatsJson, --replayMetaJson, or --snapshotJson")
@@ -1163,6 +1191,11 @@ internal fun validateCliSemantics(
         if (replayOutPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayOut")
         if (replayDumpPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayDump")
         if (playControlPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --playControlFile")
+        if (noSleep) error("--scriptValidate/--scriptDryRun cannot be combined with --noSleep")
+        if (dumpWorldHash) error("--scriptValidate/--scriptDryRun cannot be combined with --dumpWorldHash")
+        if (printEntities) error("--scriptValidate/--scriptDryRun cannot be combined with --printEntities")
+        if (printOrders) error("--scriptValidate/--scriptDryRun cannot be combined with --printOrders")
+        if (labelDump) error("--scriptValidate/--scriptDryRun cannot be combined with --labelDump")
     }
 }
 

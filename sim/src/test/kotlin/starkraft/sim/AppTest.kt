@@ -293,6 +293,30 @@ class AppTest {
                 )
             }
         assertTrue(snapshotConflict.message!!.contains("cannot be combined with --snapshotOut"))
+
+        val noSleepConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = "sim/scripts/sample.script",
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = true,
+                    noSleep = true
+                )
+            }
+        assertTrue(noSleepConflict.message!!.contains("cannot be combined with --noSleep"))
     }
 
     @Test
@@ -461,6 +485,30 @@ class AppTest {
                 )
             }
         assertTrue(playControlConflict.message!!.contains("cannot be combined with --playControlFile"))
+
+        val printConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    printEntities = true
+                )
+            }
+        assertTrue(printConflict.message!!.contains("cannot be combined with --printEntities"))
     }
 
     @Test
@@ -560,6 +608,30 @@ class AppTest {
                 )
             }
         assertTrue(snapshotConflict.message!!.contains("cannot be combined with --snapshotOut"))
+
+        val labelDumpConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = true,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    labelDump = true
+                )
+            }
+        assertTrue(labelDumpConflict.message!!.contains("cannot be combined with --labelDump"))
     }
 
     @Test
