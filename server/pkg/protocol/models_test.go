@@ -1,7 +1,10 @@
 package protocol
 
 import (
+	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -18,7 +21,7 @@ func TestHandshakeEnvelopeRoundTripGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal envelope: %v", err)
 	}
-	golden := `{"protocolVersion":1,"simVersion":"1.0.0","buildHash":"abc123","message":{"type":"handshake","clientName":"bot-a","requestedRoom":"room-1"}}`
+	golden := loadGolden(t, "v1-handshake-envelope.json")
 	if string(raw) != golden {
 		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
 	}
@@ -52,7 +55,7 @@ func TestCommandBatchEnvelopeRoundTripGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal envelope: %v", err)
 	}
-	golden := `{"protocolVersion":1,"simVersion":"1.0.0","message":{"type":"commandBatch","tick":120,"commands":[{"commandType":"move","requestId":"req-1"},{"commandType":"attack","requestId":"req-2"}]}}`
+	golden := loadGolden(t, "v1-command-batch-envelope.json")
 	if string(raw) != golden {
 		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
 	}
@@ -68,4 +71,20 @@ func TestCompatibilityMatrix(t *testing.T) {
 	if Compatibility(2, 1) != UpgradeServer {
 		t.Fatal("expected upgrade server")
 	}
+}
+
+func loadGolden(t *testing.T, file string) string {
+	t.Helper()
+	candidates := []string{
+		filepath.Join("..", "..", "..", "shared-protocol", "golden", file),
+		filepath.Join("..", "..", "..", "..", "shared-protocol", "golden", file),
+	}
+	for _, c := range candidates {
+		b, err := os.ReadFile(c)
+		if err == nil {
+			return string(bytes.TrimSpace(b))
+		}
+	}
+	t.Fatalf("missing golden file %s", file)
+	return ""
 }

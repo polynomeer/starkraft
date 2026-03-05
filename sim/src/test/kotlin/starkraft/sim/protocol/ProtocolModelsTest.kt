@@ -5,6 +5,9 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class ProtocolModelsTest {
     private val codec = Json {
@@ -22,8 +25,7 @@ class ProtocolModelsTest {
             )
 
         val json = codec.encodeToString(envelope)
-        val golden =
-            """{"protocolVersion":1,"simVersion":"1.0.0","buildHash":"abc123","message":{"type":"handshake","clientName":"bot-a","requestedRoom":"room-1"}}"""
+        val golden = loadSharedGolden("shared-protocol/golden/v1-handshake-envelope.json")
 
         assertEquals(golden, json)
         assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
@@ -46,8 +48,7 @@ class ProtocolModelsTest {
             )
 
         val json = codec.encodeToString(envelope)
-        val golden =
-            """{"protocolVersion":1,"simVersion":"1.0.0","message":{"type":"commandBatch","tick":120,"commands":[{"commandType":"move","requestId":"req-1"},{"commandType":"attack","requestId":"req-2"}]}}"""
+        val golden = loadSharedGolden("shared-protocol/golden/v1-command-batch-envelope.json")
 
         assertEquals(golden, json)
         assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
@@ -69,5 +70,18 @@ class ProtocolModelsTest {
             java.nio.file.Files.exists(direct) || java.nio.file.Files.exists(fromModule),
             "missing shared-protocol schema"
         )
+    }
+
+    private fun loadSharedGolden(relativePath: String): String {
+        val cwd = Paths.get("").toAbsolutePath().normalize()
+        val direct = cwd.resolve(relativePath).normalize()
+        val fromModule = cwd.resolve("../$relativePath").normalize()
+        val selected: Path =
+            when {
+                Files.exists(direct) -> direct
+                Files.exists(fromModule) -> fromModule
+                else -> error("missing golden file: $relativePath")
+            }
+        return Files.readString(selected).trim()
     }
 }

@@ -1,0 +1,1 @@
+{"protocolVersion":1,"simVersion":"1.0.0","message":{"type":"commandBatch","tick":120,"commands":[{"commandType":"move","requestId":"req-1"},{"commandType":"attack","requestId":"req-2"}]}}

@@ -1,0 +1,1 @@
+{"protocolVersion":1,"simVersion":"1.0.0","buildHash":"abc123","message":{"type":"handshake","clientName":"bot-a","requestedRoom":"room-1"}}

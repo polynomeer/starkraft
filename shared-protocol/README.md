@@ -5,6 +5,7 @@ Versioned wire protocol definitions.
 ## Current scope
 
 - JSON schema v1 envelope: `shared-protocol/schema/rts-protocol-v1.schema.json`
+- cross-language golden payloads: `shared-protocol/golden/`
 - envelope metadata fields:
   - `protocolVersion` (wire compatibility)
   - `simVersion` (rule/data version)
