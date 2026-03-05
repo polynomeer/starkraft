@@ -83,6 +83,7 @@ import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
+import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
 import starkraft.sim.client.buildHelpOverlayLines
@@ -289,7 +290,7 @@ class GraphicalClientTest {
                     )
                 ),
                 entities = listOf(
-                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 3),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
                     EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, buildTargetId = 30, harvestPhase = "gather", harvestTargetNodeId = 40),
                     EntitySnapshot(
@@ -325,6 +326,7 @@ class GraphicalClientTest {
                 "economy: f1 minerals=300 gas=60 dropoffs=1",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection hp: 185/465 (39%)",
+                "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "tasks: build=1 gather=1 return=0",
@@ -412,6 +414,32 @@ class GraphicalClientTest {
         assertEquals("selection hp: 30/50 (60%)", buildSelectionHealthSummary(snapshot, linkedSetOf(1, 2)))
         assertEquals("selection hp: none", buildSelectionHealthSummary(snapshot, emptySet()))
         assertEquals("selection hp: none", buildSelectionHealthSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection combat summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Marine", x = 2f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 4),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Worker", x = 3f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "selection combat: armed=2 ready=1 cooling=1 unarmed=1 nextReady=4",
+            buildSelectionCombatSummary(snapshot, linkedSetOf(1, 2, 3))
+        )
+        assertEquals("selection combat: none", buildSelectionCombatSummary(snapshot, emptySet()))
+        assertEquals("selection combat: none", buildSelectionCombatSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

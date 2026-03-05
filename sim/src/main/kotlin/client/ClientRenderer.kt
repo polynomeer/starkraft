@@ -597,6 +597,7 @@ internal fun buildClientHudLines(
         buildEconomySummary(snapshot, state.viewedFaction),
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
+        buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildTaskSummary(snapshot, state.selectedIds),
@@ -653,6 +654,37 @@ internal fun buildSelectionHealthSummary(
     if (count == 0 || maxHp <= 0) return "selection hp: none"
     val pct = ((hp.toLong() * 100L) / maxHp.toLong()).toInt().coerceIn(0, 100)
     return "selection hp: $hp/$maxHp ($pct%)"
+}
+
+internal fun buildSelectionCombatSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection combat: none"
+    var armed = 0
+    var ready = 0
+    var cooling = 0
+    var unarmed = 0
+    var minCooldown = Int.MAX_VALUE
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.weaponId == null) {
+            unarmed++
+            continue
+        }
+        armed++
+        if (entity.weaponCooldownTicks <= 0) {
+            ready++
+        } else {
+            cooling++
+            if (entity.weaponCooldownTicks < minCooldown) {
+                minCooldown = entity.weaponCooldownTicks
+            }
+        }
+    }
+    if (armed == 0 && unarmed == 0) return "selection combat: none"
+    val nextReady = if (cooling > 0) minCooldown else 0
+    return "selection combat: armed=$armed ready=$ready cooling=$cooling unarmed=$unarmed nextReady=$nextReady"
 }
 
 internal fun buildBuilderSummary(
