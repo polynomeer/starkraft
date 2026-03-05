@@ -394,6 +394,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--compactJson` render `--replayStatsJson` and `--replayMetaJson` on one line for smaller machine-facing output
   `--compactJson` requires at least one JSON output mode (`--replayStatsJson`, `--replayMetaJson`, or `--snapshotJson`).
 - `--replayMetaJson` is exclusive with `--replayStats`/`--replayStatsJson` (metadata-only output mode)
+- `--replayMetaJson` is metadata-only and cannot be combined with runtime/output flags (`--ticks`, `--replayTicks`, snapshot flags, replay write flags, `--spawnScript`, or `--inputTail`)
 - Replay stats JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
 - Replay metadata JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`

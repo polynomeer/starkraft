@@ -1087,6 +1087,18 @@ internal fun validateCliSemantics(
     if (replayMetaJson && replayStatsJson) {
         error("--replayMetaJson cannot be combined with --replayStatsJson")
     }
+    if (replayMetaJson) {
+        if (tickLimit != null) error("--replayMetaJson cannot be combined with --ticks")
+        if (replayTicks != null) error("--replayMetaJson cannot be combined with --replayTicks")
+        if (snapshotJson) error("--replayMetaJson cannot be combined with --snapshotJson")
+        if (snapshotOutPath != null) error("--replayMetaJson cannot be combined with --snapshotOut")
+        if (snapshotEvery != null) error("--replayMetaJson cannot be combined with --snapshotEvery")
+        if (recordPath != null) error("--replayMetaJson cannot be combined with --record")
+        if (replayOutPath != null) error("--replayMetaJson cannot be combined with --replayOut")
+        if (replayDumpPath != null) error("--replayMetaJson cannot be combined with --replayDump")
+        if (spawnScriptPath != null) error("--replayMetaJson cannot be combined with --spawnScript")
+        if (inputTailPath != null) error("--replayMetaJson cannot be combined with --inputTail")
+    }
     if (compactJson && !replayStatsJson && !replayMetaJson && !snapshotJson) {
         error("--compactJson requires --replayStatsJson, --replayMetaJson, or --snapshotJson")
     }
