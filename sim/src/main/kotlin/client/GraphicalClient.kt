@@ -1309,6 +1309,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: f select damaged units",
         "help: v select combat units",
         "help: n select producer buildings",
+        "help: 1/2 view faction  3 observer  0 reset camera",
         "help: home center camera on selection",
         "help: end center camera on viewed faction",
         "help: z select training buildings  c select research buildings",
