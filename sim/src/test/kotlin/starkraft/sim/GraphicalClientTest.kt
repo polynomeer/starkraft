@@ -82,6 +82,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
 import starkraft.sim.client.buildHelpOverlayLines
@@ -323,6 +324,7 @@ class GraphicalClientTest {
                 "tick=15 selected=3",
                 "economy: f1 minerals=300 gas=60 dropoffs=1",
                 "selection: Marinex1 Workerx1 Depotx1",
+                "selection hp: 185/465 (39%)",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "tasks: build=1 gather=1 return=0",
@@ -388,6 +390,28 @@ class GraphicalClientTest {
         assertEquals("economy: f1 minerals=125 gas=40 dropoffs=2", buildEconomySummary(snapshot, 1))
         assertEquals("economy: observer", buildEconomySummary(snapshot, null))
         assertEquals("economy: f2 missing", buildEconomySummary(snapshot, 2))
+    }
+
+    @Test
+    fun `builds selection health summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection hp: 30/50 (60%)", buildSelectionHealthSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection hp: none", buildSelectionHealthSummary(snapshot, emptySet()))
+        assertEquals("selection hp: none", buildSelectionHealthSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

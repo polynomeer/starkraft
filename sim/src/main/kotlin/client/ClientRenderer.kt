@@ -596,6 +596,7 @@ internal fun buildClientHudLines(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
         buildEconomySummary(snapshot, state.viewedFaction),
         buildSelectionSummary(snapshot, state.selectedIds),
+        buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildTaskSummary(snapshot, state.selectedIds),
@@ -633,6 +634,25 @@ internal fun buildSelectionSummary(
     if (counts.isEmpty()) return "selection: none"
     val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection: $summary"
+}
+
+internal fun buildSelectionHealthSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection hp: none"
+    var hp = 0
+    var maxHp = 0
+    var count = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        count++
+        hp += entity.hp
+        maxHp += entity.maxHp
+    }
+    if (count == 0 || maxHp <= 0) return "selection hp: none"
+    val pct = ((hp.toLong() * 100L) / maxHp.toLong()).toInt().coerceIn(0, 100)
+    return "selection hp: $hp/$maxHp ($pct%)"
 }
 
 internal fun buildBuilderSummary(
