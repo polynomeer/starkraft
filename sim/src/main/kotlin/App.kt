@@ -104,12 +104,50 @@ private const val DEMO_MAP_ID = "demo-32x32-obstacles"
 private const val BUILD_VERSION = "1.0-SNAPSHOT"
 private val pendingHarvesterRetargetEvents = ArrayList<HarvesterRetargetEventRecord>()
 private val RESOURCE_NODE_KINDS = setOf("MineralField", "GasGeyser")
+private val CLI_FLAGS_WITH_VALUE =
+    setOf(
+        "--seed",
+        "--replay",
+        "--script",
+        "--inputJson",
+        "--inputTail",
+        "--spawnScript",
+        "--record",
+        "--replayOut",
+        "--snapshotOut",
+        "--ticks",
+        "--replayTicks",
+        "--snapshotEvery",
+        "--replayDump",
+        "--playControlFile"
+    )
+private val CLI_TOGGLE_FLAGS =
+    setOf(
+        "--noSleep",
+        "--scriptValidate",
+        "--scriptDryRun",
+        "--replayValidateOnly",
+        "--dumpWorldHash",
+        "--strictReplayHash",
+        "--strictReplayMeta",
+        "--printEntities",
+        "--printOrders",
+        "--labelDump",
+        "--replayStats",
+        "--replayStatsJson",
+        "--replayMetaJson",
+        "--snapshotJson",
+        "--compactJson",
+        "--help",
+        "-h"
+    )
 
 fun main(args: Array<String>) {
     if (hasFlag(args, "--help") || hasFlag(args, "-h")) {
         println(buildAppUsageText())
         return
     }
+    validateCliArgs(args)
 
     // Load data resources
     val unitsResource = object {}.javaClass.getResource("/data/units.json")
@@ -942,6 +980,34 @@ private fun parseSnapshotEvery(args: Array<String>): Int? {
 
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
+
+internal fun validateCliArgs(args: Array<String>) {
+    var i = 0
+    while (i < args.size) {
+        val raw = args[i]
+        val key = raw.substringBefore("=")
+        when {
+            CLI_FLAGS_WITH_VALUE.contains(key) -> {
+                if (raw.contains("=")) {
+                    i++
+                } else {
+                    if (i + 1 >= args.size) {
+                        error("Missing value for option '$key'")
+                    }
+                    i += 2
+                }
+            }
+            CLI_TOGGLE_FLAGS.contains(raw) -> {
+                if (raw.contains("=")) {
+                    error("Option '$raw' does not accept a value")
+                }
+                i++
+            }
+            raw.startsWith("-") -> error("Unknown option '$raw'")
+            else -> error("Unknown argument '$raw'")
+        }
+    }
+}
 
 internal fun buildAppUsageText(): String =
     listOf(

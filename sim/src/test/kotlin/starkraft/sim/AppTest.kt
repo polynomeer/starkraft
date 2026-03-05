@@ -63,6 +63,36 @@ class AppTest {
     }
 
     @Test
+    fun `cli arg validator accepts supported options`() {
+        validateCliArgs(
+            arrayOf(
+                "--seed", "123",
+                "--script=sim/scripts/sample.script",
+                "--snapshotOut", "/tmp/out.ndjson",
+                "--snapshotEvery", "10",
+                "--ticks", "100",
+                "--noSleep",
+                "--compactJson"
+            )
+        )
+    }
+
+    @Test
+    fun `cli arg validator rejects unknown options and missing values`() {
+        val unknown =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--notAFlag"))
+            }
+        assertTrue(unknown.message!!.contains("Unknown option"))
+
+        val missing =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--ticks"))
+            }
+        assertTrue(missing.message!!.contains("Missing value"))
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 
