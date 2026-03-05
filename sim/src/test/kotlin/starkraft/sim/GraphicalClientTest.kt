@@ -40,6 +40,7 @@ import starkraft.sim.client.mergeControlGroupSlot
 import starkraft.sim.client.recallControlGroupSlot
 import starkraft.sim.client.formatControlGroupSummary
 import starkraft.sim.client.computeSelectionCentroid
+import starkraft.sim.client.clearControlGroupSlots
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -223,6 +224,7 @@ class GraphicalClientTest {
                 "help: q select returning harvesters",
                 "help: e select loaded harvesters",
                 "help: shift+4..9 set group  alt+4..9 add  4..9 recall  double-tap focus",
+                "help: alt+0 clear control groups",
                 "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
@@ -317,7 +319,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c j/k/q/e [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+                "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add alt+0 clearGroups m/a/p/h u/i/o/l x/t/y z/c j/k/q/e [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -1032,6 +1034,16 @@ class GraphicalClientTest {
         assignControlGroupSlot(groups, 4, linkedSetOf(1, 2))
         mergeControlGroupSlot(groups, 4, linkedSetOf(2, 3))
         assertArrayEquals(intArrayOf(1, 2, 3), groups[4])
+    }
+
+    @Test
+    fun `clears control group slots`() {
+        val groups = arrayOfNulls<IntArray>(10)
+        groups[4] = intArrayOf(1)
+        groups[9] = intArrayOf(2, 3)
+        clearControlGroupSlots(groups)
+        assertEquals(null, groups[4])
+        assertEquals(null, groups[9])
     }
 
     @Test

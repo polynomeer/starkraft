@@ -350,7 +350,13 @@ private class ClientPanel(
                     KeyEvent.VK_S -> camera = camera.copy(panY = camera.panY - delta)
                     KeyEvent.VK_EQUALS, KeyEvent.VK_PLUS -> camera = zoomCameraAt(camera, width / 2f, height / 2f, 1.1f)
                     KeyEvent.VK_MINUS -> camera = zoomCameraAt(camera, width / 2f, height / 2f, 0.9f)
-                    KeyEvent.VK_0 -> camera = CameraView()
+                    KeyEvent.VK_0 -> {
+                        if (e.isAltDown) {
+                            clearControlGroups()
+                        } else {
+                            camera = CameraView()
+                        }
+                    }
                     KeyEvent.VK_M -> groundMode = ClientGroundCommandMode.MOVE
                     KeyEvent.VK_A -> groundMode = ClientGroundCommandMode.ATTACK_MOVE
                     KeyEvent.VK_P -> groundMode = ClientGroundCommandMode.PATROL
@@ -1104,6 +1110,12 @@ private class ClientPanel(
         showNotice("group $group add (${session.state.selectedIds.size}) -> $size")
     }
 
+    private fun clearControlGroups() {
+        clearControlGroupSlots(controlGroups)
+        lastGroupRecall = null
+        showNotice("groups cleared")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -1227,6 +1239,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: q select returning harvesters",
         "help: e select loaded harvesters",
         "help: shift+4..9 set group  alt+4..9 add  4..9 recall  double-tap focus",
+        "help: alt+0 clear control groups",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1523,6 +1536,10 @@ internal fun mergeControlGroupSlot(
     for (i in existing.indices) merged.add(existing[i])
     merged.addAll(selectedIds)
     groups[group] = merged.toIntArray()
+}
+
+internal fun clearControlGroupSlots(groups: Array<IntArray?>) {
+    for (i in groups.indices) groups[i] = null
 }
 
 internal fun recallControlGroupSlot(
