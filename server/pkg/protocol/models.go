@@ -18,10 +18,21 @@ type HandshakeMessage struct {
 	RequestedRoom *string `json:"requestedRoom,omitempty"`
 }
 
+type HandshakeAckMessage struct {
+	Type            string `json:"type"`
+	RoomID          string `json:"roomId"`
+	ClientID        string `json:"clientId"`
+	ServerTickMs    int    `json:"serverTickMs"`
+	ProtocolVersion int    `json:"protocolVersion"`
+}
+
 // WireCommand is an opaque command shell that carries type/request id.
 type WireCommand struct {
 	CommandType string  `json:"commandType"`
 	RequestID   *string `json:"requestId,omitempty"`
+	UnitIDs     []int   `json:"unitIds,omitempty"`
+	X           *float64 `json:"x,omitempty"`
+	Y           *float64 `json:"y,omitempty"`
 }
 
 type CommandBatchMessage struct {
@@ -34,6 +45,15 @@ type SnapshotMessage struct {
 	Type      string `json:"type"`
 	Tick      int    `json:"tick"`
 	WorldHash int64  `json:"worldHash"`
+	Units     []SnapshotUnit `json:"units,omitempty"`
+}
+
+type SnapshotUnit struct {
+	ID      int     `json:"id"`
+	OwnerID string  `json:"ownerId"`
+	TypeID  string  `json:"typeId"`
+	X       float64 `json:"x"`
+	Y       float64 `json:"y"`
 }
 
 type ProtocolCompatibility int

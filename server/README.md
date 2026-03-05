@@ -13,6 +13,20 @@ Protocol package scaffold is implemented.
 - authoritative command validation
 - replay persistence
 
+## Current implementation
+
+- websocket endpoint: `GET /ws`
+- required first message: protocol envelope with `message.type=handshake`
+- room create/join by `requestedRoom` (default room if omitted)
+- deterministic room snapshot broadcast support
+
+## Run
+
+```bash
+cd server
+go run ./cmd/server
+```
+
 ## Run tests
 
 ```bash
