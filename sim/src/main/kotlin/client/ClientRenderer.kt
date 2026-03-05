@@ -627,6 +627,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
+        buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
         buildCommandAffordanceSummary(snapshot, state.selectedIds, state.viewedFaction),
@@ -702,6 +703,27 @@ internal fun buildSelectionHealthSummary(
     if (count == 0 || maxHp <= 0) return "selection hp: none"
     val pct = ((hp.toLong() * 100L) / maxHp.toLong()).toInt().coerceIn(0, 100)
     return "selection hp: $hp/$maxHp ($pct%)"
+}
+
+internal fun buildSelectionOrderSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "orders: none"
+    val active = LinkedHashMap<String, Int>()
+    var queued = 0
+    var selected = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        selected++
+        queued += entity.orderQueueSize
+        val order = entity.activeOrder ?: continue
+        active[order] = (active[order] ?: 0) + 1
+    }
+    if (selected == 0) return "orders: none"
+    if (active.isEmpty()) return "orders: queued=$queued active=none"
+    val activeSummary = active.entries.joinToString(" ") { "${it.key}x${it.value}" }
+    return "orders: queued=$queued active=$activeSummary"
 }
 
 internal fun buildSelectionCombatSummary(

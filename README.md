@@ -480,6 +480,7 @@ The graphical and console clients also show selected production queue state, e.g
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
 The graphical and console clients also show viewed-faction economy state, e.g. `economy: f1 minerals=275 gas=40 dropoffs=1`.
 The graphical and console clients also show selected archetype counts, e.g. `selection roles: infantryx4 workerx2`.
+The graphical and console clients also show selected order pressure, e.g. `orders: queued=3 active=movex2 attackMovex1`.
 The graphical client HUD also shows aggregate selected HP, e.g. `selection hp: 185/465 (39%)`.
 The graphical and console clients also show selected combat readiness, e.g. `selection combat: armed=2 ready=1 cooling=1 unarmed=1 nextReady=4`.
 The graphical and console clients also show selected capability counts, e.g. `capabilities: train=1 research=1 rally=0 dropoff=1`.
