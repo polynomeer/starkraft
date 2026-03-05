@@ -631,6 +631,7 @@ internal fun buildClientHudLines(
         buildSelectionDurabilitySummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
         buildSelectionCargoSummary(snapshot, state.selectedIds),
+        buildSelectionMobilitySummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
@@ -823,6 +824,31 @@ internal fun buildSelectionCargoSummary(
     }
     if (loaded == 0) return "selection cargo: none"
     return "selection cargo: loaded=$loaded minerals=$mineral gas=$gas"
+}
+
+internal fun buildSelectionMobilitySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection mobility: none"
+    var selected = 0
+    var moving = 0
+    var pathing = 0
+    var stationary = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        selected++
+        if (entity.pathRemainingNodes > 0) {
+            pathing++
+        }
+        val active = entity.activeOrder
+        if (active == "move" || active == "attackMove" || active == "patrol") {
+            moving++
+        }
+    }
+    if (selected == 0) return "selection mobility: none"
+    stationary = (selected - moving).coerceAtLeast(0)
+    return "selection mobility: moving=$moving pathing=$pathing stationary=$stationary"
 }
 
 internal fun buildSelectionCombatSummary(
