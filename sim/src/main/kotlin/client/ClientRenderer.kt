@@ -635,6 +635,7 @@ internal fun buildClientHudLines(
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
+        buildSelectionQueueSummary(snapshot, state.selectedIds),
         buildCommandAffordanceSummary(snapshot, state.selectedIds, state.viewedFaction),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
@@ -906,6 +907,30 @@ internal fun buildSelectionCapabilitySummary(
     } else {
         "capabilities: train=$training research=$research rally=$rally dropoff=$dropoff"
     }
+}
+
+internal fun buildSelectionQueueSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection queues: none"
+    var productionTotal = 0
+    var productionActive = 0
+    var researchTotal = 0
+    var researchActive = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.productionQueueSize > 0) {
+            productionTotal += entity.productionQueueSize
+            productionActive++
+        }
+        if (entity.researchQueueSize > 0) {
+            researchTotal += entity.researchQueueSize
+            researchActive++
+        }
+    }
+    if (productionTotal == 0 && researchTotal == 0) return "selection queues: none"
+    return "selection queues: prod=$productionTotal@$productionActive research=$researchTotal@$researchActive"
 }
 
 internal fun buildCommandAffordanceSummary(

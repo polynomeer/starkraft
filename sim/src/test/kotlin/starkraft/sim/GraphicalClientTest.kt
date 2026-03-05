@@ -92,6 +92,7 @@ import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
+import starkraft.sim.client.buildSelectionQueueSummary
 import starkraft.sim.client.buildCommandAffordanceSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
@@ -349,6 +350,7 @@ class GraphicalClientTest {
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
+                "selection queues: prod=2@1 research=2@1",
                 "commands: move=on train=on research=on viewSelect=on",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
@@ -673,6 +675,29 @@ class GraphicalClientTest {
         assertEquals("selection mobility: moving=2 pathing=1 stationary=1", buildSelectionMobilitySummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection mobility: none", buildSelectionMobilitySummary(snapshot, emptySet()))
         assertEquals("selection mobility: none", buildSelectionMobilitySummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection queue summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, productionQueueSize = 2),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Lab", x = 2f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, researchQueueSize = 3),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Worker", x = 3f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection queues: prod=2@1 research=3@1", buildSelectionQueueSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, emptySet()))
+        assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test
