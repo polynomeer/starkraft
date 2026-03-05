@@ -90,6 +90,7 @@ import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionOrderSummary
+import starkraft.sim.client.buildSelectionStructureSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
 import starkraft.sim.client.buildSelectionQueueSummary
@@ -318,6 +319,8 @@ class GraphicalClientTest {
                         underConstruction = true,
                         constructionRemainingTicks = 6,
                         constructionTotalTicks = 10,
+                        footprintWidth = 2,
+                        footprintHeight = 2,
                         productionQueueSize = 2,
                         activeProductionType = "Marine",
                         activeProductionRemainingTicks = 9,
@@ -348,6 +351,7 @@ class GraphicalClientTest {
                 "selection cargo: loaded=1 minerals=6 gas=0",
                 "selection mobility: moving=2 pathing=1 stationary=1",
                 "orders: queued=3 active=movex1 attackMovex1",
+                "selection structures: total=1 constructing=1 area=4",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
                 "selection queues: prod=2@1 research=2@1",
@@ -698,6 +702,29 @@ class GraphicalClientTest {
         assertEquals("selection queues: prod=2@1 research=3@1", buildSelectionQueueSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, emptySet()))
         assertEquals("selection queues: none", buildSelectionQueueSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection structure summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, underConstruction = true, footprintWidth = 2, footprintHeight = 2),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Factory", x = 3f, y = 1f, dir = 0f, hp = 300, maxHp = 300, armor = 2, underConstruction = false, footprintWidth = 3, footprintHeight = 2),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Marine", x = 2f, y = 2f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection structures: total=2 constructing=1 area=10", buildSelectionStructureSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection structures: none", buildSelectionStructureSummary(snapshot, emptySet()))
+        assertEquals("selection structures: none", buildSelectionStructureSummary(snapshot, linkedSetOf(3)))
     }
 
     @Test

@@ -633,6 +633,7 @@ internal fun buildClientHudLines(
         buildSelectionCargoSummary(snapshot, state.selectedIds),
         buildSelectionMobilitySummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
+        buildSelectionStructureSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
         buildSelectionQueueSummary(snapshot, state.selectedIds),
@@ -781,6 +782,28 @@ internal fun buildSelectionOrderSummary(
     if (active.isEmpty()) return "orders: queued=$queued active=none"
     val activeSummary = active.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "orders: queued=$queued active=$activeSummary"
+}
+
+internal fun buildSelectionStructureSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection structures: none"
+    var buildings = 0
+    var underConstruction = 0
+    var footprintArea = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val width = entity.footprintWidth ?: continue
+        val height = entity.footprintHeight ?: continue
+        buildings++
+        footprintArea += width * height
+        if (entity.underConstruction) {
+            underConstruction++
+        }
+    }
+    if (buildings == 0) return "selection structures: none"
+    return "selection structures: total=$buildings constructing=$underConstruction area=$footprintArea"
 }
 
 internal fun buildSelectionVisionSummary(

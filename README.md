@@ -486,6 +486,7 @@ The graphical and console clients also show selected durability, e.g. `selection
 The graphical and console clients also show selected carried resources, e.g. `selection cargo: loaded=2 minerals=5 gas=3`.
 The graphical and console clients also show selected movement posture, e.g. `selection mobility: moving=2 pathing=1 stationary=1`.
 The graphical and console clients also show selected order pressure, e.g. `orders: queued=3 active=movex2 attackMovex1`.
+The graphical and console clients also show selected structure footprint totals, e.g. `selection structures: total=2 constructing=1 area=10`.
 The graphical and console clients also show selected production/research queue pressure, e.g. `selection queues: prod=2@1 research=3@1`.
 The graphical client HUD also shows aggregate selected HP, e.g. `selection hp: 185/465 (39%)`.
 The graphical and console clients also show selected combat readiness, e.g. `selection combat: armed=2 ready=1 cooling=1 unarmed=1 nextReady=4`.
