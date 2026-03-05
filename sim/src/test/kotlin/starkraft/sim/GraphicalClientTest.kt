@@ -85,6 +85,7 @@ import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionPositionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
+import starkraft.sim.client.buildSelectionDurabilitySummary
 import starkraft.sim.client.buildSelectionVisionSummary
 import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionOrderSummary
@@ -340,6 +341,7 @@ class GraphicalClientTest {
                 "selection roles: infantryx1 workerx1 producerx1",
                 "selection pos: center=5.7,4.0 span=3.0x0.0",
                 "selection hp: 185/465 (39%)",
+                "selection durability: avgArmor=0.3 damaged=1/3",
                 "selection vision: avg=6.0 min=5.0 max=7.0",
                 "selection cargo: loaded=1 minerals=6 gas=0",
                 "orders: queued=3 active=movex1 attackMovex1",
@@ -602,6 +604,28 @@ class GraphicalClientTest {
         assertEquals("selection vision: avg=5.5 min=5.0 max=6.0", buildSelectionVisionSummary(snapshot, linkedSetOf(1, 2)))
         assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, emptySet()))
         assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection durability summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 1),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection durability: avgArmor=0.5 damaged=1/2", buildSelectionDurabilitySummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection durability: none", buildSelectionDurabilitySummary(snapshot, emptySet()))
+        assertEquals("selection durability: none", buildSelectionDurabilitySummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

@@ -628,6 +628,7 @@ internal fun buildClientHudLines(
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionPositionSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
+        buildSelectionDurabilitySummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
         buildSelectionCargoSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
@@ -736,6 +737,27 @@ internal fun buildSelectionHealthSummary(
     if (count == 0 || maxHp <= 0) return "selection hp: none"
     val pct = ((hp.toLong() * 100L) / maxHp.toLong()).toInt().coerceIn(0, 100)
     return "selection hp: $hp/$maxHp ($pct%)"
+}
+
+internal fun buildSelectionDurabilitySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection durability: none"
+    var count = 0
+    var totalArmor = 0
+    var damaged = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        count++
+        totalArmor += entity.armor
+        if (entity.hp < entity.maxHp) {
+            damaged++
+        }
+    }
+    if (count == 0) return "selection durability: none"
+    val avgArmor = totalArmor.toFloat() / count.toFloat()
+    return "selection durability: avgArmor=${"%.1f".format(avgArmor)} damaged=$damaged/$count"
 }
 
 internal fun buildSelectionOrderSummary(
