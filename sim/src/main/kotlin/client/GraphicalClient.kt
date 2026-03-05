@@ -358,6 +358,9 @@ private class ClientPanel(
                     KeyEvent.VK_F2 -> {
                         selectViewedFaction()
                     }
+                    KeyEvent.VK_F3 -> {
+                        selectSelectedType()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -617,6 +620,7 @@ private class ClientPanel(
             "preset:menu" -> togglePresetMenu()
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
             "select:viewFaction" -> selectViewedFaction()
+            "select:selectedType" -> selectSelectedType()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -795,6 +799,30 @@ private class ClientPanel(
         showNotice("selected ${ids.size} units (f$faction)")
     }
 
+    private fun selectSelectedType() {
+        val snapshot = session.state.snapshot ?: return
+        val firstSelectedId = session.state.selectedIds.firstOrNull()
+        if (firstSelectedId == null) {
+            showNotice("select a unit first")
+            return
+        }
+        val selected = snapshot.entities.firstOrNull { it.id == firstSelectedId }
+        if (selected == null) {
+            showNotice("selected unit missing")
+            return
+        }
+        val faction = session.state.viewedFaction ?: selected.faction
+        val ids = collectTypeSelectionIds(snapshot, selected.typeId, faction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildTypeSelectionRecord(snapshot.tick + 1, selected.typeId)
+            )
+        )
+        showNotice("selected ${ids.size} ${selected.typeId}")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -906,7 +934,8 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
     return listOf(
         "help: f1 close  tab scenario menu  f10 preset menu",
         "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
-        "help: f2 select viewed faction  space pause  [/] speed  f5 restart  f8/f9 quick preset"
+        "help: f2 select viewed faction  f3 select selected type",
+        "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
 
@@ -930,6 +959,16 @@ internal fun buildFactionSelectionRecord(
         faction = faction
     )
 
+internal fun buildTypeSelectionRecord(
+    tick: Int,
+    typeId: String
+): InputJson.InputSelectionRecord =
+    InputJson.InputSelectionRecord(
+        tick = tick,
+        selectionType = "type",
+        typeId = typeId
+    )
+
 internal fun collectFactionSelectionIds(
     snapshot: ClientSnapshot,
     faction: Int
@@ -939,6 +978,21 @@ internal fun collectFactionSelectionIds(
     for (i in snapshot.entities.indices) {
         val entity = snapshot.entities[i]
         if (entity.faction != faction) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectTypeSelectionIds(
+    snapshot: ClientSnapshot,
+    typeId: String,
+    faction: Int
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (entity.faction != faction || entity.typeId != typeId) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)

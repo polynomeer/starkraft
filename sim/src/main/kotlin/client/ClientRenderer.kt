@@ -37,6 +37,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
         actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
+        actionId == "select:selectedType" -> "Select all units matching the first selected unit type"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -467,6 +468,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Help", "help:toggle"),
             ClientCommandButton("Select View", "select:viewFaction"),
+            ClientCommandButton("Select Type", "select:selectedType"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -538,7 +540,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f3-type f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

@@ -17,7 +17,9 @@ import starkraft.sim.client.buildCancelIntent
 import starkraft.sim.client.buildQueueIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.buildFactionSelectionRecord
+import starkraft.sim.client.buildTypeSelectionRecord
 import starkraft.sim.client.collectFactionSelectionIds
+import starkraft.sim.client.collectTypeSelectionIds
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -189,7 +191,8 @@ class GraphicalClientTest {
             listOf(
                 "help: f1 close  tab scenario menu  f10 preset menu",
                 "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
-                "help: f2 select viewed faction  space pause  [/] speed  f5 restart  f8/f9 quick preset"
+                "help: f2 select viewed faction  f3 select selected type",
+                "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
         )
@@ -283,7 +286,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f3-type f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -409,15 +412,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -457,7 +460,8 @@ class GraphicalClientTest {
         val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (24 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val help = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (25 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val selectView = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (26 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (27 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val selectType = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (27 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (28 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
@@ -467,6 +471,7 @@ class GraphicalClientTest {
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("help:toggle", help?.actionId)
         assertEquals("select:viewFaction", selectView?.actionId)
+        assertEquals("select:selectedType", selectType?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
     }
@@ -483,6 +488,7 @@ class GraphicalClientTest {
         assertEquals("Switch to the next play scenario and restart", commandButtonTooltip("scenario:next"))
         assertEquals("Toggle in-game help and key hints", commandButtonTooltip("help:toggle"))
         assertEquals("Select all units for the currently viewed faction", commandButtonTooltip("select:viewFaction"))
+        assertEquals("Select all units matching the first selected unit type", commandButtonTooltip("select:selectedType"))
         assertEquals(null, commandButtonTooltip("unknown"))
     }
 
@@ -834,6 +840,15 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds type selection records for client input`() {
+        val record = buildTypeSelectionRecord(13, "Marine")
+
+        assertEquals(13, record.tick)
+        assertEquals("type", record.selectionType)
+        assertEquals("Marine", record.typeId)
+    }
+
+    @Test
     fun `collects faction selection ids from snapshot`() {
         val snapshot =
             ClientSnapshot(
@@ -853,6 +868,8 @@ class GraphicalClientTest {
 
         assertArrayEquals(intArrayOf(4, 6), collectFactionSelectionIds(snapshot, 1))
         assertArrayEquals(intArrayOf(5), collectFactionSelectionIds(snapshot, 2))
+        assertArrayEquals(intArrayOf(4), collectTypeSelectionIds(snapshot, "Marine", 1))
+        assertArrayEquals(intArrayOf(5), collectTypeSelectionIds(snapshot, "Marine", 2))
     }
 
     @Test

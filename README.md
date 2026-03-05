@@ -262,8 +262,10 @@ Client controls:
 - `F10`: open the preset menu, `Up`/`Down` to pick slot, `S` save, `L`/`Enter` load
 - `F1`: toggle help overlay with quick control hints
 - `F2`: select all units for the currently viewed faction (1/2)
+- `F3`: select all units matching the first selected unit type (within viewed faction)
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - command panel includes `Select View` to do the same faction-wide selection
+- command panel includes `Select Type` for type-based selection
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view
