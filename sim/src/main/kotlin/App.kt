@@ -998,25 +998,11 @@ private fun parseSpawnScriptPath(args: Array<String>): String? {
 }
 
 private fun parseTickLimit(args: Array<String>): Int? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--ticks" && i + 1 < args.size) return args[i + 1].toInt()
-        if (a.startsWith("--ticks=")) return a.substringAfter("=").toInt()
-        i++
-    }
-    return null
+    return parseIntOption(args, "--ticks")
 }
 
 private fun parseSnapshotEvery(args: Array<String>): Int? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--snapshotEvery" && i + 1 < args.size) return args[i + 1].toInt()
-        if (a.startsWith("--snapshotEvery=")) return a.substringAfter("=").toInt()
-        i++
-    }
-    return null
+    return parseIntOption(args, "--snapshotEvery")
 }
 
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
@@ -1175,22 +1161,44 @@ internal fun waitForNextTick(noSleep: Boolean, controlPath: java.nio.file.Path?)
 }
 
 private fun parseReplayTicks(args: Array<String>): Int? {
+    return parseIntOption(args, "--replayTicks")
+}
+
+private fun parseSeed(args: Array<String>): Long? {
+    return parseLongOption(args, "--seed")
+}
+
+internal fun parseIntOption(args: Array<String>, option: String): Int? {
     var i = 0
     while (i < args.size) {
         val a = args[i]
-        if (a == "--replayTicks" && i + 1 < args.size) return args[i + 1].toInt()
-        if (a.startsWith("--replayTicks=")) return a.substringAfter("=").toInt()
+        val raw =
+            when {
+                a == option && i + 1 < args.size -> args[i + 1]
+                a.startsWith("$option=") -> a.substringAfter("=")
+                else -> null
+            }
+        if (raw != null) {
+            return raw.toIntOrNull() ?: error("Invalid integer value '$raw' for option '$option'")
+        }
         i++
     }
     return null
 }
 
-private fun parseSeed(args: Array<String>): Long? {
+internal fun parseLongOption(args: Array<String>, option: String): Long? {
     var i = 0
     while (i < args.size) {
         val a = args[i]
-        if (a == "--seed" && i + 1 < args.size) return args[i + 1].toLong()
-        if (a.startsWith("--seed=")) return a.substringAfter("=").toLong()
+        val raw =
+            when {
+                a == option && i + 1 < args.size -> args[i + 1]
+                a.startsWith("$option=") -> a.substringAfter("=")
+                else -> null
+            }
+        if (raw != null) {
+            return raw.toLongOrNull() ?: error("Invalid long value '$raw' for option '$option'")
+        }
         i++
     }
     return null

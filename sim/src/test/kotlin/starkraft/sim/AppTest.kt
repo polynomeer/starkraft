@@ -202,6 +202,28 @@ class AppTest {
     }
 
     @Test
+    fun `option parsers parse valid numeric flags`() {
+        assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
+        assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))
+        assertEquals(42L, parseLongOption(arrayOf("--seed", "42"), "--seed"))
+        assertEquals(7L, parseLongOption(arrayOf("--seed=7"), "--seed"))
+    }
+
+    @Test
+    fun `option parsers reject invalid numeric values`() {
+        val intEx =
+            assertThrows(IllegalStateException::class.java) {
+                parseIntOption(arrayOf("--ticks", "abc"), "--ticks")
+            }
+        assertTrue(intEx.message!!.contains("Invalid integer value"))
+        val longEx =
+            assertThrows(IllegalStateException::class.java) {
+                parseLongOption(arrayOf("--seed=nan"), "--seed")
+            }
+        assertTrue(longEx.message!!.contains("Invalid long value"))
+    }
+
+    @Test
     fun `selection validator rejects unknown entity id`() {
         val world = World()
         world.spawn(Transform(1f, 1f), UnitTag(1, "Marine"), Health(10, 10), null)
