@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
 
@@ -16,12 +17,18 @@ import (
 )
 
 type Config struct {
-	Addr        string
-	SimVersion  string
-	BuildHash   string
+	Addr         string
+	SimVersion   string
+	BuildHash    string
 	TickInterval time.Duration
-	ReplayPath string
+	ReplayPath   string
 	KeyframeEvery int
+	MaxReadBytes int64
+	MaxBatchCommands int
+	MaxRequestIDLength int
+	MaxUnitIDsPerCommand int
+	MaxClientNameLength int
+	MaxRoomIDLength int
 }
 
 type Server struct {
@@ -45,12 +52,32 @@ type clientConn struct {
 	writeMu  sync.Mutex
 }
 
+var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
+
 func NewServer(cfg Config) *Server {
 	if cfg.TickInterval <= 0 {
 		cfg.TickInterval = 20 * time.Millisecond
 	}
 	if cfg.SimVersion == "" {
 		cfg.SimVersion = "dev"
+	}
+	if cfg.MaxReadBytes <= 0 {
+		cfg.MaxReadBytes = 64 * 1024
+	}
+	if cfg.MaxBatchCommands <= 0 {
+		cfg.MaxBatchCommands = 64
+	}
+	if cfg.MaxRequestIDLength <= 0 {
+		cfg.MaxRequestIDLength = 64
+	}
+	if cfg.MaxUnitIDsPerCommand <= 0 {
+		cfg.MaxUnitIDsPerCommand = 64
+	}
+	if cfg.MaxClientNameLength <= 0 {
+		cfg.MaxClientNameLength = 32
+	}
+	if cfg.MaxRoomIDLength <= 0 {
+		cfg.MaxRoomIDLength = 32
 	}
 	s := &Server{
 		cfg: cfg,
@@ -138,6 +165,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	conn.SetReadLimit(s.cfg.MaxReadBytes)
 
 	client, room, err := s.handshake(conn)
 	if err != nil {
@@ -177,6 +205,20 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(env.Message, &batch); err != nil {
 				return
 			}
+			if len(batch.Commands) > s.cfg.MaxBatchCommands {
+				_ = client.sendEnvelope(protocol.CommandAckMessage{
+					Type: "commandAck", Tick: batch.Tick, CommandType: "commandBatch",
+					Accepted: false, Reason: "batchTooLarge",
+				})
+				continue
+			}
+			if !s.validateCommandBatch(batch) {
+				_ = client.sendEnvelope(protocol.CommandAckMessage{
+					Type: "commandAck", Tick: batch.Tick, CommandType: "commandBatch",
+					Accepted: false, Reason: "invalidPayload",
+				})
+				continue
+			}
 			room.enqueue(client.id, batch)
 		}
 	}
@@ -201,6 +243,9 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	if hs.ClientName == "" {
 		return nil, nil, fmt.Errorf("empty client name")
 	}
+	if len(hs.ClientName) > s.cfg.MaxClientNameLength || !safeTokenPattern.MatchString(hs.ClientName) {
+		return nil, nil, fmt.Errorf("invalid client name")
+	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -209,6 +254,9 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	roomID := "default"
 	if hs.RequestedRoom != nil && *hs.RequestedRoom != "" {
 		roomID = *hs.RequestedRoom
+	}
+	if len(roomID) > s.cfg.MaxRoomIDLength || !safeTokenPattern.MatchString(roomID) {
+		return nil, nil, fmt.Errorf("invalid room id")
 	}
 	rm, ok := s.rooms[roomID]
 	if !ok {
@@ -219,6 +267,23 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		id: clientID, name: hs.ClientName, roomID: roomID, conn: conn,
 		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
 	}, rm, nil
+}
+
+func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) bool {
+	for _, cmd := range batch.Commands {
+		if cmd.CommandType == "" || !safeTokenPattern.MatchString(cmd.CommandType) {
+			return false
+		}
+		if cmd.RequestID != nil {
+			if len(*cmd.RequestID) > s.cfg.MaxRequestIDLength || !safeTokenPattern.MatchString(*cmd.RequestID) {
+				return false
+			}
+		}
+		if len(cmd.UnitIDs) > s.cfg.MaxUnitIDsPerCommand {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Server) stepRooms() {
