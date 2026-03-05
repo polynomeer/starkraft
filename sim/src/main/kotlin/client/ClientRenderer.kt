@@ -627,6 +627,7 @@ internal fun buildClientHudLines(
         buildSelectionFactionSummary(snapshot, state.selectedIds),
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
+        buildSelectionClassSummary(snapshot, state.selectedIds),
         buildSelectionPositionSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionDurabilitySummary(snapshot, state.selectedIds),
@@ -713,6 +714,27 @@ internal fun buildSelectionArchetypeSummary(
     if (counts.isEmpty()) return "selection roles: none"
     val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection roles: $summary"
+}
+
+internal fun buildSelectionClassSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection classes: none"
+    var workers = 0
+    var combat = 0
+    var structures = 0
+    var other = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        when {
+            entity.footprintWidth != null && entity.footprintHeight != null -> structures++
+            entity.archetype == "worker" -> workers++
+            entity.weaponId != null -> combat++
+            else -> other++
+        }
+    }
+    return "selection classes: workers=$workers combat=$combat structures=$structures other=$other"
 }
 
 internal fun buildSelectionPositionSummary(

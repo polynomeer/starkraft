@@ -84,6 +84,7 @@ import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionFactionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
+import starkraft.sim.client.buildSelectionClassSummary
 import starkraft.sim.client.buildSelectionPositionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionDurabilitySummary
@@ -355,6 +356,7 @@ class GraphicalClientTest {
                 "selection factions: f1=3",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection roles: infantryx1 workerx1 producerx1",
+                "selection classes: workers=1 combat=1 structures=1 other=0",
                 "selection pos: center=5.7,4.0 span=3.0x0.0",
                 "selection hp: 185/465 (39%)",
                 "selection durability: avgArmor=0.3 damaged=1/3",
@@ -924,6 +926,28 @@ class GraphicalClientTest {
         assertEquals("selection factions: f1=2 f2=1", buildSelectionFactionSummary(snapshot, linkedSetOf(4, 5, 6)))
         assertEquals("selection factions: none", buildSelectionFactionSummary(snapshot, emptySet()))
         assertEquals("selection factions: none", buildSelectionFactionSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection class summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Rifle"),
+                    EntitySnapshot(id = 5, faction = 1, typeId = "Worker", archetype = "worker", x = 5f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0),
+                    EntitySnapshot(id = 6, faction = 1, typeId = "Depot", archetype = "producer", x = 6f, y = 4f, dir = 0f, hp = 120, maxHp = 120, armor = 1, footprintWidth = 2, footprintHeight = 2)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection classes: workers=1 combat=1 structures=1 other=0", buildSelectionClassSummary(snapshot, linkedSetOf(4, 5, 6)))
+        assertEquals("selection classes: none", buildSelectionClassSummary(snapshot, emptySet()))
     }
 
     @Test
