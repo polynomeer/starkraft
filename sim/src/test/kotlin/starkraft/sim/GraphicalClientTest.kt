@@ -17,6 +17,7 @@ import starkraft.sim.client.buildCancelIntent
 import starkraft.sim.client.buildQueueIntent
 import starkraft.sim.client.buildUnitSelectionRecord
 import starkraft.sim.client.buildFactionSelectionRecord
+import starkraft.sim.client.collectFactionSelectionIds
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -830,6 +831,28 @@ class GraphicalClientTest {
         assertEquals(11, record.tick)
         assertEquals("faction", record.selectionType)
         assertEquals(2, record.faction)
+    }
+
+    @Test
+    fun `collects faction selection ids from snapshot`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 5, faction = 2, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 6, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertArrayEquals(intArrayOf(4, 6), collectFactionSelectionIds(snapshot, 1))
+        assertArrayEquals(intArrayOf(5), collectFactionSelectionIds(snapshot, 2))
     }
 
     @Test

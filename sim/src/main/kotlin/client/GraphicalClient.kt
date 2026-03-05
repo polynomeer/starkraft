@@ -784,11 +784,15 @@ private class ClientPanel(
             showNotice("select faction first (1/2)")
             return
         }
+        val ids = collectFactionSelectionIds(snapshot, faction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
         session.append(
             ClientIntent.Selection(
                 buildFactionSelectionRecord(snapshot.tick + 1, faction)
             )
         )
+        showNotice("selected ${ids.size} units (f$faction)")
     }
 
     private fun isPresetAvailable(name: String): Boolean {
@@ -925,6 +929,20 @@ internal fun buildFactionSelectionRecord(
         selectionType = "faction",
         faction = faction
     )
+
+internal fun collectFactionSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (entity.faction != faction) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
 
 internal fun applySelectionClick(
     selectedIds: LinkedHashSet<Int>,
