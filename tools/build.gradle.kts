@@ -14,6 +14,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("org.snakeyaml:snakeyaml-engine:2.9")
     implementation(project(":sim"))
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))

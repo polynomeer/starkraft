@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
     when (args[0]) {
         "replay" -> runReplayCommand(args.drop(1))
         "map" -> runMapCommand(args.drop(1))
+        "data" -> runDataCommand(args.drop(1))
         else -> error("Unknown command '${args[0]}'")
     }
 }
@@ -59,7 +60,7 @@ private fun runReplayCommand(args: List<String>) {
 
 private fun parsePathArg(args: List<String>, index: Int, label: String): Path {
     val raw = args.getOrNull(index) ?: error("Missing $label path")
-    return Path.of(raw).toAbsolutePath().normalize()
+    return resolveCliPath(raw)
 }
 
 private fun parseOptionalIntFlag(args: List<String>, name: String): Int? {
@@ -106,6 +107,38 @@ private fun runMapCommand(args: List<String>) {
     }
 }
 
+private fun runDataCommand(args: List<String>) {
+    if (args.isEmpty()) error("Missing data subcommand")
+    when (args[0]) {
+        "validate" -> {
+            val tail = args.drop(1)
+            val dir = parseOptionalStringFlag(tail, "--dir")?.let { resolveCliPath(it) }
+            val units = parseDataPath(tail, "--units", dir, "units")
+            val weapons = parseDataPath(tail, "--weapons", dir, "weapons")
+            val buildings = parseDataPath(tail, "--buildings", dir, "buildings")
+            val techs = parseDataPath(tail, "--techs", dir, "techs")
+            val result =
+                validateGameData(
+                    DataValidationInput(
+                        unitsPath = units,
+                        weaponsPath = weapons,
+                        buildingsPath = buildings,
+                        techsPath = techs
+                    )
+                )
+            println("valid=${result.valid}")
+            if (result.errors.isEmpty()) {
+                println("errors=0")
+            } else {
+                println("errors=${result.errors.size}")
+                result.errors.forEach { println("error: $it") }
+                exitProcess(1)
+            }
+        }
+        else -> error("Unknown data subcommand '${args[0]}'")
+    }
+}
+
 private fun parseOptionalLongFlag(args: List<String>, name: String): Long? {
     val idx = args.indexOf(name)
     if (idx < 0) return null
@@ -119,6 +152,40 @@ private fun parseOptionalStringFlag(args: List<String>, name: String): String? {
     return args.getOrNull(idx + 1) ?: error("Missing value for $name")
 }
 
+private fun parseDataPath(args: List<String>, flag: String, dir: Path?, stem: String): Path {
+    val explicit = parseOptionalStringFlag(args, flag)
+    if (explicit != null) return resolveCliPath(explicit)
+    val base = dir ?: error("Missing $flag and --dir was not provided")
+    val jsonPath = base.resolve("$stem.json")
+    if (java.nio.file.Files.exists(jsonPath)) return jsonPath.toAbsolutePath().normalize()
+    val yamlPath = base.resolve("$stem.yaml")
+    if (java.nio.file.Files.exists(yamlPath)) return yamlPath.toAbsolutePath().normalize()
+    val ymlPath = base.resolve("$stem.yml")
+    if (java.nio.file.Files.exists(ymlPath)) return ymlPath.toAbsolutePath().normalize()
+    error("Could not resolve '$stem' data file from --dir $base")
+}
+
+private fun resolveCliPath(raw: String): Path {
+    val path = Path.of(raw)
+    if (path.isAbsolute) return path.normalize()
+    val cwd = Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize()
+    val root = resolveProjectRoot(cwd)
+    val rootCandidate = root.resolve(path).normalize()
+    if (java.nio.file.Files.exists(rootCandidate) || !java.nio.file.Files.exists(cwd.resolve(path))) {
+        return rootCandidate
+    }
+    return cwd.resolve(path).normalize()
+}
+
+private fun resolveProjectRoot(start: Path): Path {
+    var current: Path? = start
+    while (current != null) {
+        if (java.nio.file.Files.exists(current.resolve("settings.gradle.kts"))) return current
+        current = current.parent
+    }
+    return start
+}
+
 private fun buildUsage(): String =
     """
     usage:
@@ -127,4 +194,5 @@ private fun buildUsage(): String =
       replay verify <replay.json> [--ticks N] [--strictHash]
       map validate <map.json>
       map generate <map.json> [--width N --height N --seed S --blockedPct N --weightedPct N --id map-id]
+      data validate (--dir <data-dir> | --units <path> --weapons <path> --buildings <path> --techs <path>)
     """.trimIndent()
