@@ -1501,6 +1501,11 @@ internal fun buildGameState(snapshot: ClientSnapshot, viewedFaction: Int?): Clie
     }
 }
 
+internal fun formatGameStateStatus(snapshot: ClientSnapshot, viewedFaction: Int?): String {
+    val state = buildGameState(snapshot, viewedFaction) ?: return "state: ongoing"
+    return "state: ${state.title.lowercase()} ${state.detail}"
+}
+
 internal fun formatResearchActivity(activity: ClientResearchActivity?): String =
     if (activity == null) {
         "research events: none"

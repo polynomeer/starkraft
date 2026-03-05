@@ -348,6 +348,7 @@ Client controls:
 - the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left
 - the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the active view faction changes selection filtering, enemy highlighting, fog rendering, and victory/defeat overlays
+- the console client now includes match end-state summaries, e.g. `state: victory Enemy faction eliminated`
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - the build preview also shows structure name, footprint, clearance, and mineral/gas cost next to the ghost
 - a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear

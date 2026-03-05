@@ -63,6 +63,7 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
     val constructionActivity = formatConstructionActivity(state.lastConstructionActivity)
     val productionActivity = formatProductionActivity(state.lastProductionActivity)
     val researchActivity = formatResearchActivity(state.lastResearchActivity)
+    val gameStateStatus = formatGameStateStatus(snapshot, state.viewedFaction)
     return buildString {
         append("tick=")
         append(snapshot.tick)
@@ -154,6 +155,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(productionActivity)
         append(" ")
         append(researchActivity)
+        append(" ")
+        append(gameStateStatus)
         append(" ")
         append(formatAckStatus(state.lastAck))
     }
