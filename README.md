@@ -181,6 +181,7 @@ Other flags:
 - `--scriptDryRun` parse, validate, and print script selections plus commands without running
 - Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
 - Script validation now also checks `select` ids/labels and fails on unknown entity ids or undefined labels
+- Validation-only exits (`--scriptValidate`, `--scriptDryRun`, `--replayValidateOnly`, `--replayMetaJson`) do not emit snapshot bootstrap files even if snapshot flags are provided
 
 Example client-input file:
 

@@ -323,9 +323,6 @@ fun main(args: Array<String>) {
     val streamSequence = longArrayOf(0L)
     val visionPrevTeam1 = BooleanArray(fog1.width * fog1.height)
     val visionPrevTeam2 = BooleanArray(fog2.width * fog2.height)
-    if (resolvedSnapshotOutPath != null) {
-        Files.deleteIfExists(resolvedSnapshotOutPath)
-    }
     validateCliSemantics(
         replayPath = replayPath,
         scriptPath = scriptPath,
@@ -433,6 +430,9 @@ fun main(args: Array<String>) {
         }
         printScriptSelections(selectionEventsByTick)
         printScriptCommands(commandsByTick)
+        if (resolvedSnapshotOutPath != null) {
+            Files.deleteIfExists(resolvedSnapshotOutPath)
+        }
         return
     }
     if (replayValidateOnly && replayPath != null) {
@@ -460,6 +460,22 @@ fun main(args: Array<String>) {
             )
         )
         return
+    }
+    if (resolvedSnapshotOutPath != null) {
+        Files.deleteIfExists(resolvedSnapshotOutPath)
+    }
+    if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
+        emitSnapshotLine(
+            renderSnapshotSessionStartJson(
+                sequence = nextStreamSequence(streamSequence),
+                mapId = DEMO_MAP_ID,
+                buildVersion = BUILD_VERSION,
+                seed = seed,
+                pretty = false
+            ),
+            resolvedSnapshotOutPath
+        )
+        emitMapStateRecord(world, map, occ, resolvedSnapshotOutPath, streamSequence)
     }
 
     if (replayPath == null) {
