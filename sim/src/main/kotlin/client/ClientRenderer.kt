@@ -395,6 +395,7 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
             it.startsWith("presets:") ||
             it.startsWith("help:") ||
             it.startsWith("selection hud:") ||
+            it.startsWith("groups:") ||
             it.startsWith("notice:")
     }
 

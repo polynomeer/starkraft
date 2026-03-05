@@ -33,6 +33,7 @@ import starkraft.sim.client.collectResearchSelectionIds
 import starkraft.sim.client.controlGroupFromKeyCode
 import starkraft.sim.client.assignControlGroupSlot
 import starkraft.sim.client.recallControlGroupSlot
+import starkraft.sim.client.formatControlGroupSummary
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -452,8 +453,8 @@ class GraphicalClientTest {
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
-            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
+            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }
 
@@ -985,6 +986,15 @@ class GraphicalClientTest {
 
         assertArrayEquals(intArrayOf(4), recallControlGroupSlot(groups, 5, snapshot))
         assertArrayEquals(intArrayOf(), recallControlGroupSlot(groups, 4, snapshot))
+    }
+
+    @Test
+    fun `formats control group summary`() {
+        val groups = arrayOfNulls<IntArray>(10)
+        groups[4] = intArrayOf(1, 2, 3)
+        groups[6] = intArrayOf(7)
+        assertEquals("4=3 6=1", formatControlGroupSummary(groups))
+        assertEquals(null, formatControlGroupSummary(arrayOfNulls(10)))
     }
 
     @Test

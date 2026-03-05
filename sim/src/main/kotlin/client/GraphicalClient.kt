@@ -588,6 +588,7 @@ private class ClientPanel(
             "preset: quick"
         ) + listOfNotNull(
             selectionHudLine(),
+            controlGroupSummaryLine(),
             presetAvailabilityLine(),
             currentNoticeLine()
         ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection) +
@@ -822,6 +823,11 @@ private class ClientPanel(
         val selected = session.state.selectedIds
         if (selected.isEmpty()) return null
         return "selection hud: ${buildSelectionSummary(snapshot, selected).removePrefix("selection: ")}"
+    }
+
+    private fun controlGroupSummaryLine(): String? {
+        val summary = formatControlGroupSummary(controlGroups)
+        return summary?.let { "groups: $it" }
     }
 
     private fun selectViewedFaction() {
@@ -1362,6 +1368,17 @@ internal fun recallControlGroupSlot(
         }
     }
     return out.copyOf(count)
+}
+
+internal fun formatControlGroupSummary(groups: Array<IntArray?>): String? {
+    val parts = ArrayList<String>(6)
+    for (group in 4..9) {
+        val size = groups.getOrNull(group)?.size ?: 0
+        if (size <= 0) continue
+        parts.add("$group=$size")
+    }
+    if (parts.isEmpty()) return null
+    return parts.joinToString(" ")
 }
 
 internal fun applySelectionClick(
