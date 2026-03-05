@@ -16,6 +16,7 @@ import starkraft.sim.client.buildClientIntent
 import starkraft.sim.client.buildCancelIntent
 import starkraft.sim.client.buildQueueIntent
 import starkraft.sim.client.buildUnitSelectionRecord
+import starkraft.sim.client.buildFactionSelectionRecord
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -187,7 +188,7 @@ class GraphicalClientTest {
             listOf(
                 "help: f1 close  tab scenario menu  f10 preset menu",
                 "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
-                "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
+                "help: f2 select viewed faction  space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
         )
@@ -281,7 +282,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f1 f2-select f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -817,6 +818,15 @@ class GraphicalClientTest {
         assertEquals(8, record.tick)
         assertEquals("units", record.selectionType)
         assertArrayEquals(intArrayOf(4, 9), record.units)
+    }
+
+    @Test
+    fun `builds faction selection records for client input`() {
+        val record = buildFactionSelectionRecord(11, 2)
+
+        assertEquals(11, record.tick)
+        assertEquals("faction", record.selectionType)
+        assertEquals(2, record.faction)
     }
 
     @Test

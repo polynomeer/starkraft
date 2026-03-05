@@ -355,6 +355,19 @@ private class ClientPanel(
                     KeyEvent.VK_1 -> session.state.viewedFaction = 1
                     KeyEvent.VK_2 -> session.state.viewedFaction = 2
                     KeyEvent.VK_3 -> session.state.viewedFaction = null
+                    KeyEvent.VK_F2 -> {
+                        val snapshot = session.state.snapshot ?: return
+                        val faction = session.state.viewedFaction
+                        if (faction == null) {
+                            showNotice("select faction first (1/2)")
+                            return
+                        }
+                        session.append(
+                            ClientIntent.Selection(
+                                buildFactionSelectionRecord(snapshot.tick + 1, faction)
+                            )
+                        )
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -884,7 +897,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
     return listOf(
         "help: f1 close  tab scenario menu  f10 preset menu",
         "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
-        "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
+        "help: f2 select viewed faction  space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
 
@@ -896,6 +909,16 @@ internal fun buildUnitSelectionRecord(
         tick = tick,
         selectionType = "units",
         units = selectedIds.toIntArray()
+    )
+
+internal fun buildFactionSelectionRecord(
+    tick: Int,
+    faction: Int
+): InputJson.InputSelectionRecord =
+    InputJson.InputSelectionRecord(
+        tick = tick,
+        selectionType = "faction",
+        faction = faction
     )
 
 internal fun applySelectionClick(

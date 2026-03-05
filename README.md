@@ -261,6 +261,7 @@ Client controls:
 - `Shift+F9`: load the `alt` preset and restart into it
 - `F10`: open the preset menu, `Up`/`Down` to pick slot, `S` save, `L`/`Enter` load
 - `F1`: toggle help overlay with quick control hints
+- `F2`: select all units for the currently viewed faction (1/2)
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - `1`: view/control faction 1
 - `2`: view/control faction 2
