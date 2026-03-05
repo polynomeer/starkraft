@@ -1096,6 +1096,7 @@ internal fun buildAppUsageText(): String =
         "  --noSleep                   Disable fixed-tick sleep for fast runs",
         "  --seed <n>                  Set deterministic RNG seed",
         "Input:",
+        "  (choose exactly one base source: --replay, --script, or --inputJson)",
         "  --script <path>             Load scripted commands",
         "  --spawnScript <path>        Apply spawn-only script before main script/replay",
         "  --inputJson <path>          Load JSON/NDJSON commands",

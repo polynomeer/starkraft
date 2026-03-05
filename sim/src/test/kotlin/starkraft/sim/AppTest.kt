@@ -27,6 +27,7 @@ class AppTest {
         val help = buildAppUsageText()
         assertTrue(help.contains("Usage: ./gradlew :sim:run"))
         assertTrue(help.contains("--script <path>"))
+        assertTrue(help.contains("choose exactly one base source"))
         assertTrue(help.contains("--spawnScript <path>"))
         assertTrue(help.contains("--replay <path>"))
         assertTrue(help.contains("--record <path>"))
