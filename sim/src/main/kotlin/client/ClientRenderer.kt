@@ -403,6 +403,7 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
     overlayLines.filter {
         it.startsWith("play:") ||
             it.startsWith("scenario:") ||
+            it.startsWith("mode:") ||
             it.startsWith("preset menu:") ||
             it.startsWith("presets:") ||
             it.startsWith("help:") ||

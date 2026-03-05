@@ -249,6 +249,7 @@ Client controls:
 - shift + left click: add/remove the nearest faction 1 unit from the current selection
 - shift + left drag: add a box selection to the current selection
 - command panel status now includes a `selection hud` line with selected type counts
+- command panel status now includes current command mode (e.g. `mode: attack-move`)
 - middle drag or `WASD` / arrow keys: pan the camera
 - mouse wheel or `+` / `-`: zoom
 - `0`: reset camera
