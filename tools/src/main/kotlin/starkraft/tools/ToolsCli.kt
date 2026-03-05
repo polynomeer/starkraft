@@ -11,6 +11,7 @@ fun main(args: Array<String>) {
     }
     when (args[0]) {
         "replay" -> runReplayCommand(args.drop(1))
+        "map" -> runMapCommand(args.drop(1))
         else -> error("Unknown command '${args[0]}'")
     }
 }
@@ -68,10 +69,62 @@ private fun parseOptionalIntFlag(args: List<String>, name: String): Int? {
     return raw.toIntOrNull() ?: error("Invalid integer for $name: '$raw'")
 }
 
+private fun runMapCommand(args: List<String>) {
+    if (args.isEmpty()) error("Missing map subcommand")
+    when (args[0]) {
+        "validate" -> {
+            val path = parsePathArg(args, 1, "map")
+            val map = loadToolMap(path)
+            val result = validateToolMap(map)
+            println("valid=${result.valid}")
+            if (result.errors.isEmpty()) {
+                println("errors=0")
+            } else {
+                println("errors=${result.errors.size}")
+                result.errors.forEach { println("error: $it") }
+                exitProcess(1)
+            }
+        }
+        "generate" -> {
+            val outPath = parsePathArg(args, 1, "output map")
+            val tail = args.drop(2)
+            val width = parseOptionalIntFlag(tail, "--width") ?: 64
+            val height = parseOptionalIntFlag(tail, "--height") ?: 64
+            val blocked = parseOptionalIntFlag(tail, "--blockedPct") ?: 8
+            val weighted = parseOptionalIntFlag(tail, "--weightedPct") ?: 10
+            val seed = parseOptionalLongFlag(tail, "--seed") ?: 1337L
+            val id = parseOptionalStringFlag(tail, "--id") ?: "generated-${width}x$height-$seed"
+            val map = generateToolMap(width, height, seed, blocked, weighted, id)
+            saveToolMap(outPath, map)
+            println("generated=${outPath.toAbsolutePath().normalize()}")
+            println("id=${map.id}")
+            println("size=${map.width}x${map.height}")
+            println("blocked=${map.blockedTiles.size}")
+            println("weighted=${map.weightedTiles.size}")
+        }
+        else -> error("Unknown map subcommand '${args[0]}'")
+    }
+}
+
+private fun parseOptionalLongFlag(args: List<String>, name: String): Long? {
+    val idx = args.indexOf(name)
+    if (idx < 0) return null
+    val raw = args.getOrNull(idx + 1) ?: error("Missing value for $name")
+    return raw.toLongOrNull() ?: error("Invalid long for $name: '$raw'")
+}
+
+private fun parseOptionalStringFlag(args: List<String>, name: String): String? {
+    val idx = args.indexOf(name)
+    if (idx < 0) return null
+    return args.getOrNull(idx + 1) ?: error("Missing value for $name")
+}
+
 private fun buildUsage(): String =
     """
     usage:
       replay meta <replay.json>
       replay fast-forward <replay.json> [--ticks N]
       replay verify <replay.json> [--ticks N] [--strictHash]
+      map validate <map.json>
+      map generate <map.json> [--width N --height N --seed S --blockedPct N --weightedPct N --id map-id]
     """.trimIndent()
