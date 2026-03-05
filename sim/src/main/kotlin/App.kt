@@ -321,6 +321,20 @@ fun main(args: Array<String>) {
     if (resolvedSnapshotOutPath != null) {
         Files.deleteIfExists(resolvedSnapshotOutPath)
     }
+    validateCliSemantics(
+        replayPath = replayPath,
+        scriptPath = scriptPath,
+        inputJsonPath = inputJsonPath,
+        spawnScriptPath = spawnScriptPath,
+        replayValidateOnly = replayValidateOnly,
+        strictReplayHash = strictReplayHash,
+        strictReplayMeta = strictReplayMeta,
+        replayStats = replayStats,
+        replayStatsJson = replayStatsJson,
+        replayMetaJson = replayMetaJson,
+        scriptValidate = scriptValidate,
+        scriptDryRun = scriptDryRun
+    )
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
@@ -1006,6 +1020,42 @@ internal fun validateCliArgs(args: Array<String>) {
             raw.startsWith("-") -> error("Unknown option '$raw'")
             else -> error("Unknown argument '$raw'")
         }
+    }
+}
+
+internal fun validateCliSemantics(
+    replayPath: String?,
+    scriptPath: String?,
+    inputJsonPath: String?,
+    spawnScriptPath: String?,
+    replayValidateOnly: Boolean,
+    strictReplayHash: Boolean,
+    strictReplayMeta: Boolean,
+    replayStats: Boolean,
+    replayStatsJson: Boolean,
+    replayMetaJson: Boolean,
+    scriptValidate: Boolean,
+    scriptDryRun: Boolean
+) {
+    val baseSources =
+        listOfNotNull(
+            replayPath?.let { "replay" },
+            scriptPath?.let { "script" },
+            inputJsonPath?.let { "inputJson" }
+        )
+    if (baseSources.size > 1) {
+        error("Base input sources are mutually exclusive: ${baseSources.joinToString(", ")}")
+    }
+    if (replayPath == null) {
+        if (replayValidateOnly) error("--replayValidateOnly requires --replay")
+        if (strictReplayHash) error("--strictReplayHash requires --replay")
+        if (strictReplayMeta) error("--strictReplayMeta requires --replay")
+        if (replayStats) error("--replayStats requires --replay")
+        if (replayStatsJson) error("--replayStatsJson requires --replay")
+        if (replayMetaJson) error("--replayMetaJson requires --replay")
+    }
+    if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
+        error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
     }
 }
 

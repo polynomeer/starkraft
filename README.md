@@ -379,6 +379,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--record <path>` save recorded commands after a run as replay JSON
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
+- Base command sources are mutually exclusive: use only one of `--replay`, `--script`, or `--inputJson`
 - `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks
 - `--replayStatsJson` print replay stats as JSON, including per-tick selector splits and action breakdowns
 - `--compactJson` render `--replayStatsJson` and `--replayMetaJson` on one line for smaller machine-facing output

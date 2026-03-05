@@ -99,6 +99,69 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator rejects mutually exclusive base inputs`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    scriptPath = "sim/scripts/sample.script",
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ex.message!!.contains("mutually exclusive"))
+    }
+
+    @Test
+    fun `cli semantic validator enforces replay and script flag dependencies`() {
+        val replayFlagEx =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = true,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(replayFlagEx.message!!.contains("requires --replay"))
+
+        val scriptFlagEx =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    scriptValidate = true,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(scriptFlagEx.message!!.contains("require --script or --spawnScript"))
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 
