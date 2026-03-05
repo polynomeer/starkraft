@@ -256,6 +256,8 @@ Client controls:
 - `F6` / `F7`: switch `:sim:play` scenario and restart
 - `F8`: save the current scenario and speed into the `quick` preset
 - `F9`: load the `quick` preset and restart into it
+- `Shift+F8`: save into the `alt` preset
+- `Shift+F9`: load the `alt` preset and restart into it
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - `1`: view/control faction 1
 - `2`: view/control faction 2
@@ -286,7 +288,7 @@ Client controls:
 - the command panel also exposes `Pause`, `Slower`, and `Faster` for `:sim:play`
 - the command panel header now shows the live play state and current scenario
 - hovering command panel buttons shows short tooltip help for the action
-- the command panel also exposes `Save Preset` / `Load Preset` for the `quick` play preset
+- the command panel also exposes `Save/Load Quick` and `Save/Load Alt` preset actions
 - build/train/research actions in the client are sourced from the sim data defs, rather than being hardcoded only in the UI
 - selected buildings now render compact status labels for construction, training, and research progress
 - the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left

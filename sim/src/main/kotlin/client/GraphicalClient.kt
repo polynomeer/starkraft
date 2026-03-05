@@ -369,8 +369,8 @@ private class ClientPanel(
                     KeyEvent.VK_CLOSE_BRACKET -> adjustSpeed(1)
                     KeyEvent.VK_F6 -> cycleScenario(-1)
                     KeyEvent.VK_F7 -> cycleScenario(1)
-                    KeyEvent.VK_F8 -> savePreset("quick")
-                    KeyEvent.VK_F9 -> loadPreset("quick")
+                    KeyEvent.VK_F8 -> savePreset(if (e.isShiftDown) "alt" else "quick")
+                    KeyEvent.VK_F9 -> loadPreset(if (e.isShiftDown) "alt" else "quick")
                     KeyEvent.VK_TAB -> toggleScenarioMenu()
                     KeyEvent.VK_ENTER -> {
                         if (scenarioMenuOpen) applyScenarioSelection()
@@ -570,8 +570,10 @@ private class ClientPanel(
             "play:pause" -> togglePause()
             "play:slower" -> adjustSpeed(-1)
             "play:faster" -> adjustSpeed(1)
-            "preset:save" -> savePreset("quick")
-            "preset:load" -> loadPreset("quick")
+            "preset:save:quick" -> savePreset("quick")
+            "preset:load:quick" -> loadPreset("quick")
+            "preset:save:alt" -> savePreset("alt")
+            "preset:load:alt" -> loadPreset("alt")
             else -> {
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")
