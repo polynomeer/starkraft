@@ -30,6 +30,8 @@ class AppTest {
         assertTrue(help.contains("choose exactly one base source"))
         assertTrue(help.contains("--spawnScript <path>"))
         assertTrue(help.contains("--replay <path>"))
+        assertTrue(help.contains("--replayTicks <n>"))
+        assertTrue(help.contains("no --ticks"))
         assertTrue(help.contains("--record <path>"))
         assertTrue(help.contains("--replayValidateOnly"))
         assertTrue(help.contains("--strictReplayMeta"))

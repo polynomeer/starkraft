@@ -1075,7 +1075,7 @@ internal fun buildAppUsageText(): String =
         "Replay:",
         "  --replay <path>             Load replay commands",
         "  --record <path>             Save command stream as replay at end",
-        "  --replayTicks <n>           Run replay partially for N ticks",
+        "  --replayTicks <n>           Run replay partially for N ticks (with --replay, no --ticks)",
         "  --replayValidateOnly        Validate replay metadata/hash and exit",
         "  --strictReplayHash          Fail when replay hash is missing/mismatched",
         "  --strictReplayMeta          Fail on replay map/build metadata mismatch",
