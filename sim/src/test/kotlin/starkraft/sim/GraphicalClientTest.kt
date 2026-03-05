@@ -27,6 +27,7 @@ import starkraft.sim.client.collectAllSelectionIds
 import starkraft.sim.client.collectIdleWorkerSelectionIds
 import starkraft.sim.client.collectDamagedSelectionIds
 import starkraft.sim.client.collectCombatSelectionIds
+import starkraft.sim.client.collectProducerSelectionIds
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -203,6 +204,7 @@ class GraphicalClientTest {
                 "help: f12 select idle workers",
                 "help: f select damaged units",
                 "help: v select combat units",
+                "help: n select producer buildings",
                 "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
@@ -297,7 +299,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle v-combat tab esc"
+                "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -423,15 +425,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:menu", "scenario:prev", "scenario:next", "help:toggle", "select:viewFaction", "select:selectedType", "select:selectedArchetype", "select:all", "select:idleWorkers", "select:damaged", "select:combat", "select:producers", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -477,7 +479,8 @@ class GraphicalClientTest {
         val idleWorkers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (30 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val damaged = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (31 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val combat = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (32 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (33 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val producers = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (33 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (34 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
@@ -493,6 +496,7 @@ class GraphicalClientTest {
         assertEquals("select:idleWorkers", idleWorkers?.actionId)
         assertEquals("select:damaged", damaged?.actionId)
         assertEquals("select:combat", combat?.actionId)
+        assertEquals("select:producers", producers?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
     }
@@ -515,6 +519,7 @@ class GraphicalClientTest {
         assertEquals("Select idle worker units in the current view scope", commandButtonTooltip("select:idleWorkers"))
         assertEquals("Select damaged units in the current view scope", commandButtonTooltip("select:damaged"))
         assertEquals("Select combat-capable units in the current view scope", commandButtonTooltip("select:combat"))
+        assertEquals("Select producer buildings in the current view scope", commandButtonTooltip("select:producers"))
         assertEquals(null, commandButtonTooltip("unknown"))
     }
 
@@ -924,6 +929,10 @@ class GraphicalClientTest {
         assertArrayEquals(intArrayOf(), collectCombatSelectionIds(snapshot, 1))
         assertArrayEquals(intArrayOf(4, 5), collectCombatSelectionIds(snapshot.copy(entities = snapshot.entities.map {
             if (it.id == 4 || it.id == 5) it.copy(weaponId = "Rifle") else it
+        }), null))
+        assertArrayEquals(intArrayOf(), collectProducerSelectionIds(snapshot, 1))
+        assertArrayEquals(intArrayOf(6), collectProducerSelectionIds(snapshot.copy(entities = snapshot.entities.map {
+            if (it.id == 6) it.copy(archetype = "producer") else it
         }), null))
     }
 

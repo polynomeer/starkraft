@@ -43,6 +43,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "select:idleWorkers" -> "Select idle worker units in the current view scope"
         actionId == "select:damaged" -> "Select damaged units in the current view scope"
         actionId == "select:combat" -> "Select combat-capable units in the current view scope"
+        actionId == "select:producers" -> "Select producer buildings in the current view scope"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -479,6 +480,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Idle Workers", "select:idleWorkers"),
             ClientCommandButton("Damaged", "select:damaged"),
             ClientCommandButton("Combat", "select:combat"),
+            ClientCommandButton("Producers", "select:producers"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -550,7 +552,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle v-combat tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
