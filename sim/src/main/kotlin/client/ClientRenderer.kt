@@ -627,6 +627,7 @@ internal fun buildClientHudLines(
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
+        buildSelectionCapabilitySummary(snapshot, state.selectedIds),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildTaskSummary(snapshot, state.selectedIds),
@@ -714,6 +715,32 @@ internal fun buildSelectionCombatSummary(
     if (armed == 0 && unarmed == 0) return "selection combat: none"
     val nextReady = if (cooling > 0) minCooldown else 0
     return "selection combat: armed=$armed ready=$ready cooling=$cooling unarmed=$unarmed nextReady=$nextReady"
+}
+
+internal fun buildSelectionCapabilitySummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "capabilities: none"
+    var training = 0
+    var research = 0
+    var rally = 0
+    var dropoff = 0
+    var selected = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        selected++
+        if (entity.supportsTraining == true) training++
+        if (entity.supportsResearch == true) research++
+        if (entity.supportsRally == true) rally++
+        if (entity.supportsDropoff == true) dropoff++
+    }
+    if (selected == 0) return "capabilities: none"
+    return if (training == 0 && research == 0 && rally == 0 && dropoff == 0) {
+        "capabilities: basic"
+    } else {
+        "capabilities: train=$training research=$research rally=$rally dropoff=$dropoff"
+    }
 }
 
 internal fun buildBuilderSummary(

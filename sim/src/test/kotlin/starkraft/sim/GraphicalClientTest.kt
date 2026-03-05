@@ -84,6 +84,7 @@ import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionCombatSummary
+import starkraft.sim.client.buildSelectionCapabilitySummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
 import starkraft.sim.client.buildHelpOverlayLines
@@ -314,6 +315,9 @@ class GraphicalClientTest {
                         researchQueueSize = 2,
                         activeResearchTech = "AdvancedTraining",
                         activeResearchRemainingTicks = 8,
+                        supportsTraining = true,
+                        supportsResearch = true,
+                        supportsDropoff = true,
                         pathRemainingNodes = 5,
                         pathGoalX = 12,
                         pathGoalY = 14
@@ -328,6 +332,7 @@ class GraphicalClientTest {
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection hp: 185/465 (39%)",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
+                "capabilities: train=1 research=1 rally=0 dropoff=1",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "tasks: build=1 gather=1 return=0",
@@ -441,6 +446,33 @@ class GraphicalClientTest {
         )
         assertEquals("selection combat: none", buildSelectionCombatSummary(snapshot, emptySet()))
         assertEquals("selection combat: none", buildSelectionCombatSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection capability summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, supportsTraining = true, supportsResearch = true),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "ResourceDepot", x = 2f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, supportsDropoff = true),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Worker", x = 3f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "capabilities: train=1 research=1 rally=0 dropoff=1",
+            buildSelectionCapabilitySummary(snapshot, linkedSetOf(1, 2, 3))
+        )
+        assertEquals("capabilities: none", buildSelectionCapabilitySummary(snapshot, emptySet()))
+        assertEquals("capabilities: none", buildSelectionCapabilitySummary(snapshot, linkedSetOf(99)))
+        assertEquals("capabilities: basic", buildSelectionCapabilitySummary(snapshot, linkedSetOf(3)))
     }
 
     @Test
