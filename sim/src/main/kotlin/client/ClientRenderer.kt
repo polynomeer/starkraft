@@ -38,6 +38,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
         actionId == "view:centerSelection" -> "Center camera on the current selection"
         actionId == "view:centerFaction" -> "Center camera on the viewed faction"
+        actionId == "view:resetCamera" -> "Reset camera pan and zoom"
         actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
         actionId == "select:selectedType" -> "Select all units matching the first selected unit type"
         actionId == "select:selectedArchetype" -> "Select all units matching the first selected unit archetype"
@@ -486,6 +487,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Help", "help:toggle"),
             ClientCommandButton("Center", "view:centerSelection"),
             ClientCommandButton("Center View", "view:centerFaction"),
+            ClientCommandButton("Reset Cam", "view:resetCamera"),
             ClientCommandButton("Select View", "select:viewFaction"),
             ClientCommandButton("Select Type", "select:selectedType"),
             ClientCommandButton("Select Role", "select:selectedArchetype"),

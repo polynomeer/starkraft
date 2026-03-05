@@ -694,6 +694,10 @@ private class ClientPanel(
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
             "view:centerSelection" -> centerOnSelection()
             "view:centerFaction" -> centerOnViewedFaction()
+            "view:resetCamera" -> {
+                camera = CameraView()
+                showNotice("camera reset")
+            }
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
