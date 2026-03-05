@@ -506,9 +506,10 @@ The graphical and console clients also show selected capability counts, e.g. `ca
 The graphical and console clients also show command affordance toggles, e.g. `commands: move=on train=off research=on viewSelect=on`.
 The graphical and console clients also show unlocked faction tech, e.g. `tech: AdvancedTrainingx1`.
 The graphical and console clients also show the latest tick-level build/train/research outcome pressure, including failure reasons, e.g. `activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15`.
-The graphical client HUD also shows current fog coverage, e.g. `fog: visible=42 hidden=982`.
+The graphical and console clients also show current fog coverage, e.g. `fog: f1 visible=42 hidden=982`.
 The console client frame also includes current view scope and selected type counts, e.g. `view=f1 selection hud: Marinex1 Workerx1`.
 The console client frame also shows selected builder and construction summaries, e.g. `builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1`.
+The console client frame also shows selected task/path summaries, e.g. `tasks: build=1 gather=0 return=0 paths: active=1 remaining=5 goals=12,14x1`.
 The graphical and console clients also show the latest streamed construction totals, e.g. `construction state: total=2 f1=2 f2=0 remaining=10 @15`.
 The graphical and console clients also show the latest streamed production event totals, e.g. `production events: e1/p2/c0/x1 @15`.
 The graphical client HUD also shows the latest streamed research event totals, e.g. `research events: e1/p2/c0/x1 @15`.
