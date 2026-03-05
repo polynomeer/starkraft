@@ -48,6 +48,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "select:researchers" -> "Select buildings that support research in the current view scope"
         actionId == "select:construction" -> "Select buildings that are still under construction"
         actionId == "select:harvesters" -> "Select worker units currently harvesting or returning cargo"
+        actionId == "select:returningHarvesters" -> "Select worker units currently returning cargo"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -490,6 +491,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Researchers", "select:researchers"),
             ClientCommandButton("Construction", "select:construction"),
             ClientCommandButton("Harvesters", "select:harvesters"),
+            ClientCommandButton("Returning", "select:returningHarvesters"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -561,7 +563,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer 4-9 recall shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c j/k [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+        "keys: 1/2 faction 3 observer 4-9 recall shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c j/k/q [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
