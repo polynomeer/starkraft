@@ -58,6 +58,11 @@ class AppTest {
     }
 
     @Test
+    fun `sample script passes label validation`() {
+        validateLabelUsage(loadScriptCommands("sim/scripts/sample.script"))
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 

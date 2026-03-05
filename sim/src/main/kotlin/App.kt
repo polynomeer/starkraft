@@ -2029,7 +2029,7 @@ internal fun emitSnapshotLine(snapshotJson: String, snapshotOutPath: java.nio.fi
     )
 }
 
-private fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
+internal fun loadScriptCommands(pathStr: String): Array<ArrayList<Command>> {
     return loadScriptProgram(pathStr).commandsByTick
 }
 
@@ -2866,7 +2866,7 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
     }
 }
 
-private fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
+internal fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
     val defined = HashSet<Int>()
     for (tick in commandsByTick.indices) {
         val cmds = commandsByTick[tick]
