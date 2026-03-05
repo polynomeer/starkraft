@@ -36,6 +36,8 @@ class AppTest {
         assertTrue(help.contains("--replayValidateOnly"))
         assertTrue(help.contains("--strictReplayMeta"))
         assertTrue(help.contains("--replayStatsJson"))
+        assertTrue(help.contains("Print replay stats as JSON and exit"))
+        assertTrue(help.contains("Print replay metadata/context as JSON and exit"))
         assertTrue(help.contains("--snapshotJson"))
         assertTrue(help.contains("requires --snapshotOut"))
         assertTrue(help.contains("standalone: no runtime/replay/output flags"))
