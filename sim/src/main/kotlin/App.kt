@@ -325,6 +325,7 @@ fun main(args: Array<String>) {
     val visionPrevTeam2 = BooleanArray(fog2.width * fog2.height)
     validateCliSemantics(
         replayPath = replayPath,
+        replayTicks = replayTicks,
         scriptPath = scriptPath,
         inputJsonPath = inputJsonPath,
         spawnScriptPath = spawnScriptPath,
@@ -975,6 +976,7 @@ internal fun validateCliArgs(args: Array<String>) {
 
 internal fun validateCliSemantics(
     replayPath: String?,
+    replayTicks: Int?,
     scriptPath: String?,
     inputJsonPath: String?,
     spawnScriptPath: String?,
@@ -997,6 +999,7 @@ internal fun validateCliSemantics(
         error("Base input sources are mutually exclusive: ${baseSources.joinToString(", ")}")
     }
     if (replayPath == null) {
+        if (replayTicks != null) error("--replayTicks requires --replay")
         if (replayValidateOnly) error("--replayValidateOnly requires --replay")
         if (strictReplayHash) error("--strictReplayHash requires --replay")
         if (strictReplayMeta) error("--strictReplayMeta requires --replay")

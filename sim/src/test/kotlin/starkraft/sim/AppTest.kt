@@ -125,6 +125,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    replayTicks = null,
                     scriptPath = "sim/scripts/sample.script",
                     inputJsonPath = null,
                     spawnScriptPath = null,
@@ -147,6 +148,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
                     spawnScriptPath = null,
@@ -166,6 +168,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = null,
+                    replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
                     spawnScriptPath = null,
@@ -188,6 +191,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
                     spawnScriptPath = null,
@@ -207,6 +211,7 @@ class AppTest {
             assertThrows(IllegalStateException::class.java) {
                 validateCliSemantics(
                     replayPath = "a.replay",
+                    replayTicks = null,
                     scriptPath = null,
                     inputJsonPath = null,
                     spawnScriptPath = null,
@@ -242,6 +247,29 @@ class AppTest {
                 validateCliNumericSemantics(tickLimit = null, replayTicks = null, snapshotEvery = 0)
             }
         assertTrue(snapshotEveryEx.message!!.contains("--snapshotEvery must be > 0"))
+    }
+
+    @Test
+    fun `cli semantic validator requires replay for replayTicks`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    replayTicks = 10,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(ex.message!!.contains("--replayTicks requires --replay"))
     }
 
     @Test
