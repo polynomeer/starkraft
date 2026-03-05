@@ -466,11 +466,11 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel status lines from overlay`() {
         assertEquals(
-            listOf("play: paused x2", "scenario: gas"),
+            listOf("play: paused x2", "scenario: gas", "view: faction 1"),
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick"),
+            listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"),
             buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }

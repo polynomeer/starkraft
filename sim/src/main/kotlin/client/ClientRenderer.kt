@@ -408,6 +408,7 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
             it.startsWith("help:") ||
             it.startsWith("selection hud:") ||
             it.startsWith("groups:") ||
+            it.startsWith("view:") ||
             it.startsWith("notice:")
     }
 
