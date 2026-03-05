@@ -624,6 +624,7 @@ internal fun buildClientHudLines(
     listOf(
         "tick=${snapshot.tick} selected=${state.selectedIds.size}",
         buildEconomySummary(snapshot, state.viewedFaction),
+        buildSelectionFactionSummary(snapshot, state.selectedIds),
         buildSelectionSummary(snapshot, state.selectedIds),
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionPositionSummary(snapshot, state.selectedIds),
@@ -675,6 +676,21 @@ internal fun buildSelectionSummary(
     if (counts.isEmpty()) return "selection: none"
     val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection: $summary"
+}
+
+internal fun buildSelectionFactionSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection factions: none"
+    val counts = LinkedHashMap<Int, Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        counts[entity.faction] = (counts[entity.faction] ?: 0) + 1
+    }
+    if (counts.isEmpty()) return "selection factions: none"
+    val summary = counts.entries.sortedBy { it.key }.joinToString(" ") { "f${it.key}=${it.value}" }
+    return "selection factions: $summary"
 }
 
 internal fun buildSelectionArchetypeSummary(

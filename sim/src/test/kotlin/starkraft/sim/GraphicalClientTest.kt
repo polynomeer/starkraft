@@ -82,6 +82,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildSelectionFactionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionPositionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
@@ -342,6 +343,7 @@ class GraphicalClientTest {
             listOf(
                 "tick=15 selected=3",
                 "economy: f1 minerals=300 gas=60 dropoffs=1",
+                "selection factions: f1=3",
                 "selection: Marinex1 Workerx1 Depotx1",
                 "selection roles: infantryx1 workerx1 producerx1",
                 "selection pos: center=5.7,4.0 span=3.0x0.0",
@@ -747,6 +749,29 @@ class GraphicalClientTest {
 
         assertEquals("selection: Marinex2 Workerx1", buildSelectionSummary(snapshot, linkedSetOf(4, 5, 6)))
         assertEquals("selection: none", buildSelectionSummary(snapshot, emptySet()))
+    }
+
+    @Test
+    fun `builds selection faction summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = listOf(
+                    EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
+                    EntitySnapshot(id = 5, faction = 1, typeId = "Worker", archetype = "worker", x = 5f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0),
+                    EntitySnapshot(id = 6, faction = 2, typeId = "Marine", archetype = "infantry", x = 6f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection factions: f1=2 f2=1", buildSelectionFactionSummary(snapshot, linkedSetOf(4, 5, 6)))
+        assertEquals("selection factions: none", buildSelectionFactionSummary(snapshot, emptySet()))
+        assertEquals("selection factions: none", buildSelectionFactionSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

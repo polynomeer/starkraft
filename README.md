@@ -479,6 +479,7 @@ The graphical client HUD also shows selected construction progress, e.g. `constr
 The graphical and console clients also show selected production queue state, e.g. `production: labs=1 queue=2 active=Marinex1`.
 The graphical client HUD also shows selected research state, e.g. `research: labs=1 queue=2 active=AdvancedTrainingx1`.
 The graphical and console clients also show viewed-faction economy state, e.g. `economy: f1 minerals=275 gas=40 dropoffs=1`.
+The graphical and console clients also show selected faction mix, e.g. `selection factions: f1=5 f2=1`.
 The graphical and console clients also show selected archetype counts, e.g. `selection roles: infantryx4 workerx2`.
 The graphical and console clients also show selected position centroid/span, e.g. `selection pos: center=5.7,4.0 span=3.0x0.0`.
 The graphical and console clients also show selected vision spread, e.g. `selection vision: avg=6.0 min=5.0 max=7.0`.

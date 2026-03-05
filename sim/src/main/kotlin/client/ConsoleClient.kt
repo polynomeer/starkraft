@@ -25,6 +25,7 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         }
     val viewSummary = buildViewedFactionSummary(state.viewedFaction)
     val economySummary = buildEconomySummary(snapshot, state.viewedFaction)
+    val selectionFactionSummary = buildSelectionFactionSummary(snapshot, state.selectedIds)
     val selectionHudSummary = buildSelectionSummary(snapshot, state.selectedIds).replaceFirst("selection:", "selection hud:")
     val selectionRoleSummary = buildSelectionArchetypeSummary(snapshot, state.selectedIds)
     val selectionPositionSummary = buildSelectionPositionSummary(snapshot, state.selectedIds)
@@ -62,6 +63,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(factionSummary)
         append("] ")
         append(economySummary)
+        append(" ")
+        append(selectionFactionSummary)
         append(" ")
         append(selectionHudSummary)
         append(" ")
