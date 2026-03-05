@@ -634,6 +634,20 @@ class AppTest {
     }
 
     @Test
+    fun `output path conflict validator normalizes relative segments`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateOutputPathConflicts(
+                    recordPath = "/tmp/starkraft/../same.replay",
+                    replayOutPath = "/tmp/same.replay",
+                    replayDumpPath = null,
+                    snapshotOutPath = null
+                )
+            }
+        assertTrue(ex.message!!.contains("Output path conflict"))
+    }
+
+    @Test
     fun `option parsers parse valid numeric flags`() {
         assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))
