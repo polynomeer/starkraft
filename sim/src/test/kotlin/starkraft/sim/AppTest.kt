@@ -249,6 +249,8 @@ class AppTest {
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))
         assertEquals(42L, parseLongOption(arrayOf("--seed", "42"), "--seed"))
         assertEquals(7L, parseLongOption(arrayOf("--seed=7"), "--seed"))
+        assertEquals("sim/scripts/sample.script", parseStringOption(arrayOf("--script", "sim/scripts/sample.script"), "--script"))
+        assertEquals("/tmp/replay.json", parseStringOption(arrayOf("--replay=/tmp/replay.json"), "--replay"))
     }
 
     @Test

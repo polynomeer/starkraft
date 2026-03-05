@@ -888,113 +888,43 @@ fun main(args: Array<String>) {
 }
 
 private fun parseReplayPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--replay" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--replay=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--replay")
 }
 
 private fun parseRecordPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--record" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--record=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--record")
 }
 
 private fun parseReplayOutPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--replayOut" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--replayOut=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--replayOut")
 }
 
 private fun parseSnapshotOutPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--snapshotOut" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--snapshotOut=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--snapshotOut")
 }
 
 private fun parseReplayDumpPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--replayDump" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--replayDump=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--replayDump")
 }
 
 private fun parsePlayControlPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--playControlFile" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--playControlFile=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--playControlFile")
 }
 
 private fun parseScriptPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--script" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--script=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--script")
 }
 
 private fun parseInputJsonPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--inputJson" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--inputJson=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--inputJson")
 }
 
 private fun parseInputTailPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--inputTail" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--inputTail=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--inputTail")
 }
 
 private fun parseSpawnScriptPath(args: Array<String>): String? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        if (a == "--spawnScript" && i + 1 < args.size) return args[i + 1]
-        if (a.startsWith("--spawnScript=")) return a.substringAfter("=")
-        i++
-    }
-    return null
+    return parseStringOption(args, "--spawnScript")
 }
 
 private fun parseTickLimit(args: Array<String>): Int? {
@@ -1208,6 +1138,19 @@ internal fun parseLongOption(args: Array<String>, option: String): Long? {
             }
         if (raw != null) {
             return raw.toLongOrNull() ?: error("Invalid long value '$raw' for option '$option'")
+        }
+        i++
+    }
+    return null
+}
+
+internal fun parseStringOption(args: Array<String>, option: String): String? {
+    var i = 0
+    while (i < args.size) {
+        val a = args[i]
+        when {
+            a == option && i + 1 < args.size -> return args[i + 1]
+            a.startsWith("$option=") -> return a.substringAfter("=")
         }
         i++
     }
