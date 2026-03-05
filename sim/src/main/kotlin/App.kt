@@ -958,7 +958,8 @@ internal fun validateCliArgs(args: Array<String>) {
                     if (i + 1 >= args.size) {
                         error("Missing value for option '$key'")
                     }
-                    if (args[i + 1].isBlank()) {
+                    val value = args[i + 1]
+                    if (value.isBlank() || value.startsWith("-")) {
                         error("Missing value for option '$key'")
                     }
                     i += 2
