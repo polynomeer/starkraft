@@ -29,7 +29,13 @@ class AppTest {
         assertTrue(help.contains("--script <path>"))
         assertTrue(help.contains("--spawnScript <path>"))
         assertTrue(help.contains("--replay <path>"))
+        assertTrue(help.contains("--record <path>"))
         assertTrue(help.contains("--replayValidateOnly"))
+        assertTrue(help.contains("--strictReplayMeta"))
+        assertTrue(help.contains("--replayStatsJson"))
+        assertTrue(help.contains("--snapshotJson"))
+        assertTrue(help.contains("--compactJson"))
+        assertTrue(help.contains("--playControlFile <path>"))
         assertTrue(help.contains("--help, -h"))
     }
 
