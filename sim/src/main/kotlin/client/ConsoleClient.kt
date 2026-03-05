@@ -23,6 +23,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         snapshot.factions.joinToString(" ") { faction ->
             "f${faction.faction}=${faction.visibleTiles}"
         }
+    val viewSummary = buildViewedFactionSummary(state.viewedFaction)
+    val selectionHudSummary = buildSelectionSummary(snapshot, state.selectedIds).replaceFirst("selection:", "selection hud:")
     val builderSummary = buildBuilderSummary(snapshot, state.selectedIds)
     val constructionSummary = buildConstructionSummary(snapshot, state.selectedIds)
     val productionSummary = buildProductionSummary(snapshot, state.selectedIds)
@@ -35,6 +37,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
     return buildString {
         append("tick=")
         append(snapshot.tick)
+        append(" view=")
+        append(viewSummary)
         append(" selected=")
         append(state.selectedIds.size)
         append(" entities=")
@@ -44,6 +48,8 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(" visible[")
         append(factionSummary)
         append("] ")
+        append(selectionHudSummary)
+        append(" ")
         append(builderSummary)
         append(" ")
         append(constructionSummary)
@@ -65,3 +71,10 @@ internal fun renderClientTextFrame(state: ClientSessionState): String {
         append(formatAckStatus(state.lastAck))
     }
 }
+
+private fun buildViewedFactionSummary(viewedFaction: Int?): String =
+    if (viewedFaction == null) {
+        "observer"
+    } else {
+        "f$viewedFaction"
+    }

@@ -130,9 +130,33 @@ class ConsoleClientTest {
             )
 
         assertEquals(
-            "tick=9 selected=3 entities=3 resources=0 visible[f1=6 f2=4] builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 production: labs=1 queue=2 active=Marinex1 research: labs=1 queue=2 active=AdvancedTrainingx1 tech: AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 construction state: total=2 f1=2 f2=0 remaining=10 @9 production events: e1/p2/c0/x1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 view=f1 selected=3 entities=3 resources=0 visible[f1=6 f2=4] selection hud: Marinex1 Workerx1 Depotx1 builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 production: labs=1 queue=2 active=Marinex1 research: labs=1 queue=2 active=AdvancedTrainingx1 tech: AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 construction state: total=2 f1=2 f2=0 remaining=10 @9 production events: e1/p2/c0/x1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
+    }
+
+    @Test
+    fun `console renderer reports observer view when no faction selected`() {
+        val output =
+            renderClientTextFrame(
+                ClientSessionState(
+                    snapshot =
+                        ClientSnapshot(
+                            tick = 4,
+                            mapId = "demo-map",
+                            buildVersion = "test-build",
+                            mapWidth = 16,
+                            mapHeight = 16,
+                            factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 6), FactionSnapshot(faction = 2, visibleTiles = 4)),
+                            entities = emptyList(),
+                            resourceNodes = emptyList()
+                        ),
+                    viewedFaction = null
+                )
+            )
+
+        assertTrue(output.contains("view=observer"))
+        assertTrue(output.contains("selection hud: none"))
     }
 
     @Test
