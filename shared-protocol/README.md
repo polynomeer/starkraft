@@ -1,13 +1,22 @@
 # shared-protocol module
 
-Versioned wire protocol definitions (planned).
+Versioned wire protocol definitions.
 
-## Status
+## Current scope
 
-Scaffold only. Implementation is pending.
+- JSON schema v1 envelope: `shared-protocol/schema/rts-protocol-v1.schema.json`
+- envelope metadata fields:
+  - `protocolVersion` (wire compatibility)
+  - `simVersion` (rule/data version)
+  - `buildHash` (build identity)
 
-## Planned responsibilities
+## Compatibility policy
 
-- protocol schema and versioning rules
-- compatibility policy
-- generated/manual models for client/server
+- equal `protocolVersion` => compatible
+- remote higher => client must upgrade
+- remote lower => server must upgrade
+
+## Next
+
+- add Go and Kotlin protocol model parity checks
+- add room/session and command ack schema variants

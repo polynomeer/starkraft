@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://starkraft.dev/schema/rts-protocol-v1.schema.json",
+  "title": "Starkraft RTS Protocol v1 Envelope",
+  "type": "object",
+  "required": ["protocolVersion", "simVersion", "message"],
+  "properties": {
+    "protocolVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "simVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "buildHash": {
+      "type": ["string", "null"]
+    },
+    "message": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "clientName"],
+          "properties": {
+            "type": {"const": "handshake"},
+            "clientName": {"type": "string", "minLength": 1},
+            "requestedRoom": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "tick", "commands"],
+          "properties": {
+            "type": {"const": "commandBatch"},
+            "tick": {"type": "integer", "minimum": 0},
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["commandType"],
+                "properties": {
+                  "commandType": {"type": "string"},
+                  "requestId": {"type": ["string", "null"]}
+                },
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "tick", "worldHash"],
+          "properties": {
+            "type": {"const": "snapshot"},
+            "tick": {"type": "integer", "minimum": 0},
+            "worldHash": {"type": "integer"}
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
