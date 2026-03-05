@@ -628,6 +628,7 @@ internal fun buildClientHudLines(
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
+        buildCommandAffordanceSummary(snapshot, state.selectedIds, state.viewedFaction),
         buildBuilderSummary(snapshot, state.selectedIds),
         buildConstructionSummary(snapshot, state.selectedIds),
         buildTaskSummary(snapshot, state.selectedIds),
@@ -741,6 +742,27 @@ internal fun buildSelectionCapabilitySummary(
     } else {
         "capabilities: train=$training research=$research rally=$rally dropoff=$dropoff"
     }
+}
+
+internal fun buildCommandAffordanceSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>,
+    viewedFaction: Int?
+): String {
+    val hasSelection = selectedIds.isNotEmpty()
+    var canTrain = false
+    var canResearch = false
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        if (entity.supportsTraining == true) canTrain = true
+        if (entity.supportsResearch == true) canResearch = true
+        if (canTrain && canResearch) break
+    }
+    val move = if (hasSelection) "on" else "off"
+    val train = if (canTrain) "on" else "off"
+    val research = if (canResearch) "on" else "off"
+    val viewSelect = if (viewedFaction != null) "on" else "off"
+    return "commands: move=$move train=$train research=$research viewSelect=$viewSelect"
 }
 
 internal fun buildBuilderSummary(

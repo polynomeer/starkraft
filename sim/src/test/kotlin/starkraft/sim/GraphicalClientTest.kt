@@ -85,6 +85,7 @@ import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
+import starkraft.sim.client.buildCommandAffordanceSummary
 import starkraft.sim.client.buildScenarioOverlayLines
 import starkraft.sim.client.buildPresetOverlayLines
 import starkraft.sim.client.buildHelpOverlayLines
@@ -333,6 +334,7 @@ class GraphicalClientTest {
                 "selection hp: 185/465 (39%)",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
+                "commands: move=on train=on research=on viewSelect=on",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
                 "tasks: build=1 gather=1 return=0",
@@ -473,6 +475,33 @@ class GraphicalClientTest {
         assertEquals("capabilities: none", buildSelectionCapabilitySummary(snapshot, emptySet()))
         assertEquals("capabilities: none", buildSelectionCapabilitySummary(snapshot, linkedSetOf(99)))
         assertEquals("capabilities: basic", buildSelectionCapabilitySummary(snapshot, linkedSetOf(3)))
+    }
+
+    @Test
+    fun `builds command affordance summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, supportsTraining = true),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Lab", x = 2f, y = 1f, dir = 0f, hp = 120, maxHp = 120, armor = 1, supportsResearch = true)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(
+            "commands: move=on train=on research=on viewSelect=on",
+            buildCommandAffordanceSummary(snapshot, linkedSetOf(1, 2), viewedFaction = 1)
+        )
+        assertEquals(
+            "commands: move=off train=off research=off viewSelect=off",
+            buildCommandAffordanceSummary(snapshot, emptySet(), viewedFaction = null)
+        )
     }
 
     @Test

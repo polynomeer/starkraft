@@ -482,6 +482,7 @@ The graphical and console clients also show viewed-faction economy state, e.g. `
 The graphical client HUD also shows aggregate selected HP, e.g. `selection hp: 185/465 (39%)`.
 The graphical and console clients also show selected combat readiness, e.g. `selection combat: armed=2 ready=1 cooling=1 unarmed=1 nextReady=4`.
 The graphical and console clients also show selected capability counts, e.g. `capabilities: train=1 research=1 rally=0 dropoff=1`.
+The graphical and console clients also show command affordance toggles, e.g. `commands: move=on train=off research=on viewSelect=on`.
 The graphical and console clients also show unlocked faction tech, e.g. `tech: AdvancedTrainingx1`.
 The graphical and console clients also show the latest tick-level build/train/research outcome pressure, including failure reasons, e.g. `activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @15`.
 The graphical client HUD also shows current fog coverage, e.g. `fog: visible=42 hidden=982`.
