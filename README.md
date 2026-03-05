@@ -278,6 +278,7 @@ Client controls:
 - `Shift+4..9`: assign control groups
 - `Alt+4..9`: add current selection to control groups
 - `4..9`: recall control groups
+- `4..9` twice quickly: recall + center camera on that group
 - command panel status now shows populated control groups as `groups: 4=...`
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - command panel includes `Select View` to do the same faction-wide selection

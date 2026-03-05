@@ -39,6 +39,7 @@ import starkraft.sim.client.assignControlGroupSlot
 import starkraft.sim.client.mergeControlGroupSlot
 import starkraft.sim.client.recallControlGroupSlot
 import starkraft.sim.client.formatControlGroupSummary
+import starkraft.sim.client.computeSelectionCentroid
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -221,7 +222,7 @@ class GraphicalClientTest {
                 "help: k select active harvesters",
                 "help: q select returning harvesters",
                 "help: e select loaded harvesters",
-                "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
+                "help: shift+4..9 set group  alt+4..9 add  4..9 recall  double-tap focus",
                 "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
@@ -316,7 +317,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer 4-9 recall shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c j/k/q/e [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+                "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c j/k/q/e [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -1040,6 +1041,27 @@ class GraphicalClientTest {
         groups[6] = intArrayOf(7)
         assertEquals("4=3 6=1", formatControlGroupSummary(groups))
         assertEquals(null, formatControlGroupSummary(arrayOfNulls(10)))
+    }
+
+    @Test
+    fun `computes centroid for selected ids`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 1)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", x = 2f, y = 4f, dir = 0f, hp = 1, maxHp = 1, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Marine", x = 6f, y = 8f, dir = 0f, hp = 1, maxHp = 1, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals(Pair(4f, 6f), computeSelectionCentroid(snapshot, intArrayOf(1, 2)))
+        assertEquals(null, computeSelectionCentroid(snapshot, intArrayOf(99)))
     }
 
     @Test

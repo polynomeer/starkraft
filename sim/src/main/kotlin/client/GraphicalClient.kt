@@ -210,6 +210,8 @@ private class ClientPanel(
     private var noticeMessage: String? = null
     private var noticeUntilNanos: Long = 0L
     private val controlGroups = arrayOfNulls<IntArray>(10)
+    private var lastGroupRecall: Int? = null
+    private var lastGroupRecallAtNanos: Long = 0L
 
     init {
         if (controlPath != null && Files.exists(controlPath)) {
@@ -325,10 +327,16 @@ private class ClientPanel(
                 if (group != null) {
                     if (e.isShiftDown) {
                         assignControlGroup(group)
+                        lastGroupRecall = null
                     } else if (e.isAltDown) {
                         addToControlGroup(group)
+                        lastGroupRecall = null
                     } else {
-                        recallControlGroup(group)
+                        val now = System.nanoTime()
+                        val focusOnRecall = lastGroupRecall == group && (now - lastGroupRecallAtNanos) <= CONTROL_GROUP_DOUBLE_TAP_WINDOW_NANOS
+                        recallControlGroup(group, focusOnRecall)
+                        lastGroupRecall = group
+                        lastGroupRecallAtNanos = now
                     }
                     repaint()
                     return
@@ -1067,7 +1075,7 @@ private class ClientPanel(
         showNotice("group $group set (${session.state.selectedIds.size})")
     }
 
-    private fun recallControlGroup(group: Int) {
+    private fun recallControlGroup(group: Int, focusOnRecall: Boolean = false) {
         val snapshot = session.state.snapshot ?: return
         val ids = recallControlGroupSlot(controlGroups, group, snapshot)
         if (ids.isEmpty()) {
@@ -1081,6 +1089,12 @@ private class ClientPanel(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
             )
         )
+        if (focusOnRecall) {
+            val focus = computeSelectionCentroid(snapshot, ids)
+            if (focus != null) {
+                camera = centerCameraOnWorld(camera, width, height, focus.first, focus.second)
+            }
+        }
         showNotice("group $group recalled (${ids.size})")
     }
 
@@ -1212,10 +1226,12 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: k select active harvesters",
         "help: q select returning harvesters",
         "help: e select loaded harvesters",
-        "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
+        "help: shift+4..9 set group  alt+4..9 add  4..9 recall  double-tap focus",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
+
+private const val CONTROL_GROUP_DOUBLE_TAP_WINDOW_NANOS = 350_000_000L
 
 internal fun controlGroupFromKeyCode(keyCode: Int): Int? =
     when (keyCode) {
@@ -1536,6 +1552,25 @@ internal fun formatControlGroupSummary(groups: Array<IntArray?>): String? {
     }
     if (parts.isEmpty()) return null
     return parts.joinToString(" ")
+}
+
+internal fun computeSelectionCentroid(
+    snapshot: ClientSnapshot,
+    ids: IntArray
+): Pair<Float, Float>? {
+    if (ids.isEmpty()) return null
+    var sumX = 0f
+    var sumY = 0f
+    var count = 0
+    for (i in ids.indices) {
+        val id = ids[i]
+        val entity = snapshot.entities.firstOrNull { it.id == id } ?: continue
+        sumX += entity.x
+        sumY += entity.y
+        count++
+    }
+    if (count == 0) return null
+    return Pair(sumX / count, sumY / count)
 }
 
 internal fun applySelectionClick(
