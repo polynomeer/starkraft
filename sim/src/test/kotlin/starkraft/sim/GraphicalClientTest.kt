@@ -85,6 +85,7 @@ import starkraft.sim.client.buildSelectionSummary
 import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionVisionSummary
+import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionOrderSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
@@ -298,7 +299,7 @@ class GraphicalClientTest {
                 entities = listOf(
                     EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Rifle", weaponCooldownTicks = 3, visionRange = 6f, orderQueueSize = 1, activeOrder = "move"),
                     EntitySnapshot(id = 9, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0),
-                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, visionRange = 5f, buildTargetId = 30, harvestPhase = "gather", harvestTargetNodeId = 40, orderQueueSize = 2, activeOrder = "attackMove"),
+                    EntitySnapshot(id = 11, faction = 1, typeId = "Worker", archetype = "worker", x = 6f, y = 4f, dir = 0f, hp = 20, maxHp = 20, armor = 0, visionRange = 5f, buildTargetId = 30, harvestPhase = "return", harvestTargetNodeId = 40, harvestCargoKind = "minerals", harvestCargoAmount = 6, orderQueueSize = 2, activeOrder = "attackMove"),
                     EntitySnapshot(
                         id = 12,
                         faction = 1,
@@ -338,13 +339,14 @@ class GraphicalClientTest {
                 "selection roles: infantryx1 workerx1 producerx1",
                 "selection hp: 185/465 (39%)",
                 "selection vision: avg=6.0 min=5.0 max=7.0",
+                "selection cargo: loaded=1 minerals=6 gas=0",
                 "orders: queued=3 active=movex1 attackMovex1",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
                 "commands: move=on train=on research=on viewSelect=on",
                 "builders: active=1 targets=1",
                 "construction: sites=1 remaining=6 Depotx1",
-                "tasks: build=1 gather=1 return=0",
+                "tasks: build=1 gather=0 return=1",
                 "paths: active=1 remaining=5 goals=12,14x1",
                 "fog: f1 visible=10 hidden=1014",
                 "production: labs=1 queue=2 active=Marinex1",
@@ -576,6 +578,28 @@ class GraphicalClientTest {
         assertEquals("selection vision: avg=5.5 min=5.0 max=6.0", buildSelectionVisionSummary(snapshot, linkedSetOf(1, 2)))
         assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, emptySet()))
         assertEquals("selection vision: none", buildSelectionVisionSummary(snapshot, linkedSetOf(99)))
+    }
+
+    @Test
+    fun `builds selection cargo summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Worker", x = 1f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestCargoKind = "minerals", harvestCargoAmount = 5),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestCargoKind = "gas", harvestCargoAmount = 3)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection cargo: loaded=2 minerals=5 gas=3", buildSelectionCargoSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection cargo: none", buildSelectionCargoSummary(snapshot, emptySet()))
+        assertEquals("selection cargo: none", buildSelectionCargoSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

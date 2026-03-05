@@ -133,7 +133,7 @@ class ConsoleClientTest {
             )
 
         assertEquals(
-            "tick=9 view=f1 selected=3 entities=3 resources=0 visible[f1=6 f2=4] economy: f1 minerals=275 gas=40 dropoffs=1 selection hud: Marinex1 Workerx1 Depotx1 selection roles: infantryx1 workerx1 producerx1 selection vision: none orders: queued=0 active=none selection combat: armed=0 ready=0 cooling=0 unarmed=3 nextReady=0 capabilities: train=1 research=1 rally=0 dropoff=1 commands: move=on train=on research=on viewSelect=on builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 production: labs=1 queue=2 active=Marinex1 research: labs=1 queue=2 active=AdvancedTrainingx1 tech: AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 construction state: total=2 f1=2 f2=0 remaining=10 @9 production events: e1/p2/c0/x1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
+            "tick=9 view=f1 selected=3 entities=3 resources=0 visible[f1=6 f2=4] economy: f1 minerals=275 gas=40 dropoffs=1 selection hud: Marinex1 Workerx1 Depotx1 selection roles: infantryx1 workerx1 producerx1 selection vision: none selection cargo: none orders: queued=0 active=none selection combat: armed=0 ready=0 cooling=0 unarmed=3 nextReady=0 capabilities: train=1 research=1 rally=0 dropoff=1 commands: move=on train=on research=on viewSelect=on builders: active=1 targets=1 construction: sites=1 remaining=6 Depotx1 production: labs=1 queue=2 active=Marinex1 research: labs=1 queue=2 active=AdvancedTrainingx1 tech: AdvancedTrainingx1 activity: builds=1/x1 buildFails=2[invalidPlacement=1,insufficientResources=1] train=q2/c1/x1 trainFails=1[queueFull=1] research=q1/c0/x1 researchFails=1[invalidTech=1] @9 construction state: total=2 f1=2 f2=0 remaining=10 @9 production events: e1/p2/c0/x1 @9 research events: e1/p2/c0/x1 @9 last ack: ok attackMove[cli-5] @9",
             output
         )
     }
@@ -163,6 +163,7 @@ class ConsoleClientTest {
         assertTrue(output.contains("selection hud: none"))
         assertTrue(output.contains("selection roles: none"))
         assertTrue(output.contains("selection vision: none"))
+        assertTrue(output.contains("selection cargo: none"))
         assertTrue(output.contains("orders: none"))
         assertTrue(output.contains("selection combat: none"))
         assertTrue(output.contains("capabilities: none"))

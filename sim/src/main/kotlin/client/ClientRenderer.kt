@@ -628,6 +628,7 @@ internal fun buildClientHudLines(
         buildSelectionArchetypeSummary(snapshot, state.selectedIds),
         buildSelectionHealthSummary(snapshot, state.selectedIds),
         buildSelectionVisionSummary(snapshot, state.selectedIds),
+        buildSelectionCargoSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
@@ -747,6 +748,28 @@ internal fun buildSelectionVisionSummary(
     if (count == 0) return "selection vision: none"
     val avg = total / count.toFloat()
     return "selection vision: avg=${"%.1f".format(avg)} min=${"%.1f".format(min)} max=${"%.1f".format(max)}"
+}
+
+internal fun buildSelectionCargoSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection cargo: none"
+    var mineral = 0
+    var gas = 0
+    var loaded = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val amount = entity.harvestCargoAmount ?: 0
+        if (amount <= 0) continue
+        loaded++
+        when (entity.harvestCargoKind) {
+            "gas" -> gas += amount
+            else -> mineral += amount
+        }
+    }
+    if (loaded == 0) return "selection cargo: none"
+    return "selection cargo: loaded=$loaded minerals=$mineral gas=$gas"
 }
 
 internal fun buildSelectionCombatSummary(
