@@ -1104,6 +1104,11 @@ internal fun validateCliSemantics(
         if (replayStatsJson) error("--scriptValidate/--scriptDryRun cannot be combined with --replayStatsJson")
         if (replayMetaJson) error("--scriptValidate/--scriptDryRun cannot be combined with --replayMetaJson")
         if (snapshotJson) error("--scriptValidate/--scriptDryRun cannot be combined with --snapshotJson")
+        if (snapshotOutPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --snapshotOut")
+        if (snapshotEvery != null) error("--scriptValidate/--scriptDryRun cannot be combined with --snapshotEvery")
+        if (recordPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --record")
+        if (replayOutPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayOut")
+        if (replayDumpPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayDump")
     }
 }
 
@@ -1179,7 +1184,7 @@ internal fun buildAppUsageText(): String =
         "  --playControlFile <path>    Use external pause/speed control file",
         "  --scriptValidate            Parse+validate script(s) and exit",
         "  --scriptDryRun              Validate and print script selections/commands",
-        "                               (standalone: no --replay/--inputJson/--ticks)",
+        "                               (standalone: no runtime/replay/output flags)",
         "  --dumpWorldHash             Print final world hash",
         "  --printEntities             Print alive entities at end",
         "  --printOrders               Print pending orders at end",

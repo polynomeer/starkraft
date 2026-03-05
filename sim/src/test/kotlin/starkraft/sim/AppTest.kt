@@ -38,7 +38,7 @@ class AppTest {
         assertTrue(help.contains("--replayStatsJson"))
         assertTrue(help.contains("--snapshotJson"))
         assertTrue(help.contains("requires --snapshotOut"))
-        assertTrue(help.contains("standalone: no --replay/--inputJson/--ticks"))
+        assertTrue(help.contains("standalone: no runtime/replay/output flags"))
         assertTrue(help.contains("--compactJson"))
         assertTrue(help.contains("--playControlFile <path>"))
         assertTrue(help.contains("--version"))
@@ -265,6 +265,30 @@ class AppTest {
                 )
             }
         assertTrue(ticksConflict.message!!.contains("cannot be combined with --ticks"))
+
+        val snapshotConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = "sim/scripts/sample.script",
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = true,
+                    scriptDryRun = false,
+                    snapshotOutPath = "/tmp/out.ndjson"
+                )
+            }
+        assertTrue(snapshotConflict.message!!.contains("cannot be combined with --snapshotOut"))
     }
 
     @Test
