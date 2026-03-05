@@ -1,13 +1,24 @@
 # client module
 
-Player client (planned).
+Headless websocket client tools.
 
-## Status
+## Current scope
 
-Scaffold only. Implementation is pending.
+- websocket handshake + protocol envelope messaging
+- interactive CLI client for select/move/attack/build/queue commands
+- snapshot buffer with basic interpolation for text display
+- autonomous bot client with simple build/queue + attack routine
 
-## Planned responsibilities
+## Run CLI client
 
-- network session and command submission
-- snapshot consumption and interpolation
-- headless bot and minimal renderer frontends
+```bash
+cd client
+go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default
+```
+
+## Run bot client
+
+```bash
+cd client
+go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default
+```
