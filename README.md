@@ -375,6 +375,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - Script validation also preflights `train` defaults and labeled producer compatibility when that information is available
 - For labeled producer builds, script validation also catches obvious queue-limit overflow using an optimistic queue timeline
 - `--spawnScript <path>` run a spawn-only script before other commands
+- `--help` / `-h` print CLI option summary and exit
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
 - `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks

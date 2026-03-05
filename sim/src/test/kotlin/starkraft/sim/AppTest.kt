@@ -22,6 +22,17 @@ import java.nio.file.Path
 
 class AppTest {
     @Test
+    fun `app usage text lists key runtime flags`() {
+        val help = buildAppUsageText()
+        assertTrue(help.contains("Usage: ./gradlew :sim:run"))
+        assertTrue(help.contains("--script <path>"))
+        assertTrue(help.contains("--spawnScript <path>"))
+        assertTrue(help.contains("--replay <path>"))
+        assertTrue(help.contains("--replayValidateOnly"))
+        assertTrue(help.contains("--help, -h"))
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 

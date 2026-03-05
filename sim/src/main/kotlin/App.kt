@@ -106,6 +106,11 @@ private val pendingHarvesterRetargetEvents = ArrayList<HarvesterRetargetEventRec
 private val RESOURCE_NODE_KINDS = setOf("MineralField", "GasGeyser")
 
 fun main(args: Array<String>) {
+    if (hasFlag(args, "--help") || hasFlag(args, "-h")) {
+        println(buildAppUsageText())
+        return
+    }
+
     // Load data resources
     val unitsResource = object {}.javaClass.getResource("/data/units.json")
         ?: error("Resource '/data/units.json' not found. Ensure it exists in the resources directory.")
@@ -936,6 +941,37 @@ private fun parseSnapshotEvery(args: Array<String>): Int? {
 
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
+
+internal fun buildAppUsageText(): String =
+    listOf(
+        "Usage: ./gradlew :sim:run --args=\"[options]\"",
+        "Core:",
+        "  --ticks <n>                 Run for N ticks",
+        "  --noSleep                   Disable fixed-tick sleep for fast runs",
+        "  --seed <n>                  Set deterministic RNG seed",
+        "Input:",
+        "  --script <path>             Load scripted commands",
+        "  --spawnScript <path>        Apply spawn-only script before main script/replay",
+        "  --inputJson <path>          Load JSON/NDJSON commands",
+        "  --inputTail <path>          Ingest commands live from append-only NDJSON",
+        "Replay:",
+        "  --replay <path>             Load replay commands",
+        "  --replayTicks <n>           Run replay partially for N ticks",
+        "  --replayValidateOnly        Validate replay metadata/hash and exit",
+        "  --strictReplayHash          Fail when replay hash is missing/mismatched",
+        "  --replayOut <path>          Write replay command stream",
+        "  --replayDump <path>         Dump replay after script/input run",
+        "Output/validation:",
+        "  --snapshotOut <path>        Write snapshot/stream NDJSON",
+        "  --snapshotEvery <n>         Snapshot cadence in ticks",
+        "  --scriptValidate            Parse+validate script(s) and exit",
+        "  --scriptDryRun              Validate and print parsed script commands",
+        "  --dumpWorldHash             Print final world hash",
+        "  --printEntities             Print alive entities at end",
+        "  --printOrders               Print pending orders at end",
+        "  --labelDump                 Print script label to entity mappings",
+        "  --help, -h                  Show this help"
+    ).joinToString("\n")
 
 internal fun ensurePlayControlFile(path: java.nio.file.Path?) {
     if (path == null) return
