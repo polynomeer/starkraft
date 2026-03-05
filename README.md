@@ -258,6 +258,7 @@ Client controls:
 - `F9`: load the `quick` preset and restart into it
 - `Shift+F8`: save into the `alt` preset
 - `Shift+F9`: load the `alt` preset and restart into it
+- `F10`: open the preset menu, `Up`/`Down` to pick slot, `S` save, `L`/`Enter` load
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
 - `1`: view/control faction 1
 - `2`: view/control faction 2

@@ -525,7 +525,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f5/f6/f7 f8/f9(+shift alt) tab esc"
+        "keys: 1/2 faction 3 observer m/a/p/h u/i/o/l x/t/y [/] spc f5/f6/f7 f8/f9(+shift alt) f10 tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

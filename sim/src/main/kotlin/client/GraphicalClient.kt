@@ -204,6 +204,8 @@ private class ClientPanel(
     private var playScenario = PlayScenario.SKIRMISH
     private var scenarioMenuOpen = false
     private var scenarioMenuSelection = PlayScenario.SKIRMISH
+    private var presetMenuOpen = false
+    private var presetMenuSelection = "quick"
     private var noticeMessage: String? = null
     private var noticeUntilNanos: Long = 0L
 
@@ -295,6 +297,23 @@ private class ClientPanel(
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 val delta = 24f
+                if (e.keyCode == KeyEvent.VK_F10) {
+                    togglePresetMenu()
+                    repaint()
+                    return
+                }
+                if (presetMenuOpen) {
+                    when (e.keyCode) {
+                        KeyEvent.VK_UP -> cyclePresetMenu(-1)
+                        KeyEvent.VK_DOWN -> cyclePresetMenu(1)
+                        KeyEvent.VK_S -> savePreset(presetMenuSelection)
+                        KeyEvent.VK_L, KeyEvent.VK_ENTER -> loadPreset(presetMenuSelection)
+                        KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB, KeyEvent.VK_F10 -> presetMenuOpen = false
+                        else -> return
+                    }
+                    repaint()
+                    return
+                }
                 when (e.keyCode) {
                     KeyEvent.VK_LEFT -> camera = camera.copy(panX = camera.panX + delta)
                     KeyEvent.VK_RIGHT -> camera = camera.copy(panX = camera.panX - delta)
@@ -523,7 +542,13 @@ private class ClientPanel(
         ) + listOfNotNull(
             presetAvailabilityLine(),
             currentNoticeLine()
-        ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection)
+        ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection) +
+            buildPresetOverlayLines(
+                open = presetMenuOpen,
+                selectedSlot = presetMenuSelection,
+                quickAvailable = isPresetAvailable("quick"),
+                altAvailable = isPresetAvailable("alt")
+            )
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
         val snapshot = session.state.snapshot
@@ -658,6 +683,7 @@ private class ClientPanel(
         if (scenarioPath == null) return
         scenarioMenuOpen = !scenarioMenuOpen
         scenarioMenuSelection = playScenario
+        if (scenarioMenuOpen) presetMenuOpen = false
     }
 
     private fun cycleScenarioMenu(delta: Int) {
@@ -671,6 +697,18 @@ private class ClientPanel(
         writePlayScenario(path, playScenario)
         scenarioMenuOpen = false
         requestRestart()
+    }
+
+    private fun togglePresetMenu() {
+        if (playRoot == null) return
+        presetMenuOpen = !presetMenuOpen
+        if (presetMenuOpen) scenarioMenuOpen = false
+    }
+
+    private fun cyclePresetMenu(delta: Int) {
+        val slots = listOf("quick", "alt")
+        val current = slots.indexOf(presetMenuSelection).let { if (it < 0) 0 else it }
+        presetMenuSelection = slots[Math.floorMod(current + delta, slots.size)]
     }
 
     private fun savePreset(name: String) {
@@ -716,6 +754,11 @@ private class ClientPanel(
         val quick = Files.exists(presetFilePath(presetsDir, "quick"))
         val alt = Files.exists(presetFilePath(presetsDir, "alt"))
         return formatPresetAvailability(quick, alt)
+    }
+
+    private fun isPresetAvailable(name: String): Boolean {
+        val root = playRoot ?: return false
+        return Files.exists(presetFilePath(root.resolve("presets"), name))
     }
 }
 
@@ -798,6 +841,25 @@ internal fun buildScenarioOverlayLines(
         lines.add("$marker ${scenario.id}$active")
     }
     return lines
+}
+
+internal fun buildPresetOverlayLines(
+    open: Boolean,
+    selectedSlot: String,
+    quickAvailable: Boolean,
+    altAvailable: Boolean
+): List<String> {
+    if (!open) return emptyList()
+    fun line(name: String, ready: Boolean): String {
+        val marker = if (selectedSlot == name) ">" else " "
+        val status = if (ready) "ready" else "missing"
+        return "$marker $name ($status)"
+    }
+    return listOf(
+        "preset menu: s save  l/enter load  f10 close",
+        line("quick", quickAvailable),
+        line("alt", altAvailable)
+    )
 }
 
 internal fun buildUnitSelectionRecord(
