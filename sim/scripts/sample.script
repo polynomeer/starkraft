@@ -40,7 +40,8 @@ select @scout
 move 22 22
 
 wait 10
-# Exercise gas harvesting against the spawn script's GasDepot + geyser setup
+# Exercise gas harvesting with a script-spawned geyser and worker
+spawnNode @geyser GasGeyser 10 6 40 1
 spawn @gasworker 2 Worker 10.5 6 6
 select @gasworker
 harvest @geyser
