@@ -317,7 +317,6 @@ fun main(args: Array<String>) {
     val resolvedReplayPath = replayPath?.let(::resolvePath)
     val resolvedSnapshotOutPath = snapshotOutPath?.let(::resolvePath)
     val resolvedPlayControlPath = playControlPath?.let(::resolvePath)
-    ensurePlayControlFile(resolvedPlayControlPath)
     val replayMeta =
         if (resolvedReplayPath != null) ReplayIO.inspect(resolvedReplayPath) else null
     val streamSequence = longArrayOf(0L)
@@ -346,7 +345,8 @@ fun main(args: Array<String>) {
         replayDumpPath = replayDumpPath,
         snapshotOutPath = snapshotOutPath,
         snapshotEvery = snapshotEvery,
-        inputTailPath = inputTailPath
+        inputTailPath = inputTailPath,
+        playControlPath = playControlPath
     )
     validateCliNumericSemantics(
         tickLimit = tickLimit,
@@ -520,6 +520,7 @@ fun main(args: Array<String>) {
         tickLimit != null -> tickLimit.coerceAtLeast(0)
         else -> defaultTicks
     }
+    ensurePlayControlFile(resolvedPlayControlPath)
     var tick = 0
     while (tick < totalTicks) {
         inputTailReader?.poll(liveCommandsByTick, liveSelectionEventsByTick, liveCommandRequestIds)
@@ -1027,7 +1028,8 @@ internal fun validateCliSemantics(
     replayDumpPath: String? = null,
     snapshotOutPath: String? = null,
     snapshotEvery: Int? = null,
-    inputTailPath: String? = null
+    inputTailPath: String? = null,
+    playControlPath: String? = null
 ) {
     if (tickLimit != null && replayTicks != null) {
         error("--ticks cannot be combined with --replayTicks")
@@ -1089,6 +1091,9 @@ internal fun validateCliSemantics(
     if (replayValidateOnly && replayDumpPath != null) {
         error("--replayValidateOnly cannot be combined with --replayDump")
     }
+    if (replayValidateOnly && playControlPath != null) {
+        error("--replayValidateOnly cannot be combined with --playControlFile")
+    }
     if (replayMetaJson && replayStats) {
         error("--replayMetaJson cannot be combined with --replayStats")
     }
@@ -1106,6 +1111,7 @@ internal fun validateCliSemantics(
         if (replayDumpPath != null) error("--replayStats/--replayStatsJson cannot be combined with --replayDump")
         if (spawnScriptPath != null) error("--replayStats/--replayStatsJson cannot be combined with --spawnScript")
         if (inputTailPath != null) error("--replayStats/--replayStatsJson cannot be combined with --inputTail")
+        if (playControlPath != null) error("--replayStats/--replayStatsJson cannot be combined with --playControlFile")
     }
     if (replayMetaJson) {
         if (tickLimit != null) error("--replayMetaJson cannot be combined with --ticks")
@@ -1118,6 +1124,7 @@ internal fun validateCliSemantics(
         if (replayDumpPath != null) error("--replayMetaJson cannot be combined with --replayDump")
         if (spawnScriptPath != null) error("--replayMetaJson cannot be combined with --spawnScript")
         if (inputTailPath != null) error("--replayMetaJson cannot be combined with --inputTail")
+        if (playControlPath != null) error("--replayMetaJson cannot be combined with --playControlFile")
     }
     if (compactJson && !replayStatsJson && !replayMetaJson && !snapshotJson) {
         error("--compactJson requires --replayStatsJson, --replayMetaJson, or --snapshotJson")
@@ -1155,6 +1162,7 @@ internal fun validateCliSemantics(
         if (recordPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --record")
         if (replayOutPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayOut")
         if (replayDumpPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replayDump")
+        if (playControlPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --playControlFile")
     }
 }
 

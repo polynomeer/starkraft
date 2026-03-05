@@ -433,6 +433,30 @@ class AppTest {
                 )
             }
         assertTrue(tailConflict.message!!.contains("cannot be combined with --inputTail"))
+
+        val playControlConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    playControlPath = "/tmp/play-control.txt"
+                )
+            }
+        assertTrue(playControlConflict.message!!.contains("cannot be combined with --playControlFile"))
     }
 
     @Test
