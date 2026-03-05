@@ -430,6 +430,9 @@ private class ClientPanel(
                     KeyEvent.VK_E -> {
                         selectCargoHarvesters()
                     }
+                    KeyEvent.VK_D -> {
+                        selectDropoffBuildings()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -705,6 +708,7 @@ private class ClientPanel(
             "select:harvesters" -> selectHarvesters()
             "select:returningHarvesters" -> selectReturningHarvesters()
             "select:cargoHarvesters" -> selectCargoHarvesters()
+            "select:dropoffs" -> selectDropoffBuildings()
             "groups:clear" -> clearControlGroups()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
@@ -1119,6 +1123,19 @@ private class ClientPanel(
         showNotice("selected cargo (${ids.size})")
     }
 
+    private fun selectDropoffBuildings() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectDropoffSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected dropoffs (${ids.size})")
+    }
+
     private fun assignControlGroup(group: Int) {
         assignControlGroupSlot(controlGroups, group, session.state.selectedIds)
         showNotice("group $group set (${session.state.selectedIds.size})")
@@ -1283,6 +1300,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: k select active harvesters",
         "help: q select returning harvesters",
         "help: e select loaded harvesters",
+        "help: d select resource drop-off buildings",
         "help: shift+4..9 set group  alt+4..9 add  4..9 recall  double-tap focus",
         "help: alt+0 clear control groups",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
@@ -1567,6 +1585,21 @@ internal fun collectCargoHarvesterSelectionIds(
         if (faction != null && entity.faction != faction) continue
         if (entity.archetype != "worker") continue
         if ((entity.harvestCargoAmount ?: 0) <= 0) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectDropoffSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.supportsDropoff != true) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)

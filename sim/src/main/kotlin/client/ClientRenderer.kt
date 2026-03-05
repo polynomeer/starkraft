@@ -52,6 +52,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "select:harvesters" -> "Select worker units currently harvesting or returning cargo"
         actionId == "select:returningHarvesters" -> "Select worker units currently returning cargo"
         actionId == "select:cargoHarvesters" -> "Select worker units currently carrying cargo"
+        actionId == "select:dropoffs" -> "Select buildings that accept resource drop-offs"
         actionId == "groups:clear" -> "Clear all control groups"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
@@ -499,6 +500,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Harvesters", "select:harvesters"),
             ClientCommandButton("Returning", "select:returningHarvesters"),
             ClientCommandButton("Cargo", "select:cargoHarvesters"),
+            ClientCommandButton("Dropoffs", "select:dropoffs"),
             ClientCommandButton("Clear Groups", "groups:clear"),
             ClientCommandButton("Clear", "clear")
         )
@@ -573,7 +575,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add alt+0 clearGroups m/a/p/h u/i/o/l x/t/y z/c j/k/q/e home-center end-faction [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+        "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add alt+0 clearGroups m/a/p/h u/i/o/l x/t/y z/c d j/k/q/e home-center end-faction [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {
