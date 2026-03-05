@@ -29,6 +29,7 @@ type Config struct {
 	MaxUnitIDsPerCommand int
 	MaxClientNameLength int
 	MaxRoomIDLength int
+	MaxPendingBatchesPerClient int
 }
 
 type Server struct {
@@ -78,6 +79,9 @@ func NewServer(cfg Config) *Server {
 	}
 	if cfg.MaxRoomIDLength <= 0 {
 		cfg.MaxRoomIDLength = 32
+	}
+	if cfg.MaxPendingBatchesPerClient <= 0 {
+		cfg.MaxPendingBatchesPerClient = 8
 	}
 	s := &Server{
 		cfg: cfg,
@@ -219,7 +223,13 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 				})
 				continue
 			}
-			room.enqueue(client.id, batch)
+			if !room.enqueue(client.id, batch) {
+				_ = client.sendEnvelope(protocol.CommandAckMessage{
+					Type: "commandAck", Tick: batch.Tick, CommandType: "commandBatch",
+					Accepted: false, Reason: "queueFull",
+				})
+				continue
+			}
 		}
 	}
 }
@@ -261,6 +271,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	rm, ok := s.rooms[roomID]
 	if !ok {
 		rm = newRoom(roomID)
+		rm.maxPendingBatchesPerClient = s.cfg.MaxPendingBatchesPerClient
 		s.rooms[roomID] = rm
 	}
 	return &clientConn{

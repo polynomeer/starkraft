@@ -395,6 +395,61 @@ func TestBatchTickOutsideWindowIsRejected(t *testing.T) {
 	}
 }
 
+func TestPendingQueueLimitRejectsOverflow(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:                 "test",
+		TickInterval:               20 * time.Millisecond,
+		MaxPendingBatchesPerClient: 1,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	x1, y1 := 4.0, 5.0
+	req1 := "r-1"
+	batch1Raw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch", Tick: 1,
+		Commands: []protocol.WireCommand{{CommandType: "move", RequestID: &req1, UnitIDs: []int{1}, X: &x1, Y: &y1}},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batch1Raw}); err != nil {
+		t.Fatalf("write batch1: %v", err)
+	}
+
+	x2, y2 := 6.0, 7.0
+	req2 := "r-2"
+	batch2Raw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch", Tick: 1,
+		Commands: []protocol.WireCommand{{CommandType: "move", RequestID: &req2, UnitIDs: []int{1}, X: &x2, Y: &y2}},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batch2Raw}); err != nil {
+		t.Fatalf("write batch2: %v", err)
+	}
+
+	ackEnv := readEnvelope(t, conn)
+	var ack protocol.CommandAckMessage
+	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
+		t.Fatalf("decode ack: %v", err)
+	}
+	if ack.Accepted || ack.Reason != "queueFull" {
+		t.Fatalf("expected queueFull rejection, got %+v", ack)
+	}
+}
+
 func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope {
 	t.Helper()
 	var env protocol.ProtocolEnvelope

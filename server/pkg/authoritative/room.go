@@ -34,6 +34,7 @@ type room struct {
 	maxTicks                   int
 	maxPastTickSkew            int
 	maxFutureTickSkew          int
+	maxPendingBatchesPerClient int
 }
 
 type queuedBatch struct {
@@ -54,6 +55,7 @@ func newRoom(id string) *room {
 		maxTicks:                   600,
 		maxPastTickSkew:            2,
 		maxFutureTickSkew:          2,
+		maxPendingBatchesPerClient: 8,
 	}
 	// Deterministic seed state for MVP networking.
 	r.units[1] = unitState{id: 1, ownerID: "player-1", typeID: "Worker", x: 2, y: 2, hp: 40}
@@ -74,10 +76,22 @@ func (r *room) removeClient(c *clientConn) {
 	delete(r.clients, c)
 }
 
-func (r *room) enqueue(clientID string, batch protocol.CommandBatchMessage) {
+func (r *room) enqueue(clientID string, batch protocol.CommandBatchMessage) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if r.maxPendingBatchesPerClient > 0 {
+		count := 0
+		for i := 0; i < len(r.pendingBatches); i++ {
+			if r.pendingBatches[i].clientID == clientID {
+				count++
+			}
+		}
+		if count >= r.maxPendingBatchesPerClient {
+			return false
+		}
+	}
 	r.pendingBatches = append(r.pendingBatches, queuedBatch{clientID: clientID, batch: batch})
+	return true
 }
 
 func (r *room) step() tickResult {
