@@ -406,6 +406,9 @@ private class ClientPanel(
                     KeyEvent.VK_N -> {
                         selectProducers()
                     }
+                    KeyEvent.VK_HOME -> {
+                        centerOnSelection()
+                    }
                     KeyEvent.VK_Z -> {
                         selectTrainingBuildings()
                     }
@@ -1252,6 +1255,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: f select damaged units",
         "help: v select combat units",
         "help: n select producer buildings",
+        "help: home center camera on selection",
         "help: z select training buildings  c select research buildings",
         "help: j select active construction sites",
         "help: k select active harvesters",

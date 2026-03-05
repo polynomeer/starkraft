@@ -275,6 +275,7 @@ Client controls:
 - `K`: select active harvesters (gather/return workers)
 - `Q`: select only returning harvesters
 - `E`: select workers currently carrying cargo
+- `Home`: center camera on current selection
 - `Shift+4..9`: assign control groups
 - `Alt+4..9`: add current selection to control groups
 - `4..9`: recall control groups
