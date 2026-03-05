@@ -229,6 +229,8 @@ Minimal graphical client:
    `./gradlew :sim:run --args="--snapshotEvery 1 --snapshotOut /tmp/starkraft/live/snapshots.ndjson --inputTail /tmp/starkraft/live/client-input.ndjson --noSleep --ticks 2000"`
 2. Start the client in another terminal:
    `./gradlew :sim:graphicalClient --args="/tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
+   For CI or non-GUI environments, run the same client in headless mode:
+   `./gradlew :sim:graphicalClient --args="--headless --headlessTicks 120 /tmp/starkraft/live/snapshots.ndjson /tmp/starkraft/live/client-input.ndjson"`
    The same client can also connect over TCP sockets:
    `./gradlew :sim:graphicalClient --args="tcp://127.0.0.1:9001 tcp://127.0.0.1:9002"`
    Or over WebSocket endpoints:

@@ -47,6 +47,7 @@ import starkraft.sim.client.activeControlGroupHighlight
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
+import starkraft.sim.client.parseGraphicalClientArgs
 import starkraft.sim.client.ClientCommandAck
 import starkraft.sim.client.ClientBuildCatalogEntry
 import starkraft.sim.client.ClientCatalog
@@ -2270,5 +2271,31 @@ class GraphicalClientTest {
         assertEquals(2, update?.visionChanges?.size)
         assertEquals(6, update?.visionChanges?.first()?.x)
         assertEquals(false, update?.visionChanges?.last()?.visible)
+    }
+
+    @Test
+    fun `parses graphical client headless launch args`() {
+        val config =
+            parseGraphicalClientArgs(
+                arrayOf(
+                    "--headless",
+                    "--headlessTicks",
+                    "40",
+                    "/tmp/live/snapshots.ndjson",
+                    "/tmp/live/client-input.ndjson"
+                )
+            )
+
+        assertTrue(config.headless)
+        assertEquals(40, config.headlessTicks)
+        assertEquals("/tmp/live/snapshots.ndjson", config.snapshotSpec)
+        assertEquals("/tmp/live/client-input.ndjson", config.inputSpec)
+    }
+
+    @Test
+    fun `clamps graphical client headless ticks to at least one`() {
+        val config = parseGraphicalClientArgs(arrayOf("--headless", "--headlessTicks", "0", "/tmp/live/snapshots.ndjson"))
+
+        assertEquals(1, config.headlessTicks)
     }
 }

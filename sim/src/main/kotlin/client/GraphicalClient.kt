@@ -1231,22 +1231,20 @@ private class ClientPanel(
 }
 
 fun main(args: Array<String>) {
-    require(args.isNotEmpty()) { "usage: GraphicalClientKt <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt] [play-scenario.txt] [play-root]" }
-    val snapshotSpec = args[0]
-    val inputSpec =
-        if (args.size >= 2) {
-            args[1]
-        } else {
-            val snapshotPath = Paths.get(snapshotSpec).toAbsolutePath().normalize()
-            defaultClientInputPath(snapshotPath).toString()
-        }
-    val controlPath = if (args.size >= 3) Paths.get(args[2]).toAbsolutePath().normalize() else null
-    val scenarioPath = if (args.size >= 4) Paths.get(args[3]).toAbsolutePath().normalize() else null
-    val playRoot = if (args.size >= 5) Paths.get(args[4]).toAbsolutePath().normalize() else scenarioPath?.parent
+    val config = parseGraphicalClientArgs(args)
 
-    val session = ClientSession(openClientStreamSubscription(snapshotSpec), openClientInputSink(inputSpec))
+    val session = ClientSession(openClientStreamSubscription(config.snapshotSpec), openClientInputSink(config.inputSpec))
+    if (config.headless) {
+        session.use {
+            repeat(config.headlessTicks) {
+                if (!session.poll()) return@repeat
+            }
+            println(renderClientTextFrame(session.state))
+        }
+        return
+    }
     var restartRequested = false
-    val panel = ClientPanel(session, controlPath = controlPath, scenarioPath = scenarioPath, playRoot = playRoot) { restartRequested = true }
+    val panel = ClientPanel(session, controlPath = config.controlPath, scenarioPath = config.scenarioPath, playRoot = config.playRoot) { restartRequested = true }
     val appLoop = ClientAppLoop(session) { panel.repaint() }
 
     val frame = JFrame("Starkraft Client")
@@ -1274,6 +1272,63 @@ fun main(args: Array<String>) {
                 }
             }
         }
+    )
+}
+
+internal data class GraphicalClientLaunchConfig(
+    val snapshotSpec: String,
+    val inputSpec: String,
+    val controlPath: Path?,
+    val scenarioPath: Path?,
+    val playRoot: Path?,
+    val headless: Boolean,
+    val headlessTicks: Int
+)
+
+internal fun parseGraphicalClientArgs(args: Array<String>): GraphicalClientLaunchConfig {
+    var headless = false
+    var headlessTicks = 240
+    val positional = ArrayList<String>(args.size)
+    var i = 0
+    while (i < args.size) {
+        when (val a = args[i]) {
+            "--headless" -> {
+                headless = true
+                i++
+            }
+            "--headlessTicks" -> {
+                val raw = args.getOrNull(i + 1) ?: error("Missing value for --headlessTicks")
+                headlessTicks = raw.toIntOrNull() ?: error("Invalid integer for --headlessTicks: '$raw'")
+                i += 2
+            }
+            else -> {
+                positional.add(a)
+                i++
+            }
+        }
+    }
+    require(positional.isNotEmpty()) {
+        "usage: GraphicalClientKt [--headless] [--headlessTicks N] <snapshot.ndjson|tcp://host:port> [input.ndjson|tcp://host:port] [play-control.txt] [play-scenario.txt] [play-root]"
+    }
+    val snapshotSpec = positional[0]
+    val inputSpec =
+        if (positional.size >= 2) {
+            positional[1]
+        } else {
+            val snapshotPath = Paths.get(snapshotSpec).toAbsolutePath().normalize()
+            defaultClientInputPath(snapshotPath).toString()
+        }
+    val controlPath = if (positional.size >= 3) Paths.get(positional[2]).toAbsolutePath().normalize() else null
+    val scenarioPath = if (positional.size >= 4) Paths.get(positional[3]).toAbsolutePath().normalize() else null
+    val playRoot = if (positional.size >= 5) Paths.get(positional[4]).toAbsolutePath().normalize() else scenarioPath?.parent
+    return GraphicalClientLaunchConfig(
+        snapshotSpec = snapshotSpec,
+        inputSpec = inputSpec,
+        controlPath = controlPath,
+        scenarioPath = scenarioPath,
+        playRoot = playRoot,
+        headless = headless,
+        headlessTicks = headlessTicks.coerceAtLeast(1)
     )
 }
 
