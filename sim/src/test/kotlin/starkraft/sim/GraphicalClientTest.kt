@@ -473,8 +473,8 @@ class GraphicalClientTest {
             buildCommandPanelStatusLines(listOf("camera: zoom=1.0", "play: paused x2", "scenario: gas", "mode: attack-move", "view: faction 1"))
         )
         assertEquals(
-            listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"),
-            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
+            listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "hint: Queue a move order with right click or ground mode", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"),
+            buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "scenario menu: up/down choose  enter restart  tab close", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "hint: Queue a move order with right click or ground mode", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
     }
 

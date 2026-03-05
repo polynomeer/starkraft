@@ -209,6 +209,7 @@ private class ClientPanel(
     private var helpOverlayOpen = false
     private var noticeMessage: String? = null
     private var noticeUntilNanos: Long = 0L
+    private var hoverHint: String? = null
     private val controlGroups = arrayOfNulls<IntArray>(10)
     private var lastGroupRecall: Int? = null
     private var lastGroupRecallAtNanos: Long = 0L
@@ -272,6 +273,12 @@ private class ClientPanel(
                 }
                 repaint()
             }
+
+            override fun mouseExited(e: MouseEvent) {
+                if (hoverHint == null) return
+                hoverHint = null
+                repaint()
+            }
         })
         addMouseMotionListener(object : MouseAdapter() {
             override fun mouseDragged(e: MouseEvent) {
@@ -286,10 +293,15 @@ private class ClientPanel(
                     repaint()
                     return
                 }
+                updateHoverHint(e.x, e.y)
                 if (!draggingSelection) return
                 dragCurrentX = e.x
                 dragCurrentY = e.y
                 repaint()
+            }
+
+            override fun mouseMoved(e: MouseEvent) {
+                updateHoverHint(e.x, e.y)
             }
         })
         addMouseWheelListener { e: MouseWheelEvent ->
@@ -499,22 +511,7 @@ private class ClientPanel(
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
-        val snapshot = session.state.snapshot
-        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
-        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
-        val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
-        val button =
-            commandButtonAt(
-                width,
-                event.x,
-                event.y,
-                catalog,
-                statusLineCount = statusLineCount,
-                hasSelection = session.state.selectedIds.isNotEmpty(),
-                canTrain = canTrain,
-                canResearch = canResearch
-            ) ?: return null
-        return commandButtonTooltip(button.actionId)
+        return commandButtonTooltipAt(event.x, event.y)
     }
 
     override fun paintComponent(graphics: Graphics) {
@@ -627,6 +624,7 @@ private class ClientPanel(
             selectionHudLine(),
             controlGroupSummaryLine(),
             presetAvailabilityLine(),
+            hoverHintLine(),
             currentNoticeLine()
         ) + buildScenarioOverlayLines(scenarioMenuOpen, playScenario, scenarioMenuSelection) +
             buildPresetOverlayLines(
@@ -869,6 +867,34 @@ private class ClientPanel(
             noticeMessage = null
             null
         }
+    }
+
+    private fun hoverHintLine(): String? = hoverHint?.let { "hint: $it" }
+
+    private fun updateHoverHint(mouseX: Int, mouseY: Int) {
+        val next = commandButtonTooltipAt(mouseX, mouseY)
+        if (next == hoverHint) return
+        hoverHint = next
+        repaint()
+    }
+
+    private fun commandButtonTooltipAt(mouseX: Int, mouseY: Int): String? {
+        val snapshot = session.state.snapshot
+        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
+        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
+        val button =
+            commandButtonAt(
+                width,
+                mouseX,
+                mouseY,
+                catalog,
+                statusLineCount = statusLineCount,
+                hasSelection = session.state.selectedIds.isNotEmpty(),
+                canTrain = canTrain,
+                canResearch = canResearch
+            ) ?: return null
+        return commandButtonTooltip(button.actionId)
     }
 
     private fun presetAvailabilityLine(): String? {
