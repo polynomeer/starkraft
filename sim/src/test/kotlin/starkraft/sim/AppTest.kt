@@ -255,6 +255,31 @@ class AppTest {
     }
 
     @Test
+    fun `selection validator rejects labels defined only on future ticks`() {
+        val world = World()
+        val selections =
+            arrayOf(
+                arrayListOf(
+                    ScriptRunner.SelectionEvent(0, ScriptRunner.Selection.Units(intArrayOf(-1)))
+                ),
+                arrayListOf()
+            )
+        val commands: Array<ArrayList<Command>> =
+            arrayOf(
+                arrayListOf(),
+                arrayListOf(
+                    Command.Spawn(tick = 1, faction = 1, typeId = "Marine", x = 2f, y = 2f, vision = null, label = "future", labelId = -1)
+                )
+            )
+
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateSelectionUnitIds(selections, commands, world)
+            }
+        assertTrue(ex.message!!.contains("Unknown label id"))
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 

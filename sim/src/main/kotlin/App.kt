@@ -3027,18 +3027,20 @@ internal fun validateSelectionUnitIds(
     world: World
 ) {
     val definedLabels = HashSet<Int>()
-    for (tick in commandsByTick.indices) {
-        val cmds = commandsByTick[tick]
-        for (i in 0 until cmds.size) {
-            when (val c = cmds[i]) {
-                is Command.SpawnNode -> c.labelId?.let(definedLabels::add)
-                is Command.Spawn -> c.labelId?.let(definedLabels::add)
-                is Command.Build -> c.labelId?.let(definedLabels::add)
-                else -> Unit
+    val ticks = maxOf(selectionEventsByTick.size, commandsByTick.size)
+    for (tick in 0 until ticks) {
+        if (tick < commandsByTick.size) {
+            val cmds = commandsByTick[tick]
+            for (i in 0 until cmds.size) {
+                when (val c = cmds[i]) {
+                    is Command.SpawnNode -> c.labelId?.let(definedLabels::add)
+                    is Command.Spawn -> c.labelId?.let(definedLabels::add)
+                    is Command.Build -> c.labelId?.let(definedLabels::add)
+                    else -> Unit
+                }
             }
         }
-    }
-    for (tick in selectionEventsByTick.indices) {
+        if (tick >= selectionEventsByTick.size) continue
         val events = selectionEventsByTick[tick]
         for (i in 0 until events.size) {
             val selection = events[i].selection
