@@ -82,6 +82,7 @@ import starkraft.sim.client.buildProductionSummary
 import starkraft.sim.client.buildResearchSummary
 import starkraft.sim.client.buildRallySummary
 import starkraft.sim.client.buildSelectionSummary
+import starkraft.sim.client.buildSelectionArchetypeSummary
 import starkraft.sim.client.buildSelectionHealthSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
@@ -331,6 +332,7 @@ class GraphicalClientTest {
                 "tick=15 selected=3",
                 "economy: f1 minerals=300 gas=60 dropoffs=1",
                 "selection: Marinex1 Workerx1 Depotx1",
+                "selection roles: infantryx1 workerx1 producerx1",
                 "selection hp: 185/465 (39%)",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
@@ -502,6 +504,28 @@ class GraphicalClientTest {
             "commands: move=off train=off research=off viewSelect=off",
             buildCommandAffordanceSummary(snapshot, emptySet(), viewedFaction = null)
         )
+    }
+
+    @Test
+    fun `builds selection archetype summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Marine", archetype = "infantry", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 40, armor = 0),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", archetype = "worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection roles: infantryx1 workerx1", buildSelectionArchetypeSummary(snapshot, linkedSetOf(1, 2)))
+        assertEquals("selection roles: none", buildSelectionArchetypeSummary(snapshot, emptySet()))
+        assertEquals("selection roles: none", buildSelectionArchetypeSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test
