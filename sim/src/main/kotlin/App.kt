@@ -1116,42 +1116,19 @@ private fun parseSeed(args: Array<String>): Long? {
 }
 
 internal fun parseIntOption(args: Array<String>, option: String): Int? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        val raw =
-            when {
-                a == option && i + 1 < args.size -> args[i + 1]
-                a.startsWith("$option=") -> a.substringAfter("=")
-                else -> null
-            }
-        if (raw != null) {
-            return raw.toIntOrNull() ?: error("Invalid integer value '$raw' for option '$option'")
-        }
-        i++
-    }
-    return null
+    val raw = findOptionRawValue(args, option) ?: return null
+    return raw.toIntOrNull() ?: error("Invalid integer value '$raw' for option '$option'")
 }
 
 internal fun parseLongOption(args: Array<String>, option: String): Long? {
-    var i = 0
-    while (i < args.size) {
-        val a = args[i]
-        val raw =
-            when {
-                a == option && i + 1 < args.size -> args[i + 1]
-                a.startsWith("$option=") -> a.substringAfter("=")
-                else -> null
-            }
-        if (raw != null) {
-            return raw.toLongOrNull() ?: error("Invalid long value '$raw' for option '$option'")
-        }
-        i++
-    }
-    return null
+    val raw = findOptionRawValue(args, option) ?: return null
+    return raw.toLongOrNull() ?: error("Invalid long value '$raw' for option '$option'")
 }
 
-internal fun parseStringOption(args: Array<String>, option: String): String? {
+internal fun parseStringOption(args: Array<String>, option: String): String? =
+    findOptionRawValue(args, option)
+
+private fun findOptionRawValue(args: Array<String>, option: String): String? {
     var i = 0
     while (i < args.size) {
         val a = args[i]
