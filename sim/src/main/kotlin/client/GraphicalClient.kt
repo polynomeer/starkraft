@@ -356,17 +356,7 @@ private class ClientPanel(
                     KeyEvent.VK_2 -> session.state.viewedFaction = 2
                     KeyEvent.VK_3 -> session.state.viewedFaction = null
                     KeyEvent.VK_F2 -> {
-                        val snapshot = session.state.snapshot ?: return
-                        val faction = session.state.viewedFaction
-                        if (faction == null) {
-                            showNotice("select faction first (1/2)")
-                            return
-                        }
-                        session.append(
-                            ClientIntent.Selection(
-                                buildFactionSelectionRecord(snapshot.tick + 1, faction)
-                            )
-                        )
+                        selectViewedFaction()
                     }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
@@ -626,6 +616,7 @@ private class ClientPanel(
             "preset:load:alt" -> loadPreset("alt")
             "preset:menu" -> togglePresetMenu()
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
+            "select:viewFaction" -> selectViewedFaction()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -784,6 +775,20 @@ private class ClientPanel(
         val selected = session.state.selectedIds
         if (selected.isEmpty()) return null
         return "selection hud: ${buildSelectionSummary(snapshot, selected).removePrefix("selection: ")}"
+    }
+
+    private fun selectViewedFaction() {
+        val snapshot = session.state.snapshot ?: return
+        val faction = session.state.viewedFaction
+        if (faction == null) {
+            showNotice("select faction first (1/2)")
+            return
+        }
+        session.append(
+            ClientIntent.Selection(
+                buildFactionSelectionRecord(snapshot.tick + 1, faction)
+            )
+        )
     }
 
     private fun isPresetAvailable(name: String): Boolean {

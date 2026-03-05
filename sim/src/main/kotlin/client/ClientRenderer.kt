@@ -36,6 +36,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "scenario:menu" -> "Open the scenario picker to restart into another setup"
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
+        actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
         actionId == "clear" -> "Clear the current selection and command mode"
         else -> null
     }
@@ -465,6 +466,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Help", "help:toggle"),
+            ClientCommandButton("Select View", "select:viewFaction"),
             ClientCommandButton("Clear", "clear")
         )
     for ((index, option) in catalog.buildOptions.withIndex()) {
@@ -490,6 +492,7 @@ internal fun buildCommandButtons(
                 it.actionId.startsWith("preset:") ||
                 it.actionId.startsWith("scenario:") ||
                 it.actionId.startsWith("help:") ||
+                it.actionId.startsWith("select:") ||
                 it.actionId == "clear"
         }
     }
