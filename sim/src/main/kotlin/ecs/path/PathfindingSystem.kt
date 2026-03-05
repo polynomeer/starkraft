@@ -72,9 +72,19 @@ class PathfindingSystem(
         private set
     var lastTickAssignedCount: Int = 0
         private set
+    var lastTickNodesUsed: Int = 0
+        private set
+    var lastTickBudgetExhausted: Int = 0
+        private set
+    var lastTickCarryOver: Int = 0
+        private set
+    val nodeBudgetPerTick: Int
+        get() = nodesBudgetPerTick
 
     fun tick() {
         var remainingBudget = nodesBudgetPerTick
+        var nodesUsed = 0
+        var budgetExhausted = 0
         var newCount = 0
         var solved = 0
         var totalLen = 0
@@ -115,6 +125,7 @@ class PathfindingSystem(
             val out = pool.obtain()
             val len = pathfinder.findPath(sx, sy, gx, gy, remainingBudget, out, allowOccupiedGoal = first is Order.Attack)
             remainingBudget -= pathfinder.lastNodesUsed
+            nodesUsed += pathfinder.lastNodesUsed
 
             if (len > 0) {
                 val old = world.pathFollows[id]
@@ -126,6 +137,7 @@ class PathfindingSystem(
             } else {
                 pool.recycle(out)
                 if (pathfinder.lastBudgetExhausted) {
+                    budgetExhausted++
                     queue.setId(newCount++, id)
                 }
             }
@@ -133,6 +145,9 @@ class PathfindingSystem(
         queue.reset(newCount)
         lastTickSolved = solved
         lastTickAvgPathLen = if (solved > 0) totalLen.toFloat() / solved.toFloat() else 0f
+        lastTickNodesUsed = nodesUsed
+        lastTickBudgetExhausted = budgetExhausted
+        lastTickCarryOver = newCount
     }
 
     fun assignedEntityId(index: Int): Int = assignedEntityIds[index]

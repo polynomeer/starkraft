@@ -72,6 +72,9 @@ object Benchmark {
         val replansStuck = IntArray(ticksToMeasure)
         val avgPathLens = FloatArray(ticksToMeasure)
         val queueSizes = IntArray(ticksToMeasure)
+        val nodesUsed = IntArray(ticksToMeasure)
+        val budgetExhausted = IntArray(ticksToMeasure)
+        val carryOver = IntArray(ticksToMeasure)
         while (tick < warmupTicks + ticksToMeasure) {
             if (tick % 500 == 0) {
                 val phase = (tick / 500) % targets.size
@@ -96,6 +99,9 @@ object Benchmark {
                 replansStuck[tick - warmupTicks] = movement.lastTickReplansStuck
                 avgPathLens[tick - warmupTicks] = pathing.lastTickAvgPathLen
                 queueSizes[tick - warmupTicks] = pathQueue.size
+                nodesUsed[tick - warmupTicks] = pathing.lastTickNodesUsed
+                budgetExhausted[tick - warmupTicks] = pathing.lastTickBudgetExhausted
+                carryOver[tick - warmupTicks] = pathing.lastTickCarryOver
             }
             tick++
         }
@@ -104,6 +110,7 @@ object Benchmark {
         Arrays.sort(sorted)
         val p50 = percentile(sorted, 50.0)
         val p95 = percentile(sorted, 95.0)
+        val p99 = percentile(sorted, 99.0)
         val max = sorted[sorted.size - 1]
         val replanP50 = percentileInt(replans, 50.0)
         val replanP95 = percentileInt(replans, 95.0)
@@ -115,15 +122,22 @@ object Benchmark {
         val avgLenP95 = percentileFloat(avgPathLens, 95.0)
         val queueP50 = percentileInt(queueSizes, 50.0)
         val queueP95 = percentileInt(queueSizes, 95.0)
+        val nodesP50 = percentileInt(nodesUsed, 50.0)
+        val nodesP95 = percentileInt(nodesUsed, 95.0)
+        val nodesP99 = percentileInt(nodesUsed, 99.0)
+        val exhaustedP95 = percentileInt(budgetExhausted, 95.0)
+        val carryP95 = percentileInt(carryOver, 95.0)
 
         println("Benchmark ticks=$ticksToMeasure warmup=$warmupTicks")
         println(
-            "p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us max=${nsToMicros(max)}us " +
+            "p50=${nsToMicros(p50)}us p95=${nsToMicros(p95)}us p99=${nsToMicros(p99)}us max=${nsToMicros(max)}us " +
                 "replan_p50=$replanP50 replan_p95=$replanP95 " +
                 "blocked_p50=$blockedP50 blocked_p95=$blockedP95 " +
                 "stuck_p50=$stuckP50 stuck_p95=$stuckP95 " +
                 "avglen_p50=${"%.2f".format(avgLenP50)} avglen_p95=${"%.2f".format(avgLenP95)} " +
-                "queue_p50=$queueP50 queue_p95=$queueP95"
+                "queue_p50=$queueP50 queue_p95=$queueP95 " +
+                "nodes_p50=$nodesP50 nodes_p95=$nodesP95 nodes_p99=$nodesP99 nodeBudget=${pathing.nodeBudgetPerTick} " +
+                "budgetExhausted_p95=$exhaustedP95 carryOver_p95=$carryP95"
         )
     }
 }
