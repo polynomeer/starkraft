@@ -559,6 +559,29 @@ class AppTest {
     }
 
     @Test
+    fun `output path conflict validator rejects shared output file`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateOutputPathConflicts(
+                    recordPath = "/tmp/same.ndjson",
+                    replayOutPath = null,
+                    replayDumpPath = null,
+                    snapshotOutPath = "/tmp/same.ndjson"
+                )
+            }
+        assertTrue(ex.message!!.contains("Output path conflict"))
+        assertTrue(ex.message!!.contains("--record"))
+        assertTrue(ex.message!!.contains("--snapshotOut"))
+
+        validateOutputPathConflicts(
+            recordPath = "/tmp/record.replay",
+            replayOutPath = "/tmp/out.replay",
+            replayDumpPath = "/tmp/dump.replay",
+            snapshotOutPath = "/tmp/snapshot.ndjson"
+        )
+    }
+
+    @Test
     fun `option parsers parse valid numeric flags`() {
         assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))

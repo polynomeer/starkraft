@@ -351,6 +351,12 @@ fun main(args: Array<String>) {
         replayTicks = replayTicks,
         snapshotEvery = snapshotEvery
     )
+    validateOutputPathConflicts(
+        recordPath = recordPath,
+        replayOutPath = replayOutPath,
+        replayDumpPath = replayDumpPath,
+        snapshotOutPath = snapshotOutPath
+    )
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
@@ -1112,6 +1118,29 @@ internal fun validateCliNumericSemantics(
     if (snapshotEvery != null && snapshotEvery <= 0) {
         error("--snapshotEvery must be > 0 (was $snapshotEvery)")
     }
+}
+
+internal fun validateOutputPathConflicts(
+    recordPath: String?,
+    replayOutPath: String?,
+    replayDumpPath: String?,
+    snapshotOutPath: String?
+) {
+    val byPath = LinkedHashMap<String, MutableList<String>>()
+    fun add(flag: String, path: String?) {
+        if (path == null) return
+        val normalized = Paths.get(path).toAbsolutePath().normalize().toString()
+        byPath.getOrPut(normalized) { ArrayList(2) }.add(flag)
+    }
+    add("--record", recordPath)
+    add("--replayOut", replayOutPath)
+    add("--replayDump", replayDumpPath)
+    add("--snapshotOut", snapshotOutPath)
+    val conflict = byPath.entries.firstOrNull { it.value.size > 1 } ?: return
+    error(
+        "Output path conflict '${conflict.key}': " +
+            conflict.value.joinToString(", ")
+    )
 }
 
 internal fun buildAppUsageText(): String =
