@@ -1279,6 +1279,21 @@ class AppTest {
     }
 
     @Test
+    fun `builds and renders empty command stats`() {
+        val stats = buildCommandStats(arrayOf(), replayMeta = null)
+
+        assertEquals(0, stats.totals.total)
+        assertEquals(0, stats.ticks.size)
+
+        val text = renderCommandStatsText(stats)
+        assertTrue(text.contains("total=0 spawns=0 moves=0 attacks=0"))
+
+        val json = renderCommandStatsJson(stats, pretty = false)
+        assertTrue(json.contains("\"ticks\":[]"))
+        assertTrue(json.contains("\"total\":0"))
+    }
+
+    @Test
     fun `renders replay metadata json golden shape`() {
         val json =
             renderReplayMetaJson(

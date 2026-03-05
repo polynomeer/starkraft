@@ -777,7 +777,7 @@ fun main(args: Array<String>) {
         printLabelMappings(labelMap, labelIdMap)
     }
 
-    if ((replayStats || replayStatsJson) && commandsByTick.isNotEmpty()) {
+    if (replayStats || replayStatsJson) {
         val stats = buildCommandStats(commandsByTick, replayMeta)
         if (replayStats) {
             printCommandStats(stats)

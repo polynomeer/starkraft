@@ -385,6 +385,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - Base command sources are mutually exclusive: use only one of `--replay`, `--script`, or `--inputJson`
 - `--replayStats` print per-tick command counts plus selector split (`direct`, `faction`, `type`) and action breakdowns like `move.direct`; large reports auto-compact the middle ticks
 - `--replayStatsJson` print replay stats as JSON, including per-tick selector splits and action breakdowns
+  Stats flags now also emit a zeroed summary for empty replays (instead of printing nothing).
 - `--compactJson` render `--replayStatsJson` and `--replayMetaJson` on one line for smaller machine-facing output
 - Replay stats JSON shape is covered by a golden test in `sim/src/test/kotlin/starkraft/sim/AppTest.kt`
 - `--replayMetaJson` print replay metadata plus current runtime map/build/seed context, resolved replay path, file size, event count, strict-mode flags, and compatibility warnings as JSON
