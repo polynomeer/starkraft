@@ -32,6 +32,7 @@ import starkraft.sim.client.collectTrainingSelectionIds
 import starkraft.sim.client.collectResearchSelectionIds
 import starkraft.sim.client.controlGroupFromKeyCode
 import starkraft.sim.client.assignControlGroupSlot
+import starkraft.sim.client.mergeControlGroupSlot
 import starkraft.sim.client.recallControlGroupSlot
 import starkraft.sim.client.formatControlGroupSummary
 import starkraft.sim.client.buildPreviewSpec
@@ -212,7 +213,7 @@ class GraphicalClientTest {
                 "help: v select combat units",
                 "help: n select producer buildings",
                 "help: z select training buildings  c select research buildings",
-                "help: shift+4..9 set group  4..9 recall group",
+                "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
                 "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
             ),
             buildHelpOverlayLines(open = true)
@@ -307,7 +308,7 @@ class GraphicalClientTest {
                 "last ack: ok move[cli-9] @15",
                 "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
                 "right: move/attack/harvest   ctrl+right: attackMove",
-                "keys: 1/2 faction 3 observer 4-9 group recall shift+4-9 set m/a/p/h u/i/o/l x/t/y z/c [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+                "keys: 1/2 faction 3 observer 4-9 recall shift+4-9 set alt+4-9 add m/a/p/h u/i/o/l x/t/y z/c [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
             ),
             buildClientHudLines(
                 snapshot = snapshot,
@@ -986,6 +987,14 @@ class GraphicalClientTest {
 
         assertArrayEquals(intArrayOf(4), recallControlGroupSlot(groups, 5, snapshot))
         assertArrayEquals(intArrayOf(), recallControlGroupSlot(groups, 4, snapshot))
+    }
+
+    @Test
+    fun `merges control group ids without duplicates`() {
+        val groups = arrayOfNulls<IntArray>(10)
+        assignControlGroupSlot(groups, 4, linkedSetOf(1, 2))
+        mergeControlGroupSlot(groups, 4, linkedSetOf(2, 3))
+        assertArrayEquals(intArrayOf(1, 2, 3), groups[4])
     }
 
     @Test

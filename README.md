@@ -272,6 +272,7 @@ Client controls:
 - `Z`: select buildings that can train units
 - `C`: select buildings that can research tech
 - `Shift+4..9`: assign control groups
+- `Alt+4..9`: add current selection to control groups
 - `4..9`: recall control groups
 - command panel status now shows populated control groups as `groups: 4=...`
 - `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it

@@ -325,6 +325,8 @@ private class ClientPanel(
                 if (group != null) {
                     if (e.isShiftDown) {
                         assignControlGroup(group)
+                    } else if (e.isAltDown) {
+                        addToControlGroup(group)
                     } else {
                         recallControlGroup(group)
                     }
@@ -1014,6 +1016,12 @@ private class ClientPanel(
         showNotice("group $group recalled (${ids.size})")
     }
 
+    private fun addToControlGroup(group: Int) {
+        mergeControlGroupSlot(controlGroups, group, session.state.selectedIds)
+        val size = controlGroups[group]?.size ?: 0
+        showNotice("group $group add (${session.state.selectedIds.size}) -> $size")
+    }
+
     private fun isPresetAvailable(name: String): Boolean {
         val root = playRoot ?: return false
         return Files.exists(presetFilePath(root.resolve("presets"), name))
@@ -1132,7 +1140,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: v select combat units",
         "help: n select producer buildings",
         "help: z select training buildings  c select research buildings",
-        "help: shift+4..9 set group  4..9 recall group",
+        "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
 }
@@ -1350,6 +1358,20 @@ internal fun assignControlGroupSlot(
 ) {
     if (group !in groups.indices) return
     groups[group] = selectedIds.toIntArray()
+}
+
+internal fun mergeControlGroupSlot(
+    groups: Array<IntArray?>,
+    group: Int,
+    selectedIds: Set<Int>
+) {
+    if (group !in groups.indices) return
+    if (selectedIds.isEmpty()) return
+    val existing = groups[group] ?: IntArray(0)
+    val merged = LinkedHashSet<Int>(existing.size + selectedIds.size)
+    for (i in existing.indices) merged.add(existing[i])
+    merged.addAll(selectedIds)
+    groups[group] = merged.toIntArray()
 }
 
 internal fun recallControlGroupSlot(
