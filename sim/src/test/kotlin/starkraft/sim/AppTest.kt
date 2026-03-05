@@ -170,6 +170,59 @@ class AppTest {
     }
 
     @Test
+    fun `selection validator rejects unknown entity id`() {
+        val world = World()
+        world.spawn(Transform(1f, 1f), UnitTag(1, "Marine"), Health(10, 10), null)
+        val selections =
+            arrayOf(
+                arrayListOf(
+                    ScriptRunner.SelectionEvent(0, ScriptRunner.Selection.Units(intArrayOf(999)))
+                )
+            )
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateSelectionUnitIds(selections, arrayOf(), world)
+            }
+        assertTrue(ex.message!!.contains("Unknown entity id"))
+    }
+
+    @Test
+    fun `selection validator rejects unknown label id`() {
+        val world = World()
+        val selections =
+            arrayOf(
+                arrayListOf(
+                    ScriptRunner.SelectionEvent(0, ScriptRunner.Selection.Units(intArrayOf(-7)))
+                )
+            )
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateSelectionUnitIds(selections, arrayOf(), world)
+            }
+        assertTrue(ex.message!!.contains("Unknown label id"))
+    }
+
+    @Test
+    fun `selection validator allows known entity and label ids`() {
+        val world = World()
+        val id = world.spawn(Transform(1f, 1f), UnitTag(1, "Marine"), Health(10, 10), null)
+        val selections =
+            arrayOf(
+                arrayListOf(
+                    ScriptRunner.SelectionEvent(0, ScriptRunner.Selection.Units(intArrayOf(id, -1)))
+                )
+            )
+        val commands: Array<ArrayList<Command>> =
+            arrayOf(
+                arrayListOf(
+                    Command.Spawn(tick = 0, faction = 1, typeId = "Marine", x = 2f, y = 2f, vision = null, label = "scout", labelId = -1)
+                )
+            )
+
+        validateSelectionUnitIds(selections, commands, world)
+    }
+
+    @Test
     fun `play control file is created and parsed`(@TempDir tempDir: Path) {
         val controlPath = tempDir.resolve("play-control.txt")
 

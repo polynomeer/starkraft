@@ -180,6 +180,7 @@ Other flags:
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script selections plus commands without running
 - Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
+- Script validation now also checks `select` ids/labels and fails on unknown entity ids or undefined labels
 
 Example client-input file:
 

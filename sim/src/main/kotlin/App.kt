@@ -418,6 +418,7 @@ fun main(args: Array<String>) {
         validateBuildCommands(commandsByTick, data, world)
         validateTrainCommands(commandsByTick, data, world)
         validateResearchCommands(commandsByTick, data, world)
+        validateSelectionUnitIds(selectionEventsByTick, commandsByTick, world)
         if (scriptPath != null) {
             validateCommandUnitIds(commandsByTick, world)
             validateLabelUsage(commandsByTick)
@@ -2993,6 +2994,40 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                     if (c.buildingId >= 0 && !existing.contains(c.buildingId)) {
                         error("Unknown building id '${c.buildingId}' in rally at tick $tick")
                     }
+                }
+            }
+        }
+    }
+}
+
+internal fun validateSelectionUnitIds(
+    selectionEventsByTick: Array<ArrayList<ScriptRunner.SelectionEvent>>,
+    commandsByTick: Array<ArrayList<Command>>,
+    world: World
+) {
+    val definedLabels = HashSet<Int>()
+    for (tick in commandsByTick.indices) {
+        val cmds = commandsByTick[tick]
+        for (i in 0 until cmds.size) {
+            when (val c = cmds[i]) {
+                is Command.SpawnNode -> c.labelId?.let(definedLabels::add)
+                is Command.Spawn -> c.labelId?.let(definedLabels::add)
+                is Command.Build -> c.labelId?.let(definedLabels::add)
+                else -> Unit
+            }
+        }
+    }
+    for (tick in selectionEventsByTick.indices) {
+        val events = selectionEventsByTick[tick]
+        for (i in 0 until events.size) {
+            val selection = events[i].selection
+            if (selection !is ScriptRunner.Selection.Units) continue
+            for (id in selection.ids) {
+                if (id < 0 && !definedLabels.contains(id)) {
+                    error("Unknown label id '$id' in select at tick $tick (spawn/build first)")
+                }
+                if (id >= 0 && !world.transforms.containsKey(id)) {
+                    error("Unknown entity id '$id' in select at tick $tick")
                 }
             }
         }
