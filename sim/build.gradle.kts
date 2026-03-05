@@ -44,6 +44,13 @@ tasks.register<JavaExec>("pathfindingBenchmark") {
     mainClass.set("starkraft.sim.bench.PathfindingMicroBenchmark")
 }
 
+tasks.register<JavaExec>("soak") {
+    group = "application"
+    description = "Run long headless soak/perf harness"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("starkraft.sim.bench.SoakHarness")
+}
+
 tasks.register<JavaExec>("consumeSnapshotStream") {
     group = "application"
     description = "Consume a snapshot NDJSON stream and print a summary"

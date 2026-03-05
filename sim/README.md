@@ -21,6 +21,20 @@ Deterministic fixed-tick RTS simulation core (Kotlin/JVM).
 ./gradlew :sim:test --tests starkraft.sim.ReplayRunnerTest
 ```
 
+## Benchmark / Soak
+
+```bash
+./gradlew :sim:benchmark
+./gradlew :sim:pathfindingBenchmark
+./gradlew :sim:soak --args="--minutes 30 --units 120 --seed 1234 --reportEverySec 10"
+```
+
+The soak harness prints:
+- tick latency percentiles (`p50/p95/p99/max`)
+- pathfinding budget pressure (`pathNodes`, queue/carry-over)
+- memory and GC deltas
+- JFR `jcmd` hint for profile captures
+
 ## Notes
 
 - `sim` is authoritative for game rules/state updates.
