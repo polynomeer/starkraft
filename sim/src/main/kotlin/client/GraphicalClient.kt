@@ -401,6 +401,9 @@ private class ClientPanel(
                     KeyEvent.VK_J -> {
                         selectConstructionSites()
                     }
+                    KeyEvent.VK_K -> {
+                        selectHarvesters()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -671,6 +674,7 @@ private class ClientPanel(
             "select:trainers" -> selectTrainingBuildings()
             "select:researchers" -> selectResearchBuildings()
             "select:construction" -> selectConstructionSites()
+            "select:harvesters" -> selectHarvesters()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -1011,6 +1015,19 @@ private class ClientPanel(
         showNotice("selected construction (${ids.size})")
     }
 
+    private fun selectHarvesters() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectHarvesterSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected harvesters (${ids.size})")
+    }
+
     private fun assignControlGroup(group: Int) {
         assignControlGroupSlot(controlGroups, group, session.state.selectedIds)
         showNotice("group $group set (${session.state.selectedIds.size})")
@@ -1158,6 +1175,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: n select producer buildings",
         "help: z select training buildings  c select research buildings",
         "help: j select active construction sites",
+        "help: k select active harvesters",
         "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
@@ -1379,6 +1397,22 @@ internal fun collectConstructionSelectionIds(
         val entity = snapshot.entities[i]
         if (faction != null && entity.faction != faction) continue
         if (!entity.underConstruction) continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectHarvesterSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.archetype != "worker") continue
+        if (entity.harvestPhase == null) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)
