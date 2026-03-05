@@ -41,6 +41,7 @@ import starkraft.sim.client.recallControlGroupSlot
 import starkraft.sim.client.formatControlGroupSummary
 import starkraft.sim.client.computeSelectionCentroid
 import starkraft.sim.client.clearControlGroupSlots
+import starkraft.sim.client.activeControlGroupHighlight
 import starkraft.sim.client.buildPreviewSpec
 import starkraft.sim.client.centerCameraOnWorld
 import starkraft.sim.client.defaultClientInputPath
@@ -1076,6 +1077,13 @@ class GraphicalClientTest {
 
         assertEquals(Pair(4f, 6f), computeSelectionCentroid(snapshot, intArrayOf(1, 2)))
         assertEquals(null, computeSelectionCentroid(snapshot, intArrayOf(99)))
+    }
+
+    @Test
+    fun `expires control group highlight by ttl`() {
+        assertEquals(4, activeControlGroupHighlight(lastGroup = 4, lastRecallAtNanos = 100L, nowNanos = 200L, ttlNanos = 200L))
+        assertEquals(null, activeControlGroupHighlight(lastGroup = 4, lastRecallAtNanos = 100L, nowNanos = 400L, ttlNanos = 200L))
+        assertEquals(null, activeControlGroupHighlight(lastGroup = null, lastRecallAtNanos = 100L, nowNanos = 200L, ttlNanos = 200L))
     }
 
     @Test

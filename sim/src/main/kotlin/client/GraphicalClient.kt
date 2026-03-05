@@ -858,7 +858,8 @@ private class ClientPanel(
     }
 
     private fun controlGroupSummaryLine(): String? {
-        val summary = formatControlGroupSummary(controlGroups, lastGroupRecall)
+        val highlighted = activeControlGroupHighlight(lastGroupRecall, lastGroupRecallAtNanos, System.nanoTime())
+        val summary = formatControlGroupSummary(controlGroups, highlighted)
         return summary?.let { "groups: $it" }
     }
 
@@ -1245,6 +1246,18 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
 }
 
 private const val CONTROL_GROUP_DOUBLE_TAP_WINDOW_NANOS = 350_000_000L
+private const val CONTROL_GROUP_HIGHLIGHT_TTL_NANOS = 2_500_000_000L
+
+internal fun activeControlGroupHighlight(
+    lastGroup: Int?,
+    lastRecallAtNanos: Long,
+    nowNanos: Long,
+    ttlNanos: Long = CONTROL_GROUP_HIGHLIGHT_TTL_NANOS
+): Int? {
+    if (lastGroup == null) return null
+    if (lastRecallAtNanos <= 0L) return null
+    return if (nowNanos - lastRecallAtNanos <= ttlNanos) lastGroup else null
+}
 
 internal fun controlGroupFromKeyCode(keyCode: Int): Int? =
     when (keyCode) {
