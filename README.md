@@ -250,6 +250,7 @@ Client controls:
 - shift + left drag: add a box selection to the current selection
 - command panel status now includes a `selection hud` line with selected type counts
 - command panel status now includes current command mode (e.g. `mode: attack-move`)
+- command panel buttons now highlight active mode/view/menu toggles (build mode, view target, help/menu open)
 - middle drag or `WASD` / arrow keys: pan the camera
 - mouse wheel or `+` / `-`: zoom
 - `0`: reset camera

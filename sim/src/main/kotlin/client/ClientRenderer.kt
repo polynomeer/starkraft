@@ -308,9 +308,10 @@ internal class SwingClientRenderer(
         val buttons = buildCommandButtons(defaultClientCatalog(), state.selectedIds.isNotEmpty(), canTrain, canResearch)
         for (i in buttons.indices) {
             val bounds = commandButtonBounds(width, i, statusLines.size)
-            g.color = Color(0x1B, 0x26, 0x31, 220)
+            val active = isCommandButtonActive(buttons[i].actionId, overlayLines)
+            g.color = if (active) Color(0x2E, 0x4C, 0x38, 228) else Color(0x1B, 0x26, 0x31, 220)
             g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
-            g.color = Color(0x61, 0x71, 0x80)
+            g.color = if (active) Color(0x7F, 0xCE, 0x92) else Color(0x61, 0x71, 0x80)
             g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
             g.color = Color.WHITE
             g.drawString(buttons[i].label, bounds.x + 10, bounds.y + 21)
@@ -412,6 +413,24 @@ internal fun buildCommandPanelStatusLines(overlayLines: List<String>): List<Stri
             it.startsWith("view:") ||
             it.startsWith("notice:")
     }
+
+internal fun isCommandButtonActive(actionId: String, overlayLines: List<String>): Boolean {
+    val mode = overlayLines.firstOrNull { it.startsWith("mode:") }?.removePrefix("mode: ")?.trim()
+    val view = overlayLines.firstOrNull { it.startsWith("view:") }?.removePrefix("view: ")?.trim()
+    return when {
+        actionId == "move" -> mode == "move"
+        actionId == "attackMove" -> mode == "attack-move"
+        actionId == "patrol" -> mode == "patrol"
+        actionId.startsWith("build:") -> mode == actionId
+        actionId == "view:faction1" -> view == "faction 1"
+        actionId == "view:faction2" -> view == "faction 2"
+        actionId == "view:observer" -> view == "observer"
+        actionId == "help:toggle" -> overlayLines.any { it.startsWith("help:") }
+        actionId == "preset:menu" -> overlayLines.any { it.startsWith("preset menu:") }
+        actionId == "scenario:menu" -> overlayLines.any { it.startsWith("scenario menu:") }
+        else -> false
+    }
+}
 
 internal fun buildStartOverlayLines(tick: Int, overlayLines: List<String>): List<String> {
     if (tick > 50) return emptyList()

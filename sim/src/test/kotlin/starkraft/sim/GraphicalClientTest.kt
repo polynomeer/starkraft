@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.ClientCommandIds
@@ -88,6 +89,7 @@ import starkraft.sim.client.buildStartOverlayLines
 import starkraft.sim.client.buildTaskSummary
 import starkraft.sim.client.buildTechSummary
 import starkraft.sim.client.healthBarFillWidth
+import starkraft.sim.client.isCommandButtonActive
 import starkraft.sim.client.commandButtonAt
 import starkraft.sim.client.commandButtonTooltip
 import starkraft.sim.client.selectEntitiesInBox
@@ -474,6 +476,26 @@ class GraphicalClientTest {
             listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"),
             buildCommandPanelStatusLines(listOf("play: paused x2", "scenario: gas", "mode: build:Depot", "preset menu: s save  l/enter load  f10 close", "help: f1 close  tab scenario menu  f10 preset menu", "selection hud: Workerx2 Marinex1", "groups: 4=3 5=2", "presets: quick=ready alt=missing", "notice: preset loaded: quick", "view: faction 1"))
         )
+    }
+
+    @Test
+    fun `detects active command buttons from overlay state`() {
+        val overlay =
+            listOf(
+                "mode: build:Depot",
+                "view: faction 2",
+                "preset menu: s save  l/enter load  f10 close",
+                "scenario menu: choose scenario",
+                "help: f1 close"
+            )
+
+        assertTrue(isCommandButtonActive("build:Depot", overlay))
+        assertTrue(isCommandButtonActive("view:faction2", overlay))
+        assertTrue(isCommandButtonActive("preset:menu", overlay))
+        assertTrue(isCommandButtonActive("scenario:menu", overlay))
+        assertTrue(isCommandButtonActive("help:toggle", overlay))
+        assertFalse(isCommandButtonActive("move", overlay))
+        assertFalse(isCommandButtonActive("view:observer", overlay))
     }
 
     @Test
