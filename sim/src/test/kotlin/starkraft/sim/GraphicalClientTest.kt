@@ -92,6 +92,7 @@ import starkraft.sim.client.buildSelectionCargoSummary
 import starkraft.sim.client.buildSelectionMobilitySummary
 import starkraft.sim.client.buildSelectionWeaponSummary
 import starkraft.sim.client.buildSelectionOrderSummary
+import starkraft.sim.client.buildSelectionTargetSummary
 import starkraft.sim.client.buildSelectionStructureSummary
 import starkraft.sim.client.buildSelectionCombatSummary
 import starkraft.sim.client.buildSelectionCapabilitySummary
@@ -355,6 +356,7 @@ class GraphicalClientTest {
                 "selection mobility: moving=2 pathing=1 stationary=1",
                 "selection weapons: Riflex1 unarmed=2",
                 "orders: queued=3 active=movex1 attackMovex1",
+                "selection targets: build=1 harvestNodes=1 return=0",
                 "selection structures: total=1 constructing=1 area=4",
                 "selection combat: armed=1 ready=0 cooling=1 unarmed=2 nextReady=3",
                 "capabilities: train=1 research=1 rally=0 dropoff=1",
@@ -706,6 +708,29 @@ class GraphicalClientTest {
         assertEquals("selection weapons: Riflex1 Cannonx1 unarmed=1", buildSelectionWeaponSummary(snapshot, linkedSetOf(1, 2, 3)))
         assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, emptySet()))
         assertEquals("selection weapons: none", buildSelectionWeaponSummary(snapshot, linkedSetOf(3)))
+    }
+
+    @Test
+    fun `builds selection target summary`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 1,
+                mapId = "demo",
+                buildVersion = "test",
+                mapWidth = 8,
+                mapHeight = 8,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(
+                    EntitySnapshot(id = 1, faction = 1, typeId = "Worker", x = 1f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, buildTargetId = 40),
+                    EntitySnapshot(id = 2, faction = 1, typeId = "Worker", x = 2f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestTargetNodeId = 9, harvestReturnTargetId = 60),
+                    EntitySnapshot(id = 3, faction = 1, typeId = "Worker", x = 3f, y = 1f, dir = 0f, hp = 10, maxHp = 10, armor = 0, harvestTargetNodeId = 9)
+                ),
+                resourceNodes = emptyList()
+            )
+
+        assertEquals("selection targets: build=1 harvestNodes=1 return=1", buildSelectionTargetSummary(snapshot, linkedSetOf(1, 2, 3)))
+        assertEquals("selection targets: none", buildSelectionTargetSummary(snapshot, emptySet()))
+        assertEquals("selection targets: none", buildSelectionTargetSummary(snapshot, linkedSetOf(99)))
     }
 
     @Test

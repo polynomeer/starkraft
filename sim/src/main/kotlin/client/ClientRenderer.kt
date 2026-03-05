@@ -635,6 +635,7 @@ internal fun buildClientHudLines(
         buildSelectionMobilitySummary(snapshot, state.selectedIds),
         buildSelectionWeaponSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
+        buildSelectionTargetSummary(snapshot, state.selectedIds),
         buildSelectionStructureSummary(snapshot, state.selectedIds),
         buildSelectionCombatSummary(snapshot, state.selectedIds),
         buildSelectionCapabilitySummary(snapshot, state.selectedIds),
@@ -911,6 +912,26 @@ internal fun buildSelectionWeaponSummary(
     if (counts.isEmpty()) return "selection weapons: none"
     val armed = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "selection weapons: $armed unarmed=$unarmed"
+}
+
+internal fun buildSelectionTargetSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection targets: none"
+    val buildTargets = LinkedHashSet<Int>()
+    val harvestNodes = LinkedHashSet<Int>()
+    val returnTargets = LinkedHashSet<Int>()
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        entity.buildTargetId?.let { buildTargets.add(it) }
+        entity.harvestTargetNodeId?.let { harvestNodes.add(it) }
+        entity.harvestReturnTargetId?.let { returnTargets.add(it) }
+    }
+    if (buildTargets.isEmpty() && harvestNodes.isEmpty() && returnTargets.isEmpty()) {
+        return "selection targets: none"
+    }
+    return "selection targets: build=${buildTargets.size} harvestNodes=${harvestNodes.size} return=${returnTargets.size}"
 }
 
 internal fun buildSelectionCombatSummary(
