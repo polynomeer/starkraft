@@ -1,10 +1,10 @@
 # server module
 
-Authoritative multiplayer host (planned).
+Authoritative multiplayer host (in progress).
 
 ## Status
 
-Scaffold only. Implementation is pending.
+Protocol package scaffold is implemented.
 
 ## Planned responsibilities
 
@@ -12,3 +12,10 @@ Scaffold only. Implementation is pending.
 - room lifecycle and fixed tick orchestration
 - authoritative command validation
 - replay persistence
+
+## Run tests
+
+```bash
+cd server
+go test ./...
+```
