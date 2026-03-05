@@ -138,11 +138,16 @@ private val CLI_TOGGLE_FLAGS =
         "--replayMetaJson",
         "--snapshotJson",
         "--compactJson",
+        "--version",
         "--help",
         "-h"
     )
 
 fun main(args: Array<String>) {
+    if (hasFlag(args, "--version")) {
+        println(buildVersionText())
+        return
+    }
     if (hasFlag(args, "--help") || hasFlag(args, "-h")) {
         println(buildAppUsageText())
         return
@@ -1095,8 +1100,12 @@ internal fun buildAppUsageText(): String =
         "  --printEntities             Print alive entities at end",
         "  --printOrders               Print pending orders at end",
         "  --labelDump                 Print script label to entity mappings",
+        "  --version                   Print sim build/version context",
         "  --help, -h                  Show this help"
     ).joinToString("\n")
+
+internal fun buildVersionText(): String =
+    "starkraft-sim version=$BUILD_VERSION map=$DEMO_MAP_ID"
 
 internal fun ensurePlayControlFile(path: java.nio.file.Path?) {
     if (path == null) return

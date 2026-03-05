@@ -36,7 +36,15 @@ class AppTest {
         assertTrue(help.contains("--snapshotJson"))
         assertTrue(help.contains("--compactJson"))
         assertTrue(help.contains("--playControlFile <path>"))
+        assertTrue(help.contains("--version"))
         assertTrue(help.contains("--help, -h"))
+    }
+
+    @Test
+    fun `version text includes build and map context`() {
+        val version = buildVersionText()
+        assertTrue(version.contains("starkraft-sim version=1.0-SNAPSHOT"))
+        assertTrue(version.contains("map=demo-32x32-obstacles"))
     }
 
     @Test
