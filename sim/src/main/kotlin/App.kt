@@ -1067,6 +1067,15 @@ internal fun validateCliSemantics(
         if (replayStatsJson) error("--replayStatsJson requires --replay")
         if (replayMetaJson) error("--replayMetaJson requires --replay")
     }
+    if (replayValidateOnly && replayMetaJson) {
+        error("--replayValidateOnly cannot be combined with --replayMetaJson")
+    }
+    if (replayValidateOnly && replayStats) {
+        error("--replayValidateOnly cannot be combined with --replayStats")
+    }
+    if (replayValidateOnly && replayStatsJson) {
+        error("--replayValidateOnly cannot be combined with --replayStatsJson")
+    }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
     }

@@ -177,6 +177,47 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator rejects replay validate only conflicts`() {
+        val metaConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = true,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(metaConflict.message!!.contains("cannot be combined"))
+
+        val statsConflict =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = "a.replay",
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = true,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = true,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false
+                )
+            }
+        assertTrue(statsConflict.message!!.contains("cannot be combined"))
+    }
+
+    @Test
     fun `cli numeric validator enforces non-negative and positive bounds`() {
         val ticksEx =
             assertThrows(IllegalStateException::class.java) {
