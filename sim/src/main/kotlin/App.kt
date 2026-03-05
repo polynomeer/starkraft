@@ -344,7 +344,8 @@ fun main(args: Array<String>) {
         replayOutPath = replayOutPath,
         replayDumpPath = replayDumpPath,
         snapshotOutPath = snapshotOutPath,
-        snapshotEvery = snapshotEvery
+        snapshotEvery = snapshotEvery,
+        inputTailPath = inputTailPath
     )
     validateCliNumericSemantics(
         tickLimit = tickLimit,
@@ -1023,7 +1024,8 @@ internal fun validateCliSemantics(
     replayOutPath: String? = null,
     replayDumpPath: String? = null,
     snapshotOutPath: String? = null,
-    snapshotEvery: Int? = null
+    snapshotEvery: Int? = null,
+    inputTailPath: String? = null
 ) {
     if (tickLimit != null && replayTicks != null) {
         error("--ticks cannot be combined with --replayTicks")
@@ -1093,6 +1095,15 @@ internal fun validateCliSemantics(
     }
     if ((scriptValidate || scriptDryRun) && scriptPath == null && spawnScriptPath == null) {
         error("--scriptValidate/--scriptDryRun require --script or --spawnScript")
+    }
+    if (
+        replayDumpPath != null &&
+            scriptPath == null &&
+            spawnScriptPath == null &&
+            inputJsonPath == null &&
+            inputTailPath == null
+    ) {
+        error("--replayDump requires --script, --spawnScript, --inputJson, or --inputTail")
     }
     if (scriptValidate || scriptDryRun) {
         if (replayPath != null) error("--scriptValidate/--scriptDryRun cannot be combined with --replay")

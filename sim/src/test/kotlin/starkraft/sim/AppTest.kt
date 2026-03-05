@@ -606,6 +606,54 @@ class AppTest {
     }
 
     @Test
+    fun `cli semantic validator requires command sources for replayDump`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliSemantics(
+                    replayPath = null,
+                    tickLimit = null,
+                    replayTicks = null,
+                    scriptPath = null,
+                    inputJsonPath = null,
+                    spawnScriptPath = null,
+                    replayValidateOnly = false,
+                    strictReplayHash = false,
+                    strictReplayMeta = false,
+                    replayStats = false,
+                    replayStatsJson = false,
+                    replayMetaJson = false,
+                    snapshotJson = false,
+                    compactJson = false,
+                    scriptValidate = false,
+                    scriptDryRun = false,
+                    replayDumpPath = "/tmp/dump.replay"
+                )
+            }
+        assertTrue(ex.message!!.contains("--replayDump requires"))
+
+        validateCliSemantics(
+            replayPath = null,
+            tickLimit = null,
+            replayTicks = null,
+            scriptPath = null,
+            inputJsonPath = null,
+            spawnScriptPath = null,
+            replayValidateOnly = false,
+            strictReplayHash = false,
+            strictReplayMeta = false,
+            replayStats = false,
+            replayStatsJson = false,
+            replayMetaJson = false,
+            snapshotJson = false,
+            compactJson = false,
+            scriptValidate = false,
+            scriptDryRun = false,
+            replayDumpPath = "/tmp/dump.replay",
+            inputTailPath = "/tmp/input.ndjson"
+        )
+    }
+
+    @Test
     fun `cli numeric validator accepts valid bounds`() {
         validateCliNumericSemantics(tickLimit = 0, replayTicks = 0, snapshotEvery = 1)
     }

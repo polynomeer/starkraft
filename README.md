@@ -473,7 +473,8 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--strictReplayHash` fail if replay is missing a hash
 - `--printEntities` dump alive units at the end
 - `--printOrders` dump pending orders at the end
-- `--replayDump <path>` save a replay after script runs
+- `--replayDump <path>` save a replay after script/input-driven runs
+  Requires one of `--script`, `--spawnScript`, `--inputJson`, or `--inputTail`.
 - `--labelDump` dump label→entity mappings
 - Building defs can declare `dropoffResourceKinds`; harvest return targeting prefers resource-compatible depots before generic drop-offs
 - Research queue activity now emits typed `research` NDJSON records with `enqueue`, `progress`, `complete`, and `cancel` events
