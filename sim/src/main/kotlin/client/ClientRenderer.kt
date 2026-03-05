@@ -37,6 +37,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
         actionId == "view:centerSelection" -> "Center camera on the current selection"
+        actionId == "view:centerFaction" -> "Center camera on the viewed faction"
         actionId == "select:viewFaction" -> "Select all units for the currently viewed faction"
         actionId == "select:selectedType" -> "Select all units matching the first selected unit type"
         actionId == "select:selectedArchetype" -> "Select all units matching the first selected unit archetype"
@@ -483,6 +484,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Help", "help:toggle"),
             ClientCommandButton("Center", "view:centerSelection"),
+            ClientCommandButton("Center View", "view:centerFaction"),
             ClientCommandButton("Select View", "select:viewFaction"),
             ClientCommandButton("Select Type", "select:selectedType"),
             ClientCommandButton("Select Role", "select:selectedArchetype"),
@@ -571,7 +573,7 @@ internal fun buildClientHudLines(
         formatAckStatus(state.lastAck),
         "left: select/drag   shift+left: add/remove/add-box   middle-drag/wheel: pan/zoom",
         "right: move/attack/harvest   ctrl+right: attackMove",
-        "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add alt+0 clearGroups m/a/p/h u/i/o/l x/t/y z/c j/k/q/e home-center [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
+        "keys: 1/2 faction 3 observer 4-9 recall dblTap focus shift+4-9 set alt+4-9 add alt+0 clearGroups m/a/p/h u/i/o/l x/t/y z/c j/k/q/e home-center end-faction [/] spc f f1 f2-select f3-type f4-role f5/f6/f7 f8/f9(+shift alt) f10 f11-all f12-idle n-prod v-combat tab esc"
     )
 
 internal fun healthBarFillWidth(barWidth: Int, hp: Int, maxHp: Int): Int {

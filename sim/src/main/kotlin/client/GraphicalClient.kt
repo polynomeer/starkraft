@@ -409,6 +409,9 @@ private class ClientPanel(
                     KeyEvent.VK_HOME -> {
                         centerOnSelection()
                     }
+                    KeyEvent.VK_END -> {
+                        centerOnViewedFaction()
+                    }
                     KeyEvent.VK_Z -> {
                         selectTrainingBuildings()
                     }
@@ -687,6 +690,7 @@ private class ClientPanel(
             "preset:menu" -> togglePresetMenu()
             "help:toggle" -> helpOverlayOpen = !helpOverlayOpen
             "view:centerSelection" -> centerOnSelection()
+            "view:centerFaction" -> centerOnViewedFaction()
             "select:viewFaction" -> selectViewedFaction()
             "select:selectedType" -> selectSelectedType()
             "select:selectedArchetype" -> selectSelectedArchetype()
@@ -900,6 +904,23 @@ private class ClientPanel(
         }
         camera = centerCameraOnWorld(camera, width, height, center.first, center.second)
         showNotice("camera centered")
+    }
+
+    private fun centerOnViewedFaction() {
+        val snapshot = session.state.snapshot ?: return
+        val faction = session.state.viewedFaction
+        if (faction == null) {
+            showNotice("select faction first (1/2)")
+            return
+        }
+        val ids = collectFactionSelectionIds(snapshot, faction)
+        val center = computeSelectionCentroid(snapshot, ids)
+        if (center == null) {
+            showNotice("no units for faction $faction")
+            return
+        }
+        camera = centerCameraOnWorld(camera, width, height, center.first, center.second)
+        showNotice("camera centered on f$faction")
     }
 
     private fun selectSelectedType() {
@@ -1256,6 +1277,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: v select combat units",
         "help: n select producer buildings",
         "help: home center camera on selection",
+        "help: end center camera on viewed faction",
         "help: z select training buildings  c select research buildings",
         "help: j select active construction sites",
         "help: k select active harvesters",

@@ -276,6 +276,7 @@ Client controls:
 - `Q`: select only returning harvesters
 - `E`: select workers currently carrying cargo
 - `Home`: center camera on current selection
+- `End`: center camera on viewed faction
 - `Shift+4..9`: assign control groups
 - `Alt+4..9`: add current selection to control groups
 - `4..9`: recall control groups
@@ -299,6 +300,7 @@ Client controls:
 - command panel includes `Cargo` to focus loaded workers
 - command panel includes `Clear Groups` (same effect as `Alt+0`)
 - command panel includes `Center` to move camera to current selection
+- command panel includes `Center View` to move camera to viewed faction
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view
