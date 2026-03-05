@@ -19,6 +19,10 @@ Protocol package scaffold is implemented.
 - required first message: protocol envelope with `message.type=handshake`
 - room create/join by `requestedRoom` (default room if omitted)
 - deterministic room snapshot broadcast support
+- command queue with deterministic validation acks (`commandAck`)
+  - ownership checks
+  - bounds checks
+  - per-tick rate limiting
 
 ## Run
 

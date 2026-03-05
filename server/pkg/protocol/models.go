@@ -41,6 +41,15 @@ type CommandBatchMessage struct {
 	Commands []WireCommand `json:"commands"`
 }
 
+type CommandAckMessage struct {
+	Type       string  `json:"type"`
+	Tick       int     `json:"tick"`
+	RequestID  *string `json:"requestId,omitempty"`
+	CommandType string `json:"commandType"`
+	Accepted   bool    `json:"accepted"`
+	Reason     string  `json:"reason,omitempty"`
+}
+
 type SnapshotMessage struct {
 	Type      string `json:"type"`
 	Tick      int    `json:"tick"`

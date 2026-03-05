@@ -34,6 +34,8 @@ type clientConn struct {
 	id       string
 	name     string
 	roomID   string
+	simVersion string
+	buildHash string
 	conn     *websocket.Conn
 	writeMu  sync.Mutex
 }
@@ -172,7 +174,10 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		rm = newRoom(roomID)
 		s.rooms[roomID] = rm
 	}
-	return &clientConn{id: clientID, name: hs.ClientName, roomID: roomID, conn: conn}, rm, nil
+	return &clientConn{
+		id: clientID, name: hs.ClientName, roomID: roomID, conn: conn,
+		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
+	}, rm, nil
 }
 
 func (s *Server) stepRooms() {
@@ -184,14 +189,25 @@ func (s *Server) stepRooms() {
 	s.mu.Unlock()
 
 	for _, rm := range rooms {
-		snap := rm.step()
-		msg := protocol.SnapshotMessage{Type: "snapshot", Tick: snap.Tick, WorldHash: snap.WorldHash, Units: snap.Units}
+		result := rm.step()
+		msg := protocol.SnapshotMessage{Type: "snapshot", Tick: result.snapshot.Tick, WorldHash: result.snapshot.WorldHash, Units: result.snapshot.Units}
 		rm.mu.Lock()
 		clients := make([]*clientConn, 0, len(rm.clients))
+		byID := make(map[string]*clientConn, len(rm.clients))
 		for c := range rm.clients {
 			clients = append(clients, c)
+			byID[c.id] = c
 		}
 		rm.mu.Unlock()
+		for _, ack := range result.acks {
+			c := byID[ack.clientID]
+			if c == nil {
+				continue
+			}
+			if err := c.sendEnvelope(ack.ack); err != nil {
+				log.Printf("command ack send failed: %v", err)
+			}
+		}
 		for _, c := range clients {
 			if err := c.sendEnvelope(msg); err != nil {
 				log.Printf("snapshot send failed: %v", err)
@@ -207,8 +223,11 @@ func (c *clientConn) sendEnvelope(msg any) error {
 	}
 	env := protocol.ProtocolEnvelope{
 		ProtocolVersion: protocol.CurrentProtocolVersion,
-		SimVersion:      "dev",
+		SimVersion:      c.simVersion,
 		Message:         raw,
+	}
+	if c.buildHash != "" {
+		env.BuildHash = &c.buildHash
 	}
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
