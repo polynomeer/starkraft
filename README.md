@@ -274,6 +274,7 @@ Client controls:
 - `J`: select active construction sites
 - `K`: select active harvesters (gather/return workers)
 - `Q`: select only returning harvesters
+- `E`: select workers currently carrying cargo
 - `Shift+4..9`: assign control groups
 - `Alt+4..9`: add current selection to control groups
 - `4..9`: recall control groups
@@ -291,6 +292,7 @@ Client controls:
 - command panel includes `Construction` to inspect unfinished buildings
 - command panel includes `Harvesters` for economy-unit selection
 - command panel includes `Returning` to focus returning workers
+- command panel includes `Cargo` to focus loaded workers
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view

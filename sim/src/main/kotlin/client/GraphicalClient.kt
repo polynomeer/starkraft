@@ -407,6 +407,9 @@ private class ClientPanel(
                     KeyEvent.VK_Q -> {
                         selectReturningHarvesters()
                     }
+                    KeyEvent.VK_E -> {
+                        selectCargoHarvesters()
+                    }
                     KeyEvent.VK_X -> {
                         val snapshot = session.state.snapshot ?: return
                         buildCancelIntent(snapshot, session.state.selectedIds, "cancelBuild", requestIds)?.let(session::append)
@@ -679,6 +682,7 @@ private class ClientPanel(
             "select:construction" -> selectConstructionSites()
             "select:harvesters" -> selectHarvesters()
             "select:returningHarvesters" -> selectReturningHarvesters()
+            "select:cargoHarvesters" -> selectCargoHarvesters()
             "scenario:menu" -> toggleScenarioMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
@@ -1045,6 +1049,19 @@ private class ClientPanel(
         showNotice("selected returning (${ids.size})")
     }
 
+    private fun selectCargoHarvesters() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectCargoHarvesterSelectionIds(snapshot, session.state.viewedFaction)
+        session.state.selectedIds.clear()
+        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.append(
+            ClientIntent.Selection(
+                buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
+            )
+        )
+        showNotice("selected cargo (${ids.size})")
+    }
+
     private fun assignControlGroup(group: Int) {
         assignControlGroupSlot(controlGroups, group, session.state.selectedIds)
         showNotice("group $group set (${session.state.selectedIds.size})")
@@ -1194,6 +1211,7 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
         "help: j select active construction sites",
         "help: k select active harvesters",
         "help: q select returning harvesters",
+        "help: e select loaded harvesters",
         "help: shift+4..9 set group  alt+4..9 add  4..9 recall",
         "help: space pause  [/] speed  f5 restart  f8/f9 quick preset"
     )
@@ -1447,6 +1465,22 @@ internal fun collectReturningHarvesterSelectionIds(
         if (faction != null && entity.faction != faction) continue
         if (entity.archetype != "worker") continue
         if (entity.harvestPhase != "return") continue
+        out[count++] = entity.id
+    }
+    return out.copyOf(count)
+}
+
+internal fun collectCargoHarvesterSelectionIds(
+    snapshot: ClientSnapshot,
+    faction: Int?
+): IntArray {
+    val out = IntArray(snapshot.entities.size)
+    var count = 0
+    for (i in snapshot.entities.indices) {
+        val entity = snapshot.entities[i]
+        if (faction != null && entity.faction != faction) continue
+        if (entity.archetype != "worker") continue
+        if ((entity.harvestCargoAmount ?: 0) <= 0) continue
         out[count++] = entity.id
     }
     return out.copyOf(count)
