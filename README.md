@@ -179,9 +179,11 @@ Other flags:
 - `--inputTail <path>` live-read appended NDJSON input records each tick
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script selections plus commands without running
+- `--scriptValidate` / `--scriptDryRun` are standalone validation modes
+  They require `--script` or `--spawnScript` and reject runtime/replay/output flags.
 - Script validation now reports specific build-definition errors such as unknown building ids or unresolved width/height/hp defaults
 - Script validation now also checks `select` ids/labels and fails on unknown entity ids or undefined labels
-- Validation-only exits (`--scriptValidate`, `--scriptDryRun`, `--replayValidateOnly`, `--replayMetaJson`) do not emit snapshot bootstrap files even if snapshot flags are provided
+- Validation-only exits (`--scriptValidate`, `--scriptDryRun`, `--replayValidateOnly`, `--replayMetaJson`) do not run simulation ticks
 
 Example client-input file:
 
@@ -382,7 +384,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--record <path>` save recorded commands after a run as replay JSON
 - `--replayOut <path>` save recorded commands after a run
 - `--replayValidateOnly` load/validate replay and exit
-  This is validation-only mode and cannot be combined with replay stats/meta output flags or `--replayTicks`.
+  This is validation-only mode and cannot be combined with ticks, replay slices/stats/meta, snapshot output flags, or replay write flags.
 - `--replayTicks <n>` requires `--replay` and runs only the first `n` replay ticks
   It cannot be combined with `--ticks`.
 - Base command sources are mutually exclusive: use only one of `--replay`, `--script`, or `--inputJson`
@@ -400,6 +402,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
   Periodic summaries now also carry research queue counts plus research failure breakdowns, so HUD-style clients do not need to reconstruct them from raw command failures.
 - `--snapshotEvery <n>` stream client snapshots every `n` ticks during the run; respects `--compactJson`
   `n` must be greater than 0.
+  `--snapshotEvery` requires `--snapshotOut`.
 - `--snapshotOut <path>` write typed snapshot NDJSON records (`recordType`, `tick`, `snapshot`) instead of stdout
   NDJSON files begin with a `sessionStart` record carrying `mapId`, `buildVersion`, and `seed`.
   They also emit a `mapState` bootstrap record with blocked tiles, weighted terrain, current static occupancy, and resource nodes.
