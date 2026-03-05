@@ -363,6 +363,12 @@ fun main(args: Array<String>) {
         replayDumpPath = replayDumpPath,
         snapshotOutPath = snapshotOutPath
     )
+    validateInputOutputPathConflicts(
+        replayPath = replayPath,
+        recordPath = recordPath,
+        replayOutPath = replayOutPath,
+        replayDumpPath = replayDumpPath
+    )
     if (resolvedSnapshotOutPath != null && (snapshotJson || snapshotEvery != null)) {
         emitSnapshotLine(
             renderSnapshotSessionStartJson(
@@ -1236,6 +1242,26 @@ internal fun validateOutputPathConflicts(
         "Output path conflict '${conflict.key}': " +
             conflict.value.joinToString(", ")
     )
+}
+
+internal fun validateInputOutputPathConflicts(
+    replayPath: String?,
+    recordPath: String?,
+    replayOutPath: String?,
+    replayDumpPath: String?
+) {
+    if (replayPath == null) return
+    val input = Paths.get(replayPath).toAbsolutePath().normalize().toString()
+    fun check(flag: String, path: String?) {
+        if (path == null) return
+        val normalized = Paths.get(path).toAbsolutePath().normalize().toString()
+        if (normalized == input) {
+            error("Replay input/output path conflict '$normalized': --replay and $flag")
+        }
+    }
+    check("--record", recordPath)
+    check("--replayOut", replayOutPath)
+    check("--replayDump", replayDumpPath)
 }
 
 internal fun buildAppUsageText(): String =

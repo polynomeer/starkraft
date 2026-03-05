@@ -947,6 +947,28 @@ class AppTest {
     }
 
     @Test
+    fun `input output path conflict validator rejects replay overwrite`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateInputOutputPathConflicts(
+                    replayPath = "/tmp/same.replay",
+                    recordPath = null,
+                    replayOutPath = "/tmp/same.replay",
+                    replayDumpPath = null
+                )
+            }
+        assertTrue(ex.message!!.contains("Replay input/output path conflict"))
+        assertTrue(ex.message!!.contains("--replayOut"))
+
+        validateInputOutputPathConflicts(
+            replayPath = "/tmp/input.replay",
+            recordPath = "/tmp/record.replay",
+            replayOutPath = "/tmp/out.replay",
+            replayDumpPath = "/tmp/dump.replay"
+        )
+    }
+
+    @Test
     fun `option parsers parse valid numeric flags`() {
         assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))

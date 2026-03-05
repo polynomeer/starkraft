@@ -383,6 +383,7 @@ WebSocket transport is now available on the same client bridge abstractions, wit
 - `--version` print sim build/map version context and exit
 - `--record <path>` save recorded commands after a run as replay JSON
 - `--replayOut <path>` save recorded commands after a run
+- Replay write flags (`--record`, `--replayOut`, `--replayDump`) cannot target the same file as `--replay`
 - `--replayValidateOnly` load/validate replay and exit
   This is validation-only mode and cannot be combined with ticks, replay slices/stats/meta, snapshot output flags, replay write flags, `--spawnScript`, `--inputTail`, or `--playControlFile`.
 - `--replayTicks <n>` requires `--replay` and runs only the first `n` replay ticks
