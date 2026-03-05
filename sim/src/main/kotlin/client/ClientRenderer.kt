@@ -639,6 +639,7 @@ internal fun buildClientHudLines(
         buildSelectionWeaponSummary(snapshot, state.selectedIds),
         buildSelectionPathSummary(snapshot, state.selectedIds),
         buildSelectionOrderSummary(snapshot, state.selectedIds),
+        buildSelectionIdleSummary(snapshot, state.selectedIds),
         buildSelectionPhaseSummary(snapshot, state.selectedIds),
         buildSelectionTargetSummary(snapshot, state.selectedIds),
         buildSelectionRallySummary(snapshot, state.selectedIds),
@@ -877,6 +878,31 @@ internal fun buildSelectionOrderSummary(
     if (active.isEmpty()) return "orders: queued=$queued active=none"
     val activeSummary = active.entries.joinToString(" ") { "${it.key}x${it.value}" }
     return "orders: queued=$queued active=$activeSummary"
+}
+
+internal fun buildSelectionIdleSummary(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>
+): String {
+    if (selectedIds.isEmpty()) return "selection idle: none"
+    var idle = 0
+    var idleWorkers = 0
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        val isIdle =
+            entity.activeOrder == null &&
+                entity.pathRemainingNodes <= 0 &&
+                entity.productionQueueSize <= 0 &&
+                entity.researchQueueSize <= 0 &&
+                entity.buildTargetId == null &&
+                entity.harvestPhase == null
+        if (!isIdle) continue
+        idle++
+        if (entity.archetype == "worker") {
+            idleWorkers++
+        }
+    }
+    return "selection idle: total=$idle workers=$idleWorkers"
 }
 
 internal fun buildSelectionPhaseSummary(
