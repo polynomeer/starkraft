@@ -363,6 +363,10 @@ fun main(args: Array<String>) {
         replayDumpPath = replayDumpPath,
         snapshotOutPath = snapshotOutPath
     )
+    validateLivePathConflicts(
+        snapshotOutPath = snapshotOutPath,
+        inputTailPath = inputTailPath
+    )
     validateInputOutputPathConflicts(
         replayPath = replayPath,
         recordPath = recordPath,
@@ -1262,6 +1266,18 @@ internal fun validateInputOutputPathConflicts(
     check("--record", recordPath)
     check("--replayOut", replayOutPath)
     check("--replayDump", replayDumpPath)
+}
+
+internal fun validateLivePathConflicts(
+    snapshotOutPath: String?,
+    inputTailPath: String?
+) {
+    if (snapshotOutPath == null || inputTailPath == null) return
+    val snapshotPath = Paths.get(snapshotOutPath).toAbsolutePath().normalize().toString()
+    val inputPath = Paths.get(inputTailPath).toAbsolutePath().normalize().toString()
+    if (snapshotPath == inputPath) {
+        error("Live path conflict '$snapshotPath': --snapshotOut and --inputTail")
+    }
 }
 
 internal fun buildAppUsageText(): String =

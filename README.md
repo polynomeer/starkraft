@@ -177,6 +177,7 @@ Other flags:
 - `--script <path>` run a command script
 - `--inputJson <path>` load machine-readable client input as JSON or NDJSON with `commands` and optional `selections`
 - `--inputTail <path>` live-read appended NDJSON input records each tick
+- `--inputTail` cannot target the same file as `--snapshotOut` (prevents read/write feedback loops)
 - Relative script/replay paths are resolved from the project root, so `sim/scripts/sample.script` works under Gradle
 - `--scriptDryRun` parse, validate, and print script selections plus commands without running
 - `--scriptValidate` / `--scriptDryRun` are standalone validation modes

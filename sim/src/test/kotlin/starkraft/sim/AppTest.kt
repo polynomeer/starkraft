@@ -969,6 +969,25 @@ class AppTest {
     }
 
     @Test
+    fun `live path conflict validator rejects snapshot out matching input tail`() {
+        val ex =
+            assertThrows(IllegalStateException::class.java) {
+                validateLivePathConflicts(
+                    snapshotOutPath = "/tmp/live.ndjson",
+                    inputTailPath = "/tmp/live.ndjson"
+                )
+            }
+        assertTrue(ex.message!!.contains("Live path conflict"))
+        assertTrue(ex.message!!.contains("--snapshotOut"))
+        assertTrue(ex.message!!.contains("--inputTail"))
+
+        validateLivePathConflicts(
+            snapshotOutPath = "/tmp/snapshots.ndjson",
+            inputTailPath = "/tmp/input.ndjson"
+        )
+    }
+
+    @Test
     fun `option parsers parse valid numeric flags`() {
         assertEquals(25, parseIntOption(arrayOf("--ticks", "25"), "--ticks"))
         assertEquals(10, parseIntOption(arrayOf("--snapshotEvery=10"), "--snapshotEvery"))
