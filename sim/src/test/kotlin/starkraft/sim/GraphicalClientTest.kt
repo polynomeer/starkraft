@@ -393,15 +393,15 @@ class GraphicalClientTest {
     @Test
     fun `builds command panel buttons for selection state`() {
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "scenario:prev", "scenario:next", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "train:Worker", "train:Marine", "train:Zergling", "research:AdvancedTraining", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = true, canResearch = true).map { it.actionId }
         )
         assertEquals(
-            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "scenario:prev", "scenario:next", "clear"),
+            listOf("move", "attackMove", "patrol", "hold", "cancelBuild", "cancelTrain", "cancelResearch", "build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(testCatalog, true, canTrain = false, canResearch = false).map { it.actionId }
         )
         assertEquals(
-            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "scenario:prev", "scenario:next", "clear"),
+            listOf("build:Depot", "build:ResourceDepot", "build:GasDepot", "play:pause", "play:slower", "play:faster", "preset:save:quick", "preset:load:quick", "preset:save:alt", "preset:load:alt", "preset:menu", "scenario:prev", "scenario:next", "clear"),
             buildCommandButtons(testCatalog, false, canTrain = false, canResearch = false).map { it.actionId }
         )
     }
@@ -436,12 +436,14 @@ class GraphicalClientTest {
         val move = commandButtonAt(width = 640, x = 640 - 150, y = 82, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val pause = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (14 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
         val presetLoad = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (18 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (22 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
-        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (23 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val presetMenu = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (21 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val scenarioNext = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (23 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
+        val clear = commandButtonAt(width = 640, x = 640 - 150, y = 82 + (24 * 34), catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true)
 
         assertEquals("move", move?.actionId)
         assertEquals("play:pause", pause?.actionId)
         assertEquals("preset:load:quick", presetLoad?.actionId)
+        assertEquals("preset:menu", presetMenu?.actionId)
         assertEquals("scenario:next", scenarioNext?.actionId)
         assertEquals("clear", clear?.actionId)
         assertEquals(null, commandButtonAt(width = 640, x = 20, y = 20, catalog = testCatalog, statusLineCount = 2, hasSelection = true, canTrain = true, canResearch = true))
@@ -454,6 +456,7 @@ class GraphicalClientTest {
         assertEquals("Queue Marine on the first selected producer", commandButtonTooltip("train:Marine"))
         assertEquals("Load preset quick and restart into it", commandButtonTooltip("preset:load:quick"))
         assertEquals("Save the current scenario and speed into preset alt", commandButtonTooltip("preset:save:alt"))
+        assertEquals("Open the preset menu to save/load quick or alt slots", commandButtonTooltip("preset:menu"))
         assertEquals("Switch to the next play scenario and restart", commandButtonTooltip("scenario:next"))
         assertEquals(null, commandButtonTooltip("unknown"))
     }

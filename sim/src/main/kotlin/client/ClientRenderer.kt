@@ -31,6 +31,7 @@ internal fun commandButtonTooltip(actionId: String): String? =
         actionId == "preset:load:quick" -> "Load preset quick and restart into it"
         actionId == "preset:save:alt" -> "Save the current scenario and speed into preset alt"
         actionId == "preset:load:alt" -> "Load preset alt and restart into it"
+        actionId == "preset:menu" -> "Open the preset menu to save/load quick or alt slots"
         actionId == "scenario:prev" -> "Switch to the previous play scenario and restart"
         actionId == "scenario:next" -> "Switch to the next play scenario and restart"
         actionId == "clear" -> "Clear the current selection and command mode"
@@ -454,6 +455,7 @@ internal fun buildCommandButtons(
             ClientCommandButton("Load Quick", "preset:load:quick"),
             ClientCommandButton("Save Alt", "preset:save:alt"),
             ClientCommandButton("Load Alt", "preset:load:alt"),
+            ClientCommandButton("Preset Menu", "preset:menu"),
             ClientCommandButton("Prev Scenario", "scenario:prev"),
             ClientCommandButton("Next Scenario", "scenario:next"),
             ClientCommandButton("Clear", "clear")

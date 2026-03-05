@@ -604,6 +604,7 @@ private class ClientPanel(
             "preset:load:quick" -> loadPreset("quick")
             "preset:save:alt" -> savePreset("alt")
             "preset:load:alt" -> loadPreset("alt")
+            "preset:menu" -> togglePresetMenu()
             else -> {
                 if (button.actionId.startsWith("build:")) {
                     buildModeTypeId = button.actionId.removePrefix("build:")
