@@ -106,6 +106,12 @@ class AppTest {
             }
         assertTrue(missing.message!!.contains("Missing value"))
 
+        val empty =
+            assertThrows(IllegalStateException::class.java) {
+                validateCliArgs(arrayOf("--script="))
+            }
+        assertTrue(empty.message!!.contains("Missing value"))
+
         val toggleWithValue =
             assertThrows(IllegalStateException::class.java) {
                 validateCliArgs(arrayOf("--noSleep=true"))

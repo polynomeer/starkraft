@@ -946,9 +946,16 @@ internal fun validateCliArgs(args: Array<String>) {
         when {
             CLI_FLAGS_WITH_VALUE.contains(key) -> {
                 if (raw.contains("=")) {
+                    val value = raw.substringAfter("=")
+                    if (value.isBlank()) {
+                        error("Missing value for option '$key'")
+                    }
                     i++
                 } else {
                     if (i + 1 >= args.size) {
+                        error("Missing value for option '$key'")
+                    }
+                    if (args[i + 1].isBlank()) {
                         error("Missing value for option '$key'")
                     }
                     i += 2
