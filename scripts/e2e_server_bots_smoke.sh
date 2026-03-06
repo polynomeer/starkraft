@@ -65,4 +65,18 @@ if ! rg -q '"recordType":"matchEnd"' "$REPLAY_FILE"; then
   exit 1
 fi
 
+if ! rg -q 'match ended winner=' "$BOT1_LOG" && ! rg -q 'match ended winner=' "$BOT2_LOG"; then
+  echo "[e2e] bots did not observe match end"
+  exit 1
+fi
+
+(
+  cd "$ROOT_DIR/server"
+  go run ./cmd/replaycheck --replay "$REPLAY_FILE" >/tmp/starkraft-replaycheck.log 2>&1
+) || {
+  echo "[e2e] replay verification failed"
+  cat /tmp/starkraft-replaycheck.log
+  exit 1
+}
+
 echo "[e2e] ok replay=$REPLAY_FILE"
