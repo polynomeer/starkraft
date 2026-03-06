@@ -40,7 +40,7 @@ class SnapshotStreamConsumerTest {
                     "{\"recordType\":\"damage\",\"sequence\":20,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                     "{\"recordType\":\"despawn\",\"sequence\":21,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"},{\"entityId\":14,\"faction\":1,\"typeId\":\"Marine\",\"reason\":\"despawn\"}]}",
                     "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"builds\":2,\"buildsCancelled\":1,\"buildFailures\":2,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":1,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"harvestedMineralsFaction1\":4,\"harvestedMineralsFaction2\":1,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":2,\"harvesterRetargets\":3,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                    "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                    "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456,\"winnerFaction\":1,\"matchEndReason\":\"elimination\"}"
                 )
             )
 
@@ -77,6 +77,8 @@ class SnapshotStreamConsumerTest {
         assertEquals(7L, summary.seed)
         assertEquals(123L, summary.worldHash)
         assertEquals(456L, summary.replayHash)
+        assertEquals(1, summary.winnerFaction)
+        assertEquals("elimination", summary.matchEndReason)
         assertEquals(2, summary.resourceNodeChangeCount)
         assertEquals(5, summary.resourceNodeHarvestedTotal)
         assertEquals(1, summary.resourceNodeDepletedCount)
@@ -199,7 +201,7 @@ class SnapshotStreamConsumerTest {
                         "{\"recordType\":\"damage\",\"sequence\":20,\"tick\":1,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}",
                         "{\"recordType\":\"despawn\",\"sequence\":21,\"tick\":1,\"entities\":[{\"entityId\":9,\"faction\":2,\"typeId\":\"Zergling\",\"reason\":\"death\"}]}",
                         "{\"recordType\":\"sessionStats\",\"sequence\":22,\"ticks\":10,\"pathRequests\":4,\"pathSolved\":4,\"replans\":1,\"replansBlocked\":1,\"replansStuck\":0,\"attacks\":2,\"kills\":1,\"despawns\":1,\"builds\":1,\"buildsCancelled\":1,\"buildFailures\":1,\"buildFailureReasons\":{\"invalidDefinition\":0,\"missingTech\":0,\"invalidFootprint\":0,\"invalidPlacement\":1,\"insufficientResources\":0},\"harvestedMineralsFaction1\":3,\"harvestedMineralsFaction2\":0,\"harvestedGasFaction1\":0,\"harvestedGasFaction2\":0,\"harvesterRetargets\":1,\"finalVisibleTilesFaction1\":12,\"finalVisibleTilesFaction2\":10,\"finalWorldHash\":123,\"finalReplayHash\":456}",
-                        "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456}"
+                        "{\"recordType\":\"sessionEnd\",\"sequence\":23,\"tick\":10,\"worldHash\":123,\"replayHash\":456,\"winnerFaction\":1,\"matchEndReason\":\"elimination\"}"
                     )
                 )
             )
@@ -209,6 +211,7 @@ class SnapshotStreamConsumerTest {
         assertTrue(text.contains("sessionEnd=1"))
         assertTrue(text.contains("worldHash=123"))
         assertTrue(text.contains("replayHash=456"))
+        assertTrue(text.contains("winner=1 reason=elimination"))
         assertTrue(text.contains("acks: ok=1 fail=1 reasons=missingTech=1"))
         assertTrue(text.contains("resourceNodes: changed=1 harvested=3 f1=3/0 f2=0/0 depleted=0 active=2 remaining=347"))
         assertTrue(text.contains("economy: events=1 spend=50/0 refund=0/0"))

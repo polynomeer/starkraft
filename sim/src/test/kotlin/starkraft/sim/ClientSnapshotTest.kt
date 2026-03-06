@@ -293,10 +293,19 @@ class ClientSnapshotTest {
 
     @Test
     fun `renders snapshot session end json`() {
-        val json = renderSnapshotSessionEndJson(sequence = 5L, tick = 15, worldHash = 123L, replayHash = 456L, pretty = false)
+        val json =
+            renderSnapshotSessionEndJson(
+                sequence = 5L,
+                tick = 15,
+                worldHash = 123L,
+                replayHash = 456L,
+                winnerFaction = 2,
+                matchEndReason = starkraft.sim.ecs.MatchEndReason.SURRENDER,
+                pretty = false
+            )
 
         assertEquals(
-            "{\"recordType\":\"sessionEnd\",\"sequence\":5,\"tick\":15,\"worldHash\":123,\"replayHash\":456}",
+            "{\"recordType\":\"sessionEnd\",\"sequence\":5,\"tick\":15,\"worldHash\":123,\"replayHash\":456,\"winnerFaction\":2,\"matchEndReason\":\"surrender\"}",
             json
         )
     }

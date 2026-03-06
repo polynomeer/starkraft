@@ -131,7 +131,9 @@ data class SnapshotSessionEndRecord(
     val sequence: Long,
     val tick: Int,
     val worldHash: Long,
-    val replayHash: Long? = null
+    val replayHash: Long? = null,
+    val winnerFaction: Int? = null,
+    val matchEndReason: String? = null
 )
 
 @Serializable
@@ -1063,9 +1065,15 @@ fun renderSnapshotSessionEndJson(
     matchEndReason: MatchEndReason? = null,
     pretty: Boolean = false
 ): String {
-    winnerFaction
-    matchEndReason
-    val record = SnapshotSessionEndRecord(sequence = sequence, tick = tick, worldHash = worldHash, replayHash = replayHash)
+    val record =
+        SnapshotSessionEndRecord(
+            sequence = sequence,
+            tick = tick,
+            worldHash = worldHash,
+            replayHash = replayHash,
+            winnerFaction = winnerFaction,
+            matchEndReason = matchEndReason?.wireValue
+        )
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
 

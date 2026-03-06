@@ -18,6 +18,8 @@ data class SnapshotStreamSummary(
     val seed: Long? = null,
     val worldHash: Long? = null,
     val replayHash: Long? = null,
+    val winnerFaction: Int? = null,
+    val matchEndReason: String? = null,
     val resourceNodeChangeCount: Int = 0,
     val resourceNodeHarvestedTotal: Int = 0,
     val resourceNodeDepletedCount: Int = 0,
@@ -121,6 +123,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
     var seed: Long? = null
     var worldHash: Long? = null
     var replayHash: Long? = null
+    var winnerFaction: Int? = null
+    var matchEndReason: String? = null
     var resourceNodeChangeCount = 0
     var resourceNodeHarvestedTotal = 0
     var resourceNodeDepletedCount = 0
@@ -261,6 +265,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
             "sessionEnd" -> {
                 worldHash = obj.long("worldHash") ?: worldHash
                 replayHash = obj.long("replayHash") ?: replayHash
+                winnerFaction = obj.int("winnerFaction") ?: winnerFaction
+                matchEndReason = obj.string("matchEndReason") ?: matchEndReason
             }
             "selection" -> {
                 if (obj.string("selectionType") == "archetype") {
@@ -534,6 +540,8 @@ fun summarizeSnapshotStream(lines: Sequence<String>): SnapshotStreamSummary {
         seed = seed,
         worldHash = worldHash,
         replayHash = replayHash,
+        winnerFaction = winnerFaction,
+        matchEndReason = matchEndReason,
         resourceNodeChangeCount = resourceNodeChangeCount,
         resourceNodeHarvestedTotal = resourceNodeHarvestedTotal,
         resourceNodeDepletedCount = resourceNodeDepletedCount,
@@ -642,7 +650,8 @@ fun renderSnapshotStreamSummary(path: Path, summary: SnapshotStreamSummary): Str
     lines.add("types=$counts")
     lines.add(
         "session: mapId=${summary.mapId} buildVersion=${summary.buildVersion} " +
-            "seed=${summary.seed} worldHash=${summary.worldHash} replayHash=${summary.replayHash}"
+            "seed=${summary.seed} worldHash=${summary.worldHash} replayHash=${summary.replayHash} " +
+            "winner=${summary.winnerFaction} reason=${summary.matchEndReason}"
     )
     if (summary.resourceDeltaEventCount > 0 || summary.countsByType["resourceDeltaSummary"] != null) {
         lines.add(
