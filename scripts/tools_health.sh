@@ -65,19 +65,30 @@ map_invalid = json.loads((tmp / "map-invalid.json").read_text())
 data_invalid = json.loads((tmp / "data-invalid.json").read_text())
 
 assert meta.get("schema") == 1, meta
+assert meta.get("outputVersion") == 1, meta
 assert stats.get("result") == "ok", stats
+assert stats.get("outputVersion") == 1, stats
 assert verify.get("result") == "ok", verify
+assert verify.get("outputVersion") == 1, verify
 assert ff.get("result") == "ok", ff
+assert ff.get("outputVersion") == 1, ff
 assert map_gen.get("result") == "generated", map_gen
+assert map_gen.get("outputVersion") == 1, map_gen
 assert map_val.get("result") == "ok", map_val
+assert map_val.get("outputVersion") == 1, map_val
 assert data_val.get("result") == "ok", data_val
+assert data_val.get("outputVersion") == 1, data_val
 assert ndjson_verify.get("result") == "ok", ndjson_verify
+assert ndjson_verify.get("outputVersion") == 1, ndjson_verify
 assert ndjson_stats.get("result") == "ok", ndjson_stats
+assert ndjson_stats.get("outputVersion") == 1, ndjson_stats
 assert ndjson_stats.get("keyframeHashMismatches") == 0, ndjson_stats
 assert map_invalid.get("result") == "invalid", map_invalid
+assert map_invalid.get("outputVersion") == 1, map_invalid
 assert "firstError" in map_invalid, map_invalid
 assert "errorsList" in map_invalid and len(map_invalid["errorsList"]) > 0, map_invalid
 assert data_invalid.get("result") == "invalid", data_invalid
+assert data_invalid.get("outputVersion") == 1, data_invalid
 assert "firstError" in data_invalid, data_invalid
 assert "errorsList" in data_invalid and len(data_invalid["errorsList"]) > 0, data_invalid
 print("ok")

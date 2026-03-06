@@ -30,21 +30,25 @@ class ToolsCliTest {
         val verifyJson = runAndCaptureJson("replay", "verify", replayPath.pathString, "--json")
         val fastForwardJson = runAndCaptureJson("replay", "fast-forward", replayPath.pathString, "--json")
 
+        assertEquals("1", metaJson["outputVersion"]?.toString())
         assertEquals("ok", metaJson["result"]?.toString()?.trim('"'))
         assertTrue(metaJson.containsKey("schema"))
         assertTrue(metaJson.containsKey("events"))
         assertTrue(metaJson.containsKey("replayHash"))
 
+        assertEquals("1", statsJson["outputVersion"]?.toString())
         assertEquals("sim-json", statsJson["format"]?.toString()?.trim('"'))
         assertEquals("ok", statsJson["result"]?.toString()?.trim('"'))
         assertTrue(statsJson.containsKey("schema"))
         assertTrue(statsJson.containsKey("events"))
 
+        assertEquals("1", verifyJson["outputVersion"]?.toString())
         assertEquals("ok", verifyJson["result"]?.toString()?.trim('"'))
         assertTrue(verifyJson.containsKey("expectedHash"))
         assertTrue(verifyJson.containsKey("computedHash"))
         assertTrue(verifyJson.containsKey("worldHash"))
 
+        assertEquals("1", fastForwardJson["outputVersion"]?.toString())
         assertEquals("ok", fastForwardJson["result"]?.toString()?.trim('"'))
         assertTrue(fastForwardJson.containsKey("finalTick"))
         assertTrue(fastForwardJson.containsKey("commandCount"))

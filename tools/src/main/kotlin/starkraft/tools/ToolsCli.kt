@@ -150,7 +150,14 @@ private fun runReplayStatsResolved(path: Path, json: Boolean): Int {
 
 private fun printStats(json: Boolean, fields: JsonObject) {
     if (json) {
-        println(Json.encodeToString(JsonObject.serializer(), fields))
+        val payload =
+            buildJsonObject {
+                put("outputVersion", 1)
+                for ((key, value) in fields) {
+                    put(key, value)
+                }
+            }
+        println(Json.encodeToString(JsonObject.serializer(), payload))
         return
     }
     for ((key, value) in fields) {

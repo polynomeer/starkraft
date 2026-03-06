@@ -14,6 +14,7 @@ Offline utility CLIs for replay/map/data workflows.
 - `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data [--json]"`
 
 Paths are resolved relative to the repository root when passed as relative paths.
+All `--json` outputs include `outputVersion=1` for machine-client compatibility.
 
 Full tools smoke run (JSON contracts + assertions):
 - `./scripts/tools_health.sh`
