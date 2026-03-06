@@ -19,6 +19,7 @@ All `--json` outputs include `outputVersion=1` for machine-client compatibility.
 Full tools smoke run (JSON contracts + assertions):
 - `./scripts/tools_health.sh`
 - `./gradlew :tools:smoke`
+  - writes JSON artifacts and `summary.json` under `$STARKRAFT_TOOLS_HEALTH_TMP_DIR` (or `/tmp/starkraft-tools-health-*`)
 
 ## Commands
 
