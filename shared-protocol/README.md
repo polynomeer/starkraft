@@ -6,7 +6,7 @@ Versioned wire protocol definitions.
 
 - JSON schema v1 envelope: `shared-protocol/schema/rts-protocol-v1.schema.json`
 - cross-language golden payloads: `shared-protocol/golden/`
-  - handshake, handshakeAck, commandBatch, snapshot, commandAck, matchEnd envelopes
+  - handshake, handshake(resume), handshakeAck, commandBatch, snapshot, commandAck, matchEnd envelopes
   - command payload coverage: `move`, `attack`, `build`, `queue`, `surrender`
 - envelope metadata fields:
   - `protocolVersion` (wire compatibility)

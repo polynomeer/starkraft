@@ -20,7 +20,8 @@ sealed interface ProtocolMessage {
     @SerialName("handshake")
     data class Handshake(
         val clientName: String,
-        val requestedRoom: String? = null
+        val requestedRoom: String? = null,
+        val resumeToken: String? = null
     ) : ProtocolMessage
 
     @Serializable

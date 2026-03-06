@@ -67,6 +67,24 @@ func TestHandshakeAckEnvelopeRoundTripGolden(t *testing.T) {
 	}
 }
 
+func TestHandshakeResumeEnvelopeRoundTripGolden(t *testing.T) {
+	token := "resume-1"
+	msg := HandshakeMessage{Type: "handshake", ClientName: "bot-a", ResumeToken: &token}
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal handshake: %v", err)
+	}
+	env := ProtocolEnvelope{ProtocolVersion: CurrentProtocolVersion, SimVersion: "1.0.0", Message: msgRaw}
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal envelope: %v", err)
+	}
+	golden := loadGolden(t, "v1-handshake-resume-envelope.json")
+	if string(raw) != golden {
+		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
+	}
+}
+
 func TestCommandBatchEnvelopeRoundTripGolden(t *testing.T) {
 	req1 := "req-1"
 	req2 := "req-2"

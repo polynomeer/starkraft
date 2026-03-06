@@ -32,6 +32,21 @@ class ProtocolModelsTest {
     }
 
     @Test
+    fun `handshake resume envelope round trip matches golden`() {
+        val envelope =
+            ProtocolEnvelope(
+                simVersion = "1.0.0",
+                message = ProtocolMessage.Handshake(clientName = "bot-a", resumeToken = "resume-1")
+            )
+
+        val json = codec.encodeToString(envelope)
+        val golden = loadSharedGolden("shared-protocol/golden/v1-handshake-resume-envelope.json")
+
+        assertEquals(golden, json)
+        assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
+    }
+
+    @Test
     fun `command batch envelope round trip matches golden`() {
         val envelope =
             ProtocolEnvelope(

@@ -24,7 +24,8 @@
           "properties": {
             "type": {"const": "handshake"},
             "clientName": {"type": "string", "minLength": 1},
-            "requestedRoom": {"type": ["string", "null"]}
+            "requestedRoom": {"type": ["string", "null"]},
+            "resumeToken": {"type": ["string", "null"]}
           },
           "additionalProperties": false
         },
