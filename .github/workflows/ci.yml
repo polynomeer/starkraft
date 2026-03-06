@@ -127,11 +127,21 @@ jobs:
           go-version: "1.22"
           cache: true
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
       - name: Run server + bots smoke
         env:
           STARKRAFT_E2E_TMP_DIR: /tmp/starkraft-e2e
           STARKRAFT_E2E_PORT: "18080"
         run: ./scripts/e2e_server_bots_smoke.sh
+
+      - name: Verify e2e replay keyframe hashes
+        run: ./gradlew --no-daemon :tools:run --args="replay verify-ndjson /tmp/starkraft-e2e/server.replay.jsonl"
 
       - name: Upload e2e logs on failure
         if: failure()
