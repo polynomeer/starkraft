@@ -18,6 +18,7 @@ Paths are resolved relative to the repository root when passed as relative paths
 - `replay meta`: print replay metadata (`schema`, hash, seed, map/build tags, size)
 - `replay verify`: compare stored replay hash to computed replay hash
   - returns non-zero for hash mismatch or strict-hash validation errors
+  - also runs replay through sim systems and prints final world hash
 - `replay fast-forward`: run replay commands through sim systems and print final world hash
 - `map validate`: validate map JSON shape and tile/resource/spawn bounds
 - `map generate`: generate a deterministic starter map JSON

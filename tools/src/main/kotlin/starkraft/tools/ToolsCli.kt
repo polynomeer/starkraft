@@ -70,6 +70,8 @@ private fun runReplayVerify(args: List<String>): Int {
     println("commands: ${commands.size}")
     println("expectedHash: ${expectedHash ?: "missing"}")
     println("computedHash: $computedHash")
+    val replayRun = fastForwardReplay(path)
+    println("worldHash: ${replayRun.finalWorldHash}")
     println("result: $result")
     return if (result == "mismatch" || result == "missing-hash") 2 else 0
 }
