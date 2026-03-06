@@ -32,3 +32,10 @@ kotlin {
 application {
     mainClass.set("starkraft.tools.ToolsCliKt")
 }
+
+tasks.register<Exec>("smoke") {
+    group = "verification"
+    description = "Run tools JSON contract smoke checks"
+    workingDir = rootDir
+    commandLine("bash", "scripts/tools_health.sh")
+}

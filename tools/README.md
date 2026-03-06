@@ -17,6 +17,7 @@ Paths are resolved relative to the repository root when passed as relative paths
 
 Full tools smoke run (JSON contracts + assertions):
 - `./scripts/tools_health.sh`
+- `./gradlew :tools:smoke`
 
 ## Commands
 
