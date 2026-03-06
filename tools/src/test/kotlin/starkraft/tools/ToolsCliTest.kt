@@ -314,22 +314,45 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `data validate json includes first error on invalid dir`() {
+        val emptyDir = Files.createTempDirectory("starkraft-tools-empty-data")
+        val (code, json) = runAndCaptureJsonWithCode("data", "validate", "--dir", emptyDir.pathString, "--json")
+        assertEquals(2, code)
+        assertEquals("invalid", json["result"]?.toString()?.trim('"'))
+        assertTrue(json.containsKey("firstError"))
+    }
+
+    @Test
     fun `map validate returns non-zero for missing file`() {
         val code = runToolsCli(arrayOf("map", "validate", "/tmp/no-such-map-${System.nanoTime()}.json"))
         assertEquals(2, code)
     }
 
+    @Test
+    fun `map validate json includes first error on invalid input`() {
+        val (code, json) = runAndCaptureJsonWithCode("map", "validate", "/tmp/no-such-map-${System.nanoTime()}.json", "--json")
+        assertEquals(2, code)
+        assertEquals("invalid", json["result"]?.toString()?.trim('"'))
+        assertTrue(json.containsKey("firstError"))
+    }
+
     private fun runAndCaptureJson(vararg args: String): JsonObject {
+        val (code, json) = runAndCaptureJsonWithCode(*args)
+        assertEquals(0, code)
+        return json
+    }
+
+    private fun runAndCaptureJsonWithCode(vararg args: String): Pair<Int, JsonObject> {
         val originalOut = System.out
         val out = ByteArrayOutputStream()
+        val code: Int
         try {
             System.setOut(PrintStream(out))
-            val code = runToolsCli(args.toList().toTypedArray())
-            assertEquals(0, code)
+            code = runToolsCli(args.toList().toTypedArray())
         } finally {
             System.setOut(originalOut)
         }
         val text = out.toString().trim()
-        return Json.parseToJsonElement(text).jsonObject
+        return code to Json.parseToJsonElement(text).jsonObject
     }
 }

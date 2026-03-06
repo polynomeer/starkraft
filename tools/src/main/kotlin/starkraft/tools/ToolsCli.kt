@@ -403,6 +403,7 @@ private fun runMapValidate(args: List<String>): Int {
                     put("map", path.toString())
                     put("result", "invalid")
                     put("errors", result.errors.size)
+                    put("firstError", result.errors.firstOrNull() ?: "unknown error")
                 }
         )
     } else {
@@ -549,6 +550,7 @@ private fun runDataValidate(args: List<String>): Int {
                     put("dataDir", dir.toString())
                     put("result", "invalid")
                     put("errors", result.errors.size)
+                    put("firstError", result.errors.firstOrNull() ?: "unknown error")
                 }
         )
     } else {

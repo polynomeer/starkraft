@@ -33,10 +33,12 @@ Paths are resolved relative to the repository root when passed as relative paths
   - `--json` prints machine-readable single-line JSON
 - `map validate`: validate map JSON/YAML shape and tile/resource/spawn bounds
   - `--json` prints machine-readable single-line JSON
+  - invalid results include `firstError`
 - `map generate`: generate a deterministic starter map JSON
   - `--json` prints machine-readable single-line JSON
 - `data validate`: validate units/buildings/techs/weapons JSON/YAML IDs and cross references
   - `--json` prints machine-readable single-line JSON
+  - invalid results include `firstError`
 
 ## Schemas
 
