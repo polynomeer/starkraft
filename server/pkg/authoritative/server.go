@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"sort"
 	"sync"
 	"time"
 
@@ -43,6 +44,10 @@ type Server struct {
 	mu             sync.Mutex
 	httpSrv        *http.Server
 	replay         *ReplayWriter
+	tickSamples    []int64
+	tickCursor     int
+	tickCount      int
+	maxPendingSeen int
 }
 
 type clientConn struct {
@@ -95,6 +100,7 @@ func NewServer(cfg Config) *Server {
 		upgrader:       websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
 		rooms:          make(map[string]*room),
 		roomMatchEnded: make(map[string]bool),
+		tickSamples:    make([]int64, 256),
 	}
 	if cfg.ReplayPath != "" {
 		replay, err := NewReplayWriter(cfg.ReplayPath)
@@ -342,7 +348,10 @@ func (s *Server) stepRooms() {
 	s.mu.Unlock()
 
 	for _, rm := range rooms {
+		pendingBefore := rm.pendingBatchCount()
+		start := time.Now()
 		result := rm.step()
+		s.recordTickSample(time.Since(start).Nanoseconds(), pendingBefore)
 		msg := protocol.SnapshotMessage{
 			Type: "snapshot", Tick: result.snapshot.Tick, WorldHash: result.snapshot.WorldHash, Units: result.snapshot.Units,
 			MatchEnded: result.snapshot.MatchEnded, WinnerID: result.snapshot.WinnerID,
@@ -378,6 +387,18 @@ func (s *Server) stepRooms() {
 			if err := c.sendEnvelope(msg); err != nil {
 				log.Printf("snapshot send failed: %v", err)
 			}
+		}
+		if result.snapshot.Tick%200 == 0 {
+			p50, p95, p99 := s.tickPercentiles()
+			log.Printf(
+				"tick-metrics room=%s tick=%d p50us=%d p95us=%d p99us=%d maxPending=%d",
+				rm.id,
+				result.snapshot.Tick,
+				p50/1000,
+				p95/1000,
+				p99/1000,
+				s.maxPending(),
+			)
 		}
 	}
 }
@@ -428,4 +449,49 @@ func (c *clientConn) close() {
 	c.closeOnce.Do(func() {
 		close(c.writeQueue)
 	})
+}
+
+func (s *Server) recordTickSample(ns int64, pending int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if pending > s.maxPendingSeen {
+		s.maxPendingSeen = pending
+	}
+	s.tickSamples[s.tickCursor] = ns
+	s.tickCursor = (s.tickCursor + 1) % len(s.tickSamples)
+	if s.tickCount < len(s.tickSamples) {
+		s.tickCount++
+	}
+}
+
+func (s *Server) tickPercentiles() (int64, int64, int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.tickCount == 0 {
+		return 0, 0, 0
+	}
+	data := make([]int64, s.tickCount)
+	copy(data, s.tickSamples[:s.tickCount])
+	sort.Slice(data, func(i, j int) bool { return data[i] < data[j] })
+	return percentileNs(data, 50), percentileNs(data, 95), percentileNs(data, 99)
+}
+
+func (s *Server) maxPending() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.maxPendingSeen
+}
+
+func percentileNs(sorted []int64, p int) int64 {
+	if len(sorted) == 0 {
+		return 0
+	}
+	if p <= 0 {
+		return sorted[0]
+	}
+	if p >= 100 {
+		return sorted[len(sorted)-1]
+	}
+	index := (p * (len(sorted) - 1)) / 100
+	return sorted[index]
 }

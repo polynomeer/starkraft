@@ -32,6 +32,8 @@ Protocol package scaffold is implemented.
   - per-client pending command-batch queue cap
   - bounded outbound websocket queue per client (prevents blocking tick loop)
   - handshake token sanitization for `clientName` and `requestedRoom`
+- tick profiling logs
+  - periodic server logs include `tick-metrics` with p50/p95/p99 step latency and max pending queue depth
 
 ## Run
 

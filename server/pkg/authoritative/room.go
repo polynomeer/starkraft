@@ -17,24 +17,24 @@ type unitState struct {
 }
 
 type room struct {
-	id                         string
-	tick                       int
-	worldHash                  int64
-	units                      map[int]unitState
-	clients                    map[*clientConn]struct{}
-	pendingBatches             []queuedBatch
-	mu                         sync.Mutex
-	mapWidth                   float64
-	mapHeight                  float64
+	id                          string
+	tick                        int
+	worldHash                   int64
+	units                       map[int]unitState
+	clients                     map[*clientConn]struct{}
+	pendingBatches              []queuedBatch
+	mu                          sync.Mutex
+	mapWidth                    float64
+	mapHeight                   float64
 	maxCommandsPerTickPerClient int
-	maxUnitsPerClient          int
-	nextUnitID                 int
-	matchEnded                 bool
-	winnerID                   string
-	maxTicks                   int
-	maxPastTickSkew            int
-	maxFutureTickSkew          int
-	maxPendingBatchesPerClient int
+	maxUnitsPerClient           int
+	nextUnitID                  int
+	matchEnded                  bool
+	winnerID                    string
+	maxTicks                    int
+	maxPastTickSkew             int
+	maxFutureTickSkew           int
+	maxPendingBatchesPerClient  int
 }
 
 type queuedBatch struct {
@@ -44,18 +44,18 @@ type queuedBatch struct {
 
 func newRoom(id string) *room {
 	r := &room{
-		id:                         id,
-		units:                      make(map[int]unitState),
-		clients:                    make(map[*clientConn]struct{}),
-		mapWidth:                   32,
-		mapHeight:                  32,
+		id:                          id,
+		units:                       make(map[int]unitState),
+		clients:                     make(map[*clientConn]struct{}),
+		mapWidth:                    32,
+		mapHeight:                   32,
 		maxCommandsPerTickPerClient: 16,
-		maxUnitsPerClient:          64,
-		nextUnitID:                 3,
-		maxTicks:                   600,
-		maxPastTickSkew:            2,
-		maxFutureTickSkew:          2,
-		maxPendingBatchesPerClient: 8,
+		maxUnitsPerClient:           64,
+		nextUnitID:                  3,
+		maxTicks:                    600,
+		maxPastTickSkew:             2,
+		maxFutureTickSkew:           2,
+		maxPendingBatchesPerClient:  8,
 	}
 	// Deterministic seed state for MVP networking.
 	r.units[1] = unitState{id: 1, ownerID: "player-1", typeID: "Worker", x: 2, y: 2, hp: 40}
@@ -92,6 +92,12 @@ func (r *room) enqueue(clientID string, batch protocol.CommandBatchMessage) bool
 	}
 	r.pendingBatches = append(r.pendingBatches, queuedBatch{clientID: clientID, batch: batch})
 	return true
+}
+
+func (r *room) pendingBatchCount() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return len(r.pendingBatches)
 }
 
 func (r *room) step() tickResult {
