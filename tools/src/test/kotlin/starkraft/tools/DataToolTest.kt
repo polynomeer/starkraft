@@ -37,4 +37,44 @@ class DataToolTest {
         assertTrue(result.errors.any { it.contains("MissingWeapon") })
         assertTrue(result.errors.any { it.contains("MissingDepot") })
     }
+
+    @Test
+    fun `data validator accepts yaml files`() {
+        val dir = Files.createTempDirectory("starkraft-data-yaml")
+        Files.writeString(
+            dir.resolve("buildings.yaml"),
+            """
+            list:
+              - id: Depot
+                supportsDropoff: true
+                dropoffResourceKinds: [minerals]
+            """.trimIndent()
+        )
+        Files.writeString(
+            dir.resolve("weapons.yaml"),
+            """
+            list:
+              - id: Gauss
+            """.trimIndent()
+        )
+        Files.writeString(
+            dir.resolve("techs.yaml"),
+            """
+            list:
+              - id: AdvancedTraining
+                producerTypes: [Depot]
+            """.trimIndent()
+        )
+        Files.writeString(
+            dir.resolve("units.yaml"),
+            """
+            list:
+              - id: Marine
+                weaponId: Gauss
+                producerTypes: [Depot]
+            """.trimIndent()
+        )
+        val result = validateDataDir(dir)
+        assertTrue(result.ok, result.errors.joinToString())
+    }
 }

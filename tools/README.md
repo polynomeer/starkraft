@@ -23,9 +23,9 @@ Paths are resolved relative to the repository root when passed as relative paths
   - returns non-zero for hash mismatch or strict-hash validation errors
   - also runs replay through sim systems and prints final world hash
 - `replay fast-forward`: run replay commands through sim systems and print final world hash
-- `map validate`: validate map JSON shape and tile/resource/spawn bounds
+- `map validate`: validate map JSON/YAML shape and tile/resource/spawn bounds
 - `map generate`: generate a deterministic starter map JSON
-- `data validate`: validate units/buildings/techs/weapons IDs and cross references
+- `data validate`: validate units/buildings/techs/weapons JSON/YAML IDs and cross references
 
 ## Schemas
 

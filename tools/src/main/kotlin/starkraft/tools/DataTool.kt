@@ -18,16 +18,16 @@ private val dataJson = Json { ignoreUnknownKeys = false }
 internal fun validateDataDir(dir: Path): ValidationResult {
     val files =
         mapOf(
-            "units" to dir.resolve("units.json"),
-            "buildings" to dir.resolve("buildings.json"),
-            "techs" to dir.resolve("techs.json"),
-            "weapons" to dir.resolve("weapons.json")
+            "units" to findDataFile(dir, "units"),
+            "buildings" to findDataFile(dir, "buildings"),
+            "techs" to findDataFile(dir, "techs"),
+            "weapons" to findDataFile(dir, "weapons")
         )
     val errors = mutableListOf<String>()
     val parsed = mutableMapOf<String, List<JsonObject>>()
     for ((name, path) in files) {
-        if (!Files.exists(path)) {
-            errors += "missing file: $path"
+        if (path == null) {
+            errors += "missing file for '$name' (expected .json/.yaml/.yml)"
             continue
         }
         parsed[name] = parseListFile(path, "$name.list", errors)
@@ -73,9 +73,18 @@ internal fun validateDataDir(dir: Path): ValidationResult {
     return ValidationResult(errors.isEmpty(), errors)
 }
 
+private fun findDataFile(dir: Path, baseName: String): Path? {
+    val candidates = listOf("$baseName.json", "$baseName.yaml", "$baseName.yml")
+    for (candidate in candidates) {
+        val path = dir.resolve(candidate)
+        if (Files.exists(path)) return path
+    }
+    return null
+}
+
 private fun parseListFile(path: Path, context: String, errors: MutableList<String>): List<JsonObject> {
     return try {
-        val root = dataJson.parseToJsonElement(Files.readString(path)).jsonObject
+        val root = readStructuredElement(path).jsonObject
         val listElement = root["list"]
         if (listElement !is JsonArray) {
             errors += "$context must be an array"

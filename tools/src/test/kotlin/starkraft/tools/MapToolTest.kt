@@ -57,4 +57,23 @@ class MapToolTest {
         val result = validateMap(path)
         assertTrue(result.ok, result.errors.joinToString())
     }
+
+    @Test
+    fun `map validator accepts yaml payload`() {
+        val path = Files.createTempFile("starkraft-map-yaml", ".yaml")
+        Files.writeString(
+            path,
+            """
+            schema: 1
+            id: demo-yaml
+            width: 8
+            height: 8
+            blockedTiles:
+              - x: 1
+                y: 2
+            """.trimIndent()
+        )
+        val result = validateMap(path)
+        assertTrue(result.ok, result.errors.joinToString())
+    }
 }

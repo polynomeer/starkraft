@@ -3,6 +3,7 @@ package starkraft.tools
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.max
@@ -43,9 +44,8 @@ internal data class MapSpawn(val faction: Int, val x: Int, val y: Int)
 internal data class ValidationResult(val ok: Boolean, val errors: List<String>)
 
 internal fun validateMap(path: Path): ValidationResult {
-    val raw = Files.readString(path)
     val payload = try {
-        mapJson.decodeFromString<MapPayload>(raw)
+        mapJson.decodeFromJsonElement<MapPayload>(readStructuredElement(path))
     } catch (e: Exception) {
         return ValidationResult(false, listOf("invalid json: ${e.message}"))
     }
