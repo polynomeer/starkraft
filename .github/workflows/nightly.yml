@@ -58,4 +58,14 @@ jobs:
           cache: gradle
 
       - name: Run tools tests and data/map checks
+        env:
+          STARKRAFT_TOOLS_HEALTH_TMP_DIR: /tmp/starkraft-tools-health
         run: ./scripts/tools_health.sh
+
+      - name: Upload nightly tools health artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-tools-health
+          path: /tmp/starkraft-tools-health
+          if-no-files-found: ignore
