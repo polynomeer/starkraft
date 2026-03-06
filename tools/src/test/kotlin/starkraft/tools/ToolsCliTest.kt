@@ -126,6 +126,28 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay verify-ndjson accepts json output flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify-ndjson-json", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """{"recordType":"keyframe","tick":1,"worldHash":1469598103934665634,"units":[]}"""
+        )
+        val code = runToolsCli(arrayOf("replay", "verify-ndjson", replayPath.pathString, "--json"))
+        assertEquals(0, code)
+    }
+
+    @Test
+    fun `replay verify-ndjson rejects unknown flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify-ndjson-flag", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """{"recordType":"keyframe","tick":1,"worldHash":1469598103934665634,"units":[]}"""
+        )
+        val code = runToolsCli(arrayOf("replay", "verify-ndjson", replayPath.pathString, "--bad"))
+        assertEquals(1, code)
+    }
+
+    @Test
     fun `replay fast-forward command succeeds`() {
         val replayPath = Files.createTempFile("starkraft-tools-ff", ".json")
         ReplayIO.save(

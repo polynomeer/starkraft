@@ -6,7 +6,7 @@ Offline utility CLIs for replay/map/data workflows.
 
 - `./gradlew :tools:run --args="replay meta <path>"`
 - `./gradlew :tools:run --args="replay stats <path> [--json]"`
-- `./gradlew :tools:run --args="replay verify-ndjson <path>"`
+- `./gradlew :tools:run --args="replay verify-ndjson <path> [--json]"`
 - `./gradlew :tools:run --args="replay verify <path> [--strictHash]"`
 - `./gradlew :tools:run --args="replay fast-forward <path> [--ticks N]"`
 - `./gradlew :tools:run --args="map validate <map.json>"`
@@ -23,6 +23,7 @@ Paths are resolved relative to the repository root when passed as relative paths
   - for server NDJSON, also reports keyframe hash mismatches (non-zero on mismatch)
   - `--json` prints machine-readable single-line JSON
 - `replay verify-ndjson`: verify server NDJSON keyframe `worldHash` values
+  - `--json` prints machine-readable single-line JSON
 - `replay verify`: compare stored replay hash to computed replay hash
   - returns non-zero for hash mismatch or strict-hash validation errors
   - also runs replay through sim systems and prints final world hash

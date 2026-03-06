@@ -23,7 +23,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
         args[0] == "replay" && args[1] == "stats" -> runReplayStats(args.drop(2))
-        args[0] == "replay" && args[1] == "verify-ndjson" -> runReplayVerifyNdjson(args[2])
+        args[0] == "replay" && args[1] == "verify-ndjson" -> runReplayVerifyNdjson(args.drop(2))
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "replay" && args[1] == "fast-forward" -> runReplayFastForward(args.drop(2))
         args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
@@ -124,23 +124,61 @@ private fun printStats(json: Boolean, fields: JsonObject) {
     }
 }
 
-private fun runReplayVerifyNdjson(pathArg: String): Int {
-    val path = resolvePath(pathArg)
+private fun runReplayVerifyNdjson(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = resolvePath(args[0])
+    val json = args.drop(1).any { it == "--json" }
+    if (args.drop(1).any { it != "--json" }) {
+        printUsage()
+        return 1
+    }
     return try {
         val result = verifyNdjsonKeyframeHashes(path)
-        println("replay: $path")
-        println("format: server-ndjson")
-        println("keyframesChecked: ${result.keyframesChecked}")
-        println("mismatches: ${result.mismatches}")
-        if (result.firstMismatchTick != null) {
-            println("firstMismatchTick: ${result.firstMismatchTick}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("replay", path.toString())
+                        put("format", "server-ndjson")
+                        put("keyframesChecked", result.keyframesChecked)
+                        put("mismatches", result.mismatches)
+                        if (result.firstMismatchTick != null) {
+                            put("firstMismatchTick", result.firstMismatchTick)
+                        }
+                        put("result", if (result.mismatches == 0) "ok" else "mismatch")
+                    }
+            )
+        } else {
+            println("replay: $path")
+            println("format: server-ndjson")
+            println("keyframesChecked: ${result.keyframesChecked}")
+            println("mismatches: ${result.mismatches}")
+            if (result.firstMismatchTick != null) {
+                println("firstMismatchTick: ${result.firstMismatchTick}")
+            }
+            if (result.mismatches == 0) println("result: ok") else println("result: mismatch")
         }
-        if (result.mismatches == 0) println("result: ok") else println("result: mismatch")
         if (result.mismatches == 0) 0 else 2
     } catch (e: Exception) {
-        println("replay: $path")
-        println("result: invalid")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("replay", path.toString())
+                        put("result", "invalid")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("replay: $path")
+            println("result: invalid")
+            println("error: ${e.message}")
+        }
         2
     }
 }
@@ -348,7 +386,7 @@ private fun printUsage() {
         Usage:
           replay meta <path>
           replay stats <path> [--json]
-          replay verify-ndjson <path>
+          replay verify-ndjson <path> [--json]
           replay verify <path> [--strictHash]
           replay fast-forward <path> [--ticks N]
           map validate <path>
