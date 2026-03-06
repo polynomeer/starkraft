@@ -22,6 +22,7 @@ internal fun runToolsCli(args: Array<String>): Int {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
+        args[0] == "map" && args[1] == "generate" -> runMapGenerate(args.drop(2))
         else -> {
             printUsage()
             1
@@ -87,6 +88,44 @@ private fun runMapValidate(pathArg: String): Int {
     return 2
 }
 
+private fun runMapGenerate(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val outPath = resolvePath(args[0])
+    var width = 64
+    var height = 64
+    var seed = 1337L
+    var i = 1
+    while (i < args.size) {
+        when (args[i]) {
+            "--width" -> {
+                width = args.getOrNull(i + 1)?.toIntOrNull() ?: return 1
+                i += 2
+            }
+            "--height" -> {
+                height = args.getOrNull(i + 1)?.toIntOrNull() ?: return 1
+                i += 2
+            }
+            "--seed" -> {
+                seed = args.getOrNull(i + 1)?.toLongOrNull() ?: return 1
+                i += 2
+            }
+            else -> return 1
+        }
+    }
+    val payload = generateMap(outPath, width, height, seed)
+    println("map: $outPath")
+    println("result: generated")
+    println("id: ${payload.id}")
+    println("width: ${payload.width}")
+    println("height: ${payload.height}")
+    println("blockedTiles: ${payload.blockedTiles.size}")
+    println("weightedTiles: ${payload.weightedTiles.size}")
+    return 0
+}
+
 internal fun resolvePath(raw: String): Path {
     val path = Paths.get(raw)
     if (path.isAbsolute) return path.normalize()
@@ -126,6 +165,7 @@ private fun printUsage() {
           replay meta <path>
           replay verify <path> [--strictHash]
           map validate <path>
+          map generate <path> [--width N] [--height N] [--seed N]
         """.trimIndent()
     )
 }

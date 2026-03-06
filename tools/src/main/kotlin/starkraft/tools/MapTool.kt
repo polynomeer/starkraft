@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.math.max
+import kotlin.random.Random
 
 private val mapJson = Json { ignoreUnknownKeys = false }
 
@@ -83,3 +85,49 @@ internal fun validateMap(path: Path): ValidationResult {
 
 private fun inBounds(x: Int, y: Int, width: Int, height: Int): Boolean =
     x >= 0 && y >= 0 && x < width && y < height
+
+internal fun generateMap(path: Path, width: Int, height: Int, seed: Long): MapPayload {
+    require(width > 0) { "width must be > 0" }
+    require(height > 0) { "height must be > 0" }
+    val rnd = Random(seed)
+    val blockedCount = max(1, (width * height) / 25)
+    val weightedCount = max(1, (width * height) / 20)
+    val blocked = ArrayList<MapTile>(blockedCount)
+    val weighted = ArrayList<WeightedTile>(weightedCount)
+    val used = HashSet<Long>(blockedCount + weightedCount)
+    repeat(blockedCount) {
+        val tile = nextUniqueTile(rnd, width, height, used)
+        blocked += MapTile(tile.first, tile.second)
+    }
+    repeat(weightedCount) {
+        val tile = nextUniqueTile(rnd, width, height, used)
+        val cost = 1f + rnd.nextInt(1, 4)
+        weighted += WeightedTile(tile.first, tile.second, cost)
+    }
+    val payload =
+        MapPayload(
+            schema = 1,
+            id = "generated-${width}x$height-$seed",
+            width = width,
+            height = height,
+            blockedTiles = blocked,
+            weightedTiles = weighted,
+            resources =
+                listOf(
+                    MapResource("MineralField", 1, 1, amount = 1200, yieldPerTick = 2),
+                    MapResource("GasGeyser", max(0, width - 2), max(0, height - 2), amount = 800, yieldPerTick = 2)
+                ),
+            spawns = listOf(MapSpawn(1, 0, 0), MapSpawn(2, max(0, width - 1), max(0, height - 1)))
+        )
+    Files.writeString(path, mapJson.encodeToString(MapPayload.serializer(), payload))
+    return payload
+}
+
+private fun nextUniqueTile(rnd: Random, width: Int, height: Int, used: MutableSet<Long>): Pair<Int, Int> {
+    while (true) {
+        val x = rnd.nextInt(width)
+        val y = rnd.nextInt(height)
+        val key = (x.toLong() shl 32) or (y.toLong() and 0xffffffffL)
+        if (used.add(key)) return x to y
+    }
+}

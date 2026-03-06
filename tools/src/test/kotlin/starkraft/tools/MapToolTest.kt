@@ -49,4 +49,12 @@ class MapToolTest {
         assertFalse(result.ok)
         assertTrue(result.errors.any { it.contains("out of bounds") })
     }
+
+    @Test
+    fun `map generator emits valid map`() {
+        val path = Files.createTempFile("starkraft-map-generated", ".json")
+        generateMap(path, width = 12, height = 10, seed = 99L)
+        val result = validateMap(path)
+        assertTrue(result.ok, result.errors.joinToString())
+    }
 }

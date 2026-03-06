@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayIO
 import java.nio.file.Files
+import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
 class ToolsCliTest {
@@ -65,5 +66,14 @@ class ToolsCliTest {
         )
         val code = runToolsCli(arrayOf("map", "validate", mapPath.pathString))
         assertEquals(0, code)
+    }
+
+    @Test
+    fun `map generate command writes output file`() {
+        val mapPath = Files.createTempFile("starkraft-tools-map-gen", ".json")
+        Files.deleteIfExists(mapPath)
+        val code = runToolsCli(arrayOf("map", "generate", mapPath.pathString, "--width", "7", "--height", "6", "--seed", "11"))
+        assertEquals(0, code)
+        assertTrue(mapPath.exists())
     }
 }
