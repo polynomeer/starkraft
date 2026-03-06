@@ -16,6 +16,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
+print_logs() {
+  echo "[e2e] server log:"
+  [[ -f "$SERVER_LOG" ]] && cat "$SERVER_LOG" || true
+  echo "[e2e] bot-a log:"
+  [[ -f "$BOT1_LOG" ]] && cat "$BOT1_LOG" || true
+  echo "[e2e] bot-b log:"
+  [[ -f "$BOT2_LOG" ]] && cat "$BOT2_LOG" || true
+}
+
 (
   cd "$ROOT_DIR/server"
   STARKRAFT_SERVER_ADDR=127.0.0.1:18080 STARKRAFT_REPLAY_PATH="$REPLAY_FILE" go run ./cmd/server >"$SERVER_LOG" 2>&1
@@ -23,6 +32,12 @@ trap cleanup EXIT
 SERVER_PID=$!
 
 sleep 1
+
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+  echo "[e2e] server exited during startup"
+  print_logs
+  exit 1
+fi
 
 (
   cd "$ROOT_DIR/client"
@@ -37,6 +52,11 @@ BOT1_PID=$!
 BOT2_PID=$!
 
 for _ in $(seq 1 35); do
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo "[e2e] server exited before bots finished"
+    print_logs
+    exit 1
+  fi
   if ! kill -0 "$BOT1_PID" 2>/dev/null && ! kill -0 "$BOT2_PID" 2>/dev/null; then
     break
   fi
@@ -45,29 +65,47 @@ done
 
 if kill -0 "$BOT1_PID" 2>/dev/null || kill -0 "$BOT2_PID" 2>/dev/null; then
   echo "[e2e] bots did not finish in time"
+  print_logs
+  exit 1
+fi
+
+set +e
+wait "$BOT1_PID"
+BOT1_STATUS=$?
+wait "$BOT2_PID"
+BOT2_STATUS=$?
+set -e
+if [[ "$BOT1_STATUS" -ne 0 || "$BOT2_STATUS" -ne 0 ]]; then
+  echo "[e2e] bot process exited with error status bot-a=$BOT1_STATUS bot-b=$BOT2_STATUS"
+  print_logs
   exit 1
 fi
 
 if [[ ! -s "$REPLAY_FILE" ]]; then
   echo "[e2e] replay file missing"
+  print_logs
   exit 1
 fi
 
 if ! rg -q '"recordType":"header"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing header"
+  print_logs
   exit 1
 fi
 if ! rg -q '"recordType":"command"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing command"
+  print_logs
   exit 1
 fi
 if ! rg -q '"recordType":"matchEnd"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing matchEnd"
+  print_logs
   exit 1
 fi
 
 if ! rg -q 'match ended winner=' "$BOT1_LOG" && ! rg -q 'match ended winner=' "$BOT2_LOG"; then
   echo "[e2e] bots did not observe match end"
+  print_logs
   exit 1
 fi
 
