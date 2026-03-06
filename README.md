@@ -32,6 +32,7 @@ Release/process assets:
 - packaging script for sim/server/client artifacts (`scripts/release_package.sh`)
   - emits `manifest-<version>.txt` with artifact names, sizes, and sha256 checksums
 - operations runbook (`OPERATIONS.md`) for host/play/replay/troubleshooting
+- release gate checklist (`RELEASE_CHECKLIST.md`) for build/test/perf/package signoff
 
 Out of scope for this module:
 - a polished game UI
