@@ -21,4 +21,36 @@ class ReplayToolTest {
         assertTrue(result.commandCount == 2)
         assertTrue(result.finalWorldHash != 0L)
     }
+
+    @Test
+    fun `verify ndjson keyframe hashes passes for matching hash`() {
+        val replayPath = Files.createTempFile("starkraft-tools-ndjson-ok", ".jsonl")
+        val tick = 3
+        val hash = tick.toLong() * 1469598103934665603L + 31L
+        Files.writeString(
+            replayPath,
+            """
+            {"recordType":"header","protocolVersion":1}
+            {"recordType":"keyframe","tick":$tick,"worldHash":$hash,"units":[]}
+            """.trimIndent()
+        )
+        val result = verifyNdjsonKeyframeHashes(replayPath)
+        assertTrue(result.keyframesChecked == 1)
+        assertTrue(result.mismatches == 0)
+    }
+
+    @Test
+    fun `verify ndjson keyframe hashes detects mismatch`() {
+        val replayPath = Files.createTempFile("starkraft-tools-ndjson-bad", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """
+            {"recordType":"header","protocolVersion":1}
+            {"recordType":"keyframe","tick":2,"worldHash":123,"units":[]}
+            """.trimIndent()
+        )
+        val result = verifyNdjsonKeyframeHashes(replayPath)
+        assertTrue(result.keyframesChecked == 1)
+        assertTrue(result.mismatches == 1)
+    }
 }

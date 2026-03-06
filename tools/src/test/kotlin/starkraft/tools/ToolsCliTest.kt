@@ -79,6 +79,17 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay verify-ndjson command fails on keyframe hash mismatch`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify-ndjson", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """{"recordType":"keyframe","tick":2,"worldHash":1,"units":[]}"""
+        )
+        val code = runToolsCli(arrayOf("replay", "verify-ndjson", replayPath.pathString))
+        assertEquals(2, code)
+    }
+
+    @Test
     fun `replay fast-forward command succeeds`() {
         val replayPath = Files.createTempFile("starkraft-tools-ff", ".json")
         ReplayIO.save(

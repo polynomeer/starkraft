@@ -21,6 +21,9 @@ import starkraft.sim.replay.ReplayIO
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -36,6 +39,12 @@ internal data class NdjsonReplaySummary(
     val commandCount: Int,
     val keyframeCount: Int,
     val matchEndCount: Int
+)
+
+internal data class NdjsonHashVerification(
+    val keyframesChecked: Int,
+    val mismatches: Int,
+    val firstMismatchTick: Int?
 )
 
 internal fun fastForwardReplay(path: Path, tickLimit: Int? = null): ReplayRunResult {
@@ -128,4 +137,50 @@ internal fun summarizeNdjsonReplay(path: Path): NdjsonReplaySummary {
         keyframeCount = keyframeCount,
         matchEndCount = matchEndCount
     )
+}
+
+internal fun verifyNdjsonKeyframeHashes(path: Path): NdjsonHashVerification {
+    val json = Json { ignoreUnknownKeys = true }
+    var checked = 0
+    var mismatches = 0
+    var firstMismatchTick: Int? = null
+    Files.newBufferedReader(path).use { reader ->
+        while (true) {
+            val line = reader.readLine() ?: break
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) continue
+            val obj = json.parseToJsonElement(trimmed).jsonObject
+            if (obj["recordType"]?.jsonPrimitive?.content != "keyframe") continue
+            val tick = obj["tick"]?.jsonPrimitive?.intOrNull ?: error("keyframe missing tick")
+            val expected = obj["worldHash"]?.jsonPrimitive?.content?.toLongOrNull() ?: error("keyframe missing worldHash")
+            val units = obj["units"]?.jsonArray ?: error("keyframe missing units")
+            val computed = computeServerStyleWorldHash(tick, units)
+            checked++
+            if (computed != expected) {
+                mismatches++
+                if (firstMismatchTick == null) firstMismatchTick = tick
+            }
+        }
+    }
+    return NdjsonHashVerification(
+        keyframesChecked = checked,
+        mismatches = mismatches,
+        firstMismatchTick = firstMismatchTick
+    )
+}
+
+private fun computeServerStyleWorldHash(tick: Int, units: kotlinx.serialization.json.JsonArray): Long {
+    var h = tick.toLong() * 1469598103934665603L + 31L
+    val byId = units.map { it.jsonObject }.sortedBy { it["id"]?.jsonPrimitive?.intOrNull ?: Int.MAX_VALUE }
+    for (unit in byId) {
+        val id = unit["id"]?.jsonPrimitive?.intOrNull ?: error("unit missing id")
+        val x = unit["x"]?.jsonPrimitive?.doubleOrNull ?: error("unit missing x")
+        val y = unit["y"]?.jsonPrimitive?.doubleOrNull ?: error("unit missing y")
+        val hp = unit["hp"]?.jsonPrimitive?.intOrNull ?: error("unit missing hp")
+        h = h * 1099511628211L + id.toLong()
+        h = h * 1099511628211L + (x * 100.0).toLong()
+        h = h * 1099511628211L + (y * 100.0).toLong()
+        h = h * 1099511628211L + hp.toLong()
+    }
+    return h
 }
