@@ -20,6 +20,7 @@ Paths are resolved relative to the repository root when passed as relative paths
 - `replay meta`: print replay metadata (`schema`, hash, seed, map/build tags, size)
 - `replay stats`: print replay record counts
   - supports sim replay JSON and server replay NDJSON
+  - for server NDJSON, also reports keyframe hash mismatches (non-zero on mismatch)
 - `replay verify-ndjson`: verify server NDJSON keyframe `worldHash` values
 - `replay verify`: compare stored replay hash to computed replay hash
   - returns non-zero for hash mismatch or strict-hash validation errors

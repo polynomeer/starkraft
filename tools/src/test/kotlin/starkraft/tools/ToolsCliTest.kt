@@ -70,12 +70,26 @@ class ToolsCliTest {
             """
             {"recordType":"header","protocolVersion":1}
             {"recordType":"command","ack":{"tick":1}}
-            {"recordType":"keyframe","tick":1,"worldHash":123}
+            {"recordType":"keyframe","tick":1,"worldHash":1469598103934665634,"units":[]}
             {"recordType":"matchEnd","tick":2}
             """.trimIndent()
         )
         val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString))
         assertEquals(0, code)
+    }
+
+    @Test
+    fun `replay stats command fails for server ndjson hash mismatch`() {
+        val replayPath = Files.createTempFile("starkraft-tools-stats-ndjson-bad", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """
+            {"recordType":"header","protocolVersion":1}
+            {"recordType":"keyframe","tick":1,"worldHash":1,"units":[]}
+            """.trimIndent()
+        )
+        val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString))
+        assertEquals(2, code)
     }
 
     @Test

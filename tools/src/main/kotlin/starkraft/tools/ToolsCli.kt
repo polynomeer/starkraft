@@ -52,6 +52,7 @@ private fun runReplayStats(pathArg: String): Int {
     } catch (_: Exception) {
         try {
             val summary = summarizeNdjsonReplay(path)
+            val verify = verifyNdjsonKeyframeHashes(path)
             println("replay: $path")
             println("format: server-ndjson")
             println("records: ${summary.records}")
@@ -59,7 +60,11 @@ private fun runReplayStats(pathArg: String): Int {
             println("command: ${summary.commandCount}")
             println("keyframe: ${summary.keyframeCount}")
             println("matchEnd: ${summary.matchEndCount}")
-            0
+            println("keyframeHashMismatches: ${verify.mismatches}")
+            if (verify.firstMismatchTick != null) {
+                println("firstMismatchTick: ${verify.firstMismatchTick}")
+            }
+            if (verify.mismatches == 0) 0 else 2
         } catch (e: Exception) {
             println("replay: $path")
             println("result: invalid")
