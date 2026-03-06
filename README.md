@@ -164,7 +164,9 @@ Optional env vars:
 
 Tools quick checks:
 - `./gradlew :tools:run --args="replay meta /tmp/starkraft-tools-smoke.replay.json"`
+- `./gradlew :tools:run --args="replay stats /tmp/starkraft-tools-smoke.replay.json --json"`
 - `./gradlew :tools:run --args="replay verify /tmp/starkraft-tools-smoke.replay.json --strictHash"`
+- `./gradlew :tools:run --args="replay verify-ndjson /tmp/starkraft-e2e/server.replay.jsonl --json"`
 - `./gradlew :tools:run --args="map generate /tmp/starkraft-map.json --width 64 --height 64 --seed 1337"`
 - `./gradlew :tools:run --args="map validate /tmp/starkraft-map.json"`
 - `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data"`
