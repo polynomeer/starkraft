@@ -84,6 +84,11 @@ func main() {
 			statuses.onAck(ack)
 		}
 	}()
+	go func() {
+		for end := range c.MatchEndCh {
+			fmt.Printf("matchEnd tick=%d winner=%v\n", end.Tick, end.WinnerID)
+		}
+	}()
 
 	s := bufio.NewScanner(os.Stdin)
 	for {

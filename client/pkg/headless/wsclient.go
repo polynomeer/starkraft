@@ -79,6 +79,7 @@ type Client struct {
 	resumeToken *string
 
 	SnapshotCh chan protocol.SnapshotMessage
+	MatchEndCh chan protocol.MatchEndMessage
 	AckCh      chan protocol.CommandAckMessage
 	ErrCh      chan error
 
@@ -96,6 +97,7 @@ func Dial(url, simVersion, name string, room *string) (*Client, error) {
 		name:       name,
 		room:       room,
 		SnapshotCh: make(chan protocol.SnapshotMessage, 64),
+		MatchEndCh: make(chan protocol.MatchEndMessage, 8),
 		AckCh:      make(chan protocol.CommandAckMessage, 128),
 		ErrCh:      make(chan error, 1),
 	}
@@ -187,6 +189,13 @@ func (c *Client) readLoop() {
 				return
 			}
 			c.AckCh <- ack
+		case "matchEnd":
+			var end protocol.MatchEndMessage
+			if err := json.Unmarshal(env.Message, &end); err != nil {
+				c.ErrCh <- err
+				return
+			}
+			c.MatchEndCh <- end
 		}
 	}
 }
