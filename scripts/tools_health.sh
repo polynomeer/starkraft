@@ -18,6 +18,7 @@ NDJSON_STATS_JSON="$TMP_DIR/ndjson-stats.json"
 MAP_INVALID_JSON="$TMP_DIR/map-invalid.json"
 DATA_INVALID_JSON="$TMP_DIR/data-invalid.json"
 EMPTY_DATA_DIR="$TMP_DIR/empty-data"
+SUMMARY_JSON="$TMP_DIR/summary.json"
 
 mkdir -p "$TMP_DIR"
 export TMP_DIR
@@ -91,7 +92,26 @@ assert data_invalid.get("result") == "invalid", data_invalid
 assert data_invalid.get("outputVersion") == 1, data_invalid
 assert "firstError" in data_invalid, data_invalid
 assert "errorsList" in data_invalid and len(data_invalid["errorsList"]) > 0, data_invalid
+summary = {
+    "result": "ok",
+    "outputVersion": 1,
+    "files": {
+        "replay": str(tmp / "replay.json"),
+        "replayMeta": str(tmp / "replay-meta.json"),
+        "replayStats": str(tmp / "replay-stats.json"),
+        "replayVerify": str(tmp / "replay-verify.json"),
+        "replayFastForward": str(tmp / "replay-fast-forward.json"),
+        "ndjsonVerify": str(tmp / "ndjson-verify.json"),
+        "ndjsonStats": str(tmp / "ndjson-stats.json"),
+        "mapGenerate": str(tmp / "map-generate.json"),
+        "mapValidate": str(tmp / "map-validate.json"),
+        "mapInvalid": str(tmp / "map-invalid.json"),
+        "dataValidate": str(tmp / "data-validate.json"),
+        "dataInvalid": str(tmp / "data-invalid.json")
+    }
+}
+(tmp / "summary.json").write_text(json.dumps(summary, separators=(",", ":")))
 print("ok")
 PY
 
-echo "[tools-health] ok"
+echo "[tools-health] ok summary=$SUMMARY_JSON"
