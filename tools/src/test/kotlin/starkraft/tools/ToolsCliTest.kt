@@ -25,6 +25,32 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay verify command succeeds for hash-matching replay`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f))
+        )
+
+        val code = runToolsCli(arrayOf("replay", "verify", replayPath.pathString))
+        assertEquals(0, code)
+    }
+
+    @Test
+    fun `replay verify strict hash rejects legacy replay array`() {
+        val replayPath = Files.createTempFile("starkraft-tools-legacy", ".json")
+        Files.writeString(
+            replayPath,
+            """
+            [{"type":"move","tick":1,"units":[1],"x":2.0,"y":3.0}]
+            """.trimIndent()
+        )
+
+        val code = runToolsCli(arrayOf("replay", "verify", replayPath.pathString, "--strictHash"))
+        assertEquals(2, code)
+    }
+
+    @Test
     fun `resolve path returns absolute path`() {
         val resolved = resolvePath("sim/scripts/sample.script")
         assertTrue(resolved.isAbsolute)

@@ -1,6 +1,7 @@
 package starkraft.tools
 
 import starkraft.sim.replay.ReplayIO
+import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -19,6 +20,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     }
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
+        args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         else -> {
             printUsage()
             1
@@ -31,6 +33,41 @@ private fun runReplayMeta(pathArg: String): Int {
     val metadata = ReplayIO.inspect(path)
     println(formatReplayMetadata(path, metadata))
     return 0
+}
+
+private fun runReplayVerify(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = resolvePath(args[0])
+    val strictHash = args.drop(1).any { it == "--strictHash" }
+    val commands = try {
+        ReplayIO.load(path, strictHash = strictHash)
+    } catch (e: IllegalStateException) {
+        println("replay: $path")
+        println("result: validation-error")
+        println("error: ${e.message}")
+        return 2
+    }
+    val metadata = ReplayIO.inspect(path)
+    val recorder = ReplayHashRecorder()
+    for (command in commands) recorder.onCommand(command)
+    val computedHash = recorder.value()
+    val expectedHash = metadata.replayHash
+    val result = if (expectedHash == null) {
+        if (strictHash) "missing-hash" else "ok-legacy"
+    } else if (expectedHash == computedHash) {
+        "ok"
+    } else {
+        "mismatch"
+    }
+    println("replay: $path")
+    println("commands: ${commands.size}")
+    println("expectedHash: ${expectedHash ?: "missing"}")
+    println("computedHash: $computedHash")
+    println("result: $result")
+    return if (result == "mismatch" || result == "missing-hash") 2 else 0
 }
 
 internal fun resolvePath(raw: String): Path {
@@ -70,6 +107,7 @@ private fun printUsage() {
         """
         Usage:
           replay meta <path>
+          replay verify <path> [--strictHash]
         """.trimIndent()
     )
 }
