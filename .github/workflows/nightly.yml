@@ -42,3 +42,24 @@ jobs:
           ./gradlew --no-daemon :sim:test --tests starkraft.sim.DeterminismTest
           ./gradlew --no-daemon :sim:test --tests starkraft.sim.ReplayHashTest
           ./gradlew --no-daemon :sim:test --tests starkraft.sim.ReplayIOTest
+
+  tools-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Run tools tests and data/map checks
+        run: |
+          ./gradlew --no-daemon :tools:test
+          ./gradlew --no-daemon :tools:run --args="data validate --dir sim/src/main/resources/data"
+          ./gradlew --no-daemon :tools:run --args="map generate /tmp/starkraft-nightly-map.json --width 64 --height 64 --seed 1337"
+          ./gradlew --no-daemon :tools:run --args="map validate /tmp/starkraft-nightly-map.json"
