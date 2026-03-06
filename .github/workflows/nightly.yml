@@ -58,18 +58,4 @@ jobs:
           cache: gradle
 
       - name: Run tools tests and data/map checks
-        run: |
-          ./gradlew --no-daemon :tools:test
-          ./gradlew --no-daemon --quiet :tools:run --args="data validate --dir sim/src/main/resources/data --json" > /tmp/starkraft-nightly-data.json
-          ./gradlew --no-daemon --quiet :tools:run --args="map generate /tmp/starkraft-nightly-map.json --width 64 --height 64 --seed 1337 --json" > /tmp/starkraft-nightly-map-generate.json
-          ./gradlew --no-daemon --quiet :tools:run --args="map validate /tmp/starkraft-nightly-map.json --json" > /tmp/starkraft-nightly-map-validate.json
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          data = json.loads(Path('/tmp/starkraft-nightly-data.json').read_text())
-          gen = json.loads(Path('/tmp/starkraft-nightly-map-generate.json').read_text())
-          val = json.loads(Path('/tmp/starkraft-nightly-map-validate.json').read_text())
-          assert data.get('result') == 'ok', data
-          assert gen.get('result') == 'generated', gen
-          assert val.get('result') == 'ok', val
-          PY
+        run: ./scripts/tools_health.sh
