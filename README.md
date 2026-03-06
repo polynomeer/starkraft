@@ -31,6 +31,7 @@ Release/process assets:
 - changelog tracking (`CHANGELOG.md`)
 - packaging script for sim/server/client artifacts (`scripts/release_package.sh`)
   - emits `manifest-<version>.txt` with artifact names, sizes, and sha256 checksums
+- operations runbook (`OPERATIONS.md`) for host/play/replay/troubleshooting
 
 Out of scope for this module:
 - a polished game UI
