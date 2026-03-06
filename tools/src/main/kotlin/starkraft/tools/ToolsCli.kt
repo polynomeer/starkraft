@@ -5,12 +5,10 @@ import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayMetadata
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val exitCode = runToolsCli(args)
-    if (exitCode != 0) {
-        throw IllegalStateException("tools command failed (exitCode=$exitCode)")
-    }
+    exitProcess(runToolsCli(args))
 }
 
 internal fun runToolsCli(args: Array<String>): Int {
@@ -48,7 +46,7 @@ private fun runReplayVerify(args: List<String>): Int {
     val strictHash = args.drop(1).any { it == "--strictHash" }
     val commands = try {
         ReplayIO.load(path, strictHash = strictHash)
-    } catch (e: IllegalStateException) {
+    } catch (e: Exception) {
         println("replay: $path")
         println("result: validation-error")
         println("error: ${e.message}")
@@ -93,7 +91,14 @@ private fun runReplayFastForward(args: List<String>): Int {
             else -> return 1
         }
     }
-    val result = fastForwardReplay(path, tickLimit)
+    val result = try {
+        fastForwardReplay(path, tickLimit)
+    } catch (e: Exception) {
+        println("replay: $path")
+        println("result: validation-error")
+        println("error: ${e.message}")
+        return 2
+    }
     println("replay: $path")
     println("result: ok")
     println("finalTick: ${result.finalTick}")
@@ -104,7 +109,14 @@ private fun runReplayFastForward(args: List<String>): Int {
 
 private fun runMapValidate(pathArg: String): Int {
     val path = resolvePath(pathArg)
-    val result = validateMap(path)
+    val result = try {
+        validateMap(path)
+    } catch (e: Exception) {
+        println("map: $path")
+        println("result: invalid")
+        println("error: ${e.message}")
+        return 2
+    }
     if (result.ok) {
         println("map: $path")
         println("result: ok")
@@ -145,7 +157,14 @@ private fun runMapGenerate(args: List<String>): Int {
             else -> return 1
         }
     }
-    val payload = generateMap(outPath, width, height, seed)
+    val payload = try {
+        generateMap(outPath, width, height, seed)
+    } catch (e: Exception) {
+        println("map: $outPath")
+        println("result: invalid")
+        println("error: ${e.message}")
+        return 2
+    }
     println("map: $outPath")
     println("result: generated")
     println("id: ${payload.id}")
@@ -162,7 +181,14 @@ private fun runDataValidate(args: List<String>): Int {
         return 1
     }
     val dir = resolvePath(args[1])
-    val result = validateDataDir(dir)
+    val result = try {
+        validateDataDir(dir)
+    } catch (e: Exception) {
+        println("dataDir: $dir")
+        println("result: invalid")
+        println("error: ${e.message}")
+        return 2
+    }
     if (result.ok) {
         println("dataDir: $dir")
         println("result: ok")

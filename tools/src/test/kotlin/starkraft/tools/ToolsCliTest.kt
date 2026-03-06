@@ -93,4 +93,10 @@ class ToolsCliTest {
         val code = runToolsCli(arrayOf("data", "validate", "--dir", "sim/src/main/resources/data"))
         assertEquals(0, code)
     }
+
+    @Test
+    fun `map validate returns non-zero for missing file`() {
+        val code = runToolsCli(arrayOf("map", "validate", "/tmp/no-such-map-${System.nanoTime()}.json"))
+        assertEquals(2, code)
+    }
 }
