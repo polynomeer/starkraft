@@ -8,6 +8,7 @@ Offline utility CLIs for replay/map/data workflows.
 - `./gradlew :tools:run --args="replay verify <path> [--strictHash]"`
 - `./gradlew :tools:run --args="map validate <map.json>"`
 - `./gradlew :tools:run --args="map generate <map.json> --width 64 --height 64 --seed 1337"`
+- `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data"`
 
 Paths are resolved relative to the repository root when passed as relative paths.
 
@@ -18,10 +19,10 @@ Paths are resolved relative to the repository root when passed as relative paths
   - returns non-zero for hash mismatch or strict-hash validation errors
 - `map validate`: validate map JSON shape and tile/resource/spawn bounds
 - `map generate`: generate a deterministic starter map JSON
+- `data validate`: validate units/buildings/techs/weapons IDs and cross references
 
 Planned next commands:
 - `replay fast-forward`: run replay commands through the sim stack and print final world hash
-- `data validate`: validate units/buildings/tech/weapons JSON or YAML against schema + reference rules
 
 ## Schemas
 

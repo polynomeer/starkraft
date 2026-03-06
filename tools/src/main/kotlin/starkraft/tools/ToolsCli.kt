@@ -23,6 +23,7 @@ internal fun runToolsCli(args: Array<String>): Int {
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
         args[0] == "map" && args[1] == "generate" -> runMapGenerate(args.drop(2))
+        args[0] == "data" && args[1] == "validate" -> runDataValidate(args.drop(2))
         else -> {
             printUsage()
             1
@@ -126,6 +127,26 @@ private fun runMapGenerate(args: List<String>): Int {
     return 0
 }
 
+private fun runDataValidate(args: List<String>): Int {
+    if (args.size != 2 || args[0] != "--dir") {
+        printUsage()
+        return 1
+    }
+    val dir = resolvePath(args[1])
+    val result = validateDataDir(dir)
+    if (result.ok) {
+        println("dataDir: $dir")
+        println("result: ok")
+        return 0
+    }
+    println("dataDir: $dir")
+    println("result: invalid")
+    for (error in result.errors) {
+        println("error: $error")
+    }
+    return 2
+}
+
 internal fun resolvePath(raw: String): Path {
     val path = Paths.get(raw)
     if (path.isAbsolute) return path.normalize()
@@ -166,6 +187,7 @@ private fun printUsage() {
           replay verify <path> [--strictHash]
           map validate <path>
           map generate <path> [--width N] [--height N] [--seed N]
+          data validate --dir <path>
         """.trimIndent()
     )
 }

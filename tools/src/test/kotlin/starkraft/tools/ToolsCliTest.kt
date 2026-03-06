@@ -76,4 +76,10 @@ class ToolsCliTest {
         assertEquals(0, code)
         assertTrue(mapPath.exists())
     }
+
+    @Test
+    fun `data validate command succeeds for sim data`() {
+        val code = runToolsCli(arrayOf("data", "validate", "--dir", "sim/src/main/resources/data"))
+        assertEquals(0, code)
+    }
 }
