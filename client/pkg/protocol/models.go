@@ -27,14 +27,16 @@ type HandshakeMessage struct {
 	Type          string  `json:"type"`
 	ClientName    string  `json:"clientName"`
 	RequestedRoom *string `json:"requestedRoom,omitempty"`
+	ResumeToken   *string `json:"resumeToken,omitempty"`
 }
 
 type HandshakeAckMessage struct {
-	Type            string `json:"type"`
-	RoomID          string `json:"roomId"`
-	ClientID        string `json:"clientId"`
-	ServerTickMs    int    `json:"serverTickMs"`
-	ProtocolVersion int    `json:"protocolVersion"`
+	Type            string  `json:"type"`
+	RoomID          string  `json:"roomId"`
+	ClientID        string  `json:"clientId"`
+	ServerTickMs    int     `json:"serverTickMs"`
+	ProtocolVersion int     `json:"protocolVersion"`
+	ResumeToken     *string `json:"resumeToken,omitempty"`
 }
 
 type WireCommand struct {

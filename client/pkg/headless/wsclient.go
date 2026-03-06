@@ -71,11 +71,12 @@ func (b *SnapshotBuffer) Interpolate(alpha float64) []InterpolatedUnit {
 }
 
 type Client struct {
-	conn      *websocket.Conn
-	simVersion string
-	name      string
-	room      *string
-	clientID  string
+	conn        *websocket.Conn
+	simVersion  string
+	name        string
+	room        *string
+	clientID    string
+	resumeToken *string
 
 	SnapshotCh chan protocol.SnapshotMessage
 	AckCh      chan protocol.CommandAckMessage
@@ -90,13 +91,13 @@ func Dial(url, simVersion, name string, room *string) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{
-		conn: conn,
+		conn:       conn,
 		simVersion: simVersion,
-		name: name,
-		room: room,
+		name:       name,
+		room:       room,
 		SnapshotCh: make(chan protocol.SnapshotMessage, 64),
-		AckCh: make(chan protocol.CommandAckMessage, 128),
-		ErrCh: make(chan error, 1),
+		AckCh:      make(chan protocol.CommandAckMessage, 128),
+		ErrCh:      make(chan error, 1),
 	}
 	if err := c.handshake(); err != nil {
 		_ = conn.Close()
@@ -124,8 +125,8 @@ func (c *Client) SendBatch(tick int, commands []protocol.WireCommand) error {
 	defer c.mu.Unlock()
 	return c.conn.WriteJSON(protocol.ProtocolEnvelope{
 		ProtocolVersion: protocol.CurrentProtocolVersion,
-		SimVersion: c.simVersion,
-		Message: raw,
+		SimVersion:      c.simVersion,
+		Message:         raw,
 	})
 }
 
@@ -155,6 +156,7 @@ func (c *Client) handshake() error {
 		return err
 	}
 	c.clientID = ack.ClientID
+	c.resumeToken = ack.ResumeToken
 	return nil
 }
 

@@ -34,6 +34,7 @@ type Config struct {
 	MaxPendingBatchesPerClient int
 	MaxOutboundQueue           int
 	EmptyRoomTTL               time.Duration
+	ResumeWindow               time.Duration
 }
 
 type Server struct {
@@ -49,16 +50,26 @@ type Server struct {
 	tickCursor     int
 	tickCount      int
 	maxPendingSeen int
+	resumeSessions map[string]resumeSession
+	nextResumeID   int
 }
 
 type clientConn struct {
-	id         string
-	name       string
-	roomID     string
-	simVersion string
-	buildHash  string
-	conn       *websocket.Conn
-	writeMu    sync.Mutex
+	id          string
+	name        string
+	roomID      string
+	simVersion  string
+	buildHash   string
+	resumeToken string
+	conn        *websocket.Conn
+	writeMu     sync.Mutex
+}
+
+type resumeSession struct {
+	clientID string
+	name     string
+	roomID   string
+	expires  time.Time
 }
 
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
@@ -97,12 +108,16 @@ func NewServer(cfg Config) *Server {
 	if cfg.EmptyRoomTTL <= 0 {
 		cfg.EmptyRoomTTL = 30 * time.Second
 	}
+	if cfg.ResumeWindow <= 0 {
+		cfg.ResumeWindow = 15 * time.Second
+	}
 	s := &Server{
 		cfg:            cfg,
 		upgrader:       websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
 		rooms:          make(map[string]*room),
 		roomMatchEnded: make(map[string]bool),
 		tickSamples:    make([]int64, 256),
+		resumeSessions: make(map[string]resumeSession),
 	}
 	if cfg.ReplayPath != "" {
 		replay, err := NewReplayWriter(cfg.ReplayPath)
@@ -194,12 +209,15 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	room.addClient(client)
 	defer func() {
 		room.removeClient(client)
+		s.rememberResumeSession(client)
 		_ = conn.Close()
 	}()
 
+	resumeToken := client.resumeToken
 	_ = client.sendEnvelope(protocol.HandshakeAckMessage{
 		Type: "handshakeAck", RoomID: room.id, ClientID: client.id,
 		ServerTickMs: int(s.cfg.TickInterval / time.Millisecond), ProtocolVersion: protocol.CurrentProtocolVersion,
+		ResumeToken: &resumeToken,
 	})
 	snap := room.snapshot()
 	_ = client.sendEnvelope(protocol.SnapshotMessage{
@@ -274,11 +292,26 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.nextID++
-	clientID := fmt.Sprintf("player-%d", s.nextID)
-	roomID := "default"
-	if hs.RequestedRoom != nil && *hs.RequestedRoom != "" {
-		roomID = *hs.RequestedRoom
+	s.pruneExpiredResumeSessionsLocked()
+	clientID := ""
+	roomID := ""
+	clientName := hs.ClientName
+	if hs.ResumeToken != nil && *hs.ResumeToken != "" {
+		session, ok := s.resumeSessions[*hs.ResumeToken]
+		if !ok || time.Now().After(session.expires) {
+			return nil, nil, fmt.Errorf("invalid resume token")
+		}
+		delete(s.resumeSessions, *hs.ResumeToken)
+		clientID = session.clientID
+		roomID = session.roomID
+		clientName = session.name
+	} else {
+		s.nextID++
+		clientID = fmt.Sprintf("player-%d", s.nextID)
+		roomID = "default"
+		if hs.RequestedRoom != nil && *hs.RequestedRoom != "" {
+			roomID = *hs.RequestedRoom
+		}
 	}
 	if len(roomID) > s.cfg.MaxRoomIDLength || !safeTokenPattern.MatchString(roomID) {
 		return nil, nil, fmt.Errorf("invalid room id")
@@ -289,9 +322,11 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		rm.maxPendingBatchesPerClient = s.cfg.MaxPendingBatchesPerClient
 		s.rooms[roomID] = rm
 	}
+	resumeToken := s.issueResumeTokenLocked(clientID, clientName, roomID)
 	return &clientConn{
-		id: clientID, name: hs.ClientName, roomID: roomID, conn: conn,
+		id: clientID, name: clientName, roomID: roomID, conn: conn,
 		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
+		resumeToken: resumeToken,
 	}, rm, nil
 }
 
@@ -403,7 +438,43 @@ func (s *Server) stepRooms() {
 			s.mu.Lock()
 			delete(s.rooms, rm.id)
 			delete(s.roomMatchEnded, rm.id)
+			s.pruneExpiredResumeSessionsLocked()
 			s.mu.Unlock()
+		}
+	}
+}
+
+func (s *Server) issueResumeTokenLocked(clientID, name, roomID string) string {
+	s.nextResumeID++
+	token := fmt.Sprintf("resume-%d", s.nextResumeID)
+	s.resumeSessions[token] = resumeSession{
+		clientID: clientID,
+		name:     name,
+		roomID:   roomID,
+		expires:  time.Now().Add(s.cfg.ResumeWindow),
+	}
+	return token
+}
+
+func (s *Server) rememberResumeSession(client *clientConn) {
+	if client == nil || client.resumeToken == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	session, ok := s.resumeSessions[client.resumeToken]
+	if !ok {
+		return
+	}
+	session.expires = time.Now().Add(s.cfg.ResumeWindow)
+	s.resumeSessions[client.resumeToken] = session
+}
+
+func (s *Server) pruneExpiredResumeSessionsLocked() {
+	now := time.Now()
+	for token, session := range s.resumeSessions {
+		if now.After(session.expires) {
+			delete(s.resumeSessions, token)
 		}
 	}
 }

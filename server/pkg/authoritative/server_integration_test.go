@@ -572,6 +572,48 @@ func TestMalformedMoveCommandIsRejected(t *testing.T) {
 	}
 }
 
+func TestHandshakeResumeTokenRestoresIdentity(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+		ResumeWindow: 2 * time.Second,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	roomID := "resume-room"
+	conn1, ack1 := dialHandshakeWithAck(t, wsURL, protocol.HandshakeMessage{
+		Type:          "handshake",
+		ClientName:    "bot-a",
+		RequestedRoom: &roomID,
+	})
+	if ack1.ResumeToken == nil || *ack1.ResumeToken == "" {
+		t.Fatalf("expected resume token in handshake ack")
+	}
+	clientID := ack1.ClientID
+	firstToken := *ack1.ResumeToken
+	_ = conn1.Close()
+	time.Sleep(10 * time.Millisecond)
+
+	conn2, ack2 := dialHandshakeWithAck(t, wsURL, protocol.HandshakeMessage{
+		Type:        "handshake",
+		ClientName:  "ignored-on-resume",
+		ResumeToken: &firstToken,
+	})
+	defer conn2.Close()
+	if ack2.ClientID != clientID {
+		t.Fatalf("expected resumed client id %s, got %s", clientID, ack2.ClientID)
+	}
+	if ack2.RoomID != roomID {
+		t.Fatalf("expected resumed room %s, got %s", roomID, ack2.RoomID)
+	}
+	if ack2.ResumeToken == nil || *ack2.ResumeToken == "" || *ack2.ResumeToken == firstToken {
+		t.Fatalf("expected rotated resume token, got %v", ack2.ResumeToken)
+	}
+}
+
 func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope {
 	t.Helper()
 	var env protocol.ProtocolEnvelope
@@ -595,6 +637,30 @@ func dialAndHandshake(t *testing.T, wsURL, name, room string) *websocket.Conn {
 	_ = readUntilMessageType(t, conn, "handshakeAck")
 	_ = readUntilMessageType(t, conn, "snapshot")
 	return conn
+}
+
+func dialHandshakeWithAck(t *testing.T, wsURL string, hs protocol.HandshakeMessage) (*websocket.Conn, protocol.HandshakeAckMessage) {
+	t.Helper()
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	hsRaw, _ := json.Marshal(hs)
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      "test",
+		Message:         hsRaw,
+	}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	ackEnv := readUntilMessageType(t, conn, "handshakeAck")
+	var ack protocol.HandshakeAckMessage
+	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
+		t.Fatalf("decode handshake ack: %v", err)
+	}
+	_ = readUntilMessageType(t, conn, "snapshot")
+	return conn, ack
 }
 
 func readUntilMessageType(t *testing.T, conn *websocket.Conn, want string) protocol.ProtocolEnvelope {
