@@ -5,8 +5,10 @@ import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayMetadata
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
@@ -405,6 +407,9 @@ private fun runMapValidate(args: List<String>): Int {
                     put("result", "invalid")
                     put("errors", result.errors.size)
                     put("firstError", result.errors.firstOrNull() ?: "unknown error")
+                    putJsonArray("errorsList") {
+                        for (error in result.errors) add(JsonPrimitive(error))
+                    }
                 }
         )
     } else {
@@ -552,6 +557,9 @@ private fun runDataValidate(args: List<String>): Int {
                     put("result", "invalid")
                     put("errors", result.errors.size)
                     put("firstError", result.errors.firstOrNull() ?: "unknown error")
+                    putJsonArray("errorsList") {
+                        for (error in result.errors) add(JsonPrimitive(error))
+                    }
                 }
         )
     } else {

@@ -321,6 +321,7 @@ class ToolsCliTest {
         assertEquals(2, code)
         assertEquals("invalid", json["result"]?.toString()?.trim('"'))
         assertTrue(json.containsKey("firstError"))
+        assertTrue(json.containsKey("errorsList"))
     }
 
     @Test
@@ -335,6 +336,7 @@ class ToolsCliTest {
         assertEquals(2, code)
         assertEquals("invalid", json["result"]?.toString()?.trim('"'))
         assertTrue(json.containsKey("firstError"))
+        assertTrue(json.containsKey("errorsList"))
     }
 
     private fun runAndCaptureJson(vararg args: String): JsonObject {
