@@ -45,6 +45,13 @@ Replay output (optional):
 STARKRAFT_REPLAY_PATH=/tmp/starkraft-room.replay.jsonl go run ./cmd/server
 ```
 
+Replay verifier:
+
+```bash
+cd server
+go run ./cmd/replaycheck --replay /tmp/starkraft-room.replay.jsonl
+```
+
 ## Run tests
 
 ```bash
