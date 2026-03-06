@@ -637,6 +637,50 @@ func TestMalformedMoveCommandIsRejected(t *testing.T) {
 	}
 }
 
+func TestMalformedSurrenderCommandIsRejected(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	req := "bad-surrender"
+	x := 10.0
+	batchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch",
+		Tick: 1,
+		Commands: []protocol.WireCommand{
+			{CommandType: "surrender", RequestID: &req, X: &x},
+		},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
+		t.Fatalf("write batch: %v", err)
+	}
+
+	ackEnv := readEnvelope(t, conn)
+	var ack protocol.CommandAckMessage
+	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
+		t.Fatalf("decode ack: %v", err)
+	}
+	if ack.Accepted || ack.Reason != "invalidPayload" {
+		t.Fatalf("expected invalidPayload rejection, got %+v", ack)
+	}
+}
+
 func TestHandshakeResumeTokenRestoresIdentity(t *testing.T) {
 	srv := NewServer(Config{
 		SimVersion:   "test",

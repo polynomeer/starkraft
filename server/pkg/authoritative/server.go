@@ -452,6 +452,10 @@ func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) bool {
 			}
 		case "queue":
 			// no-op: optional UnitType only
+		case "surrender":
+			if len(cmd.UnitIDs) > 0 || cmd.X != nil || cmd.Y != nil || cmd.TargetUnitID != nil || cmd.UnitType != nil {
+				return false
+			}
 		}
 	}
 	return true
