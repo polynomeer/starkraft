@@ -51,4 +51,34 @@ class VictorySystemTest {
         assertEquals(null, world.winnerFaction)
         assertEquals(MatchEndReason.DRAW, world.matchEndReason)
     }
+
+    @Test
+    fun `declares draw when combat factions are eliminated simultaneously`() {
+        val world = World()
+        val victory = VictorySystem(world)
+        val a = world.spawn(Transform(2f, 2f), UnitTag(1, "Marine"), Health(45, 45), null)
+        val b = world.spawn(Transform(10f, 10f), UnitTag(2, "Zergling"), Health(35, 35), null)
+        world.healths[a] = Health(0, 45)
+        world.healths[b] = Health(0, 35)
+
+        victory.tick()
+
+        assertTrue(world.matchEnded)
+        assertEquals(null, world.winnerFaction)
+        assertEquals(MatchEndReason.DRAW, world.matchEndReason)
+    }
+
+    @Test
+    fun `declares timeout on invalid unit transform`() {
+        val world = World()
+        val victory = VictorySystem(world)
+        world.spawn(Transform(Float.NaN, 2f), UnitTag(1, "Marine"), Health(45, 45), null)
+        world.spawn(Transform(10f, 10f), UnitTag(2, "Zergling"), Health(35, 35), null)
+
+        victory.tick()
+
+        assertTrue(world.matchEnded)
+        assertEquals(null, world.winnerFaction)
+        assertEquals(MatchEndReason.TIMEOUT, world.matchEndReason)
+    }
 }
