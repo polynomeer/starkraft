@@ -18,40 +18,43 @@ import (
 )
 
 type Config struct {
-	Addr         string
-	SimVersion   string
-	BuildHash    string
-	TickInterval time.Duration
-	ReplayPath   string
-	KeyframeEvery int
-	MaxReadBytes int64
-	MaxBatchCommands int
-	MaxRequestIDLength int
-	MaxUnitIDsPerCommand int
-	MaxClientNameLength int
-	MaxRoomIDLength int
+	Addr                       string
+	SimVersion                 string
+	BuildHash                  string
+	TickInterval               time.Duration
+	ReplayPath                 string
+	KeyframeEvery              int
+	MaxReadBytes               int64
+	MaxBatchCommands           int
+	MaxRequestIDLength         int
+	MaxUnitIDsPerCommand       int
+	MaxClientNameLength        int
+	MaxRoomIDLength            int
 	MaxPendingBatchesPerClient int
+	MaxOutboundQueue           int
 }
 
 type Server struct {
-	cfg      Config
-	upgrader websocket.Upgrader
-	rooms    map[string]*room
+	cfg            Config
+	upgrader       websocket.Upgrader
+	rooms          map[string]*room
 	roomMatchEnded map[string]bool
-	nextID   int
-	mu       sync.Mutex
-	httpSrv  *http.Server
-	replay   *ReplayWriter
+	nextID         int
+	mu             sync.Mutex
+	httpSrv        *http.Server
+	replay         *ReplayWriter
 }
 
 type clientConn struct {
-	id       string
-	name     string
-	roomID   string
+	id         string
+	name       string
+	roomID     string
 	simVersion string
-	buildHash string
-	conn     *websocket.Conn
-	writeMu  sync.Mutex
+	buildHash  string
+	conn       *websocket.Conn
+	writeMu    sync.Mutex
+	writeQueue chan protocol.ProtocolEnvelope
+	closeOnce  sync.Once
 }
 
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
@@ -84,10 +87,13 @@ func NewServer(cfg Config) *Server {
 	if cfg.MaxPendingBatchesPerClient <= 0 {
 		cfg.MaxPendingBatchesPerClient = 8
 	}
+	if cfg.MaxOutboundQueue <= 0 {
+		cfg.MaxOutboundQueue = 128
+	}
 	s := &Server{
-		cfg: cfg,
-		upgrader: websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
-		rooms: make(map[string]*room),
+		cfg:            cfg,
+		upgrader:       websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
+		rooms:          make(map[string]*room),
 		roomMatchEnded: make(map[string]bool),
 	}
 	if cfg.ReplayPath != "" {
@@ -180,8 +186,10 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	room.addClient(client)
 	defer func() {
 		room.removeClient(client)
+		client.close()
 		_ = conn.Close()
 	}()
+	client.startWriter()
 
 	_ = client.sendEnvelope(protocol.HandshakeAckMessage{
 		Type: "handshakeAck", RoomID: room.id, ClientID: client.id,
@@ -278,6 +286,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	return &clientConn{
 		id: clientID, name: hs.ClientName, roomID: roomID, conn: conn,
 		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
+		writeQueue: make(chan protocol.ProtocolEnvelope, s.cfg.MaxOutboundQueue),
 	}, rm, nil
 }
 
@@ -373,7 +382,7 @@ func (s *Server) stepRooms() {
 	}
 }
 
-func (c *clientConn) sendEnvelope(msg any) error {
+func (c *clientConn) sendEnvelope(msg any) (err error) {
 	raw, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -386,7 +395,37 @@ func (c *clientConn) sendEnvelope(msg any) error {
 	if c.buildHash != "" {
 		env.BuildHash = &c.buildHash
 	}
-	c.writeMu.Lock()
-	defer c.writeMu.Unlock()
-	return c.conn.WriteJSON(env)
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("connection closing")
+		}
+	}()
+	select {
+	case c.writeQueue <- env:
+		return nil
+	default:
+		return fmt.Errorf("outbound queue full")
+	}
+}
+
+func (c *clientConn) startWriter() {
+	go func() {
+		for env := range c.writeQueue {
+			c.writeMu.Lock()
+			_ = c.conn.SetWriteDeadline(time.Now().Add(1500 * time.Millisecond))
+			err := c.conn.WriteJSON(env)
+			_ = c.conn.SetWriteDeadline(time.Time{})
+			c.writeMu.Unlock()
+			if err != nil {
+				_ = c.conn.Close()
+				return
+			}
+		}
+	}()
+}
+
+func (c *clientConn) close() {
+	c.closeOnce.Do(func() {
+		close(c.writeQueue)
+	})
 }

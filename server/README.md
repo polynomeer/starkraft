@@ -30,6 +30,7 @@ Protocol package scaffold is implemented.
   - command schema checks for required fields (e.g. move needs `unitIds+x+y`)
   - per-command `unitIds` cap and request-id length cap
   - per-client pending command-batch queue cap
+  - bounded outbound websocket queue per client (prevents blocking tick loop)
   - handshake token sanitization for `clientName` and `requestedRoom`
 
 ## Run
