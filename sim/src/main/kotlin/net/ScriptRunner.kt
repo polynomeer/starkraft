@@ -271,6 +271,10 @@ object ScriptRunner {
                     }
                     out.add(Command.Rally(tick, buildingId, parts[2].toFloat(), parts[3].toFloat()))
                 }
+                "surrender" -> {
+                    require(parts.size == 2) { "surrender <faction>" }
+                    out.add(Command.SurrenderFaction(tick, parts[1].toInt()))
+                }
                 else -> error("Unknown command")
             }
             } catch (e: Exception) {

@@ -2792,6 +2792,9 @@ private fun printScriptCommands(commandsByTick: Array<ArrayList<Command>>) {
                 is Command.Rally -> {
                     println("tick=$tick rally building=${c.buildingId} x=${c.x} y=${c.y}")
                 }
+                is Command.SurrenderFaction -> {
+                    println("tick=$tick surrenderFaction faction=${c.faction}")
+                }
             }
         }
     }
@@ -3271,6 +3274,7 @@ private fun validateCommandUnitIds(commandsByTick: Array<ArrayList<Command>>, wo
                         error("Unknown building id '${c.buildingId}' in rally at tick $tick")
                     }
                 }
+                is Command.SurrenderFaction -> Unit
             }
         }
     }
@@ -3462,6 +3466,7 @@ internal fun validateLabelUsage(commandsByTick: Array<ArrayList<Command>>) {
                         error("Unknown label id '${c.buildingId}' in rally at tick $tick (spawn/build first)")
                     }
                 }
+                is Command.SurrenderFaction -> Unit
             }
         }
     }
@@ -3780,6 +3785,7 @@ internal fun buildCommandStats(
                 is Command.HarvestFaction -> Unit
                 is Command.HarvestType -> Unit
                 is Command.HarvestArchetype -> Unit
+                is Command.SurrenderFaction -> Unit
             }
         }
         if (count > 0) {
@@ -3923,6 +3929,7 @@ internal fun buildCommandStats(
                 is Command.HarvestFaction -> Unit
                 is Command.HarvestType -> Unit
                 is Command.HarvestArchetype -> Unit
+                is Command.SurrenderFaction -> Unit
             }
         }
     }
@@ -5306,6 +5313,29 @@ fun issue(
             emitRallyRecord(cmd.tick, buildingId, cmd.x, cmd.y, snapshotOutPath, streamSequence)
             emitCommandAck(true, entityId = buildingId)
         }
+        is Command.SurrenderFaction -> {
+            if (world.matchEnded) {
+                emitCommandAck(false, reason = "matchEnded")
+                return
+            }
+            val winnerFaction = applyFactionSurrender(world, cmd.faction)
+            if (winnerFaction == Int.MIN_VALUE) {
+                emitCommandFailureRecord(
+                    tick = cmd.tick,
+                    commandType = "surrenderFaction",
+                    reason = "invalidFaction",
+                    snapshotOutPath = snapshotOutPath,
+                    streamSequence = streamSequence,
+                    faction = cmd.faction
+                )
+                emitCommandAck(false, reason = "invalidFaction")
+                return
+            }
+            world.matchEnded = true
+            world.winnerFaction = winnerFaction.takeIf { it > 0 }
+            world.matchEndReason = MatchEndReason.SURRENDER
+            emitCommandAck(true)
+        }
     }
 }
 
@@ -5348,7 +5378,22 @@ private fun commandTypeName(cmd: Command): String =
         is Command.Research -> "research"
         is Command.CancelResearch -> "cancelResearch"
         is Command.Rally -> "rally"
+        is Command.SurrenderFaction -> "surrenderFaction"
     }
+
+private fun applyFactionSurrender(world: World, surrenderingFaction: Int): Int {
+    val aliveCombatFactions = LinkedHashSet<Int>()
+    for ((id, tag) in world.tags) {
+        val hp = world.healths[id]?.hp ?: 0
+        if (hp <= 0) continue
+        if (tag.faction <= 0) continue
+        if (tag.typeId == "MineralField" || tag.typeId == "GasGeyser") continue
+        aliveCombatFactions.add(tag.faction)
+    }
+    if (!aliveCombatFactions.contains(surrenderingFaction)) return Int.MIN_VALUE
+    aliveCombatFactions.remove(surrenderingFaction)
+    return if (aliveCombatFactions.size == 1) aliveCombatFactions.first() else -1
+}
 
 private fun resolveLabelId(id: Int, labelIdMap: Map<Int, Int>): Int {
     if (id >= 0) return id

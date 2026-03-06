@@ -1426,6 +1426,14 @@ fun renderCommandStreamRecordJson(
                     x = cmd.x,
                     y = cmd.y
                 )
+            is Command.SurrenderFaction ->
+                CommandStreamRecord(
+                    sequence = sequence,
+                    tick = cmd.tick,
+                    commandType = "surrenderFaction",
+                    requestId = requestId,
+                    faction = cmd.faction
+                )
         }
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }

@@ -225,6 +225,7 @@ private data class ReplayEvent(
                 )
             "cancelResearch" -> Command.CancelResearch(tick = tick, buildingId = target ?: 0)
             "rally" -> Command.Rally(tick = tick, buildingId = target ?: 0, x = x ?: 0f, y = y ?: 0f)
+            "surrenderFaction" -> Command.SurrenderFaction(tick = tick, faction = faction ?: 0)
             else -> error("Unknown replay event type: $type")
         }
     }
@@ -347,6 +348,12 @@ private data class ReplayEvent(
                         target = cmd.buildingId,
                         x = cmd.x,
                         y = cmd.y
+                    )
+                is Command.SurrenderFaction ->
+                    ReplayEvent(
+                        type = "surrenderFaction",
+                        tick = cmd.tick,
+                        faction = cmd.faction
                     )
             }
         }

@@ -102,4 +102,8 @@ sealed interface Command {
         val x: Float,
         val y: Float
     ) : Command
+    data class SurrenderFaction(
+        override val tick: Int,
+        val faction: Int
+    ) : Command
 }

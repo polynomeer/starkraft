@@ -50,7 +50,8 @@ class ReplayIOTest {
             Command.CancelBuild(31, -2),
             Command.Research(31, -2, "AdvancedTraining", 60, 75, 0),
             Command.CancelResearch(31, -2),
-            Command.Rally(32, -2, 20f, 21f)
+            Command.Rally(32, -2, 20f, 21f),
+            Command.SurrenderFaction(33, 1)
         )
         ReplayIO.save(
             tmp,
@@ -428,6 +429,11 @@ private fun assertCommandsEqual(a: Command, b: Command) {
             assertEquals(a.buildingId, b.buildingId)
             assertEquals(a.x, b.x)
             assertEquals(a.y, b.y)
+        }
+        is Command.SurrenderFaction -> {
+            require(b is Command.SurrenderFaction)
+            assertEquals(a.tick, b.tick)
+            assertEquals(a.faction, b.faction)
         }
     }
 }

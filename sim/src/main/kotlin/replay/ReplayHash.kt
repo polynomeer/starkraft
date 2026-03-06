@@ -280,6 +280,11 @@ class ReplayHashRecorder : Recorder {
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.x))
                 mixInt(java.lang.Float.floatToRawIntBits(cmd.y))
             }
+            is Command.SurrenderFaction -> {
+                mixInt(41)
+                mixInt(cmd.tick)
+                mixInt(cmd.faction)
+            }
         }
     }
 

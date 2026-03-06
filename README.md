@@ -187,6 +187,7 @@ Script syntax:
 - `cancelTrain <buildingId|@label>` cancel the last queued production job and refund its cost
 - `cancelResearch <buildingId|@label>` cancel the last queued research job and refund its cost
 - `rally <buildingId|@label> <x> <y>` override a producer building rally point for future trained units
+- `surrender <faction>` end match immediately with `surrender` reason and remaining faction winner (or draw if ambiguous)
 - If optional build/train values are omitted or `0`, the sim falls back to typed data defs when available
 - Unit and building defs can declare `requiredBuildingTypes`, and both `build` and `train` now fail deterministically with `missingTech` until the faction has those prerequisite buildings
 - Unit, building, and research defs can also declare `requiredResearchIds`, which unlock only after that faction finishes the corresponding research queue
