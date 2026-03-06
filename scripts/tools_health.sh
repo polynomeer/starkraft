@@ -15,6 +15,9 @@ MAP_VALIDATE_JSON="$TMP_DIR/map-validate.json"
 DATA_VALIDATE_JSON="$TMP_DIR/data-validate.json"
 NDJSON_VERIFY_JSON="$TMP_DIR/ndjson-verify.json"
 NDJSON_STATS_JSON="$TMP_DIR/ndjson-stats.json"
+MAP_INVALID_JSON="$TMP_DIR/map-invalid.json"
+DATA_INVALID_JSON="$TMP_DIR/data-invalid.json"
+EMPTY_DATA_DIR="$TMP_DIR/empty-data"
 
 mkdir -p "$TMP_DIR"
 export TMP_DIR
@@ -25,6 +28,7 @@ cat > "$NDJSON_REPLAY" <<'EOF'
 {"recordType":"header","protocolVersion":1}
 {"recordType":"keyframe","tick":1,"worldHash":1469598103934665634,"units":[]}
 EOF
+mkdir -p "$EMPTY_DATA_DIR"
 
 (
   cd "$ROOT_DIR"
@@ -38,6 +42,9 @@ EOF
   ./gradlew --quiet :tools:run --args="data validate --dir sim/src/main/resources/data --json" > "$DATA_VALIDATE_JSON"
   ./gradlew --quiet :tools:run --args="replay verify-ndjson $NDJSON_REPLAY --json" > "$NDJSON_VERIFY_JSON"
   ./gradlew --quiet :tools:run --args="replay stats $NDJSON_REPLAY --json" > "$NDJSON_STATS_JSON"
+
+  ./gradlew --quiet :tools:run --args="map validate $TMP_DIR/missing-map.json --json" > "$MAP_INVALID_JSON" 2>/dev/null || true
+  ./gradlew --quiet :tools:run --args="data validate --dir $EMPTY_DATA_DIR --json" > "$DATA_INVALID_JSON" 2>/dev/null || true
 )
 
 python3 - <<'PY'
@@ -54,6 +61,8 @@ map_val = json.loads((tmp / "map-validate.json").read_text())
 data_val = json.loads((tmp / "data-validate.json").read_text())
 ndjson_verify = json.loads((tmp / "ndjson-verify.json").read_text())
 ndjson_stats = json.loads((tmp / "ndjson-stats.json").read_text())
+map_invalid = json.loads((tmp / "map-invalid.json").read_text())
+data_invalid = json.loads((tmp / "data-invalid.json").read_text())
 
 assert meta.get("schema") == 1, meta
 assert stats.get("result") == "ok", stats
@@ -65,6 +74,12 @@ assert data_val.get("result") == "ok", data_val
 assert ndjson_verify.get("result") == "ok", ndjson_verify
 assert ndjson_stats.get("result") == "ok", ndjson_stats
 assert ndjson_stats.get("keyframeHashMismatches") == 0, ndjson_stats
+assert map_invalid.get("result") == "invalid", map_invalid
+assert "firstError" in map_invalid, map_invalid
+assert "errorsList" in map_invalid and len(map_invalid["errorsList"]) > 0, map_invalid
+assert data_invalid.get("result") == "invalid", data_invalid
+assert "firstError" in data_invalid, data_invalid
+assert "errorsList" in data_invalid and len(data_invalid["errorsList"]) > 0, data_invalid
 print("ok")
 PY
 
