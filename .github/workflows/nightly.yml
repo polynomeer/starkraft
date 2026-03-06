@@ -62,6 +62,15 @@ jobs:
           STARKRAFT_TOOLS_HEALTH_TMP_DIR: /tmp/starkraft-tools-health
         run: ./gradlew --no-daemon :tools:smoke
 
+      - name: Print nightly tools health summary
+        if: always()
+        run: |
+          if [ -f /tmp/starkraft-tools-health/summary.json ]; then
+            cat /tmp/starkraft-tools-health/summary.json
+          else
+            echo '{"result":"missing","summary":"not found"}'
+          fi
+
       - name: Upload nightly tools health artifacts
         if: always()
         uses: actions/upload-artifact@v4
