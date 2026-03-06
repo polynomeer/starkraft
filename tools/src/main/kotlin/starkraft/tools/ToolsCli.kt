@@ -3,6 +3,10 @@ package starkraft.tools
 import starkraft.sim.replay.ReplayIO
 import starkraft.sim.replay.ReplayHashRecorder
 import starkraft.sim.replay.ReplayMetadata
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
@@ -18,7 +22,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     }
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
-        args[0] == "replay" && args[1] == "stats" -> runReplayStats(args[2])
+        args[0] == "replay" && args[1] == "stats" -> runReplayStats(args.drop(2))
         args[0] == "replay" && args[1] == "verify-ndjson" -> runReplayVerifyNdjson(args[2])
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "replay" && args[1] == "fast-forward" -> runReplayFastForward(args.drop(2))
@@ -39,38 +43,84 @@ private fun runReplayMeta(pathArg: String): Int {
     return 0
 }
 
-private fun runReplayStats(pathArg: String): Int {
-    val path = resolvePath(pathArg)
+private fun runReplayStats(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = args[0]
+    val json = args.drop(1).any { it == "--json" }
+    if (args.drop(1).any { it != "--json" }) {
+        printUsage()
+        return 1
+    }
+    val resolvedPath = resolvePath(path)
+    return runReplayStatsResolved(resolvedPath, json)
+}
+
+private fun runReplayStatsResolved(path: Path, json: Boolean): Int {
     return try {
         val meta = ReplayIO.inspect(path)
-        println("replay: $path")
-        println("format: sim-json")
-        println("schema: ${meta.schema}")
-        println("events: ${meta.eventCount}")
-        println("replayHash: ${meta.replayHash ?: "missing"}")
+        printStats(
+            json = json,
+            fields =
+                buildJsonObject {
+                    put("replay", path.toString())
+                    put("format", "sim-json")
+                    put("schema", meta.schema)
+                    put("events", meta.eventCount)
+                    put("replayHash", meta.replayHash?.toString() ?: "missing")
+                }
+        )
         0
     } catch (_: Exception) {
         try {
             val summary = summarizeNdjsonReplay(path)
             val verify = verifyNdjsonKeyframeHashes(path)
-            println("replay: $path")
-            println("format: server-ndjson")
-            println("records: ${summary.records}")
-            println("header: ${summary.headerCount}")
-            println("command: ${summary.commandCount}")
-            println("keyframe: ${summary.keyframeCount}")
-            println("matchEnd: ${summary.matchEndCount}")
-            println("keyframeHashMismatches: ${verify.mismatches}")
-            if (verify.firstMismatchTick != null) {
-                println("firstMismatchTick: ${verify.firstMismatchTick}")
-            }
+            val fields =
+                buildJsonObject {
+                    put("replay", path.toString())
+                    put("format", "server-ndjson")
+                    put("records", summary.records)
+                    put("header", summary.headerCount)
+                    put("command", summary.commandCount)
+                    put("keyframe", summary.keyframeCount)
+                    put("matchEnd", summary.matchEndCount)
+                    put("keyframeHashMismatches", verify.mismatches)
+                    if (verify.firstMismatchTick != null) {
+                        put("firstMismatchTick", verify.firstMismatchTick)
+                    }
+                }
+            printStats(json = json, fields = fields)
             if (verify.mismatches == 0) 0 else 2
         } catch (e: Exception) {
-            println("replay: $path")
-            println("result: invalid")
-            println("error: ${e.message}")
+            if (json) {
+                printStats(
+                    json = true,
+                    fields =
+                        buildJsonObject {
+                            put("replay", path.toString())
+                            put("result", "invalid")
+                            put("error", e.message ?: "unknown error")
+                        }
+                )
+            } else {
+                println("replay: $path")
+                println("result: invalid")
+                println("error: ${e.message}")
+            }
             2
         }
+    }
+}
+
+private fun printStats(json: Boolean, fields: JsonObject) {
+    if (json) {
+        println(Json.encodeToString(JsonObject.serializer(), fields))
+        return
+    }
+    for ((key, value) in fields) {
+        println("$key: ${value.toString().trim('\"')}")
     }
 }
 
@@ -297,7 +347,7 @@ private fun printUsage() {
         """
         Usage:
           replay meta <path>
-          replay stats <path>
+          replay stats <path> [--json]
           replay verify-ndjson <path>
           replay verify <path> [--strictHash]
           replay fast-forward <path> [--ticks N]

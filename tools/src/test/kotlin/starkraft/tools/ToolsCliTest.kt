@@ -63,6 +63,17 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay stats command accepts json output flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-stats-json", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 0, units = intArrayOf(1), x = 3f, y = 4f))
+        )
+        val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString, "--json"))
+        assertEquals(0, code)
+    }
+
+    @Test
     fun `replay stats command succeeds for server ndjson replay`() {
         val replayPath = Files.createTempFile("starkraft-tools-stats-ndjson", ".jsonl")
         Files.writeString(
@@ -90,6 +101,17 @@ class ToolsCliTest {
         )
         val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString))
         assertEquals(2, code)
+    }
+
+    @Test
+    fun `replay stats command rejects unknown flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-stats-bad-flag", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 0, units = intArrayOf(1), x = 3f, y = 4f))
+        )
+        val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString, "--bad"))
+        assertEquals(1, code)
     }
 
     @Test
