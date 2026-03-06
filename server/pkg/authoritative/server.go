@@ -72,6 +72,31 @@ type resumeSession struct {
 	expires  time.Time
 }
 
+type healthResponse struct {
+	Status          string `json:"status"`
+	ProtocolVersion int    `json:"protocolVersion"`
+	SimVersion      string `json:"simVersion"`
+	Rooms           int    `json:"rooms"`
+	ResumeSessions  int    `json:"resumeSessions"`
+}
+
+type adminStatsResponse struct {
+	ProtocolVersion int                 `json:"protocolVersion"`
+	SimVersion      string              `json:"simVersion"`
+	BuildHash       string              `json:"buildHash,omitempty"`
+	TickIntervalMs  int64               `json:"tickIntervalMs"`
+	Rooms           []roomRuntimeStats  `json:"rooms"`
+	ResumeSessions  []resumeSessionStat `json:"resumeSessions"`
+}
+
+type resumeSessionStat struct {
+	Token       string `json:"token"`
+	ClientID    string `json:"clientId"`
+	ClientName  string `json:"clientName"`
+	RoomID      string `json:"roomId"`
+	ExpiresInMs int64  `json:"expiresInMs"`
+}
+
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
 
 func NewServer(cfg Config) *Server {
@@ -182,6 +207,8 @@ func (s *Server) RunOnListener(ctx context.Context, ln net.Listener) error {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWS)
+	mux.HandleFunc("/healthz", s.handleHealth)
+	mux.HandleFunc("/admin/stats", s.handleAdminStats)
 	return mux
 }
 
@@ -265,6 +292,67 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pruneExpiredResumeSessionsLocked()
+	resp := healthResponse{
+		Status:          "ok",
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      s.cfg.SimVersion,
+		Rooms:           len(s.rooms),
+		ResumeSessions:  len(s.resumeSessions),
+	}
+	writeJSON(w, resp)
+}
+
+func (s *Server) handleAdminStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	now := time.Now()
+	s.mu.Lock()
+	s.pruneExpiredResumeSessionsLocked()
+	rooms := make([]*room, 0, len(s.rooms))
+	for _, rm := range s.rooms {
+		rooms = append(rooms, rm)
+	}
+	resumeStats := make([]resumeSessionStat, 0, len(s.resumeSessions))
+	for token, session := range s.resumeSessions {
+		resumeStats = append(resumeStats, resumeSessionStat{
+			Token:       token,
+			ClientID:    session.clientID,
+			ClientName:  session.name,
+			RoomID:      session.roomID,
+			ExpiresInMs: session.expires.Sub(now).Milliseconds(),
+		})
+	}
+	cfg := s.cfg
+	s.mu.Unlock()
+
+	sort.Slice(resumeStats, func(i, j int) bool { return resumeStats[i].Token < resumeStats[j].Token })
+	roomStats := make([]roomRuntimeStats, 0, len(rooms))
+	for _, rm := range rooms {
+		roomStats = append(roomStats, rm.runtimeStats(now))
+	}
+	sort.Slice(roomStats, func(i, j int) bool { return roomStats[i].ID < roomStats[j].ID })
+
+	resp := adminStatsResponse{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      cfg.SimVersion,
+		BuildHash:       cfg.BuildHash,
+		TickIntervalMs:  cfg.TickInterval.Milliseconds(),
+		Rooms:           roomStats,
+		ResumeSessions:  resumeStats,
+	}
+	writeJSON(w, resp)
 }
 
 func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
@@ -549,4 +637,10 @@ func percentileNs(sorted []int64, p int) int64 {
 	}
 	index := (p * (len(sorted) - 1)) / 100
 	return sorted[index]
+}
+
+func writeJSON(w http.ResponseWriter, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	_ = encoder.Encode(payload)
 }

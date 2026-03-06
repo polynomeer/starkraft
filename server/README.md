@@ -16,6 +16,8 @@ Protocol package scaffold is implemented.
 ## Current implementation
 
 - websocket endpoint: `GET /ws`
+- health endpoint: `GET /healthz`
+- admin stats endpoint: `GET /admin/stats`
 - required first message: protocol envelope with `message.type=handshake`
 - room create/join by `requestedRoom` (default room if omitted)
 - deterministic room snapshot broadcast support
@@ -52,6 +54,13 @@ Runtime tuning env vars:
 - `STARKRAFT_EMPTY_ROOM_TTL` (duration, default `30s`)
 - `STARKRAFT_RESUME_WINDOW` (duration, default `15s`)
 - `STARKRAFT_KEYFRAME_EVERY` (int ticks, default `50`)
+
+Operational endpoints:
+- `GET /healthz`:
+  - lightweight readiness/status payload (`status`, protocol, sim version, room/session counts)
+- `GET /admin/stats`:
+  - room-level runtime snapshot (`tick`, world hash, unit/client/pending counts, match state)
+  - resumable session snapshot (token, room/client linkage, remaining expiry)
 
 Replay verifier:
 

@@ -39,6 +39,18 @@ type room struct {
 	emptySince                  time.Time
 }
 
+type roomRuntimeStats struct {
+	ID               string `json:"id"`
+	Tick             int    `json:"tick"`
+	WorldHash        int64  `json:"worldHash"`
+	Units            int    `json:"units"`
+	ConnectedClients int    `json:"connectedClients"`
+	PendingBatches   int    `json:"pendingBatches"`
+	MatchEnded       bool   `json:"matchEnded"`
+	WinnerID         string `json:"winnerId,omitempty"`
+	EmptyForMs       int64  `json:"emptyForMs,omitempty"`
+}
+
 type queuedBatch struct {
 	clientID string
 	batch    protocol.CommandBatchMessage
@@ -119,6 +131,25 @@ func (r *room) shouldEvict(now time.Time, ttl time.Duration) bool {
 		return false
 	}
 	return now.Sub(r.emptySince) >= ttl
+}
+
+func (r *room) runtimeStats(now time.Time) roomRuntimeStats {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	stats := roomRuntimeStats{
+		ID:               r.id,
+		Tick:             r.tick,
+		WorldHash:        r.worldHash,
+		Units:            len(r.units),
+		ConnectedClients: len(r.clients),
+		PendingBatches:   len(r.pendingBatches),
+		MatchEnded:       r.matchEnded,
+		WinnerID:         r.winnerID,
+	}
+	if len(r.clients) == 0 && !r.emptySince.IsZero() {
+		stats.EmptyForMs = now.Sub(r.emptySince).Milliseconds()
+	}
+	return stats
 }
 
 func (r *room) step() tickResult {
