@@ -415,6 +415,37 @@ func TestHandshakeRejectsInvalidClientName(t *testing.T) {
 	}
 }
 
+func TestHandshakeRejectsProtocolMismatch(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion + 1,
+		SimVersion:      "test",
+		Message:         hsRaw,
+	}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	if err := conn.ReadJSON(&env); err == nil {
+		t.Fatalf("expected protocol-mismatch handshake rejection")
+	}
+}
+
 func TestBatchTickOutsideWindowIsRejected(t *testing.T) {
 	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
 	defer srv.Close()
