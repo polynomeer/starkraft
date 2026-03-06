@@ -49,3 +49,4 @@ Full tools smoke run (JSON contracts + assertions):
 
 - `tools/schema/map-v1.schema.json`: map payload structure for generated/validated map files
 - `tools/schema/data-defs-v1.schema.json`: top-level data defs container shape
+- `tools/schema/tools-output-v1.schema.json`: JSON output contract metadata for machine-readable CLI results

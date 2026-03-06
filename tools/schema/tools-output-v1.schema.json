@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://starkraft.dev/schema/tools-output-v1.schema.json",
+  "title": "Starkraft Tools JSON Output v1",
+  "type": "object",
+  "required": ["outputVersion", "command", "requiredKeys"],
+  "properties": {
+    "outputVersion": { "type": "integer", "const": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "requiredKeys": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    }
+  },
+  "examples": [
+    { "outputVersion": 1, "command": "replay-meta", "requiredKeys": ["outputVersion", "result", "schema", "events", "replayHash"] },
+    { "outputVersion": 1, "command": "replay-stats", "requiredKeys": ["outputVersion", "result", "format"] },
+    { "outputVersion": 1, "command": "replay-verify", "requiredKeys": ["outputVersion", "result", "expectedHash", "computedHash", "worldHash"] },
+    { "outputVersion": 1, "command": "replay-fast-forward", "requiredKeys": ["outputVersion", "result", "finalTick", "commandCount", "worldHash"] },
+    { "outputVersion": 1, "command": "map-validate", "requiredKeys": ["outputVersion", "result", "errors"] },
+    { "outputVersion": 1, "command": "map-generate", "requiredKeys": ["outputVersion", "result", "id", "width", "height"] },
+    { "outputVersion": 1, "command": "data-validate", "requiredKeys": ["outputVersion", "result", "errors"] }
+  ]
+}
