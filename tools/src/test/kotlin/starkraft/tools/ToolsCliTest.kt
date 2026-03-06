@@ -1,0 +1,32 @@
+package starkraft.tools
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import starkraft.sim.net.Command
+import starkraft.sim.replay.ReplayIO
+import java.nio.file.Files
+import kotlin.io.path.pathString
+
+class ToolsCliTest {
+    @Test
+    fun `replay meta command succeeds for saved replay`() {
+        val replayPath = Files.createTempFile("starkraft-tools-meta", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f)),
+            seed = 42L,
+            mapId = "test-map",
+            buildVersion = "test-build"
+        )
+
+        val code = runToolsCli(arrayOf("replay", "meta", replayPath.pathString))
+        assertEquals(0, code)
+    }
+
+    @Test
+    fun `resolve path returns absolute path`() {
+        val resolved = resolvePath("sim/scripts/sample.script")
+        assertTrue(resolved.isAbsolute)
+    }
+}
