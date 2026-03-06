@@ -59,6 +59,9 @@ jobs:
           ./gradlew --no-daemon :sim:run --args="--script sim/scripts/sample.script --ticks 2 --noSleep --replayDump /tmp/starkraft-tools-smoke.replay.json"
           ./gradlew --no-daemon :tools:run --args="replay meta /tmp/starkraft-tools-smoke.replay.json"
 
+      - name: Run tools health contract smoke
+        run: ./scripts/tools_health.sh
+
   server-build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10

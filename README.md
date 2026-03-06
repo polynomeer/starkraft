@@ -153,6 +153,9 @@ Quick smoke check:
 Authoritative stack smoke check (server + 2 bots + replay):
 `./scripts/e2e_server_bots_smoke.sh`
 
+Tools JSON contract smoke check:
+`./scripts/tools_health.sh`
+
 Interactive local stack play (server + optional bot + CLI):
 `./scripts/play_stack_local.sh`
 
