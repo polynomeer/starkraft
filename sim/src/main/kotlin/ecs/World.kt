@@ -1,5 +1,12 @@
 package starkraft.sim.ecs
 
+enum class MatchEndReason(val wireValue: String) {
+    ELIMINATION("elimination"),
+    SURRENDER("surrender"),
+    TIMEOUT("timeout"),
+    DRAW("draw")
+}
+
 class World {
     val transforms = mutableMapOf<EntityId, Transform>()
     val motions = mutableMapOf<EntityId, Motion>()
@@ -24,6 +31,7 @@ class World {
     val autoAttackTargets = mutableMapOf<EntityId, EntityId>()
     var matchEnded: Boolean = false
     var winnerFaction: Int? = null
+    var matchEndReason: MatchEndReason? = null
 
     val index = FactionIndex(this) // NEW
     val aliveSnapshot = AliveSnapshot(IntArray(64), 0)

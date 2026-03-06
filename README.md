@@ -20,6 +20,7 @@ Completed scope:
 - buildings, construction, production, research, and tech prerequisites
 - economy with stockpiles, harvesting, drop-offs, and retargeting
 - victory detection (last surviving faction wins) and match-end state
+- deterministic match-end reason tagging (`elimination`, `timeout`, `draw`, `surrender` reserved)
 - replay, benchmark, golden determinism checks, and snapshot/replay tooling
 - client-facing snapshot, event stream, live input, and minimal graphical/console clients
 
@@ -27,6 +28,7 @@ Release/process assets:
 - versioned protocol baseline (`shared-protocol/schema/rts-protocol-v1.schema.json`)
 - changelog tracking (`CHANGELOG.md`)
 - packaging script for sim/server/client artifacts (`scripts/release_package.sh`)
+  - emits `manifest-<version>.txt` with artifact names, sizes, and sha256 checksums
 
 Out of scope for this module:
 - a polished game UI

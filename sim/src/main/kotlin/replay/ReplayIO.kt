@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import starkraft.sim.ecs.MatchEndReason
 import starkraft.sim.net.Command
 import java.nio.file.Files
 import java.nio.file.Path
@@ -21,7 +22,9 @@ object ReplayIO {
         commands: List<Command>,
         seed: Long? = null,
         mapId: String? = null,
-        buildVersion: String? = null
+        buildVersion: String? = null,
+        winnerFaction: Int? = null,
+        matchEndReason: MatchEndReason? = null
     ) {
         val normalized = ensureLabelIds(commands)
         val recorder = ReplayHashRecorder()
@@ -32,6 +35,8 @@ object ReplayIO {
             seed = seed,
             mapId = mapId,
             buildVersion = buildVersion,
+            winnerFaction = winnerFaction,
+            matchEndReason = matchEndReason?.wireValue,
             events = normalized.map { ReplayEvent.fromCommand(it) }
         )
         val payload = json.encodeToString(container)
@@ -70,6 +75,8 @@ object ReplayIO {
                 seed = null,
                 mapId = null,
                 buildVersion = null,
+                winnerFaction = null,
+                matchEndReason = null,
                 eventCount = events.size,
                 fileSizeBytes = fileSizeBytes,
                 legacy = true
@@ -82,6 +89,8 @@ object ReplayIO {
             seed = container.seed,
             mapId = container.mapId,
             buildVersion = container.buildVersion,
+            winnerFaction = container.winnerFaction,
+            matchEndReason = container.matchEndReason,
             eventCount = container.events.size,
             fileSizeBytes = fileSizeBytes,
             legacy = container.schema == 0
@@ -95,6 +104,8 @@ data class ReplayMetadata(
     val seed: Long?,
     val mapId: String?,
     val buildVersion: String?,
+    val winnerFaction: Int? = null,
+    val matchEndReason: String? = null,
     val eventCount: Int,
     val fileSizeBytes: Long,
     val legacy: Boolean
@@ -107,6 +118,8 @@ private data class ReplayContainer(
     val seed: Long? = null,
     val mapId: String? = null,
     val buildVersion: String? = null,
+    val winnerFaction: Int? = null,
+    val matchEndReason: String? = null,
     val events: List<ReplayEvent>
 ) {
     fun validateSchema() {

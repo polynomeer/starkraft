@@ -3,6 +3,7 @@ package starkraft.sim
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import starkraft.sim.ecs.MatchEndReason
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayIO
 import java.nio.file.Files
@@ -50,13 +51,23 @@ class ReplayIOTest {
             Command.CancelResearch(31, -2),
             Command.Rally(32, -2, 20f, 21f)
         )
-        ReplayIO.save(tmp, cmds, seed = 1234L, mapId = "demo-map", buildVersion = "test-build")
+        ReplayIO.save(
+            tmp,
+            cmds,
+            seed = 1234L,
+            mapId = "demo-map",
+            buildVersion = "test-build",
+            winnerFaction = 1,
+            matchEndReason = MatchEndReason.ELIMINATION
+        )
         val loaded = ReplayIO.load(tmp)
         val payload = Files.readString(tmp)
         assertTrue(payload.contains("\"replayHash\""))
         assertTrue(payload.contains("\"seed\":1234"))
         assertTrue(payload.contains("\"mapId\":\"demo-map\""))
         assertTrue(payload.contains("\"buildVersion\":\"test-build\""))
+        assertTrue(payload.contains("\"winnerFaction\":1"))
+        assertTrue(payload.contains("\"matchEndReason\":\"elimination\""))
         assertEquals(cmds.size, loaded.size)
         for (i in cmds.indices) {
             assertCommandsEqual(cmds[i], loaded[i])
@@ -81,12 +92,14 @@ class ReplayIOTest {
     fun inspectsReplayMetadata() {
         val tmp = Files.createTempFile("starkraft-replay", ".json")
         val cmds = listOf(Command.Move(0, intArrayOf(1), 2f, 3f))
-        ReplayIO.save(tmp, cmds, seed = 77L, mapId = "demo-map", buildVersion = "test-build")
+        ReplayIO.save(tmp, cmds, seed = 77L, mapId = "demo-map", buildVersion = "test-build", winnerFaction = 2, matchEndReason = MatchEndReason.TIMEOUT)
         val meta = ReplayIO.inspect(tmp)
         assertEquals(1, meta.schema)
         assertEquals(77L, meta.seed)
         assertEquals("demo-map", meta.mapId)
         assertEquals("test-build", meta.buildVersion)
+        assertEquals(2, meta.winnerFaction)
+        assertEquals("timeout", meta.matchEndReason)
         assertEquals(1, meta.eventCount)
         assertTrue(meta.fileSizeBytes > 0)
         assertTrue(meta.replayHash != null)

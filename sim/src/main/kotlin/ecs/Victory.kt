@@ -24,6 +24,7 @@ class VictorySystem(private val world: World) {
                 // Guard against corrupted state producing invalid movement values.
                 world.matchEnded = true
                 world.winnerFaction = null
+                world.matchEndReason = MatchEndReason.TIMEOUT
                 return
             }
         }
@@ -31,6 +32,7 @@ class VictorySystem(private val world: World) {
         if (aliveFactions <= 1) {
             world.matchEnded = true
             world.winnerFaction = survivorFaction.takeIf { it > 0 }
+            world.matchEndReason = if (survivorFaction > 0) MatchEndReason.ELIMINATION else MatchEndReason.DRAW
         }
     }
 }

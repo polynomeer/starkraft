@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.ecs.Health
+import starkraft.sim.ecs.MatchEndReason
 import starkraft.sim.ecs.Transform
 import starkraft.sim.ecs.UnitTag
 import starkraft.sim.ecs.VictorySystem
@@ -22,6 +23,7 @@ class VictorySystemTest {
 
         assertTrue(world.matchEnded)
         assertEquals(1, world.winnerFaction)
+        assertEquals(MatchEndReason.ELIMINATION, world.matchEndReason)
     }
 
     @Test
@@ -35,5 +37,18 @@ class VictorySystemTest {
 
         assertFalse(world.matchEnded)
         assertEquals(null, world.winnerFaction)
+        assertEquals(null, world.matchEndReason)
+    }
+
+    @Test
+    fun `declares draw when no combat factions remain`() {
+        val world = World()
+        val victory = VictorySystem(world)
+
+        victory.tick()
+
+        assertTrue(world.matchEnded)
+        assertEquals(null, world.winnerFaction)
+        assertEquals(MatchEndReason.DRAW, world.matchEndReason)
     }
 }

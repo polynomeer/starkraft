@@ -748,7 +748,7 @@ fun main(args: Array<String>) {
             )
         }
         if (world.matchEnded) {
-            println("tick=$tick  match ended winnerFaction=${world.winnerFaction}")
+            println("tick=$tick  match ended winnerFaction=${world.winnerFaction} reason=${world.matchEndReason?.wireValue}")
             tick++
             break
         }
@@ -758,7 +758,7 @@ fun main(args: Array<String>) {
 
     if (recordPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(recordPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
+        ReplayIO.save(Paths.get(recordPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION, world.winnerFaction, world.matchEndReason)
         println("replay saved: $recordPath")
     }
 
@@ -825,7 +825,7 @@ fun main(args: Array<String>) {
         println(finalOutcomeSummary)
     }
     if (world.matchEnded) {
-        println("match result: winnerFaction=${world.winnerFaction}")
+        println("match result: winnerFaction=${world.winnerFaction} reason=${world.matchEndReason?.wireValue}")
     }
     if (totalInputAccepted > 0 || totalInputDroppedOversized > 0 || totalInputDroppedInvalid > 0 || totalInputDroppedRateLimited > 0) {
         println(
@@ -930,6 +930,8 @@ fun main(args: Array<String>) {
                 tick = tick,
                 worldHash = finalWorldHash,
                 replayHash = finalReplayHash,
+                winnerFaction = world.winnerFaction,
+                matchEndReason = world.matchEndReason,
                 pretty = false
             ),
             resolvedSnapshotOutPath
@@ -940,13 +942,13 @@ fun main(args: Array<String>) {
 
     if (replayOutPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayOutPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
+        ReplayIO.save(Paths.get(replayOutPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION, world.winnerFaction, world.matchEndReason)
         println("replay out saved: $replayOutPath")
     }
 
     if (replayDumpPath != null && scriptPath != null) {
         val recorded = recorder.snapshot()
-        ReplayIO.save(Paths.get(replayDumpPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION)
+        ReplayIO.save(Paths.get(replayDumpPath), recorded, seed, DEMO_MAP_ID, BUILD_VERSION, world.winnerFaction, world.matchEndReason)
         println("replay dump saved: $replayDumpPath")
     }
 }
@@ -3487,6 +3489,15 @@ private fun hashWorldForReplay(world: World): Long {
     }
     mix(if (world.matchEnded) 1L else 0L)
     mix((world.winnerFaction ?: -1).toLong())
+    mix(
+        when (world.matchEndReason) {
+            null -> -1L
+            starkraft.sim.ecs.MatchEndReason.ELIMINATION -> 1L
+            starkraft.sim.ecs.MatchEndReason.SURRENDER -> 2L
+            starkraft.sim.ecs.MatchEndReason.TIMEOUT -> 3L
+            starkraft.sim.ecs.MatchEndReason.DRAW -> 4L
+        }
+    )
     return h
 }
 

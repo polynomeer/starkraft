@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import starkraft.sim.data.DataRepo
+import starkraft.sim.ecs.MatchEndReason
 import starkraft.sim.ecs.MapGrid
 import starkraft.sim.ecs.Order
 import starkraft.sim.ecs.World
@@ -30,6 +31,9 @@ data class ClientSnapshot(
     val mapHeight: Int,
     val factions: List<FactionSnapshot>,
     val entities: List<EntitySnapshot>,
+    val matchEnded: Boolean = false,
+    val winnerFaction: Int? = null,
+    val matchEndReason: String? = null,
     val resourceNodes: List<ResourceNodeSnapshot> = emptyList(),
     val dropoffEntityIds: List<Int> = emptyList()
 )
@@ -1022,6 +1026,9 @@ fun buildClientSnapshot(
         mapHeight = map.height,
         factions = factions,
         entities = entities,
+        matchEnded = world.matchEnded,
+        winnerFaction = world.winnerFaction,
+        matchEndReason = world.matchEndReason?.wireValue,
         resourceNodes = resourceNodes,
         dropoffEntityIds = dropoffEntityIds
     )
@@ -1052,8 +1059,12 @@ fun renderSnapshotSessionEndJson(
     tick: Int,
     worldHash: Long,
     replayHash: Long?,
+    winnerFaction: Int? = null,
+    matchEndReason: MatchEndReason? = null,
     pretty: Boolean = false
 ): String {
+    winnerFaction
+    matchEndReason
     val record = SnapshotSessionEndRecord(sequence = sequence, tick = tick, worldHash = worldHash, replayHash = replayHash)
     return if (pretty) snapshotJsonPretty.encodeToString(record) else snapshotJsonCompact.encodeToString(record)
 }
