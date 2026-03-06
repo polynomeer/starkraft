@@ -90,6 +90,49 @@ func TestSnapshotEnvelopeRoundTripGolden(t *testing.T) {
 	}
 }
 
+func TestCommandAckEnvelopeRoundTripGolden(t *testing.T) {
+	req := "req-7"
+	msg := CommandAckMessage{
+		Type:        "commandAck",
+		Tick:        121,
+		RequestID:   &req,
+		CommandType: "move",
+		Accepted:    false,
+		Reason:      "outOfBounds",
+	}
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal commandAck: %v", err)
+	}
+	env := ProtocolEnvelope{ProtocolVersion: CurrentProtocolVersion, SimVersion: "1.0.0", Message: msgRaw}
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal envelope: %v", err)
+	}
+	golden := loadGolden(t, "v1-command-ack-envelope.json")
+	if string(raw) != golden {
+		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
+	}
+}
+
+func TestMatchEndEnvelopeRoundTripGolden(t *testing.T) {
+	winner := "player-1"
+	msg := MatchEndMessage{Type: "matchEnd", Tick: 600, WinnerID: &winner}
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal matchEnd: %v", err)
+	}
+	env := ProtocolEnvelope{ProtocolVersion: CurrentProtocolVersion, SimVersion: "1.0.0", Message: msgRaw}
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal envelope: %v", err)
+	}
+	golden := loadGolden(t, "v1-match-end-envelope.json")
+	if string(raw) != golden {
+		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
+	}
+}
+
 func loadGolden(t *testing.T, file string) string {
 	t.Helper()
 	candidates := []string{

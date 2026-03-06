@@ -37,6 +37,23 @@ sealed interface ProtocolMessage {
         val worldHash: Long,
         val payload: JsonElement? = null
     ) : ProtocolMessage
+
+    @Serializable
+    @SerialName("commandAck")
+    data class CommandAck(
+        val tick: Int,
+        val requestId: String? = null,
+        val commandType: String,
+        val accepted: Boolean,
+        val reason: String? = null
+    ) : ProtocolMessage
+
+    @Serializable
+    @SerialName("matchEnd")
+    data class MatchEnd(
+        val tick: Int,
+        val winnerId: String? = null
+    ) : ProtocolMessage
 }
 
 @Serializable

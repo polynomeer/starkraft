@@ -44,21 +44,27 @@ type CommandBatchMessage struct {
 }
 
 type CommandAckMessage struct {
-	Type       string  `json:"type"`
-	Tick       int     `json:"tick"`
-	RequestID  *string `json:"requestId,omitempty"`
-	CommandType string `json:"commandType"`
-	Accepted   bool    `json:"accepted"`
-	Reason     string  `json:"reason,omitempty"`
+	Type        string  `json:"type"`
+	Tick        int     `json:"tick"`
+	RequestID   *string `json:"requestId,omitempty"`
+	CommandType string  `json:"commandType"`
+	Accepted    bool    `json:"accepted"`
+	Reason      string  `json:"reason,omitempty"`
 }
 
 type SnapshotMessage struct {
-	Type       string   `json:"type"`
-	Tick       int      `json:"tick"`
-	WorldHash  int64    `json:"worldHash"`
+	Type       string         `json:"type"`
+	Tick       int            `json:"tick"`
+	WorldHash  int64          `json:"worldHash"`
 	Units      []SnapshotUnit `json:"units,omitempty"`
-	MatchEnded bool     `json:"matchEnded,omitempty"`
-	WinnerID   *string  `json:"winnerId,omitempty"`
+	MatchEnded bool           `json:"matchEnded,omitempty"`
+	WinnerID   *string        `json:"winnerId,omitempty"`
+}
+
+type MatchEndMessage struct {
+	Type     string  `json:"type"`
+	Tick     int     `json:"tick"`
+	WinnerID *string `json:"winnerId,omitempty"`
 }
 
 type SnapshotUnit struct {

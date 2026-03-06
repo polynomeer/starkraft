@@ -77,6 +77,43 @@ class ProtocolModelsTest {
     }
 
     @Test
+    fun `command ack envelope round trip matches golden`() {
+        val envelope =
+            ProtocolEnvelope(
+                simVersion = "1.0.0",
+                message =
+                    ProtocolMessage.CommandAck(
+                        tick = 121,
+                        requestId = "req-7",
+                        commandType = "move",
+                        accepted = false,
+                        reason = "outOfBounds"
+                    )
+            )
+
+        val json = codec.encodeToString(envelope)
+        val golden = loadSharedGolden("shared-protocol/golden/v1-command-ack-envelope.json")
+
+        assertEquals(golden, json)
+        assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
+    }
+
+    @Test
+    fun `match end envelope round trip matches golden`() {
+        val envelope =
+            ProtocolEnvelope(
+                simVersion = "1.0.0",
+                message = ProtocolMessage.MatchEnd(tick = 600, winnerId = "player-1")
+            )
+
+        val json = codec.encodeToString(envelope)
+        val golden = loadSharedGolden("shared-protocol/golden/v1-match-end-envelope.json")
+
+        assertEquals(golden, json)
+        assertEquals(envelope, codec.decodeFromString<ProtocolEnvelope>(json))
+    }
+
+    @Test
     fun `schema file exists for protocol v1`() {
         val cwd = java.nio.file.Paths.get("").toAbsolutePath().normalize()
         val direct = cwd.resolve("shared-protocol/schema/rts-protocol-v1.schema.json").normalize()

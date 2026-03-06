@@ -79,3 +79,9 @@ type SnapshotMessage struct {
 	MatchEnded bool           `json:"matchEnded,omitempty"`
 	WinnerID   *string        `json:"winnerId,omitempty"`
 }
+
+type MatchEndMessage struct {
+	Type     string  `json:"type"`
+	Tick     int     `json:"tick"`
+	WinnerID *string `json:"winnerId,omitempty"`
+}
