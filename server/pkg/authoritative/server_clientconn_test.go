@@ -7,20 +7,19 @@ import (
 	"github.com/starkraft/server/pkg/protocol"
 )
 
-func TestClientConnSendEnvelopeRejectsWhenQueueFull(t *testing.T) {
+func TestClientConnSendEnvelopeRejectsWhenBusy(t *testing.T) {
 	c := &clientConn{
 		simVersion: "test",
-		writeQueue: make(chan protocol.ProtocolEnvelope, 1),
 	}
 
-	if err := c.sendEnvelope(protocol.SnapshotMessage{Type: "snapshot", Tick: 1}); err != nil {
-		t.Fatalf("first enqueue failed: %v", err)
-	}
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
 	err := c.sendEnvelope(protocol.SnapshotMessage{Type: "snapshot", Tick: 2})
 	if err == nil {
-		t.Fatalf("expected outbound queue full error")
+		t.Fatalf("expected connection busy error")
 	}
-	if !strings.Contains(err.Error(), "outbound queue full") {
+	if !strings.Contains(err.Error(), "connection busy") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

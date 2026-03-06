@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net"
-	"os"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -114,9 +114,9 @@ func TestCommandValidationAndAck(t *testing.T) {
 	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
 		t.Fatalf("write batch: %v", err)
 	}
+	waitForPendingBatches(t, srv, "default", 1)
 
-	srv.stepRooms()
-	ackCmdEnv := readEnvelope(t, conn)
+	ackCmdEnv := stepUntilMessageType(t, srv, conn, "commandAck", 5)
 	var cmdAck protocol.CommandAckMessage
 	if err := json.Unmarshal(ackCmdEnv.Message, &cmdAck); err != nil {
 		t.Fatalf("decode command ack: %v", err)
@@ -124,7 +124,7 @@ func TestCommandValidationAndAck(t *testing.T) {
 	if !cmdAck.Accepted || cmdAck.Reason != "" {
 		t.Fatalf("expected accepted ack, got %+v", cmdAck)
 	}
-	snapEnv := readEnvelope(t, conn)
+	snapEnv := readUntilMessageType(t, conn, "snapshot")
 	var snap protocol.SnapshotMessage
 	if err := json.Unmarshal(snapEnv.Message, &snap); err != nil {
 		t.Fatalf("decode snapshot: %v", err)
@@ -160,8 +160,8 @@ func TestCommandValidationAndAck(t *testing.T) {
 	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: badRaw}); err != nil {
 		t.Fatalf("write bad batch: %v", err)
 	}
-	srv.stepRooms()
-	badAckEnv := readEnvelope(t, conn)
+	waitForPendingBatches(t, srv, "default", 1)
+	badAckEnv := stepUntilMessageType(t, srv, conn, "commandAck", 5)
 	var badAck protocol.CommandAckMessage
 	if err := json.Unmarshal(badAckEnv.Message, &badAck); err != nil {
 		t.Fatalf("decode bad ack: %v", err)
@@ -174,10 +174,10 @@ func TestCommandValidationAndAck(t *testing.T) {
 func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {
 	replayPath := filepath.Join(t.TempDir(), "room.replay.jsonl")
 	srv := NewServer(Config{
-		SimVersion: "test",
-		BuildHash:  "build-1",
-		TickInterval: 20 * time.Millisecond,
-		ReplayPath: replayPath,
+		SimVersion:    "test",
+		BuildHash:     "build-1",
+		TickInterval:  20 * time.Millisecond,
+		ReplayPath:    replayPath,
 		KeyframeEvery: 1,
 	})
 	defer srv.Close()
@@ -208,9 +208,9 @@ func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {
 	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
 		t.Fatalf("write batch: %v", err)
 	}
-	srv.stepRooms()
-	_ = readEnvelope(t, conn) // commandAck
-	_ = readEnvelope(t, conn) // snapshot
+	waitForPendingBatches(t, srv, "default", 1)
+	_ = stepUntilMessageType(t, srv, conn, "commandAck", 5)
+	_ = readUntilMessageType(t, conn, "snapshot")
 
 	if err := srv.Close(); err != nil {
 		t.Fatalf("close replay: %v", err)
@@ -312,7 +312,7 @@ func TestBatchTooLargeIsRejectedWithAck(t *testing.T) {
 		t.Fatalf("write batch: %v", err)
 	}
 
-	ackEnv := readEnvelope(t, conn)
+	ackEnv := readUntilMessageType(t, conn, "commandAck")
 	var ack protocol.CommandAckMessage
 	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
 		t.Fatalf("decode ack: %v", err)
@@ -324,9 +324,9 @@ func TestBatchTooLargeIsRejectedWithAck(t *testing.T) {
 
 func TestHandshakeRejectsInvalidClientName(t *testing.T) {
 	srv := NewServer(Config{
-		SimVersion:           "test",
-		TickInterval:         20 * time.Millisecond,
-		MaxClientNameLength:  8,
+		SimVersion:          "test",
+		TickInterval:        20 * time.Millisecond,
+		MaxClientNameLength: 8,
 	})
 	defer srv.Close()
 	ts := httptest.NewServer(srv.Handler())
@@ -383,9 +383,9 @@ func TestBatchTickOutsideWindowIsRejected(t *testing.T) {
 	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
 		t.Fatalf("write batch: %v", err)
 	}
+	waitForPendingBatches(t, srv, "default", 1)
 
-	srv.stepRooms()
-	ackEnv := readEnvelope(t, conn)
+	ackEnv := stepUntilMessageType(t, srv, conn, "commandAck", 5)
 	var ack protocol.CommandAckMessage
 	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
 		t.Fatalf("decode ack: %v", err)
@@ -440,7 +440,7 @@ func TestPendingQueueLimitRejectsOverflow(t *testing.T) {
 		t.Fatalf("write batch2: %v", err)
 	}
 
-	ackEnv := readEnvelope(t, conn)
+	ackEnv := readUntilMessageType(t, conn, "commandAck")
 	var ack protocol.CommandAckMessage
 	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
 		t.Fatalf("decode ack: %v", err)
@@ -502,4 +502,63 @@ func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope 
 		t.Fatalf("read envelope: %v", err)
 	}
 	return env
+}
+
+func readUntilMessageType(t *testing.T, conn *websocket.Conn, want string) protocol.ProtocolEnvelope {
+	t.Helper()
+	for i := 0; i < 8; i++ {
+		env := readEnvelope(t, conn)
+		got, err := protocol.DecodeMessageType(env.Message)
+		if err != nil {
+			t.Fatalf("decode message type: %v", err)
+		}
+		if got == want {
+			return env
+		}
+	}
+	t.Fatalf("did not receive message type %s within bounded reads", want)
+	return protocol.ProtocolEnvelope{}
+}
+
+func stepUntilMessageType(t *testing.T, srv *Server, conn *websocket.Conn, want string, steps int) protocol.ProtocolEnvelope {
+	t.Helper()
+	for i := 0; i < steps; i++ {
+		srv.stepRooms()
+		conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+		for j := 0; j < 4; j++ {
+			var env protocol.ProtocolEnvelope
+			if err := conn.ReadJSON(&env); err != nil {
+				if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+					break
+				}
+				t.Fatalf("read envelope: %v", err)
+			}
+			got, err := protocol.DecodeMessageType(env.Message)
+			if err != nil {
+				t.Fatalf("decode message type: %v", err)
+			}
+			if got == want {
+				return env
+			}
+		}
+	}
+	t.Fatalf("did not receive message type %s within %d step(s)", want, steps)
+	return protocol.ProtocolEnvelope{}
+}
+
+func waitForPendingBatches(t *testing.T, srv *Server, roomID string, min int) {
+	t.Helper()
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for {
+		srv.mu.Lock()
+		rm := srv.rooms[roomID]
+		srv.mu.Unlock()
+		if rm != nil && rm.pendingBatchCount() >= min {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for pending batch in room %s", roomID)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
 }

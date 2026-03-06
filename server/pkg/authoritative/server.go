@@ -58,8 +58,6 @@ type clientConn struct {
 	buildHash  string
 	conn       *websocket.Conn
 	writeMu    sync.Mutex
-	writeQueue chan protocol.ProtocolEnvelope
-	closeOnce  sync.Once
 }
 
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
@@ -192,10 +190,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	room.addClient(client)
 	defer func() {
 		room.removeClient(client)
-		client.close()
 		_ = conn.Close()
 	}()
-	client.startWriter()
 
 	_ = client.sendEnvelope(protocol.HandshakeAckMessage{
 		Type: "handshakeAck", RoomID: room.id, ClientID: client.id,
@@ -292,7 +288,6 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	return &clientConn{
 		id: clientID, name: hs.ClientName, roomID: roomID, conn: conn,
 		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
-		writeQueue: make(chan protocol.ProtocolEnvelope, s.cfg.MaxOutboundQueue),
 	}, rm, nil
 }
 
@@ -416,39 +411,18 @@ func (c *clientConn) sendEnvelope(msg any) (err error) {
 	if c.buildHash != "" {
 		env.BuildHash = &c.buildHash
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("connection closing")
-		}
-	}()
-	select {
-	case c.writeQueue <- env:
-		return nil
-	default:
-		return fmt.Errorf("outbound queue full")
+	if !c.writeMu.TryLock() {
+		return fmt.Errorf("connection busy")
 	}
-}
-
-func (c *clientConn) startWriter() {
-	go func() {
-		for env := range c.writeQueue {
-			c.writeMu.Lock()
-			_ = c.conn.SetWriteDeadline(time.Now().Add(1500 * time.Millisecond))
-			err := c.conn.WriteJSON(env)
-			_ = c.conn.SetWriteDeadline(time.Time{})
-			c.writeMu.Unlock()
-			if err != nil {
-				_ = c.conn.Close()
-				return
-			}
-		}
+	defer c.writeMu.Unlock()
+	if c.conn == nil {
+		return fmt.Errorf("connection unavailable")
+	}
+	_ = c.conn.SetWriteDeadline(time.Now().Add(1500 * time.Millisecond))
+	defer func() {
+		_ = c.conn.SetWriteDeadline(time.Time{})
 	}()
-}
-
-func (c *clientConn) close() {
-	c.closeOnce.Do(func() {
-		close(c.writeQueue)
-	})
+	return c.conn.WriteJSON(env)
 }
 
 func (s *Server) recordTickSample(ns int64, pending int) {
