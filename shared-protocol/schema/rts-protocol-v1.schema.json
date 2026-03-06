@@ -37,15 +37,77 @@
             "commands": {
               "type": "array",
               "items": {
-                "type": "object",
-                "required": ["commandType"],
-                "properties": {
-                  "commandType": {"type": "string"},
-                  "requestId": {"type": ["string", "null"]}
-                },
-                "additionalProperties": true
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": ["commandType", "unitIds", "x", "y"],
+                    "properties": {
+                      "commandType": {"const": "move"},
+                      "requestId": {"type": ["string", "null"]},
+                      "unitIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": ["commandType", "unitIds", "targetUnitId"],
+                    "properties": {
+                      "commandType": {"const": "attack"},
+                      "requestId": {"type": ["string", "null"]},
+                      "unitIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
+                      "targetUnitId": {"type": "integer"}
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": ["commandType", "x", "y"],
+                    "properties": {
+                      "commandType": {"const": "build"},
+                      "requestId": {"type": ["string", "null"]},
+                      "x": {"type": "number"},
+                      "y": {"type": "number"},
+                      "unitType": {"type": ["string", "null"]}
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": ["commandType"],
+                    "properties": {
+                      "commandType": {"const": "queue"},
+                      "requestId": {"type": ["string", "null"]},
+                      "unitType": {"type": ["string", "null"]}
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": ["commandType"],
+                    "properties": {
+                      "commandType": {"const": "surrender"},
+                      "requestId": {"type": ["string", "null"]}
+                    },
+                    "additionalProperties": false
+                  }
+                ]
               }
             }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "tick", "commandType", "accepted"],
+          "properties": {
+            "type": {"const": "commandAck"},
+            "tick": {"type": "integer", "minimum": 0},
+            "requestId": {"type": ["string", "null"]},
+            "commandType": {"type": "string", "minLength": 1},
+            "accepted": {"type": "boolean"},
+            "reason": {"type": "string"}
           },
           "additionalProperties": false
         },
@@ -58,6 +120,16 @@
             "worldHash": {"type": "integer"}
           },
           "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": ["type", "tick"],
+          "properties": {
+            "type": {"const": "matchEnd"},
+            "tick": {"type": "integer", "minimum": 0},
+            "winnerId": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
         }
       ]
     }
