@@ -153,6 +153,15 @@ Quick smoke check:
 Authoritative stack smoke check (server + 2 bots + replay):
 `./scripts/e2e_server_bots_smoke.sh`
 
+Interactive local stack play (server + optional bot + CLI):
+`./scripts/play_stack_local.sh`
+
+Optional env vars:
+- `STARKRAFT_PLAY_PORT` (default `18080`)
+- `STARKRAFT_PLAY_ROOM` (default `local-play`)
+- `STARKRAFT_PLAY_BOT=0` (disable auto-start bot)
+- `STARKRAFT_PLAY_TMP_DIR` (custom logs/replay dir)
+
 ### Headless Script Input
 You can run a simple command script with:
 `./gradlew :sim:run --args="--script sim/scripts/sample.script --noSleep"`
