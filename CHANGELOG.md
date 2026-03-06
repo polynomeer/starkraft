@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- Tools module with replay metadata/stats/verify/fast-forward CLI, map validator/generator, and data validation for JSON defs.
+- Tools module with replay metadata/stats/verify/fast-forward CLI, map validator/generator, and data validation for JSON/YAML defs.
 - Graphical client headless mode for non-GUI CI smoke runs.
 - Soak harness (`:sim:soak`) with tick latency, pathfinding budget pressure, memory, and GC telemetry.
 
