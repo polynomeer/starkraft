@@ -103,4 +103,15 @@ jobs:
           cache: true
 
       - name: Run server + bots smoke
+        env:
+          STARKRAFT_E2E_TMP_DIR: /tmp/starkraft-e2e
+          STARKRAFT_E2E_PORT: "18080"
         run: ./scripts/e2e_server_bots_smoke.sh
+
+      - name: Upload e2e logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-logs
+          path: /tmp/starkraft-e2e
+          if-no-files-found: ignore

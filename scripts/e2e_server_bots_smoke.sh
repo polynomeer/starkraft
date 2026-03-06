@@ -2,11 +2,16 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPLAY_FILE="$(mktemp /tmp/starkraft-server-replay-XXXXXX).jsonl"
-touch "$REPLAY_FILE"
-SERVER_LOG="$(mktemp /tmp/starkraft-server-log-XXXXXX).txt"
-BOT1_LOG="$(mktemp /tmp/starkraft-bot1-log-XXXXXX).txt"
-BOT2_LOG="$(mktemp /tmp/starkraft-bot2-log-XXXXXX).txt"
+E2E_TMP_DIR="${STARKRAFT_E2E_TMP_DIR:-$(mktemp -d /tmp/starkraft-e2e-XXXXXX)}"
+mkdir -p "$E2E_TMP_DIR"
+PORT="${STARKRAFT_E2E_PORT:-18080}"
+ADDR="127.0.0.1:${PORT}"
+REPLAY_FILE="$E2E_TMP_DIR/server.replay.jsonl"
+SERVER_LOG="$E2E_TMP_DIR/server.log"
+BOT1_LOG="$E2E_TMP_DIR/bot-a.log"
+BOT2_LOG="$E2E_TMP_DIR/bot-b.log"
+REPLAYCHECK_LOG="$E2E_TMP_DIR/replaycheck.log"
+touch "$REPLAY_FILE" "$SERVER_LOG" "$BOT1_LOG" "$BOT2_LOG" "$REPLAYCHECK_LOG"
 
 cleanup() {
   set +e
@@ -27,7 +32,7 @@ print_logs() {
 
 (
   cd "$ROOT_DIR/server"
-  STARKRAFT_SERVER_ADDR=127.0.0.1:18080 STARKRAFT_REPLAY_PATH="$REPLAY_FILE" go run ./cmd/server >"$SERVER_LOG" 2>&1
+  STARKRAFT_SERVER_ADDR="$ADDR" STARKRAFT_REPLAY_PATH="$REPLAY_FILE" go run ./cmd/server >"$SERVER_LOG" 2>&1
 ) &
 SERVER_PID=$!
 
@@ -41,13 +46,13 @@ fi
 
 (
   cd "$ROOT_DIR/client"
-  go run ./cmd/bot --url ws://127.0.0.1:18080/ws --name bot-a --room smoke >"$BOT1_LOG" 2>&1
+  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-a --room smoke >"$BOT1_LOG" 2>&1
 ) &
 BOT1_PID=$!
 
 (
   cd "$ROOT_DIR/client"
-  go run ./cmd/bot --url ws://127.0.0.1:18080/ws --name bot-b --room smoke >"$BOT2_LOG" 2>&1
+  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-b --room smoke >"$BOT2_LOG" 2>&1
 ) &
 BOT2_PID=$!
 
@@ -111,11 +116,11 @@ fi
 
 (
   cd "$ROOT_DIR/server"
-  go run ./cmd/replaycheck --replay "$REPLAY_FILE" >/tmp/starkraft-replaycheck.log 2>&1
+  go run ./cmd/replaycheck --replay "$REPLAY_FILE" >"$REPLAYCHECK_LOG" 2>&1
 ) || {
   echo "[e2e] replay verification failed"
-  cat /tmp/starkraft-replaycheck.log
+  cat "$REPLAYCHECK_LOG"
   exit 1
 }
 
-echo "[e2e] ok replay=$REPLAY_FILE"
+echo "[e2e] ok replay=$REPLAY_FILE logs=$E2E_TMP_DIR"
