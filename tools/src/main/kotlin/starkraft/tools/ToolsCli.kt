@@ -21,6 +21,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
+        args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
         else -> {
             printUsage()
             1
@@ -70,6 +71,22 @@ private fun runReplayVerify(args: List<String>): Int {
     return if (result == "mismatch" || result == "missing-hash") 2 else 0
 }
 
+private fun runMapValidate(pathArg: String): Int {
+    val path = resolvePath(pathArg)
+    val result = validateMap(path)
+    if (result.ok) {
+        println("map: $path")
+        println("result: ok")
+        return 0
+    }
+    println("map: $path")
+    println("result: invalid")
+    for (error in result.errors) {
+        println("error: $error")
+    }
+    return 2
+}
+
 internal fun resolvePath(raw: String): Path {
     val path = Paths.get(raw)
     if (path.isAbsolute) return path.normalize()
@@ -108,6 +125,7 @@ private fun printUsage() {
         Usage:
           replay meta <path>
           replay verify <path> [--strictHash]
+          map validate <path>
         """.trimIndent()
     )
 }

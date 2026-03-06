@@ -55,4 +55,15 @@ class ToolsCliTest {
         val resolved = resolvePath("sim/scripts/sample.script")
         assertTrue(resolved.isAbsolute)
     }
+
+    @Test
+    fun `map validate command succeeds for valid map`() {
+        val mapPath = Files.createTempFile("starkraft-tools-map", ".json")
+        Files.writeString(
+            mapPath,
+            """{"schema":1,"id":"demo","width":4,"height":4}"""
+        )
+        val code = runToolsCli(arrayOf("map", "validate", mapPath.pathString))
+        assertEquals(0, code)
+    }
 }
