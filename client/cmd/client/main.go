@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,6 +37,7 @@ func main() {
 	selected := make([]int, 0, 8)
 	groups := newControlGroups()
 	statuses := newRequestStatusBook()
+	hud := newHudState(c.ClientID())
 	scriptBatches := loadScriptBatches(*scriptPath)
 	nextScriptIndex := 0
 
@@ -43,6 +45,7 @@ func main() {
 		for s := range c.SnapshotCh {
 			currentTick.Store(int64(s.Tick))
 			buffer.Push(s)
+			hud.update(s)
 			units := buffer.Interpolate(0.5)
 			fmt.Printf("tick=%d worldHash=%d units=%d matchEnded=%v\n", s.Tick, s.WorldHash, len(s.Units), s.MatchEnded)
 			if len(units) > 0 {
@@ -185,8 +188,10 @@ func main() {
 			}
 		case "status":
 			statuses.print()
+		case "hud":
+			hud.print(statuses)
 		default:
-			fmt.Println("commands: select/groupSave/groupRecall/groupAdd/groups/move/attack/build/queue/snapshot/status/quit")
+			fmt.Println("commands: select/groupSave/groupRecall/groupAdd/groups/move/attack/build/queue/snapshot/status/hud/quit")
 		}
 	}
 }
@@ -304,6 +309,19 @@ type requestStatusBook struct {
 	order   []string
 }
 
+type hudState struct {
+	ownerID      string
+	tick         int
+	worldHash    int64
+	totalUnits   int
+	myUnits      int
+	enemyUnits   int
+	matchEnded   bool
+	winnerID     string
+	myTypeCounts map[string]int
+	enemyByOwner map[string]int
+}
+
 type scriptBatch struct {
 	Tick     int                    `json:"tick"`
 	Commands []protocol.WireCommand `json:"commands"`
@@ -314,6 +332,70 @@ func newRequestStatusBook() *requestStatusBook {
 		entries: make(map[string]requestStatus, 128),
 		order:   make([]string, 0, 128),
 	}
+}
+
+func newHudState(ownerID string) *hudState {
+	return &hudState{
+		ownerID:      ownerID,
+		myTypeCounts: make(map[string]int, 8),
+		enemyByOwner: make(map[string]int, 8),
+	}
+}
+
+func (h *hudState) update(snapshot protocol.SnapshotMessage) {
+	h.tick = snapshot.Tick
+	h.worldHash = snapshot.WorldHash
+	h.totalUnits = len(snapshot.Units)
+	h.myUnits = 0
+	h.enemyUnits = 0
+	h.matchEnded = snapshot.MatchEnded
+	if snapshot.WinnerID != nil {
+		h.winnerID = *snapshot.WinnerID
+	} else {
+		h.winnerID = ""
+	}
+	for k := range h.myTypeCounts {
+		delete(h.myTypeCounts, k)
+	}
+	for k := range h.enemyByOwner {
+		delete(h.enemyByOwner, k)
+	}
+	for _, unit := range snapshot.Units {
+		if unit.OwnerID == h.ownerID {
+			h.myUnits++
+			h.myTypeCounts[unit.TypeID]++
+		} else {
+			h.enemyUnits++
+			h.enemyByOwner[unit.OwnerID]++
+		}
+	}
+}
+
+func (h *hudState) print(statuses *requestStatusBook) {
+	fmt.Printf(
+		"hud tick=%d worldHash=%d totalUnits=%d myUnits=%d enemyUnits=%d matchEnded=%v winner=%s\n",
+		h.tick,
+		h.worldHash,
+		h.totalUnits,
+		h.myUnits,
+		h.enemyUnits,
+		h.matchEnded,
+		blankIfEmpty(h.winnerID),
+	)
+	if len(h.myTypeCounts) > 0 {
+		fmt.Printf("  my types: %s\n", formatCountMap(h.myTypeCounts))
+	}
+	if len(h.enemyByOwner) > 0 {
+		fmt.Printf("  enemy owners: %s\n", formatCountMap(h.enemyByOwner))
+	}
+	pending, accepted, rejected, sendFailed := statuses.countByState()
+	fmt.Printf(
+		"  requests pending=%d accepted=%d rejected=%d sendFailed=%d\n",
+		pending,
+		accepted,
+		rejected,
+		sendFailed,
+	)
 }
 
 func (b *requestStatusBook) onSubmit(requestID, command string, tick int) {
@@ -386,6 +468,48 @@ func (b *requestStatusBook) print() {
 			entry.Reason,
 		)
 	}
+}
+
+func (b *requestStatusBook) countByState() (int, int, int, int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	pending := 0
+	accepted := 0
+	rejected := 0
+	sendFailed := 0
+	for _, entry := range b.entries {
+		switch entry.State {
+		case "pending":
+			pending++
+		case "accepted":
+			accepted++
+		case "rejected":
+			rejected++
+		case "sendFailed":
+			sendFailed++
+		}
+	}
+	return pending, accepted, rejected, sendFailed
+}
+
+func formatCountMap(values map[string]int) string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, fmt.Sprintf("%s=%d", key, values[key]))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func blankIfEmpty(value string) string {
+	if value == "" {
+		return "-"
+	}
+	return value
 }
 
 func loadScriptBatches(path string) []scriptBatch {

@@ -44,6 +44,7 @@ CLI tips:
   - `groupAdd <0-9>` merges slot into current selection
   - `groups` prints non-empty control groups
 - `status` prints the latest command `requestId -> pending/accepted/rejected` table
+- `hud` prints an authoritative snapshot summary (unit counts by owner/type, match end state, request-state counters)
 
 ## Run bot client
 
