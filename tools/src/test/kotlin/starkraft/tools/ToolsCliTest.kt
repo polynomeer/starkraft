@@ -203,6 +203,17 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay fast-forward accepts json output flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-ff-json", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 0, units = intArrayOf(1), x = 3f, y = 4f))
+        )
+        val code = runToolsCli(arrayOf("replay", "fast-forward", replayPath.pathString, "--json"))
+        assertEquals(0, code)
+    }
+
+    @Test
     fun `resolve path returns absolute path`() {
         val resolved = resolvePath("sim/scripts/sample.script")
         assertTrue(resolved.isAbsolute)

@@ -288,6 +288,7 @@ private fun runReplayFastForward(args: List<String>): Int {
     }
     val path = resolvePath(args[0])
     var tickLimit: Int? = null
+    var json = false
     var i = 1
     while (i < args.size) {
         when (args[i]) {
@@ -295,22 +296,52 @@ private fun runReplayFastForward(args: List<String>): Int {
                 tickLimit = args.getOrNull(i + 1)?.toIntOrNull() ?: return 1
                 i += 2
             }
+            "--json" -> {
+                json = true
+                i++
+            }
             else -> return 1
         }
     }
     val result = try {
         fastForwardReplay(path, tickLimit)
     } catch (e: Exception) {
-        println("replay: $path")
-        println("result: validation-error")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("replay", path.toString())
+                        put("result", "validation-error")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("replay: $path")
+            println("result: validation-error")
+            println("error: ${e.message}")
+        }
         return 2
     }
-    println("replay: $path")
-    println("result: ok")
-    println("finalTick: ${result.finalTick}")
-    println("commandCount: ${result.commandCount}")
-    println("worldHash: ${result.finalWorldHash}")
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("replay", path.toString())
+                    put("result", "ok")
+                    put("finalTick", result.finalTick)
+                    put("commandCount", result.commandCount)
+                    put("worldHash", result.finalWorldHash.toString())
+                }
+        )
+    } else {
+        println("replay: $path")
+        println("result: ok")
+        println("finalTick: ${result.finalTick}")
+        println("commandCount: ${result.commandCount}")
+        println("worldHash: ${result.finalWorldHash}")
+    }
     return 0
 }
 
@@ -449,7 +480,7 @@ private fun printUsage() {
           replay stats <path> [--json]
           replay verify-ndjson <path> [--json]
           replay verify <path> [--strictHash] [--json]
-          replay fast-forward <path> [--ticks N]
+          replay fast-forward <path> [--ticks N] [--json]
           map validate <path>
           map generate <path> [--width N] [--height N] [--seed N]
           data validate --dir <path>
