@@ -16,6 +16,10 @@ cd client
 go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default
 ```
 
+CLI tips:
+- `select <ids...>`, `move x y`, `attack <targetId>`, `build x y [type]`, `queue [type]`
+- `status` prints the latest command `requestId -> pending/accepted/rejected` table
+
 ## Run bot client
 
 ```bash

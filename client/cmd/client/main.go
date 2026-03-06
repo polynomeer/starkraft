@@ -7,7 +7,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/starkraft/client/pkg/headless"
 	"github.com/starkraft/client/pkg/protocol"
@@ -27,8 +29,10 @@ func main() {
 
 	fmt.Printf("connected as %s\n", c.ClientID())
 	var currentTick atomic.Int64
+	var requestSeq atomic.Int64
 	buffer := &headless.SnapshotBuffer{}
 	selected := make([]int, 0, 8)
+	statuses := newRequestStatusBook()
 
 	go func() {
 		for s := range c.SnapshotCh {
@@ -48,6 +52,7 @@ func main() {
 	go func() {
 		for ack := range c.AckCh {
 			fmt.Printf("ack tick=%d cmd=%s accepted=%v reason=%s\n", ack.Tick, ack.CommandType, ack.Accepted, ack.Reason)
+			statuses.onAck(ack)
 		}
 	}()
 
@@ -83,14 +88,14 @@ func main() {
 			}
 			x, _ := strconv.ParseFloat(parts[1], 64)
 			y, _ := strconv.ParseFloat(parts[2], 64)
-			issue(c, int(currentTick.Load())+1, protocol.WireCommand{CommandType: "move", UnitIDs: cloneInts(selected), X: &x, Y: &y})
+			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "move", UnitIDs: cloneInts(selected), X: &x, Y: &y})
 		case "attack":
 			if len(parts) < 2 {
 				fmt.Println("usage: attack <targetUnitId>")
 				continue
 			}
 			t, _ := strconv.Atoi(parts[1])
-			issue(c, int(currentTick.Load())+1, protocol.WireCommand{CommandType: "attack", UnitIDs: cloneInts(selected), TargetUnitID: &t})
+			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "attack", UnitIDs: cloneInts(selected), TargetUnitID: &t})
 		case "build":
 			if len(parts) < 3 {
 				fmt.Println("usage: build <x> <y> [unitType]")
@@ -103,29 +108,39 @@ func main() {
 				t := parts[3]
 				ut = &t
 			}
-			issue(c, int(currentTick.Load())+1, protocol.WireCommand{CommandType: "build", X: &x, Y: &y, UnitType: ut})
+			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "build", X: &x, Y: &y, UnitType: ut})
 		case "queue":
 			var ut *string
 			if len(parts) >= 2 {
 				t := parts[1]
 				ut = &t
 			}
-			issue(c, int(currentTick.Load())+1, protocol.WireCommand{CommandType: "queue", UnitType: ut})
+			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "queue", UnitType: ut})
 		case "snapshot":
 			for _, u := range buffer.Interpolate(0.5) {
 				fmt.Printf("unit id=%d owner=%s type=%s pos=(%.2f,%.2f) hp=%d\n", u.ID, u.OwnerID, u.TypeID, u.X, u.Y, u.HP)
 			}
+		case "status":
+			statuses.print()
 		default:
-			fmt.Println("commands: select/move/attack/build/queue/snapshot/quit")
+			fmt.Println("commands: select/move/attack/build/queue/snapshot/status/quit")
 		}
 	}
 }
 
-func issue(c *headless.Client, tick int, cmd protocol.WireCommand) {
-	req := fmt.Sprintf("cli-%d", tick)
+func issue(
+	c *headless.Client,
+	tick int,
+	seq *atomic.Int64,
+	statuses *requestStatusBook,
+	cmd protocol.WireCommand,
+) {
+	req := fmt.Sprintf("cli-%d-%d", tick, seq.Add(1))
 	cmd.RequestID = &req
+	statuses.onSubmit(req, cmd.CommandType, tick)
 	if err := c.SendBatch(tick, []protocol.WireCommand{cmd}); err != nil {
 		fmt.Printf("send failed: %v\n", err)
+		statuses.onSendError(req, err.Error())
 	}
 }
 
@@ -133,4 +148,98 @@ func cloneInts(src []int) []int {
 	out := make([]int, len(src))
 	copy(out, src)
 	return out
+}
+
+type requestStatus struct {
+	RequestID string
+	Command   string
+	Tick      int
+	State     string
+	Reason    string
+	UpdatedAt time.Time
+}
+
+type requestStatusBook struct {
+	mu      sync.Mutex
+	entries map[string]requestStatus
+	order   []string
+}
+
+func newRequestStatusBook() *requestStatusBook {
+	return &requestStatusBook{
+		entries: make(map[string]requestStatus, 128),
+		order:   make([]string, 0, 128),
+	}
+}
+
+func (b *requestStatusBook) onSubmit(requestID, command string, tick int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if _, ok := b.entries[requestID]; !ok {
+		b.order = append(b.order, requestID)
+	}
+	b.entries[requestID] = requestStatus{
+		RequestID: requestID,
+		Command:   command,
+		Tick:      tick,
+		State:     "pending",
+		UpdatedAt: time.Now(),
+	}
+}
+
+func (b *requestStatusBook) onSendError(requestID, reason string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	entry := b.entries[requestID]
+	entry.State = "sendFailed"
+	entry.Reason = reason
+	entry.UpdatedAt = time.Now()
+	b.entries[requestID] = entry
+}
+
+func (b *requestStatusBook) onAck(ack protocol.CommandAckMessage) {
+	if ack.RequestID == nil {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	entry, ok := b.entries[*ack.RequestID]
+	if !ok {
+		entry = requestStatus{RequestID: *ack.RequestID, Command: ack.CommandType, Tick: ack.Tick}
+		b.order = append(b.order, *ack.RequestID)
+	}
+	if ack.Accepted {
+		entry.State = "accepted"
+		entry.Reason = ""
+	} else {
+		entry.State = "rejected"
+		entry.Reason = ack.Reason
+	}
+	entry.UpdatedAt = time.Now()
+	b.entries[*ack.RequestID] = entry
+}
+
+func (b *requestStatusBook) print() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if len(b.order) == 0 {
+		fmt.Println("status: no requests")
+		return
+	}
+	start := 0
+	if len(b.order) > 15 {
+		start = len(b.order) - 15
+	}
+	fmt.Println("status (latest):")
+	for _, requestID := range b.order[start:] {
+		entry := b.entries[requestID]
+		fmt.Printf(
+			"  id=%s cmd=%s tick=%d state=%s reason=%s\n",
+			entry.RequestID,
+			entry.Command,
+			entry.Tick,
+			entry.State,
+			entry.Reason,
+		)
+	}
 }
