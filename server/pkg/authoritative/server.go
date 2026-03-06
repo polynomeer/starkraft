@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"regexp"
@@ -293,8 +294,34 @@ func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) bool {
 		if len(cmd.UnitIDs) > s.cfg.MaxUnitIDsPerCommand {
 			return false
 		}
+		if cmd.X != nil && !isFinite(*cmd.X) {
+			return false
+		}
+		if cmd.Y != nil && !isFinite(*cmd.Y) {
+			return false
+		}
+		switch cmd.CommandType {
+		case "move":
+			if len(cmd.UnitIDs) == 0 || cmd.X == nil || cmd.Y == nil {
+				return false
+			}
+		case "attack":
+			if len(cmd.UnitIDs) == 0 || cmd.TargetUnitID == nil {
+				return false
+			}
+		case "build":
+			if cmd.X == nil || cmd.Y == nil {
+				return false
+			}
+		case "queue":
+			// no-op: optional UnitType only
+		}
 	}
 	return true
+}
+
+func isFinite(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0)
 }
 
 func (s *Server) stepRooms() {

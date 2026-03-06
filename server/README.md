@@ -27,6 +27,7 @@ Protocol package scaffold is implemented.
 - transport/input hardening
   - websocket read-size cap (`MaxReadBytes`, default 64 KiB)
   - command batch cap (`MaxBatchCommands`, default 64)
+  - command schema checks for required fields (e.g. move needs `unitIds+x+y`)
   - per-command `unitIds` cap and request-id length cap
   - per-client pending command-batch queue cap
   - handshake token sanitization for `clientName` and `requestedRoom`

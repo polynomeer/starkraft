@@ -450,6 +450,51 @@ func TestPendingQueueLimitRejectsOverflow(t *testing.T) {
 	}
 }
 
+func TestMalformedMoveCommandIsRejected(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	// Missing x coordinate for move => protocol payload invalid.
+	y := 7.0
+	req := "bad-move"
+	batchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch",
+		Tick: 1,
+		Commands: []protocol.WireCommand{
+			{CommandType: "move", RequestID: &req, UnitIDs: []int{1}, Y: &y},
+		},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
+		t.Fatalf("write batch: %v", err)
+	}
+
+	ackEnv := readEnvelope(t, conn)
+	var ack protocol.CommandAckMessage
+	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
+		t.Fatalf("decode ack: %v", err)
+	}
+	if ack.Accepted || ack.Reason != "invalidPayload" {
+		t.Fatalf("expected invalidPayload rejection, got %+v", ack)
+	}
+}
+
 func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope {
 	t.Helper()
 	var env protocol.ProtocolEnvelope
