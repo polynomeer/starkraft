@@ -219,12 +219,29 @@ private fun runReplayVerify(args: List<String>): Int {
     }
     val path = resolvePath(args[0])
     val strictHash = args.drop(1).any { it == "--strictHash" }
+    val json = args.drop(1).any { it == "--json" }
+    if (args.drop(1).any { it != "--strictHash" && it != "--json" }) {
+        printUsage()
+        return 1
+    }
     val commands = try {
         ReplayIO.load(path, strictHash = strictHash)
     } catch (e: Exception) {
-        println("replay: $path")
-        println("result: validation-error")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("replay", path.toString())
+                        put("result", "validation-error")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("replay: $path")
+            println("result: validation-error")
+            println("error: ${e.message}")
+        }
         return 2
     }
     val metadata = ReplayIO.inspect(path)
@@ -239,13 +256,28 @@ private fun runReplayVerify(args: List<String>): Int {
     } else {
         "mismatch"
     }
-    println("replay: $path")
-    println("commands: ${commands.size}")
-    println("expectedHash: ${expectedHash ?: "missing"}")
-    println("computedHash: $computedHash")
     val replayRun = fastForwardReplay(path)
-    println("worldHash: ${replayRun.finalWorldHash}")
-    println("result: $result")
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("replay", path.toString())
+                    put("commands", commands.size)
+                    put("expectedHash", expectedHash?.toString() ?: "missing")
+                    put("computedHash", computedHash.toString())
+                    put("worldHash", replayRun.finalWorldHash.toString())
+                    put("result", result)
+                }
+        )
+    } else {
+        println("replay: $path")
+        println("commands: ${commands.size}")
+        println("expectedHash: ${expectedHash ?: "missing"}")
+        println("computedHash: $computedHash")
+        println("worldHash: ${replayRun.finalWorldHash}")
+        println("result: $result")
+    }
     return if (result == "mismatch" || result == "missing-hash") 2 else 0
 }
 
@@ -416,7 +448,7 @@ private fun printUsage() {
           replay meta <path> [--json]
           replay stats <path> [--json]
           replay verify-ndjson <path> [--json]
-          replay verify <path> [--strictHash]
+          replay verify <path> [--strictHash] [--json]
           replay fast-forward <path> [--ticks N]
           map validate <path>
           map generate <path> [--width N] [--height N] [--seed N]

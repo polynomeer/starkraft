@@ -7,7 +7,7 @@ Offline utility CLIs for replay/map/data workflows.
 - `./gradlew :tools:run --args="replay meta <path> [--json]"`
 - `./gradlew :tools:run --args="replay stats <path> [--json]"`
 - `./gradlew :tools:run --args="replay verify-ndjson <path> [--json]"`
-- `./gradlew :tools:run --args="replay verify <path> [--strictHash]"`
+- `./gradlew :tools:run --args="replay verify <path> [--strictHash] [--json]"`
 - `./gradlew :tools:run --args="replay fast-forward <path> [--ticks N]"`
 - `./gradlew :tools:run --args="map validate <map.json>"`
 - `./gradlew :tools:run --args="map generate <map.json> --width 64 --height 64 --seed 1337"`
@@ -28,6 +28,7 @@ Paths are resolved relative to the repository root when passed as relative paths
 - `replay verify`: compare stored replay hash to computed replay hash
   - returns non-zero for hash mismatch or strict-hash validation errors
   - also runs replay through sim systems and prints final world hash
+  - `--json` prints machine-readable single-line JSON
 - `replay fast-forward`: run replay commands through sim systems and print final world hash
 - `map validate`: validate map JSON/YAML shape and tile/resource/spawn bounds
 - `map generate`: generate a deterministic starter map JSON

@@ -60,6 +60,17 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay verify accepts json output flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify-json", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f))
+        )
+        val code = runToolsCli(arrayOf("replay", "verify", replayPath.pathString, "--json"))
+        assertEquals(0, code)
+    }
+
+    @Test
     fun `replay verify strict hash rejects legacy replay array`() {
         val replayPath = Files.createTempFile("starkraft-tools-legacy", ".json")
         Files.writeString(
@@ -71,6 +82,17 @@ class ToolsCliTest {
 
         val code = runToolsCli(arrayOf("replay", "verify", replayPath.pathString, "--strictHash"))
         assertEquals(2, code)
+    }
+
+    @Test
+    fun `replay verify rejects unknown flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-verify-flag", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f))
+        )
+        val code = runToolsCli(arrayOf("replay", "verify", replayPath.pathString, "--bad"))
+        assertEquals(1, code)
     }
 
     @Test
