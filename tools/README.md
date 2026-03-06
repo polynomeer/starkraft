@@ -5,6 +5,7 @@ Offline utility CLIs for replay/map/data workflows.
 ## Run
 
 - `./gradlew :tools:run --args="replay meta <path>"`
+- `./gradlew :tools:run --args="replay stats <path>"`
 - `./gradlew :tools:run --args="replay verify <path> [--strictHash]"`
 - `./gradlew :tools:run --args="replay fast-forward <path> [--ticks N]"`
 - `./gradlew :tools:run --args="map validate <map.json>"`
@@ -16,6 +17,8 @@ Paths are resolved relative to the repository root when passed as relative paths
 ## Commands
 
 - `replay meta`: print replay metadata (`schema`, hash, seed, map/build tags, size)
+- `replay stats`: print replay record counts
+  - supports sim replay JSON and server replay NDJSON
 - `replay verify`: compare stored replay hash to computed replay hash
   - returns non-zero for hash mismatch or strict-hash validation errors
   - also runs replay through sim systems and prints final world hash

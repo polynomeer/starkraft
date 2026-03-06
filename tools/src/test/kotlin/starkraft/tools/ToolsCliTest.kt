@@ -52,6 +52,33 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay stats command succeeds for sim replay`() {
+        val replayPath = Files.createTempFile("starkraft-tools-stats", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 0, units = intArrayOf(1), x = 3f, y = 4f))
+        )
+        val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString))
+        assertEquals(0, code)
+    }
+
+    @Test
+    fun `replay stats command succeeds for server ndjson replay`() {
+        val replayPath = Files.createTempFile("starkraft-tools-stats-ndjson", ".jsonl")
+        Files.writeString(
+            replayPath,
+            """
+            {"recordType":"header","protocolVersion":1}
+            {"recordType":"command","ack":{"tick":1}}
+            {"recordType":"keyframe","tick":1,"worldHash":123}
+            {"recordType":"matchEnd","tick":2}
+            """.trimIndent()
+        )
+        val code = runToolsCli(arrayOf("replay", "stats", replayPath.pathString))
+        assertEquals(0, code)
+    }
+
+    @Test
     fun `replay fast-forward command succeeds`() {
         val replayPath = Files.createTempFile("starkraft-tools-ff", ".json")
         ReplayIO.save(

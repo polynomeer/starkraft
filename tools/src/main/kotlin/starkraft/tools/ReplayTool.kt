@@ -18,12 +18,24 @@ import starkraft.sim.issue
 import starkraft.sim.net.Command
 import starkraft.sim.replay.NullRecorder
 import starkraft.sim.replay.ReplayIO
+import java.nio.file.Files
 import java.nio.file.Path
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 internal data class ReplayRunResult(
     val finalTick: Int,
     val commandCount: Int,
     val finalWorldHash: Long
+)
+
+internal data class NdjsonReplaySummary(
+    val records: Int,
+    val headerCount: Int,
+    val commandCount: Int,
+    val keyframeCount: Int,
+    val matchEndCount: Int
 )
 
 internal fun fastForwardReplay(path: Path, tickLimit: Int? = null): ReplayRunResult {
@@ -85,4 +97,35 @@ private fun hashWorld(world: World): Long {
         mix((world.orders[id]?.items?.size ?: 0).toLong())
     }
     return h
+}
+
+internal fun summarizeNdjsonReplay(path: Path): NdjsonReplaySummary {
+    val json = Json { ignoreUnknownKeys = true }
+    var records = 0
+    var headerCount = 0
+    var commandCount = 0
+    var keyframeCount = 0
+    var matchEndCount = 0
+    Files.newBufferedReader(path).use { reader ->
+        while (true) {
+            val line = reader.readLine() ?: break
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) continue
+            records++
+            val obj = json.parseToJsonElement(trimmed).jsonObject
+            when (obj["recordType"]?.jsonPrimitive?.content) {
+                "header" -> headerCount++
+                "command" -> commandCount++
+                "keyframe" -> keyframeCount++
+                "matchEnd" -> matchEndCount++
+            }
+        }
+    }
+    return NdjsonReplaySummary(
+        records = records,
+        headerCount = headerCount,
+        commandCount = commandCount,
+        keyframeCount = keyframeCount,
+        matchEndCount = matchEndCount
+    )
 }

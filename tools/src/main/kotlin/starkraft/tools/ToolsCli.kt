@@ -18,6 +18,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     }
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
+        args[0] == "replay" && args[1] == "stats" -> runReplayStats(args[2])
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "replay" && args[1] == "fast-forward" -> runReplayFastForward(args.drop(2))
         args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
@@ -35,6 +36,36 @@ private fun runReplayMeta(pathArg: String): Int {
     val metadata = ReplayIO.inspect(path)
     println(formatReplayMetadata(path, metadata))
     return 0
+}
+
+private fun runReplayStats(pathArg: String): Int {
+    val path = resolvePath(pathArg)
+    return try {
+        val meta = ReplayIO.inspect(path)
+        println("replay: $path")
+        println("format: sim-json")
+        println("schema: ${meta.schema}")
+        println("events: ${meta.eventCount}")
+        println("replayHash: ${meta.replayHash ?: "missing"}")
+        0
+    } catch (_: Exception) {
+        try {
+            val summary = summarizeNdjsonReplay(path)
+            println("replay: $path")
+            println("format: server-ndjson")
+            println("records: ${summary.records}")
+            println("header: ${summary.headerCount}")
+            println("command: ${summary.commandCount}")
+            println("keyframe: ${summary.keyframeCount}")
+            println("matchEnd: ${summary.matchEndCount}")
+            0
+        } catch (e: Exception) {
+            println("replay: $path")
+            println("result: invalid")
+            println("error: ${e.message}")
+            2
+        }
+    }
 }
 
 private fun runReplayVerify(args: List<String>): Int {
@@ -239,6 +270,7 @@ private fun printUsage() {
         """
         Usage:
           replay meta <path>
+          replay stats <path>
           replay verify <path> [--strictHash]
           replay fast-forward <path> [--ticks N]
           map validate <path>
