@@ -12,6 +12,8 @@ Current repository layout:
 - `shared-protocol/` protocol schemas/models
 - `scripts/` developer smoke scripts
 - `.github/workflows/` CI pipeline
+  - `ci.yml`: PR/push build, test, and socket smoke
+  - `nightly.yml`: scheduled soak + deterministic replay checks
 
 Completed scope:
 - fixed-tick deterministic simulation loop

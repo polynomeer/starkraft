@@ -1,0 +1,44 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+
+jobs:
+  sim-soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Run soak harness
+        run: ./gradlew --no-daemon :sim:soak --args="--minutes 1 --units 240 --seed 1234 --reportEverySec 30"
+
+  replay-compat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Run deterministic and replay compatibility tests
+        run: |
+          ./gradlew --no-daemon :sim:test --tests starkraft.sim.DeterminismTest
+          ./gradlew --no-daemon :sim:test --tests starkraft.sim.ReplayHashTest
+          ./gradlew --no-daemon :sim:test --tests starkraft.sim.ReplayIOTest
