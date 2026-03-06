@@ -30,6 +30,7 @@ class ToolsCliTest {
         val verifyJson = runAndCaptureJson("replay", "verify", replayPath.pathString, "--json")
         val fastForwardJson = runAndCaptureJson("replay", "fast-forward", replayPath.pathString, "--json")
 
+        assertEquals("ok", metaJson["result"]?.toString()?.trim('"'))
         assertTrue(metaJson.containsKey("schema"))
         assertTrue(metaJson.containsKey("events"))
         assertTrue(metaJson.containsKey("replayHash"))

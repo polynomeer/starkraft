@@ -54,6 +54,7 @@ private fun runReplayMeta(args: List<String>): Int {
             fields =
                 buildJsonObject {
                     put("replay", path.toString())
+                    put("result", "ok")
                     put("schema", metadata.schema)
                     put("legacy", metadata.legacy)
                     put("events", metadata.eventCount)
