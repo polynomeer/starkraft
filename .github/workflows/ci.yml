@@ -143,6 +143,17 @@ jobs:
       - name: Verify e2e replay keyframe hashes
         run: ./gradlew --no-daemon :tools:run --args="replay verify-ndjson /tmp/starkraft-e2e/server.replay.jsonl"
 
+      - name: Export e2e replay stats JSON
+        run: ./gradlew --no-daemon :tools:run --args="replay stats /tmp/starkraft-e2e/server.replay.jsonl --json" > /tmp/starkraft-e2e/replay-stats.json
+
+      - name: Upload e2e replay stats
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-replay-stats
+          path: /tmp/starkraft-e2e/replay-stats.json
+          if-no-files-found: ignore
+
       - name: Upload e2e logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
