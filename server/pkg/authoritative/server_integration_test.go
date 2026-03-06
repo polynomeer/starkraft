@@ -225,6 +225,15 @@ func TestSurrenderCommandEndsMatch(t *testing.T) {
 	if snap.WinnerID == nil || *snap.WinnerID != "player-2" {
 		t.Fatalf("expected winner player-2, got %v", snap.WinnerID)
 	}
+
+	endEnv := readUntilMessageType(t, conn, "matchEnd")
+	var end protocol.MatchEndMessage
+	if err := json.Unmarshal(endEnv.Message, &end); err != nil {
+		t.Fatalf("decode matchEnd: %v", err)
+	}
+	if end.WinnerID == nil || *end.WinnerID != "player-2" {
+		t.Fatalf("expected matchEnd winner player-2, got %v", end.WinnerID)
+	}
 }
 
 func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {

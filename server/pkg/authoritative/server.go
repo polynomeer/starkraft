@@ -501,14 +501,23 @@ func (s *Server) stepRooms() {
 		if s.replay != nil && s.cfg.KeyframeEvery > 0 && result.snapshot.Tick%s.cfg.KeyframeEvery == 0 {
 			_ = s.replay.WriteKeyframe(result.snapshot.Tick, result.snapshot.WorldHash, result.snapshot.Units)
 		}
-		if s.replay != nil && result.matchEnded && !s.roomMatchEnded[rm.id] {
-			_ = s.replay.WriteMatchEnd(result.snapshot.Tick, result.snapshot.WinnerID)
-			s.roomMatchEnded[rm.id] = true
-		}
+		justEnded := result.matchEnded && !s.roomMatchEnded[rm.id]
 		for _, c := range clients {
 			if err := c.sendEnvelope(msg); err != nil {
 				log.Printf("snapshot send failed: %v", err)
 			}
+		}
+		if justEnded {
+			if s.replay != nil {
+				_ = s.replay.WriteMatchEnd(result.snapshot.Tick, result.snapshot.WinnerID)
+			}
+			end := protocol.MatchEndMessage{Type: "matchEnd", Tick: result.snapshot.Tick, WinnerID: result.snapshot.WinnerID}
+			for _, c := range clients {
+				if err := c.sendEnvelope(end); err != nil {
+					log.Printf("matchEnd send failed: %v", err)
+				}
+			}
+			s.roomMatchEnded[rm.id] = true
 		}
 		if result.snapshot.Tick%200 == 0 {
 			p50, p95, p99 := s.tickPercentiles()
