@@ -21,6 +21,7 @@ internal fun runToolsCli(args: Array<String>): Int {
     return when {
         args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
+        args[0] == "replay" && args[1] == "fast-forward" -> runReplayFastForward(args.drop(2))
         args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
         args[0] == "map" && args[1] == "generate" -> runMapGenerate(args.drop(2))
         args[0] == "data" && args[1] == "validate" -> runDataValidate(args.drop(2))
@@ -71,6 +72,32 @@ private fun runReplayVerify(args: List<String>): Int {
     println("computedHash: $computedHash")
     println("result: $result")
     return if (result == "mismatch" || result == "missing-hash") 2 else 0
+}
+
+private fun runReplayFastForward(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = resolvePath(args[0])
+    var tickLimit: Int? = null
+    var i = 1
+    while (i < args.size) {
+        when (args[i]) {
+            "--ticks" -> {
+                tickLimit = args.getOrNull(i + 1)?.toIntOrNull() ?: return 1
+                i += 2
+            }
+            else -> return 1
+        }
+    }
+    val result = fastForwardReplay(path, tickLimit)
+    println("replay: $path")
+    println("result: ok")
+    println("finalTick: ${result.finalTick}")
+    println("commandCount: ${result.commandCount}")
+    println("worldHash: ${result.finalWorldHash}")
+    return 0
 }
 
 private fun runMapValidate(pathArg: String): Int {
@@ -185,6 +212,7 @@ private fun printUsage() {
         Usage:
           replay meta <path>
           replay verify <path> [--strictHash]
+          replay fast-forward <path> [--ticks N]
           map validate <path>
           map generate <path> [--width N] [--height N] [--seed N]
           data validate --dir <path>
