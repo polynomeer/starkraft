@@ -48,6 +48,11 @@ Replay output (optional):
 STARKRAFT_REPLAY_PATH=/tmp/starkraft-room.replay.jsonl go run ./cmd/server
 ```
 
+Runtime tuning env vars:
+- `STARKRAFT_EMPTY_ROOM_TTL` (duration, default `30s`)
+- `STARKRAFT_RESUME_WINDOW` (duration, default `15s`)
+- `STARKRAFT_KEYFRAME_EVERY` (int ticks, default `50`)
+
 Replay verifier:
 
 ```bash
