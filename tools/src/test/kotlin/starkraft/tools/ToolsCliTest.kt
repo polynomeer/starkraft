@@ -26,6 +26,28 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `replay meta command accepts json output flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-meta-json", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f))
+        )
+        val code = runToolsCli(arrayOf("replay", "meta", replayPath.pathString, "--json"))
+        assertEquals(0, code)
+    }
+
+    @Test
+    fun `replay meta command rejects unknown flag`() {
+        val replayPath = Files.createTempFile("starkraft-tools-meta-flag", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(Command.Move(tick = 1, units = intArrayOf(1), x = 2f, y = 3f))
+        )
+        val code = runToolsCli(arrayOf("replay", "meta", replayPath.pathString, "--bad"))
+        assertEquals(1, code)
+    }
+
+    @Test
     fun `replay verify command succeeds for hash-matching replay`() {
         val replayPath = Files.createTempFile("starkraft-tools-verify", ".json")
         ReplayIO.save(

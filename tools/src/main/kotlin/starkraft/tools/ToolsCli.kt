@@ -21,7 +21,7 @@ internal fun runToolsCli(args: Array<String>): Int {
         return 1
     }
     return when {
-        args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args[2])
+        args[0] == "replay" && args[1] == "meta" -> runReplayMeta(args.drop(2))
         args[0] == "replay" && args[1] == "stats" -> runReplayStats(args.drop(2))
         args[0] == "replay" && args[1] == "verify-ndjson" -> runReplayVerifyNdjson(args.drop(2))
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
@@ -36,10 +36,39 @@ internal fun runToolsCli(args: Array<String>): Int {
     }
 }
 
-private fun runReplayMeta(pathArg: String): Int {
-    val path = resolvePath(pathArg)
+private fun runReplayMeta(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = resolvePath(args[0])
+    val json = args.drop(1).any { it == "--json" }
+    if (args.drop(1).any { it != "--json" }) {
+        printUsage()
+        return 1
+    }
     val metadata = ReplayIO.inspect(path)
-    println(formatReplayMetadata(path, metadata))
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("replay", path.toString())
+                    put("schema", metadata.schema)
+                    put("legacy", metadata.legacy)
+                    put("events", metadata.eventCount)
+                    put("sizeBytes", metadata.fileSizeBytes)
+                    put("replayHash", metadata.replayHash?.toString() ?: "missing")
+                    put("seed", metadata.seed?.toString() ?: "unknown")
+                    put("mapId", metadata.mapId ?: "unknown")
+                    put("buildVersion", metadata.buildVersion ?: "unknown")
+                    put("winnerFaction", metadata.winnerFaction?.toString() ?: "unknown")
+                    put("matchEndReason", metadata.matchEndReason ?: "unknown")
+                }
+        )
+    } else {
+        println(formatReplayMetadata(path, metadata))
+    }
     return 0
 }
 
@@ -384,7 +413,7 @@ private fun printUsage() {
     println(
         """
         Usage:
-          replay meta <path>
+          replay meta <path> [--json]
           replay stats <path> [--json]
           replay verify-ndjson <path> [--json]
           replay verify <path> [--strictHash]
