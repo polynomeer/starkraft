@@ -33,6 +33,7 @@ type Config struct {
 	MaxRoomIDLength            int
 	MaxPendingBatchesPerClient int
 	MaxOutboundQueue           int
+	EmptyRoomTTL               time.Duration
 }
 
 type Server struct {
@@ -92,6 +93,9 @@ func NewServer(cfg Config) *Server {
 	}
 	if cfg.MaxOutboundQueue <= 0 {
 		cfg.MaxOutboundQueue = 128
+	}
+	if cfg.EmptyRoomTTL <= 0 {
+		cfg.EmptyRoomTTL = 30 * time.Second
 	}
 	s := &Server{
 		cfg:            cfg,
@@ -394,6 +398,12 @@ func (s *Server) stepRooms() {
 				p99/1000,
 				s.maxPending(),
 			)
+		}
+		if rm.shouldEvict(time.Now(), s.cfg.EmptyRoomTTL) {
+			s.mu.Lock()
+			delete(s.rooms, rm.id)
+			delete(s.roomMatchEnded, rm.id)
+			s.mu.Unlock()
 		}
 	}
 }

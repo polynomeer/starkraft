@@ -3,6 +3,7 @@ package authoritative
 import (
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/starkraft/server/pkg/protocol"
 )
@@ -35,6 +36,7 @@ type room struct {
 	maxPastTickSkew             int
 	maxFutureTickSkew           int
 	maxPendingBatchesPerClient  int
+	emptySince                  time.Time
 }
 
 type queuedBatch struct {
@@ -68,12 +70,16 @@ func (r *room) addClient(c *clientConn) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.clients[c] = struct{}{}
+	r.emptySince = time.Time{}
 }
 
 func (r *room) removeClient(c *clientConn) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	delete(r.clients, c)
+	if len(r.clients) == 0 {
+		r.emptySince = time.Now()
+	}
 }
 
 func (r *room) enqueue(clientID string, batch protocol.CommandBatchMessage) bool {
@@ -98,6 +104,21 @@ func (r *room) pendingBatchCount() int {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return len(r.pendingBatches)
+}
+
+func (r *room) shouldEvict(now time.Time, ttl time.Duration) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if len(r.clients) > 0 {
+		return false
+	}
+	if len(r.pendingBatches) > 0 {
+		return false
+	}
+	if r.emptySince.IsZero() {
+		return false
+	}
+	return now.Sub(r.emptySince) >= ttl
 }
 
 func (r *room) step() tickResult {
