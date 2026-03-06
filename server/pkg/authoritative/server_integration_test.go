@@ -450,6 +450,83 @@ func TestPendingQueueLimitRejectsOverflow(t *testing.T) {
 	}
 }
 
+func TestTwoClientsMatchEndsAndBroadcastsToBoth(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	roomID := "duel"
+	aConn := dialAndHandshake(t, wsURL, "bot-a", roomID)
+	defer aConn.Close()
+	bConn := dialAndHandshake(t, wsURL, "bot-b", roomID)
+	defer bConn.Close()
+
+	moveX, moveY := 28.0, 28.0
+	moveReq := "move-close"
+	moveBatchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch", Tick: 1,
+		Commands: []protocol.WireCommand{{CommandType: "move", RequestID: &moveReq, UnitIDs: []int{1}, X: &moveX, Y: &moveY}},
+	})
+	if err := aConn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: moveBatchRaw}); err != nil {
+		t.Fatalf("write move batch: %v", err)
+	}
+	waitForPendingBatches(t, srv, roomID, 1)
+	moveAck := stepUntilMessageType(t, srv, aConn, "commandAck", 5)
+	var moveCmdAck protocol.CommandAckMessage
+	if err := json.Unmarshal(moveAck.Message, &moveCmdAck); err != nil {
+		t.Fatalf("decode move ack: %v", err)
+	}
+	if !moveCmdAck.Accepted {
+		t.Fatalf("expected move accepted ack, got %+v", moveCmdAck)
+	}
+	_ = readUntilMessageType(t, aConn, "snapshot")
+	_ = readUntilMessageType(t, bConn, "snapshot")
+
+	var endA protocol.SnapshotMessage
+	var endB protocol.SnapshotMessage
+	for i := 0; i < 4; i++ {
+		attackReq := "atk-" + string(rune('a'+i))
+		targetID := 2
+		attackBatchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+			Type: "commandBatch", Tick: i + 2,
+			Commands: []protocol.WireCommand{{CommandType: "attack", RequestID: &attackReq, UnitIDs: []int{1}, TargetUnitID: &targetID}},
+		})
+		if err := aConn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: attackBatchRaw}); err != nil {
+			t.Fatalf("write attack batch: %v", err)
+		}
+		waitForPendingBatches(t, srv, roomID, 1)
+		attackAck := stepUntilMessageType(t, srv, aConn, "commandAck", 5)
+		var attackCmdAck protocol.CommandAckMessage
+		if err := json.Unmarshal(attackAck.Message, &attackCmdAck); err != nil {
+			t.Fatalf("decode attack ack: %v", err)
+		}
+		if !attackCmdAck.Accepted {
+			t.Fatalf("expected attack accepted ack, got %+v", attackCmdAck)
+		}
+
+		endASnapEnv := readUntilMessageType(t, aConn, "snapshot")
+		if err := json.Unmarshal(endASnapEnv.Message, &endA); err != nil {
+			t.Fatalf("decode snapshot A: %v", err)
+		}
+		endBSnapEnv := readUntilMessageType(t, bConn, "snapshot")
+		if err := json.Unmarshal(endBSnapEnv.Message, &endB); err != nil {
+			t.Fatalf("decode snapshot B: %v", err)
+		}
+	}
+
+	if !endA.MatchEnded || endA.WinnerID == nil || *endA.WinnerID != "player-1" {
+		t.Fatalf("expected match end winner player-1 for client A, got %+v", endA)
+	}
+	if !endB.MatchEnded || endB.WinnerID == nil || *endB.WinnerID != "player-1" {
+		t.Fatalf("expected match end winner player-1 for client B, got %+v", endB)
+	}
+	if endA.WorldHash != endB.WorldHash || endA.Tick != endB.Tick {
+		t.Fatalf("clients observed different terminal snapshots: A=%+v B=%+v", endA, endB)
+	}
+}
+
 func TestMalformedMoveCommandIsRejected(t *testing.T) {
 	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
 	defer srv.Close()
@@ -502,6 +579,22 @@ func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope 
 		t.Fatalf("read envelope: %v", err)
 	}
 	return env
+}
+
+func dialAndHandshake(t *testing.T, wsURL, name, room string) *websocket.Conn {
+	t.Helper()
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: name, RequestedRoom: &room})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readUntilMessageType(t, conn, "handshakeAck")
+	_ = readUntilMessageType(t, conn, "snapshot")
+	return conn
 }
 
 func readUntilMessageType(t *testing.T, conn *websocket.Conn, want string) protocol.ProtocolEnvelope {
