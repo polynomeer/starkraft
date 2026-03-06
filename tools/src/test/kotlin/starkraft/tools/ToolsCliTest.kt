@@ -271,6 +271,18 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `map validate command accepts json output flag`() {
+        val mapPath = Files.createTempFile("starkraft-tools-map-json", ".json")
+        Files.writeString(
+            mapPath,
+            """{"schema":1,"id":"demo","width":4,"height":4}"""
+        )
+        val json = runAndCaptureJson("map", "validate", mapPath.pathString, "--json")
+        assertEquals("ok", json["result"]?.toString()?.trim('"'))
+        assertEquals("0", json["errors"]?.toString())
+    }
+
+    @Test
     fun `map generate command writes output file`() {
         val mapPath = Files.createTempFile("starkraft-tools-map-gen", ".json")
         Files.deleteIfExists(mapPath)
@@ -280,9 +292,25 @@ class ToolsCliTest {
     }
 
     @Test
+    fun `map generate command accepts json output flag`() {
+        val mapPath = Files.createTempFile("starkraft-tools-map-gen-json", ".json")
+        Files.deleteIfExists(mapPath)
+        val json = runAndCaptureJson("map", "generate", mapPath.pathString, "--width", "7", "--height", "6", "--seed", "11", "--json")
+        assertEquals("generated", json["result"]?.toString()?.trim('"'))
+        assertTrue(mapPath.exists())
+    }
+
+    @Test
     fun `data validate command succeeds for sim data`() {
         val code = runToolsCli(arrayOf("data", "validate", "--dir", "sim/src/main/resources/data"))
         assertEquals(0, code)
+    }
+
+    @Test
+    fun `data validate command accepts json output flag`() {
+        val json = runAndCaptureJson("data", "validate", "--dir", "sim/src/main/resources/data", "--json")
+        assertEquals("ok", json["result"]?.toString()?.trim('"'))
+        assertEquals("0", json["errors"]?.toString())
     }
 
     @Test

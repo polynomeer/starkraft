@@ -26,7 +26,7 @@ internal fun runToolsCli(args: Array<String>): Int {
         args[0] == "replay" && args[1] == "verify-ndjson" -> runReplayVerifyNdjson(args.drop(2))
         args[0] == "replay" && args[1] == "verify" -> runReplayVerify(args.drop(2))
         args[0] == "replay" && args[1] == "fast-forward" -> runReplayFastForward(args.drop(2))
-        args[0] == "map" && args[1] == "validate" -> runMapValidate(args[2])
+        args[0] == "map" && args[1] == "validate" -> runMapValidate(args.drop(2))
         args[0] == "map" && args[1] == "generate" -> runMapGenerate(args.drop(2))
         args[0] == "data" && args[1] == "validate" -> runDataValidate(args.drop(2))
         else -> {
@@ -347,25 +347,70 @@ private fun runReplayFastForward(args: List<String>): Int {
     return 0
 }
 
-private fun runMapValidate(pathArg: String): Int {
-    val path = resolvePath(pathArg)
+private fun runMapValidate(args: List<String>): Int {
+    if (args.isEmpty()) {
+        printUsage()
+        return 1
+    }
+    val path = resolvePath(args[0])
+    val json = args.drop(1).any { it == "--json" }
+    if (args.drop(1).any { it != "--json" }) {
+        printUsage()
+        return 1
+    }
     val result = try {
         validateMap(path)
     } catch (e: Exception) {
-        println("map: $path")
-        println("result: invalid")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("map", path.toString())
+                        put("result", "invalid")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("map: $path")
+            println("result: invalid")
+            println("error: ${e.message}")
+        }
         return 2
     }
     if (result.ok) {
-        println("map: $path")
-        println("result: ok")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("map", path.toString())
+                        put("result", "ok")
+                        put("errors", 0)
+                    }
+            )
+        } else {
+            println("map: $path")
+            println("result: ok")
+        }
         return 0
     }
-    println("map: $path")
-    println("result: invalid")
-    for (error in result.errors) {
-        println("error: $error")
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("map", path.toString())
+                    put("result", "invalid")
+                    put("errors", result.errors.size)
+                }
+        )
+    } else {
+        println("map: $path")
+        println("result: invalid")
+        for (error in result.errors) {
+            println("error: $error")
+        }
     }
     return 2
 }
@@ -379,6 +424,7 @@ private fun runMapGenerate(args: List<String>): Int {
     var width = 64
     var height = 64
     var seed = 1337L
+    var json = false
     var i = 1
     while (i < args.size) {
         when (args[i]) {
@@ -394,29 +440,66 @@ private fun runMapGenerate(args: List<String>): Int {
                 seed = args.getOrNull(i + 1)?.toLongOrNull() ?: return 1
                 i += 2
             }
+            "--json" -> {
+                json = true
+                i++
+            }
             else -> return 1
         }
     }
     val payload = try {
         generateMap(outPath, width, height, seed)
     } catch (e: Exception) {
-        println("map: $outPath")
-        println("result: invalid")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("map", outPath.toString())
+                        put("result", "invalid")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("map: $outPath")
+            println("result: invalid")
+            println("error: ${e.message}")
+        }
         return 2
     }
-    println("map: $outPath")
-    println("result: generated")
-    println("id: ${payload.id}")
-    println("width: ${payload.width}")
-    println("height: ${payload.height}")
-    println("blockedTiles: ${payload.blockedTiles.size}")
-    println("weightedTiles: ${payload.weightedTiles.size}")
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("map", outPath.toString())
+                    put("result", "generated")
+                    put("id", payload.id)
+                    put("width", payload.width)
+                    put("height", payload.height)
+                    put("blockedTiles", payload.blockedTiles.size)
+                    put("weightedTiles", payload.weightedTiles.size)
+                }
+        )
+    } else {
+        println("map: $outPath")
+        println("result: generated")
+        println("id: ${payload.id}")
+        println("width: ${payload.width}")
+        println("height: ${payload.height}")
+        println("blockedTiles: ${payload.blockedTiles.size}")
+        println("weightedTiles: ${payload.weightedTiles.size}")
+    }
     return 0
 }
 
 private fun runDataValidate(args: List<String>): Int {
-    if (args.size != 2 || args[0] != "--dir") {
+    if (args.size < 2 || args[0] != "--dir") {
+        printUsage()
+        return 1
+    }
+    val json = args.drop(2).any { it == "--json" }
+    if (args.drop(2).any { it != "--json" }) {
         printUsage()
         return 1
     }
@@ -424,20 +507,56 @@ private fun runDataValidate(args: List<String>): Int {
     val result = try {
         validateDataDir(dir)
     } catch (e: Exception) {
-        println("dataDir: $dir")
-        println("result: invalid")
-        println("error: ${e.message}")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("dataDir", dir.toString())
+                        put("result", "invalid")
+                        put("error", e.message ?: "unknown error")
+                    }
+            )
+        } else {
+            println("dataDir: $dir")
+            println("result: invalid")
+            println("error: ${e.message}")
+        }
         return 2
     }
     if (result.ok) {
-        println("dataDir: $dir")
-        println("result: ok")
+        if (json) {
+            printStats(
+                json = true,
+                fields =
+                    buildJsonObject {
+                        put("dataDir", dir.toString())
+                        put("result", "ok")
+                        put("errors", 0)
+                    }
+            )
+        } else {
+            println("dataDir: $dir")
+            println("result: ok")
+        }
         return 0
     }
-    println("dataDir: $dir")
-    println("result: invalid")
-    for (error in result.errors) {
-        println("error: $error")
+    if (json) {
+        printStats(
+            json = true,
+            fields =
+                buildJsonObject {
+                    put("dataDir", dir.toString())
+                    put("result", "invalid")
+                    put("errors", result.errors.size)
+                }
+        )
+    } else {
+        println("dataDir: $dir")
+        println("result: invalid")
+        for (error in result.errors) {
+            println("error: $error")
+        }
     }
     return 2
 }
@@ -483,9 +602,9 @@ private fun printUsage() {
           replay verify-ndjson <path> [--json]
           replay verify <path> [--strictHash] [--json]
           replay fast-forward <path> [--ticks N] [--json]
-          map validate <path>
-          map generate <path> [--width N] [--height N] [--seed N]
-          data validate --dir <path>
+          map validate <path> [--json]
+          map generate <path> [--width N] [--height N] [--seed N] [--json]
+          data validate --dir <path> [--json]
         """.trimIndent()
     )
 }

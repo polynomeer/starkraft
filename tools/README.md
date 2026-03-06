@@ -9,9 +9,9 @@ Offline utility CLIs for replay/map/data workflows.
 - `./gradlew :tools:run --args="replay verify-ndjson <path> [--json]"`
 - `./gradlew :tools:run --args="replay verify <path> [--strictHash] [--json]"`
 - `./gradlew :tools:run --args="replay fast-forward <path> [--ticks N] [--json]"`
-- `./gradlew :tools:run --args="map validate <map.json>"`
-- `./gradlew :tools:run --args="map generate <map.json> --width 64 --height 64 --seed 1337"`
-- `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data"`
+- `./gradlew :tools:run --args="map validate <map.json> [--json]"`
+- `./gradlew :tools:run --args="map generate <map.json> --width 64 --height 64 --seed 1337 [--json]"`
+- `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data [--json]"`
 
 Paths are resolved relative to the repository root when passed as relative paths.
 
@@ -32,8 +32,11 @@ Paths are resolved relative to the repository root when passed as relative paths
 - `replay fast-forward`: run replay commands through sim systems and print final world hash
   - `--json` prints machine-readable single-line JSON
 - `map validate`: validate map JSON/YAML shape and tile/resource/spawn bounds
+  - `--json` prints machine-readable single-line JSON
 - `map generate`: generate a deterministic starter map JSON
+  - `--json` prints machine-readable single-line JSON
 - `data validate`: validate units/buildings/techs/weapons JSON/YAML IDs and cross references
+  - `--json` prints machine-readable single-line JSON
 
 ## Schemas
 
