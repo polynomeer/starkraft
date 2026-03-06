@@ -35,6 +35,7 @@ class ToolsCliTest {
         assertTrue(metaJson.containsKey("replayHash"))
 
         assertEquals("sim-json", statsJson["format"]?.toString()?.trim('"'))
+        assertEquals("ok", statsJson["result"]?.toString()?.trim('"'))
         assertTrue(statsJson.containsKey("schema"))
         assertTrue(statsJson.containsKey("events"))
 

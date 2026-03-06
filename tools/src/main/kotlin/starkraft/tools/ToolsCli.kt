@@ -99,6 +99,7 @@ private fun runReplayStatsResolved(path: Path, json: Boolean): Int {
                     put("schema", meta.schema)
                     put("events", meta.eventCount)
                     put("replayHash", meta.replayHash?.toString() ?: "missing")
+                    put("result", "ok")
                 }
         )
         0
@@ -119,6 +120,7 @@ private fun runReplayStatsResolved(path: Path, json: Boolean): Int {
                     if (verify.firstMismatchTick != null) {
                         put("firstMismatchTick", verify.firstMismatchTick)
                     }
+                    put("result", if (verify.mismatches == 0) "ok" else "mismatch")
                 }
             printStats(json = json, fields = fields)
             if (verify.mismatches == 0) 0 else 2
