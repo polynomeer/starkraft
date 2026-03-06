@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -19,6 +20,7 @@ func main() {
 	url := flag.String("url", "ws://127.0.0.1:8080/ws", "server websocket URL")
 	name := flag.String("name", "cli", "client name")
 	room := flag.String("room", "default", "room id")
+	scriptPath := flag.String("script", "", "optional JSON script path for auto command batches")
 	flag.Parse()
 
 	c, err := headless.Dial(*url, "dev", *name, room)
@@ -33,6 +35,8 @@ func main() {
 	buffer := &headless.SnapshotBuffer{}
 	selected := make([]int, 0, 8)
 	statuses := newRequestStatusBook()
+	scriptBatches := loadScriptBatches(*scriptPath)
+	nextScriptIndex := 0
 
 	go func() {
 		for s := range c.SnapshotCh {
@@ -46,6 +50,27 @@ func main() {
 			}
 			if s.MatchEnded {
 				fmt.Printf("match ended winner=%v\n", s.WinnerID)
+			}
+			for nextScriptIndex < len(scriptBatches) && scriptBatches[nextScriptIndex].Tick <= s.Tick+1 {
+				batch := scriptBatches[nextScriptIndex]
+				for i := range batch.Commands {
+					if batch.Commands[i].RequestID == nil {
+						req := fmt.Sprintf("script-%d-%d", batch.Tick, i+1)
+						batch.Commands[i].RequestID = &req
+					}
+					statuses.onSubmit(*batch.Commands[i].RequestID, batch.Commands[i].CommandType, batch.Tick)
+				}
+				if err := c.SendBatch(batch.Tick, batch.Commands); err != nil {
+					fmt.Printf("script send failed tick=%d: %v\n", batch.Tick, err)
+					for i := range batch.Commands {
+						if batch.Commands[i].RequestID != nil {
+							statuses.onSendError(*batch.Commands[i].RequestID, err.Error())
+						}
+					}
+				} else {
+					fmt.Printf("script batch sent tick=%d commands=%d\n", batch.Tick, len(batch.Commands))
+				}
+				nextScriptIndex++
 			}
 		}
 	}()
@@ -165,6 +190,11 @@ type requestStatusBook struct {
 	order   []string
 }
 
+type scriptBatch struct {
+	Tick     int                    `json:"tick"`
+	Commands []protocol.WireCommand `json:"commands"`
+}
+
 func newRequestStatusBook() *requestStatusBook {
 	return &requestStatusBook{
 		entries: make(map[string]requestStatus, 128),
@@ -242,4 +272,25 @@ func (b *requestStatusBook) print() {
 			entry.Reason,
 		)
 	}
+}
+
+func loadScriptBatches(path string) []scriptBatch {
+	if path == "" {
+		return nil
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		panic(fmt.Sprintf("read script: %v", err))
+	}
+	var batches []scriptBatch
+	if err := json.Unmarshal(raw, &batches); err != nil {
+		panic(fmt.Sprintf("parse script: %v", err))
+	}
+	for i := range batches {
+		if batches[i].Tick < 0 {
+			panic(fmt.Sprintf("script batch %d has negative tick", i))
+		}
+	}
+	fmt.Printf("loaded script batches=%d path=%s\n", len(batches), path)
+	return batches
 }
