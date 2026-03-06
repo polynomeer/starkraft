@@ -146,6 +146,20 @@ jobs:
       - name: Export e2e replay stats JSON
         run: ./gradlew --no-daemon --quiet :tools:run --args="replay stats /tmp/starkraft-e2e/server.replay.jsonl --json" > /tmp/starkraft-e2e/replay-stats.json
 
+      - name: Validate e2e replay JSON payloads
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          verify = json.loads(Path('/tmp/starkraft-e2e/replay-verify.json').read_text())
+          stats = json.loads(Path('/tmp/starkraft-e2e/replay-stats.json').read_text())
+          assert verify.get('result') == 'ok', f"unexpected verify result: {verify}"
+          assert 'keyframesChecked' in verify, f"missing keyframesChecked: {verify}"
+          assert stats.get('result') == 'ok', f"unexpected stats result: {stats}"
+          for key in ('records', 'header', 'command', 'keyframe', 'matchEnd'):
+              assert key in stats, f"missing {key}: {stats}"
+          PY
+
       - name: Upload e2e replay stats
         if: always()
         uses: actions/upload-artifact@v4
