@@ -162,6 +162,13 @@ Optional env vars:
 - `STARKRAFT_PLAY_BOT=0` (disable auto-start bot)
 - `STARKRAFT_PLAY_TMP_DIR` (custom logs/replay dir)
 
+Tools quick checks:
+- `./gradlew :tools:run --args="replay meta /tmp/starkraft-tools-smoke.replay.json"`
+- `./gradlew :tools:run --args="replay verify /tmp/starkraft-tools-smoke.replay.json --strictHash"`
+- `./gradlew :tools:run --args="map generate /tmp/starkraft-map.json --width 64 --height 64 --seed 1337"`
+- `./gradlew :tools:run --args="map validate /tmp/starkraft-map.json"`
+- `./gradlew :tools:run --args="data validate --dir sim/src/main/resources/data"`
+
 ### Headless Script Input
 You can run a simple command script with:
 `./gradlew :sim:run --args="--script sim/scripts/sample.script --noSleep"`
