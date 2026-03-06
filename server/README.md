@@ -69,6 +69,11 @@ cd server
 go run ./cmd/replaycheck --replay /tmp/starkraft-room.replay.jsonl
 ```
 
+`replaycheck` validates:
+- record ordering (`header` first, keyframe/command tick monotonicity)
+- structural counts (single header, max one matchEnd)
+- keyframe `worldHash` consistency against recorded unit snapshots
+
 ## Run tests
 
 ```bash
