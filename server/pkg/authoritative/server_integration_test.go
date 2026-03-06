@@ -171,6 +171,62 @@ func TestCommandValidationAndAck(t *testing.T) {
 	}
 }
 
+func TestSurrenderCommandEndsMatch(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	req := "s-1"
+	batchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch",
+		Tick: 1,
+		Commands: []protocol.WireCommand{
+			{CommandType: "surrender", RequestID: &req},
+		},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: batchRaw}); err != nil {
+		t.Fatalf("write surrender batch: %v", err)
+	}
+	waitForPendingBatches(t, srv, "default", 1)
+
+	ackEnv := stepUntilMessageType(t, srv, conn, "commandAck", 5)
+	var ack protocol.CommandAckMessage
+	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
+		t.Fatalf("decode surrender ack: %v", err)
+	}
+	if !ack.Accepted || ack.Reason != "" {
+		t.Fatalf("expected accepted surrender ack, got %+v", ack)
+	}
+
+	snapEnv := readUntilMessageType(t, conn, "snapshot")
+	var snap protocol.SnapshotMessage
+	if err := json.Unmarshal(snapEnv.Message, &snap); err != nil {
+		t.Fatalf("decode snapshot: %v", err)
+	}
+	if !snap.MatchEnded {
+		t.Fatalf("expected snapshot matchEnded=true after surrender")
+	}
+	if snap.WinnerID == nil || *snap.WinnerID != "player-2" {
+		t.Fatalf("expected winner player-2, got %v", snap.WinnerID)
+	}
+}
+
 func TestReplayFileContainsHeaderCommandAndKeyframe(t *testing.T) {
 	replayPath := filepath.Join(t.TempDir(), "room.replay.jsonl")
 	srv := NewServer(Config{

@@ -37,7 +37,7 @@ go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --scr
 ```
 
 CLI tips:
-- `select <ids...>`, `move x y`, `attack <targetId>`, `build x y [type]`, `queue [type]`
+- `select <ids...>`, `move x y`, `attack <targetId>`, `build x y [type]`, `queue [type]`, `surrender`
 - control groups:
   - `groupSave <0-9>` stores current selection
   - `groupRecall <0-9>` replaces current selection from slot

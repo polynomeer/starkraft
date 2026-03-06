@@ -15,6 +15,7 @@ func TestRoomValidationMatrix(t *testing.T) {
 		batch        protocol.CommandBatchMessage
 		wantAccepted bool
 		wantReason   string
+		verify       func(t *testing.T, r *room)
 	}{
 		{
 			name: "reject not owner move",
@@ -83,6 +84,39 @@ func TestRoomValidationMatrix(t *testing.T) {
 			wantAccepted: true,
 			wantReason:   "",
 		},
+		{
+			name: "accept surrender and end match",
+			batch: protocol.CommandBatchMessage{
+				Type: "commandBatch",
+				Tick: 1,
+				Commands: []protocol.WireCommand{
+					{CommandType: "surrender"},
+				},
+			},
+			wantAccepted: true,
+			wantReason:   "",
+			verify: func(t *testing.T, r *room) {
+				t.Helper()
+				if !r.matchEnded {
+					t.Fatalf("expected match ended after surrender")
+				}
+				if r.winnerID != "player-2" {
+					t.Fatalf("expected winner player-2, got %q", r.winnerID)
+				}
+			},
+		},
+		{
+			name: "reject surrender with payload",
+			batch: protocol.CommandBatchMessage{
+				Type: "commandBatch",
+				Tick: 1,
+				Commands: []protocol.WireCommand{
+					{CommandType: "surrender", UnitIDs: []int{1}},
+				},
+			},
+			wantAccepted: false,
+			wantReason:   "invalidPayload",
+		},
 	}
 
 	for _, tc := range cases {
@@ -102,6 +136,9 @@ func TestRoomValidationMatrix(t *testing.T) {
 			ack := acks[0].ack
 			if ack.Accepted != tc.wantAccepted || ack.Reason != tc.wantReason {
 				t.Fatalf("unexpected ack: got accepted=%v reason=%s", ack.Accepted, ack.Reason)
+			}
+			if tc.verify != nil {
+				tc.verify(t, r)
 			}
 		})
 	}

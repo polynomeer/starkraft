@@ -295,6 +295,8 @@ func (r *room) applyCommandLocked(clientID string, cmd protocol.WireCommand) (bo
 		return r.applyBuildLocked(clientID, cmd)
 	case "queue":
 		return r.applyQueueLocked(clientID, cmd)
+	case "surrender":
+		return r.applySurrenderLocked(clientID, cmd)
 	default:
 		return false, "unsupportedCommand"
 	}
@@ -426,6 +428,34 @@ func (r *room) applyQueueLocked(clientID string, cmd protocol.WireCommand) (bool
 	r.nextUnitID++
 	r.units[id] = unitState{id: id, ownerID: clientID, typeID: typeID, x: x, y: y, hp: 60}
 	return true, ""
+}
+
+func (r *room) applySurrenderLocked(clientID string, cmd protocol.WireCommand) (bool, string) {
+	if len(cmd.UnitIDs) > 0 || cmd.X != nil || cmd.Y != nil || cmd.TargetUnitID != nil || cmd.UnitType != nil {
+		return false, "invalidPayload"
+	}
+	r.matchEnded = true
+	r.winnerID = r.winnerAfterSurrenderLocked(clientID)
+	return true, ""
+}
+
+func (r *room) winnerAfterSurrenderLocked(surrenderingClientID string) string {
+	ownerSet := make(map[string]struct{}, len(r.units))
+	for _, u := range r.units {
+		if u.ownerID == surrenderingClientID {
+			continue
+		}
+		ownerSet[u.ownerID] = struct{}{}
+	}
+	if len(ownerSet) == 0 {
+		return ""
+	}
+	owners := make([]string, 0, len(ownerSet))
+	for owner := range ownerSet {
+		owners = append(owners, owner)
+	}
+	sort.Strings(owners)
+	return owners[0]
 }
 
 func (r *room) updateWinnerLocked() {

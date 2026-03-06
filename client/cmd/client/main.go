@@ -182,6 +182,8 @@ func main() {
 				ut = &t
 			}
 			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "queue", UnitType: ut})
+		case "surrender":
+			issue(c, int(currentTick.Load())+1, &requestSeq, statuses, protocol.WireCommand{CommandType: "surrender"})
 		case "snapshot":
 			for _, u := range buffer.Interpolate(0.5) {
 				fmt.Printf("unit id=%d owner=%s type=%s pos=(%.2f,%.2f) hp=%d\n", u.ID, u.OwnerID, u.TypeID, u.X, u.Y, u.HP)
@@ -191,7 +193,7 @@ func main() {
 		case "hud":
 			hud.print(statuses)
 		default:
-			fmt.Println("commands: select/groupSave/groupRecall/groupAdd/groups/move/attack/build/queue/snapshot/status/hud/quit")
+			fmt.Println("commands: select/groupSave/groupRecall/groupAdd/groups/move/attack/build/queue/surrender/snapshot/status/hud/quit")
 		}
 	}
 }
