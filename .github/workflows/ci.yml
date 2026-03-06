@@ -56,6 +56,11 @@ jobs:
       - name: Test server packages
         run: go test ./...
 
+      - name: Verify server module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
   client-build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -77,6 +82,11 @@ jobs:
 
       - name: Test client packages
         run: go test ./...
+
+      - name: Verify client module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
   e2e-smoke:
     runs-on: ubuntu-latest
