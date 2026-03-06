@@ -1,6 +1,7 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.ecs.MatchEndReason
@@ -104,6 +105,71 @@ class ReplayIOTest {
         assertTrue(meta.fileSizeBytes > 0)
         assertTrue(meta.replayHash != null)
         assertEquals(false, meta.legacy)
+    }
+
+    @Test
+    fun loadsLegacyArrayReplayAndRejectsStrictHash() {
+        val tmp = Files.createTempFile("starkraft-replay-legacy-array", ".json")
+        Files.writeString(
+            tmp,
+            """
+            [
+              {"type":"move","tick":0,"units":[1],"x":2.0,"y":3.0}
+            ]
+            """.trimIndent()
+        )
+
+        val loaded = ReplayIO.load(tmp, strictHash = false)
+        assertEquals(1, loaded.size)
+        assertTrue(loaded[0] is Command.Move)
+        assertThrows(IllegalStateException::class.java) {
+            ReplayIO.load(tmp, strictHash = true)
+        }
+    }
+
+    @Test
+    fun loadsSchemaZeroReplayAndRejectsStrictHash() {
+        val tmp = Files.createTempFile("starkraft-replay-legacy-schema", ".json")
+        Files.writeString(
+            tmp,
+            """
+            {
+              "schema": 0,
+              "replayHash": 0,
+              "events": [
+                {"type":"move","tick":1,"units":[2],"x":4.0,"y":5.0}
+              ]
+            }
+            """.trimIndent()
+        )
+
+        val loaded = ReplayIO.load(tmp, strictHash = false)
+        assertEquals(1, loaded.size)
+        assertTrue(loaded[0] is Command.Move)
+        assertThrows(IllegalStateException::class.java) {
+            ReplayIO.load(tmp, strictHash = true)
+        }
+    }
+
+    @Test
+    fun rejectsSchemaOneReplayWithHashMismatch() {
+        val tmp = Files.createTempFile("starkraft-replay-hash-mismatch", ".json")
+        Files.writeString(
+            tmp,
+            """
+            {
+              "schema": 1,
+              "replayHash": 123,
+              "events": [
+                {"type":"move","tick":0,"units":[1],"x":2.0,"y":3.0}
+              ]
+            }
+            """.trimIndent()
+        )
+
+        assertThrows(IllegalStateException::class.java) {
+            ReplayIO.load(tmp, strictHash = false)
+        }
     }
 }
 
