@@ -34,6 +34,7 @@ func main() {
 	var requestSeq atomic.Int64
 	buffer := &headless.SnapshotBuffer{}
 	selected := make([]int, 0, 8)
+	groups := newControlGroups()
 	statuses := newRequestStatusBook()
 	scriptBatches := loadScriptBatches(*scriptPath)
 	nextScriptIndex := 0
@@ -105,7 +106,44 @@ func main() {
 					selected = append(selected, id)
 				}
 			}
+			selected = sanitizeSelection(selected)
 			fmt.Printf("selected=%v\n", selected)
+		case "groupSave":
+			slot, ok := parseGroupSlot(parts)
+			if !ok {
+				fmt.Println("usage: groupSave <0-9>")
+				continue
+			}
+			groups.save(slot, selected)
+			fmt.Printf("group %d saved=%v\n", slot, groups.recall(slot))
+		case "groupRecall":
+			slot, ok := parseGroupSlot(parts)
+			if !ok {
+				fmt.Println("usage: groupRecall <0-9>")
+				continue
+			}
+			restored := groups.recall(slot)
+			if restored == nil {
+				fmt.Printf("group %d is empty\n", slot)
+				continue
+			}
+			selected = restored
+			fmt.Printf("selected=%v\n", selected)
+		case "groupAdd":
+			slot, ok := parseGroupSlot(parts)
+			if !ok {
+				fmt.Println("usage: groupAdd <0-9>")
+				continue
+			}
+			restored := groups.recall(slot)
+			if restored == nil {
+				fmt.Printf("group %d is empty\n", slot)
+				continue
+			}
+			selected = mergeUniqueIDs(selected, restored)
+			fmt.Printf("selected=%v\n", selected)
+		case "groups":
+			groups.print()
 		case "move":
 			if len(parts) < 3 {
 				fmt.Println("usage: move <x> <y>")
@@ -148,7 +186,7 @@ func main() {
 		case "status":
 			statuses.print()
 		default:
-			fmt.Println("commands: select/move/attack/build/queue/snapshot/status/quit")
+			fmt.Println("commands: select/groupSave/groupRecall/groupAdd/groups/move/attack/build/queue/snapshot/status/quit")
 		}
 	}
 }
@@ -173,6 +211,82 @@ func cloneInts(src []int) []int {
 	out := make([]int, len(src))
 	copy(out, src)
 	return out
+}
+
+func mergeUniqueIDs(base []int, extra []int) []int {
+	if len(extra) == 0 {
+		return sanitizeSelection(base)
+	}
+	seen := make(map[int]struct{}, len(base)+len(extra))
+	out := make([]int, 0, len(base)+len(extra))
+	for _, id := range base {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	for _, id := range extra {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
+func sanitizeSelection(ids []int) []int {
+	if len(ids) == 0 {
+		return ids
+	}
+	return mergeUniqueIDs(nil, ids)
+}
+
+func parseGroupSlot(parts []string) (int, bool) {
+	if len(parts) < 2 {
+		return 0, false
+	}
+	slot, err := strconv.Atoi(parts[1])
+	if err != nil || slot < 0 || slot > 9 {
+		return 0, false
+	}
+	return slot, true
+}
+
+type controlGroups struct {
+	slots [10][]int
+}
+
+func newControlGroups() *controlGroups {
+	return &controlGroups{}
+}
+
+func (g *controlGroups) save(slot int, selected []int) {
+	if slot < 0 || slot >= len(g.slots) {
+		return
+	}
+	g.slots[slot] = cloneInts(sanitizeSelection(selected))
+}
+
+func (g *controlGroups) recall(slot int) []int {
+	if slot < 0 || slot >= len(g.slots) {
+		return nil
+	}
+	if len(g.slots[slot]) == 0 {
+		return nil
+	}
+	return cloneInts(g.slots[slot])
+}
+
+func (g *controlGroups) print() {
+	fmt.Println("control groups:")
+	for slot := range g.slots {
+		if len(g.slots[slot]) == 0 {
+			continue
+		}
+		fmt.Printf("  %d: %v\n", slot, g.slots[slot])
+	}
 }
 
 type requestStatus struct {
