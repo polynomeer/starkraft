@@ -69,3 +69,13 @@ jobs:
           name: nightly-tools-health
           path: /tmp/starkraft-tools-health
           if-no-files-found: ignore
+
+      - name: Upload nightly tools test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-tools-test-reports
+          path: |
+            tools/build/reports/tests/test
+            tools/build/test-results/test
+          if-no-files-found: ignore
