@@ -167,6 +167,16 @@ func (c *Client) handshake() error {
 	if err := json.Unmarshal(env.Message, &ack); err != nil {
 		return err
 	}
+	switch protocol.Compatibility(protocol.CurrentProtocolVersion, ack.ProtocolVersion) {
+	case protocol.Compatible:
+		// continue
+	case protocol.UpgradeClient:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade client)", protocol.CurrentProtocolVersion, ack.ProtocolVersion)
+	case protocol.UpgradeServer:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade server)", protocol.CurrentProtocolVersion, ack.ProtocolVersion)
+	default:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d", protocol.CurrentProtocolVersion, ack.ProtocolVersion)
+	}
 	c.clientID = ack.ClientID
 	c.resumeToken = ack.ResumeToken
 	return nil
