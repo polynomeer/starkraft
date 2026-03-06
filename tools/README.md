@@ -15,6 +15,9 @@ Offline utility CLIs for replay/map/data workflows.
 
 Paths are resolved relative to the repository root when passed as relative paths.
 
+Full tools smoke run (JSON contracts + assertions):
+- `./scripts/tools_health.sh`
+
 ## Commands
 
 - `replay meta`: print replay metadata (`schema`, hash, seed, map/build tags, size)
