@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
+
+	"github.com/starkraft/server/pkg/protocol"
 )
 
 type ReplayVerifySummary struct {
@@ -25,6 +28,7 @@ type replayKeyframeView struct {
 	RecordType string `json:"recordType"`
 	Tick       int    `json:"tick"`
 	WorldHash  int64  `json:"worldHash"`
+	Units      []protocol.SnapshotUnit `json:"units"`
 }
 
 type replayCommandView struct {
@@ -86,6 +90,15 @@ func VerifyReplayFile(path string) (ReplayVerifySummary, error) {
 				return summary, fmt.Errorf("line %d: keyframe tick not increasing (%d <= %d)", lineNo, kf.Tick, lastKeyframeTick)
 			}
 			lastKeyframeTick = kf.Tick
+			expectedHash := computeReplayWorldHash(kf.Tick, kf.Units)
+			if kf.WorldHash != expectedHash {
+				return summary, fmt.Errorf(
+					"line %d: keyframe worldHash mismatch (got %d want %d)",
+					lineNo,
+					kf.WorldHash,
+					expectedHash,
+				)
+			}
 			summary.LastTick = kf.Tick
 			summary.LastWorldHash = kf.WorldHash
 		case "matchEnd":
@@ -115,4 +128,20 @@ func VerifyReplayFile(path string) (ReplayVerifySummary, error) {
 		return summary, fmt.Errorf("replay file is empty")
 	}
 	return summary, nil
+}
+
+func computeReplayWorldHash(tick int, units []protocol.SnapshotUnit) int64 {
+	h := int64(tick)*1469598103934665603 + 31
+	sorted := make([]protocol.SnapshotUnit, len(units))
+	copy(sorted, units)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].ID < sorted[j].ID
+	})
+	for _, u := range sorted {
+		h = h*1099511628211 + int64(u.ID)
+		h = h*1099511628211 + int64(u.X*100)
+		h = h*1099511628211 + int64(u.Y*100)
+		h = h*1099511628211 + int64(u.HP)
+	}
+	return h
 }

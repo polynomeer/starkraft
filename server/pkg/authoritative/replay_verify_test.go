@@ -12,8 +12,8 @@ func TestVerifyReplayFileAcceptsBasicTimeline(t *testing.T) {
 	content := strings.Join([]string{
 		`{"recordType":"header","timestampUtc":"2026-01-01T00:00:00Z","protocolVersion":1,"simVersion":"test","tickMs":20}`,
 		`{"recordType":"command","clientId":"player-1","command":{"commandType":"move"},"ack":{"type":"commandAck","tick":1,"commandType":"move","accepted":true}}`,
-		`{"recordType":"keyframe","tick":1,"worldHash":123,"units":[]}`,
-		`{"recordType":"keyframe","tick":2,"worldHash":456,"units":[]}`,
+		`{"recordType":"keyframe","tick":1,"worldHash":1469598103934665634,"units":[]}`,
+		`{"recordType":"keyframe","tick":2,"worldHash":2939196207869331237,"units":[]}`,
 		`{"recordType":"matchEnd","tick":2,"winnerId":"player-1"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
@@ -42,5 +42,20 @@ func TestVerifyReplayFileRejectsRegressedKeyframeTick(t *testing.T) {
 
 	if _, err := VerifyReplayFile(path); err == nil {
 		t.Fatalf("expected keyframe regression verification failure")
+	}
+}
+
+func TestVerifyReplayFileRejectsWorldHashMismatch(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "replay.jsonl")
+	content := strings.Join([]string{
+		`{"recordType":"header","timestampUtc":"2026-01-01T00:00:00Z","protocolVersion":1,"simVersion":"test","tickMs":20}`,
+		`{"recordType":"keyframe","tick":1,"worldHash":42,"units":[]}`,
+	}, "\n") + "\n"
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatalf("write replay: %v", err)
+	}
+
+	if _, err := VerifyReplayFile(path); err == nil {
+		t.Fatalf("expected world hash verification failure")
 	}
 }
