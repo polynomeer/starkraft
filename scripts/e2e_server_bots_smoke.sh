@@ -2,10 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPLAY_FILE="$(mktemp /tmp/starkraft-server-replay-XXXXXX.jsonl)"
-SERVER_LOG="$(mktemp /tmp/starkraft-server-log-XXXXXX.txt)"
-BOT1_LOG="$(mktemp /tmp/starkraft-bot1-log-XXXXXX.txt)"
-BOT2_LOG="$(mktemp /tmp/starkraft-bot2-log-XXXXXX.txt)"
+REPLAY_FILE="$(mktemp /tmp/starkraft-server-replay-XXXXXX).jsonl"
+touch "$REPLAY_FILE"
+SERVER_LOG="$(mktemp /tmp/starkraft-server-log-XXXXXX).txt"
+BOT1_LOG="$(mktemp /tmp/starkraft-bot1-log-XXXXXX).txt"
+BOT2_LOG="$(mktemp /tmp/starkraft-bot2-log-XXXXXX).txt"
 
 cleanup() {
   set +e
