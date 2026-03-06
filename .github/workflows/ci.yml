@@ -73,6 +73,21 @@ jobs:
             echo '{"result":"missing","summary":"not found"}'
           fi
 
+      - name: Validate tools health summary payload
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('/tmp/starkraft-tools-health/summary.json')
+          assert p.exists(), 'summary.json missing'
+          data = json.loads(p.read_text())
+          assert data.get('result') == 'ok', data
+          assert data.get('outputVersion') == 1, data
+          files = data.get('files', {})
+          for key in ('replayMeta', 'replayStats', 'replayVerify', 'mapGenerate', 'mapValidate', 'dataValidate'):
+            assert key in files, (key, data)
+          PY
+
       - name: Upload tools test reports
         if: always()
         uses: actions/upload-artifact@v4
