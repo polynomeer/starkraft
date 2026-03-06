@@ -87,3 +87,22 @@ type MatchEndMessage struct {
 	Tick     int     `json:"tick"`
 	WinnerID *string `json:"winnerId,omitempty"`
 }
+
+type ProtocolCompatibility int
+
+const (
+	Compatible ProtocolCompatibility = iota
+	UpgradeServer
+	UpgradeClient
+)
+
+func Compatibility(localVersion, remoteVersion int) ProtocolCompatibility {
+	switch {
+	case remoteVersion == localVersion:
+		return Compatible
+	case remoteVersion > localVersion:
+		return UpgradeClient
+	default:
+		return UpgradeServer
+	}
+}

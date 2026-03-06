@@ -146,6 +146,16 @@ func (c *Client) handshake() error {
 		return err
 	}
 	_ = c.conn.SetReadDeadline(time.Time{})
+	switch protocol.Compatibility(protocol.CurrentProtocolVersion, env.ProtocolVersion) {
+	case protocol.Compatible:
+		// continue
+	case protocol.UpgradeClient:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade client)", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+	case protocol.UpgradeServer:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade server)", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+	default:
+		return fmt.Errorf("protocol mismatch: local=%d remote=%d", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+	}
 	mt, err := protocol.DecodeMessageType(env.Message)
 	if err != nil {
 		return err
