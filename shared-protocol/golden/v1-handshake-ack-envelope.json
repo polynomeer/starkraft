@@ -1,0 +1,1 @@
+{"protocolVersion":1,"simVersion":"1.0.0","message":{"type":"handshakeAck","roomId":"room-1","clientId":"player-1","serverTickMs":20,"protocolVersion":1,"resumeToken":"resume-1"}}
