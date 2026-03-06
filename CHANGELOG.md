@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Graphical client headless mode for non-GUI CI smoke runs.
 - Soak harness (`:sim:soak`) with tick latency, pathfinding budget pressure, memory, and GC telemetry.
 - Tools JSON output modes for replay/map/data commands with CI contract validation.
+- Tools JSON outputs now carry `outputVersion=1` and richer invalid payload fields (`firstError`, `errorsList`).
 
 ### Changed
 - Benchmark output now includes tick `p99` and pathfinding node-budget usage percentiles.
