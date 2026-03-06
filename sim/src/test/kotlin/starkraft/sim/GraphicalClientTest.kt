@@ -1616,6 +1616,31 @@ class GraphicalClientTest {
     }
 
     @Test
+    fun `builds game state from explicit match outcome metadata`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 20,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities = emptyList(),
+                matchEnded = true,
+                winnerFaction = 2,
+                matchEndReason = "surrender",
+                resourceNodes = emptyList()
+            )
+
+        val p1 = buildGameState(snapshot, 1)
+        val p2 = buildGameState(snapshot, 2)
+        assertEquals("Defeat", p1?.title)
+        assertTrue(p1?.detail?.contains("surrender") == true)
+        assertEquals("Victory", p2?.title)
+        assertTrue(p2?.detail?.contains("surrender") == true)
+    }
+
+    @Test
     fun `builds fog summary from streamed vision state`() {
         val snapshot =
             ClientSnapshot(

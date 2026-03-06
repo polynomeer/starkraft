@@ -1482,6 +1482,30 @@ internal fun buildEntityStatusLabel(entity: EntitySnapshot): String? =
     }
 
 internal fun buildGameState(snapshot: ClientSnapshot, viewedFaction: Int?): ClientGameState? {
+    if (snapshot.matchEnded) {
+        val reasonSuffix =
+            when (snapshot.matchEndReason) {
+                "surrender" -> " (surrender)"
+                "timeout" -> " (timeout)"
+                "draw" -> " (draw)"
+                else -> ""
+            }
+        val winner = snapshot.winnerFaction
+        return when {
+            viewedFaction == null ->
+                ClientGameState(
+                    if (winner == null) "Draw" else "Finished",
+                    if (winner == null) "Match ended$reasonSuffix" else "Winner: faction $winner$reasonSuffix"
+                )
+            winner == null ->
+                ClientGameState("Draw", "Match ended$reasonSuffix")
+            winner == viewedFaction ->
+                ClientGameState("Victory", "Enemy faction eliminated$reasonSuffix")
+            else ->
+                ClientGameState("Defeat", "Your faction has been eliminated$reasonSuffix")
+        }
+    }
+
     var friendlyAlive = 0
     var enemyAlive = 0
     for (entity in snapshot.entities) {
