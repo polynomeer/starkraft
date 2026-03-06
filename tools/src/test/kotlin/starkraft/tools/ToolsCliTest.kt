@@ -3,13 +3,52 @@ package starkraft.tools
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import starkraft.sim.net.Command
 import starkraft.sim.replay.ReplayIO
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import java.nio.file.Files
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
 class ToolsCliTest {
+    @Test
+    fun `replay json commands expose stable keys`() {
+        val replayPath = Files.createTempFile("starkraft-tools-json-contract", ".json")
+        ReplayIO.save(
+            replayPath,
+            listOf(
+                Command.Move(tick = 0, units = intArrayOf(1), x = 3f, y = 4f),
+                Command.Move(tick = 1, units = intArrayOf(2), x = 5f, y = 6f)
+            )
+        )
+        val metaJson = runAndCaptureJson("replay", "meta", replayPath.pathString, "--json")
+        val statsJson = runAndCaptureJson("replay", "stats", replayPath.pathString, "--json")
+        val verifyJson = runAndCaptureJson("replay", "verify", replayPath.pathString, "--json")
+        val fastForwardJson = runAndCaptureJson("replay", "fast-forward", replayPath.pathString, "--json")
+
+        assertTrue(metaJson.containsKey("schema"))
+        assertTrue(metaJson.containsKey("events"))
+        assertTrue(metaJson.containsKey("replayHash"))
+
+        assertEquals("sim-json", statsJson["format"]?.toString()?.trim('"'))
+        assertTrue(statsJson.containsKey("schema"))
+        assertTrue(statsJson.containsKey("events"))
+
+        assertEquals("ok", verifyJson["result"]?.toString()?.trim('"'))
+        assertTrue(verifyJson.containsKey("expectedHash"))
+        assertTrue(verifyJson.containsKey("computedHash"))
+        assertTrue(verifyJson.containsKey("worldHash"))
+
+        assertEquals("ok", fastForwardJson["result"]?.toString()?.trim('"'))
+        assertTrue(fastForwardJson.containsKey("finalTick"))
+        assertTrue(fastForwardJson.containsKey("commandCount"))
+        assertTrue(fastForwardJson.containsKey("worldHash"))
+    }
+
     @Test
     fun `replay meta command succeeds for saved replay`() {
         val replayPath = Files.createTempFile("starkraft-tools-meta", ".json")
@@ -249,5 +288,19 @@ class ToolsCliTest {
     fun `map validate returns non-zero for missing file`() {
         val code = runToolsCli(arrayOf("map", "validate", "/tmp/no-such-map-${System.nanoTime()}.json"))
         assertEquals(2, code)
+    }
+
+    private fun runAndCaptureJson(vararg args: String): JsonObject {
+        val originalOut = System.out
+        val out = ByteArrayOutputStream()
+        try {
+            System.setOut(PrintStream(out))
+            val code = runToolsCli(args.toList().toTypedArray())
+            assertEquals(0, code)
+        } finally {
+            System.setOut(originalOut)
+        }
+        val text = out.toString().trim()
+        return Json.parseToJsonElement(text).jsonObject
     }
 }
