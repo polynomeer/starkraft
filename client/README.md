@@ -9,6 +9,7 @@ Headless websocket client tools.
 - interactive CLI client for select/move/attack/build/queue commands
 - snapshot buffer with basic interpolation for text display
 - autonomous bot client with simple build/queue + attack routine
+- runtime failures (connect/protocol/stream timeout) exit with explicit stderr errors and non-zero code
 
 ## Run CLI client
 
