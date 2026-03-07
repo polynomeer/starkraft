@@ -117,6 +117,18 @@ func TestRoomValidationMatrix(t *testing.T) {
 			wantAccepted: false,
 			wantReason:   "invalidPayload",
 		},
+		{
+			name: "reject unknown command type",
+			batch: protocol.CommandBatchMessage{
+				Type: "commandBatch",
+				Tick: 1,
+				Commands: []protocol.WireCommand{
+					{CommandType: "dance"},
+				},
+			},
+			wantAccepted: false,
+			wantReason:   "unsupportedCommand",
+		},
 	}
 
 	for _, tc := range cases {
