@@ -155,6 +155,7 @@ Quick smoke check:
 
 Play pipeline smoke check (snapshot producer + headless graphical client):
 `./scripts/play_sim_smoke.sh`
+  - set `STARKRAFT_PLAY_SIM_SMOKE_KEEP_TMP=1` to keep logs/artifacts under the temp dir
 
 Authoritative stack smoke check (server + 2 bots + replay):
 `./scripts/e2e_server_bots_smoke.sh`

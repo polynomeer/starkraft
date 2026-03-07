@@ -66,3 +66,10 @@ CLI tips:
 cd client
 go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default
 ```
+
+Resume bot identity with a saved token:
+
+```bash
+cd client
+go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --resumeToken <token>
+```
