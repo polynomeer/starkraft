@@ -162,6 +162,14 @@ Interactive local stack play (server + optional bot + CLI):
 Interactive local sim + graphical client play:
 `./scripts/play_sim_graphical.sh`
 
+Quick play modes:
+1. Sim-only graphical sandbox:
+   `./scripts/play_sim_graphical.sh`
+2. Authoritative stack (server + bot + CLI):
+   `./scripts/play_stack_local.sh`
+3. Non-interactive stack smoke:
+   `./scripts/e2e_server_bots_smoke.sh`
+
 Optional env vars:
 - `STARKRAFT_PLAY_PORT` (default `18080`)
 - `STARKRAFT_PLAY_ROOM` (default `local-play`)
