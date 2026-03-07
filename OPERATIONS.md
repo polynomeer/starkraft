@@ -8,6 +8,13 @@ This runbook covers local host/play/replay verification and fast triage.
 - Go 1.22+
 - Unix shell with `bash`
 
+Optional one-shot dependency bootstrap:
+
+```bash
+cd /Users/hammac/Projects/starkraft
+./scripts/bootstrap_dev.sh
+```
+
 ## Quick Start (Authoritative Server + 2 Bots)
 
 1. Start server:
@@ -50,6 +57,13 @@ cd /Users/hammac/Projects/starkraft
 If it fails, inspect script output and referenced log files.
 
 ## Sim Local Play (Headless + Minimal Graphical Client)
+
+One-command launcher:
+
+```bash
+cd /Users/hammac/Projects/starkraft
+./scripts/play_sim_graphical.sh
+```
 
 1. Start sim snapshot producer:
 
