@@ -419,6 +419,45 @@ func TestHandshakeRejectsInvalidClientName(t *testing.T) {
 	}
 }
 
+func TestHandshakeRejectsWrongInitialMessageTypeWithReason(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	raw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type:     "commandBatch",
+		Tick:     1,
+		Commands: []protocol.WireCommand{},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      "test",
+		Message:         raw,
+	}); err != nil {
+		t.Fatalf("write envelope: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	err = conn.ReadJSON(&env)
+	if err == nil {
+		t.Fatalf("expected invalid handshake rejection")
+	}
+	if !strings.Contains(err.Error(), "invalid handshake") {
+		t.Fatalf("expected invalid handshake close reason, got: %v", err)
+	}
+}
+
 func TestHandshakeRejectsProtocolMismatch(t *testing.T) {
 	srv := NewServer(Config{
 		SimVersion:   "test",
