@@ -20,14 +20,14 @@ Optional first-time dependency bootstrap from repo root:
 
 ```bash
 cd client
-go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default
+go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --simVersion dev
 ```
 
 Resume a prior session identity (if token is still valid):
 
 ```bash
 cd client
-go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --resumeToken <token>
+go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --simVersion dev --resumeToken <token>
 ```
 
 Scripted batch mode:
@@ -64,12 +64,12 @@ CLI tips:
 
 ```bash
 cd client
-go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default
+go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --simVersion dev
 ```
 
 Resume bot identity with a saved token:
 
 ```bash
 cd client
-go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --resumeToken <token>
+go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --simVersion dev --resumeToken <token>
 ```
