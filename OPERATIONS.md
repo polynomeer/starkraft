@@ -54,6 +54,13 @@ cd /Users/hammac/Projects/starkraft
 ./scripts/e2e_server_bots_smoke.sh
 ```
 
+Sim play pipeline smoke:
+
+```bash
+cd /Users/hammac/Projects/starkraft
+./scripts/play_sim_smoke.sh
+```
+
 If it fails, inspect script output and referenced log files.
 
 ## Sim Local Play (Headless + Minimal Graphical Client)
