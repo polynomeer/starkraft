@@ -16,6 +16,7 @@ Implemented and wired for local play/smoke:
 - health endpoint: `GET /healthz`
 - admin stats endpoint: `GET /admin/stats`
 - required first message: protocol envelope with `message.type=handshake`
+- handshake rejects now close socket with explicit reasons (e.g. `protocol mismatch: upgrade client`, `invalid room id`)
 - room create/join by `requestedRoom` (default room if omitted)
 - deterministic room snapshot broadcast support
 - command queue with deterministic validation acks (`commandAck`)
