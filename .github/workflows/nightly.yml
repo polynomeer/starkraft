@@ -56,6 +56,9 @@ jobs:
       - name: Run soak harness
         run: ./gradlew --no-daemon :sim:soak --args="--minutes 1 --units 240 --seed 1234 --reportEverySec 30"
 
+      - name: Run sim play smoke
+        run: ./scripts/play_sim_smoke.sh
+
   replay-compat:
     runs-on: ubuntu-latest
     timeout-minutes: 20
