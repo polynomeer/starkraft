@@ -12,6 +12,10 @@ Versioned wire protocol definitions.
   - `protocolVersion` (wire compatibility)
   - `simVersion` (rule/data version)
   - `buildHash` (build identity)
+- cross-language model parity tests:
+  - Kotlin golden tests: `/Users/hammac/Projects/starkraft/sim/src/test/kotlin/starkraft/sim/protocol/ProtocolModelsTest.kt`
+  - Go golden tests: `/Users/hammac/Projects/starkraft/server/pkg/protocol/models_test.go`
+  - Go client golden tests: `/Users/hammac/Projects/starkraft/client/pkg/protocol/golden_test.go`
 
 ## Compatibility policy
 
@@ -21,5 +25,5 @@ Versioned wire protocol definitions.
 
 ## Next
 
-- add Go and Kotlin protocol model parity checks
-- add room/session and command ack schema variants
+- add protocol v2 draft with compatibility matrix documentation
+- add optional binary transport schema/interop plan
