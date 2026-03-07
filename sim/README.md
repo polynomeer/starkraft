@@ -8,6 +8,12 @@ Deterministic fixed-tick RTS simulation core (Kotlin/JVM).
 ./gradlew :sim:run --args="--ticks 200 --noSleep"
 ```
 
+Interactive sim + graphical client launcher:
+
+```bash
+./gradlew :sim:play
+```
+
 ## Test
 
 ```bash

@@ -159,11 +159,17 @@ Tools JSON contract smoke check:
 Interactive local stack play (server + optional bot + CLI):
 `./scripts/play_stack_local.sh`
 
+Interactive local sim + graphical client play:
+`./scripts/play_sim_graphical.sh`
+
 Optional env vars:
 - `STARKRAFT_PLAY_PORT` (default `18080`)
 - `STARKRAFT_PLAY_ROOM` (default `local-play`)
 - `STARKRAFT_PLAY_BOT=0` (disable auto-start bot)
 - `STARKRAFT_PLAY_TMP_DIR` (custom logs/replay dir)
+- `STARKRAFT_SIM_PLAY_DIR` (default `/tmp/starkraft-play`)
+- `STARKRAFT_SIM_PLAY_TICKS` (default `5000`)
+- `STARKRAFT_SIM_PLAY_SCENARIO` (default `skirmish`, supports `economy`, `gas`, `scripted`)
 
 Tools quick checks:
 - `./gradlew :tools:run --args="replay meta /tmp/starkraft-tools-smoke.replay.json"`
