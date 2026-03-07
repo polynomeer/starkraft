@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/starkraft/client/pkg/headless"
@@ -14,9 +15,15 @@ func main() {
 	url := flag.String("url", "ws://127.0.0.1:8080/ws", "server websocket URL")
 	name := flag.String("name", "bot", "bot name")
 	room := flag.String("room", "default", "room id")
+	resumeToken := flag.String("resumeToken", "", "optional resume token from prior handshake")
 	flag.Parse()
 
-	c, err := headless.Dial(*url, "dev", *name, room)
+	var resumePtr *string
+	if strings.TrimSpace(*resumeToken) != "" {
+		token := strings.TrimSpace(*resumeToken)
+		resumePtr = &token
+	}
+	c, err := headless.DialWithResume(*url, "dev", *name, room, resumePtr)
 	if err != nil {
 		panic(err)
 	}

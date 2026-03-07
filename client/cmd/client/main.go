@@ -21,10 +21,16 @@ func main() {
 	url := flag.String("url", "ws://127.0.0.1:8080/ws", "server websocket URL")
 	name := flag.String("name", "cli", "client name")
 	room := flag.String("room", "default", "room id")
+	resumeToken := flag.String("resumeToken", "", "optional resume token from prior handshake")
 	scriptPath := flag.String("script", "", "optional JSON script path for auto command batches")
 	flag.Parse()
 
-	c, err := headless.Dial(*url, "dev", *name, room)
+	var resumePtr *string
+	if strings.TrimSpace(*resumeToken) != "" {
+		token := strings.TrimSpace(*resumeToken)
+		resumePtr = &token
+	}
+	c, err := headless.DialWithResume(*url, "dev", *name, room, resumePtr)
 	if err != nil {
 		panic(err)
 	}
