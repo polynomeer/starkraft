@@ -189,6 +189,19 @@ func (c *Client) readLoop() {
 			c.ErrCh <- err
 			return
 		}
+		switch protocol.Compatibility(protocol.CurrentProtocolVersion, env.ProtocolVersion) {
+		case protocol.Compatible:
+			// continue
+		case protocol.UpgradeClient:
+			c.ErrCh <- fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade client)", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+			return
+		case protocol.UpgradeServer:
+			c.ErrCh <- fmt.Errorf("protocol mismatch: local=%d remote=%d (upgrade server)", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+			return
+		default:
+			c.ErrCh <- fmt.Errorf("protocol mismatch: local=%d remote=%d", protocol.CurrentProtocolVersion, env.ProtocolVersion)
+			return
+		}
 		mt, err := protocol.DecodeMessageType(env.Message)
 		if err != nil {
 			c.ErrCh <- err
