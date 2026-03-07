@@ -158,6 +158,16 @@ internal fun resetPlayFiles(paths: PlayPaths) {
 
 internal fun shouldRestartPlay(exitCode: Int): Boolean = exitCode == CLIENT_EXIT_RESTART
 
+internal fun parseInitialSnapshotTimeoutMs(raw: String?, defaultMs: Long = 5000L): Long {
+    val value = raw?.trim().orEmpty()
+    if (value.isEmpty()) return defaultMs
+    val parsed = value.toLongOrNull() ?: return defaultMs
+    return parsed.coerceAtLeast(250L)
+}
+
+internal fun resolveInitialSnapshotTimeoutMs(defaultMs: Long = 5000L): Long =
+    parseInitialSnapshotTimeoutMs(System.getenv("STARKRAFT_PLAY_WAIT_SNAPSHOT_MS"), defaultMs)
+
 internal fun waitForInitialSnapshot(
     simProcess: Process,
     snapshotPath: Path,
@@ -203,6 +213,7 @@ fun main(args: Array<String>) {
     writePlayScenario(paths.scenario, scenario)
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
+    val initialSnapshotTimeoutMs = resolveInitialSnapshotTimeoutMs()
 
     while (true) {
         val activeScenario = readPlayScenario(paths.scenario, scenario)
@@ -221,13 +232,16 @@ fun main(args: Array<String>) {
         Runtime.getRuntime().addShutdownHook(shutdownHook)
 
         try {
-            if (!waitForInitialSnapshot(simProcess, paths.snapshots)) {
+            if (!waitForInitialSnapshot(simProcess, paths.snapshots, timeoutMs = initialSnapshotTimeoutMs)) {
                 val exitCode = if (simProcess.isAlive) null else simProcess.exitValue()
                 if (simProcess.isAlive) {
                     simProcess.destroy()
                     simProcess.waitFor()
                 }
-                error("sim startup failed: no snapshots produced within 5s (exitCode=$exitCode)")
+                error(
+                    "sim startup failed: no snapshots produced within ${initialSnapshotTimeoutMs}ms " +
+                        "(exitCode=$exitCode)"
+                )
             }
             val clientProcess =
                 ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, paths.scenario, paths.root))

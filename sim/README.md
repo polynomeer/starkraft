@@ -14,6 +14,9 @@ Interactive sim + graphical client launcher:
 ./gradlew :sim:play
 ```
 
+Optional play startup tuning:
+- `STARKRAFT_PLAY_WAIT_SNAPSHOT_MS` controls how long `:sim:play` waits for initial snapshots (default `5000`, min `250`).
+
 ## Test
 
 ```bash

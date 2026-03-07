@@ -185,6 +185,7 @@ Optional env vars:
 - `STARKRAFT_SIM_PLAY_DIR` (default `/tmp/starkraft-play`)
 - `STARKRAFT_SIM_PLAY_TICKS` (default `5000`)
 - `STARKRAFT_SIM_PLAY_SCENARIO` (default `skirmish`, supports `economy`, `gas`, `scripted`)
+- `STARKRAFT_PLAY_WAIT_SNAPSHOT_MS` (default `5000`, minimum `250`)
 
 Tools quick checks:
 - `./gradlew :tools:run --args="replay meta /tmp/starkraft-tools-smoke.replay.json"`

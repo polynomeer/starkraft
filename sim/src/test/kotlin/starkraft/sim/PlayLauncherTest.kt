@@ -12,6 +12,7 @@ import starkraft.sim.client.buildPlayClientCommand
 import starkraft.sim.client.buildPlaySimCommand
 import starkraft.sim.client.loadPlayPreset
 import starkraft.sim.client.parsePlayControlState
+import starkraft.sim.client.parseInitialSnapshotTimeoutMs
 import starkraft.sim.client.parsePlayPreset
 import starkraft.sim.client.presetFilePath
 import starkraft.sim.client.defaultPlayPaths
@@ -179,6 +180,15 @@ class PlayLauncherTest {
         val process = ProcessBuilder("bash", "-lc", "exit 0").start()
         process.waitFor(200, TimeUnit.MILLISECONDS)
         assertTrue(!waitForInitialSnapshot(process, snapshotPath, timeoutMs = 200L, pollMs = 5L))
+    }
+
+    @Test
+    fun `parseInitialSnapshotTimeoutMs handles defaults and bounds`() {
+        assertEquals(5000L, parseInitialSnapshotTimeoutMs(null))
+        assertEquals(5000L, parseInitialSnapshotTimeoutMs(""))
+        assertEquals(5000L, parseInitialSnapshotTimeoutMs("bad"))
+        assertEquals(250L, parseInitialSnapshotTimeoutMs("1"))
+        assertEquals(8000L, parseInitialSnapshotTimeoutMs("8000"))
     }
 
     @Test
