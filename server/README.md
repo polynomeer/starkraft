@@ -36,6 +36,12 @@ Implemented and wired for local play/smoke:
 
 ## Run
 
+Optional first-time dependency bootstrap from repo root:
+
+```bash
+./scripts/bootstrap_dev.sh
+```
+
 ```bash
 cd server
 go run ./cmd/server

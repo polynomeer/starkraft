@@ -147,6 +147,9 @@ positions.
 ## Running
 Use `./gradlew :sim:run` with JDK 17.
 
+First-time dependency bootstrap (Gradle + Go modules):
+`./scripts/bootstrap_dev.sh`
+
 Quick smoke check:
 `./scripts/smoke_run.sh`
 

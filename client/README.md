@@ -11,6 +11,12 @@ Headless websocket client tools.
 
 ## Run CLI client
 
+Optional first-time dependency bootstrap from repo root:
+
+```bash
+./scripts/bootstrap_dev.sh
+```
+
 ```bash
 cd client
 go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default
