@@ -1,17 +1,14 @@
 # server module
 
-Authoritative multiplayer host (in progress).
+Authoritative multiplayer host.
 
 ## Status
 
-Protocol package scaffold is implemented.
-
-## Planned responsibilities
-
-- websocket transport and handshake
-- room lifecycle and fixed tick orchestration
-- authoritative command validation
-- replay persistence
+Implemented and wired for local play/smoke:
+- websocket transport + handshake/resume
+- room lifecycle + fixed tick orchestration
+- authoritative command validation + ack reasons
+- replay persistence (JSONL with optional keyframes)
 
 ## Current implementation
 
