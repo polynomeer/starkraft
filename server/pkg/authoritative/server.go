@@ -483,6 +483,8 @@ func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) bool {
 			if len(cmd.UnitIDs) > 0 || cmd.X != nil || cmd.Y != nil || cmd.TargetUnitID != nil || cmd.UnitType != nil {
 				return false
 			}
+		default:
+			return false
 		}
 	}
 	return true
