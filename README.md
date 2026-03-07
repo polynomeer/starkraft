@@ -159,6 +159,10 @@ Authoritative stack smoke check (server + 2 bots + replay):
 Tools JSON contract smoke check:
 `./scripts/tools_health.sh`
 
+Go static analysis:
+- `cd /Users/hammac/Projects/starkraft/server && go vet ./...`
+- `cd /Users/hammac/Projects/starkraft/client && go vet ./...`
+
 Interactive local stack play (server + optional bot + CLI):
 `./scripts/play_stack_local.sh`
 
