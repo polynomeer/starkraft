@@ -116,6 +116,10 @@ Track:
 
 - `ClassNotFoundException: AppKt`:
   - ensure run target is module-qualified (`:sim:run`) and main class is `starkraft.sim.AppKt`.
+- `missing go.sum entry for module ... gorilla/websocket`:
+  - run `/Users/hammac/Projects/starkraft/scripts/bootstrap_dev.sh` once, or:
+    - `cd /Users/hammac/Projects/starkraft/server && go mod download`
+    - `cd /Users/hammac/Projects/starkraft/client && go mod download`
 - `script file not found`:
   - pass project-root-relative path (`sim/scripts/sample.script`) or absolute path.
 - server bind/connect permission errors:
