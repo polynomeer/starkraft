@@ -17,6 +17,7 @@ Implemented and wired for local play/smoke:
 - admin stats endpoint: `GET /admin/stats`
 - required first message: protocol envelope with `message.type=handshake`
 - handshake rejects now close socket with explicit reasons (e.g. `protocol mismatch: upgrade client`, `invalid room id`)
+- handshake ack includes `resumeToken`; reconnecting clients can send it via handshake `resumeToken` to restore identity within `STARKRAFT_RESUME_WINDOW`
 - room create/join by `requestedRoom` (default room if omitted)
 - deterministic room snapshot broadcast support
 - command queue with deterministic validation acks (`commandAck`)
