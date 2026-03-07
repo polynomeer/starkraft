@@ -169,6 +169,7 @@ Go static analysis:
 
 Interactive local stack play (server + optional bot + CLI):
 `./scripts/play_stack_local.sh`
+  - pass `--simVersion <tag>` to `client/cmd/client` or `client/cmd/bot` when testing non-default sim version tags.
 
 Interactive local sim + graphical client play:
 `./scripts/play_sim_graphical.sh`
