@@ -89,6 +89,30 @@ func TestCommandBatchEnvelopeRoundTripGolden(t *testing.T) {
 	}
 }
 
+func TestSurrenderCommandBatchEnvelopeRoundTripGolden(t *testing.T) {
+	req := "req-surrender-1"
+	msg := CommandBatchMessage{
+		Type: "commandBatch",
+		Tick: 42,
+		Commands: []WireCommand{
+			{CommandType: "surrender", RequestID: &req},
+		},
+	}
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal batch: %v", err)
+	}
+	env := ProtocolEnvelope{ProtocolVersion: CurrentProtocolVersion, SimVersion: "1.0.0", Message: msgRaw}
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal envelope: %v", err)
+	}
+	golden := loadGolden(t, "v1-command-batch-surrender-envelope.json")
+	if string(raw) != golden {
+		t.Fatalf("golden mismatch\nwant=%s\n got=%s", golden, string(raw))
+	}
+}
+
 func TestSnapshotEnvelopeRoundTripGolden(t *testing.T) {
 	msg := SnapshotMessage{Type: "snapshot", Tick: 480, WorldHash: 123456789}
 	msgRaw, err := json.Marshal(msg)
