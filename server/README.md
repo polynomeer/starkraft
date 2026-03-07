@@ -25,6 +25,7 @@ Implemented and wired for local play/smoke:
   - bounds checks
   - per-tick rate limiting
   - accepted tick window checks (reject stale/far-future command batches)
+  - unsupported command rejection (`unsupportedCommand`) inside room validation
 - transport/input hardening
   - websocket read-size cap (`MaxReadBytes`, default 64 KiB)
   - command batch cap (`MaxBatchCommands`, default 64)
