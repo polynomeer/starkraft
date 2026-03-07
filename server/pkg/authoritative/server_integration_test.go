@@ -806,6 +806,46 @@ func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope 
 	return env
 }
 
+func TestHandshakeRejectsInvalidResumeTokenWithReason(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	bad := "resume-does-not-exist"
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{
+		Type:        "handshake",
+		ClientName:  "bot-a",
+		ResumeToken: &bad,
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      "test",
+		Message:         hsRaw,
+	}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	err = conn.ReadJSON(&env)
+	if err == nil {
+		t.Fatalf("expected invalid resume token rejection")
+	}
+	if !strings.Contains(err.Error(), "invalid resume token") {
+		t.Fatalf("expected invalid resume token close reason, got: %v", err)
+	}
+}
+
 func dialAndHandshake(t *testing.T, wsURL, name, room string) *websocket.Conn {
 	t.Helper()
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
