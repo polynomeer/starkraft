@@ -61,6 +61,13 @@ cd /Users/hammac/Projects/starkraft
 ./scripts/play_sim_smoke.sh
 ```
 
+If your machine is slow to produce the first snapshots, increase play startup wait:
+
+```bash
+cd /Users/hammac/Projects/starkraft
+STARKRAFT_PLAY_WAIT_SNAPSHOT_MS=15000 ./scripts/play_sim_graphical.sh
+```
+
 If it fails, inspect script output and referenced log files.
 
 ## Sim Local Play (Headless + Minimal Graphical Client)
