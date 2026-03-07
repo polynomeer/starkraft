@@ -13,6 +13,24 @@ BOT2_LOG="$E2E_TMP_DIR/bot-b.log"
 REPLAYCHECK_LOG="$E2E_TMP_DIR/replaycheck.log"
 touch "$REPLAY_FILE" "$SERVER_LOG" "$BOT1_LOG" "$BOT2_LOG" "$REPLAYCHECK_LOG"
 
+http_ready() {
+  local url="$1"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS "$url" >/dev/null 2>&1
+    return $?
+  fi
+  python3 - "$url" <<'PY' >/dev/null 2>&1
+import sys
+import urllib.request
+
+url = sys.argv[1]
+with urllib.request.urlopen(url, timeout=1.0) as resp:
+    if 200 <= resp.status < 300:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
 cleanup() {
   set +e
   [[ -n "${SERVER_PID:-}" ]] && kill "$SERVER_PID" 2>/dev/null
@@ -38,8 +56,20 @@ SERVER_PID=$!
 
 sleep 1
 
-if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-  echo "[e2e] server exited during startup"
+for _ in $(seq 1 40); do
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo "[e2e] server exited during startup"
+    print_logs
+    exit 1
+  fi
+  if http_ready "http://${ADDR}/healthz"; then
+    break
+  fi
+  sleep 0.25
+done
+
+if ! http_ready "http://${ADDR}/healthz"; then
+  echo "[e2e] server health check failed"
   print_logs
   exit 1
 fi
