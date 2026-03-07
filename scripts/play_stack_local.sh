@@ -14,6 +14,24 @@ RUN_BOT="${STARKRAFT_PLAY_BOT:-1}"
 mkdir -p "$TMP_DIR"
 touch "$SERVER_LOG" "$BOT_LOG"
 
+http_ready() {
+  local url="$1"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS "$url" >/dev/null 2>&1
+    return $?
+  fi
+  python3 - "$url" <<'PY' >/dev/null 2>&1
+import sys
+import urllib.request
+
+url = sys.argv[1]
+with urllib.request.urlopen(url, timeout=1.0) as resp:
+    if 200 <= resp.status < 300:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
 cleanup() {
   set +e
   [[ -n "${CLI_PID:-}" ]] && kill "$CLI_PID" 2>/dev/null
@@ -36,13 +54,13 @@ for _ in $(seq 1 40); do
     cat "$SERVER_LOG"
     exit 1
   fi
-  if curl -fsS "http://${ADDR}/healthz" >/dev/null 2>&1; then
+  if http_ready "http://${ADDR}/healthz"; then
     break
   fi
   sleep 0.25
 done
 
-if ! curl -fsS "http://${ADDR}/healthz" >/dev/null 2>&1; then
+if ! http_ready "http://${ADDR}/healthz"; then
   echo "[play] server health check failed"
   cat "$SERVER_LOG"
   exit 1
