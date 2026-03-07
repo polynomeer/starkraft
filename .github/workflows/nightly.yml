@@ -48,6 +48,7 @@ jobs:
           bash -n scripts/smoke_run.sh
           bash -n scripts/e2e_server_bots_smoke.sh
           bash -n scripts/bootstrap_dev.sh
+          bash -n scripts/play_sim_smoke.sh
           bash -n scripts/play_stack_local.sh
           bash -n scripts/play_sim_graphical.sh
           bash -n scripts/tools_health.sh

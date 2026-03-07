@@ -23,6 +23,12 @@ Optional play startup tuning:
 ./gradlew :sim:test
 ```
 
+Play smoke:
+
+```bash
+./scripts/play_sim_smoke.sh
+```
+
 ## Determinism check
 
 ```bash

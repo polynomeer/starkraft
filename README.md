@@ -153,6 +153,9 @@ First-time dependency bootstrap (Gradle + Go modules):
 Quick smoke check:
 `./scripts/smoke_run.sh`
 
+Play pipeline smoke check (snapshot producer + headless graphical client):
+`./scripts/play_sim_smoke.sh`
+
 Authoritative stack smoke check (server + 2 bots + replay):
 `./scripts/e2e_server_bots_smoke.sh`
 
