@@ -122,6 +122,10 @@ Track:
     - `cd /Users/hammac/Projects/starkraft/client && go mod download`
 - `script file not found`:
   - pass project-root-relative path (`sim/scripts/sample.script`) or absolute path.
+- graphical client stuck on `waiting for snapshots...`:
+  - run `/Users/hammac/Projects/starkraft/scripts/play_sim_graphical.sh` from repo root.
+  - if sim startup fails, launcher now exits with `sim startup failed: no snapshots produced within 5s`; run:
+    - `./gradlew :sim:run --args="--ticks 60 --snapshotEvery 1 --snapshotOut /tmp/starkraft-check.ndjson"`
 - server bind/connect permission errors:
   - verify environment allows local sockets/ports.
 - replay hash mismatch:
