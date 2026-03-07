@@ -889,6 +889,46 @@ func TestHandshakeRejectsInvalidResumeTokenWithReason(t *testing.T) {
 	}
 }
 
+func TestHandshakeRejectsInvalidRequestedRoomWithReason(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	badRoom := "bad room"
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{
+		Type:          "handshake",
+		ClientName:    "bot-a",
+		RequestedRoom: &badRoom,
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      "test",
+		Message:         hsRaw,
+	}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	err = conn.ReadJSON(&env)
+	if err == nil {
+		t.Fatalf("expected invalid room id rejection")
+	}
+	if !strings.Contains(err.Error(), "invalid room id") {
+		t.Fatalf("expected invalid room id close reason, got: %v", err)
+	}
+}
+
 func dialAndHandshake(t *testing.T, wsURL, name, room string) *websocket.Conn {
 	t.Helper()
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
