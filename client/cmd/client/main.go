@@ -33,7 +33,8 @@ func main() {
 	}
 	c, err := headless.DialWithResume(*url, *simVersion, *name, room, resumePtr)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "connect failed: %v\n", err)
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -94,6 +95,12 @@ func main() {
 	go func() {
 		for end := range c.MatchEndCh {
 			fmt.Printf("matchEnd tick=%d winner=%v\n", end.Tick, end.WinnerID)
+		}
+	}()
+	go func() {
+		for err := range c.ErrCh {
+			fmt.Fprintf(os.Stderr, "stream error: %v\n", err)
+			os.Exit(1)
 		}
 	}()
 

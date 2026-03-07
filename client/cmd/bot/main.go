@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -26,7 +27,8 @@ func main() {
 	}
 	c, err := headless.DialWithResume(*url, *simVersion, *name, room, resumePtr)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "connect failed: %v\n", err)
+		os.Exit(1)
 	}
 	defer c.Close()
 	fmt.Printf("bot connected as %s\n", c.ClientID())
@@ -90,9 +92,11 @@ func main() {
 				fmt.Printf("bot ack rejected cmd=%s reason=%s\n", ack.CommandType, ack.Reason)
 			}
 		case err := <-c.ErrCh:
-			panic(err)
+			fmt.Fprintf(os.Stderr, "stream error: %v\n", err)
+			os.Exit(1)
 		case <-time.After(15 * time.Second):
-			panic(fmt.Sprintf("bot timeout at tick %d", lastTick))
+			fmt.Fprintf(os.Stderr, "bot timeout at tick %d\n", lastTick)
+			os.Exit(1)
 		}
 	}
 }
