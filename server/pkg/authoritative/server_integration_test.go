@@ -962,6 +962,58 @@ func TestHandshakeRejectsInvalidResumeTokenWithReason(t *testing.T) {
 	}
 }
 
+func TestHandshakeRejectsExpiredResumeTokenWithReason(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+		ResumeWindow: 150 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	roomID := "resume-expire-room"
+	conn1, ack1 := dialHandshakeWithAck(t, wsURL, protocol.HandshakeMessage{
+		Type:          "handshake",
+		ClientName:    "bot-a",
+		RequestedRoom: &roomID,
+	})
+	if ack1.ResumeToken == nil || *ack1.ResumeToken == "" {
+		t.Fatalf("expected resume token in handshake ack")
+	}
+	token := *ack1.ResumeToken
+	_ = conn1.Close()
+	time.Sleep(250 * time.Millisecond)
+
+	conn2, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn2.Close()
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{
+		Type:        "handshake",
+		ClientName:  "bot-a",
+		ResumeToken: &token,
+	})
+	if err := conn2.WriteJSON(protocol.ProtocolEnvelope{
+		ProtocolVersion: protocol.CurrentProtocolVersion,
+		SimVersion:      "test",
+		Message:         hsRaw,
+	}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn2.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	err = conn2.ReadJSON(&env)
+	if err == nil {
+		t.Fatalf("expected expired resume token rejection")
+	}
+	if !strings.Contains(err.Error(), "invalid resume token") {
+		t.Fatalf("expected invalid resume token close reason, got: %v", err)
+	}
+}
+
 func TestHandshakeRejectsInvalidRequestedRoomWithReason(t *testing.T) {
 	srv := NewServer(Config{
 		SimVersion:   "test",
