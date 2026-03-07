@@ -381,7 +381,14 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		return nil, nil, err
 	}
 	if env.ProtocolVersion != protocol.CurrentProtocolVersion {
-		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "protocol mismatch"}
+		reason := "protocol mismatch"
+		switch protocol.Compatibility(protocol.CurrentProtocolVersion, env.ProtocolVersion) {
+		case protocol.UpgradeClient:
+			reason = "protocol mismatch: upgrade client"
+		case protocol.UpgradeServer:
+			reason = "protocol mismatch: upgrade server"
+		}
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: reason}
 	}
 	msgType, err := protocol.DecodeMessageType(env.Message)
 	if err != nil || msgType != "handshake" {
