@@ -87,6 +87,10 @@ type Client struct {
 }
 
 func Dial(url, simVersion, name string, room *string) (*Client, error) {
+	return DialWithResume(url, simVersion, name, room, nil)
+}
+
+func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*Client, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, err
@@ -96,6 +100,7 @@ func Dial(url, simVersion, name string, room *string) (*Client, error) {
 		simVersion: simVersion,
 		name:       name,
 		room:       room,
+		resumeToken: resumeToken,
 		SnapshotCh: make(chan protocol.SnapshotMessage, 64),
 		MatchEndCh: make(chan protocol.MatchEndMessage, 8),
 		AckCh:      make(chan protocol.CommandAckMessage, 128),
@@ -133,7 +138,12 @@ func (c *Client) SendBatch(tick int, commands []protocol.WireCommand) error {
 }
 
 func (c *Client) handshake() error {
-	raw, err := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: c.name, RequestedRoom: c.room})
+	raw, err := json.Marshal(protocol.HandshakeMessage{
+		Type:          "handshake",
+		ClientName:    c.name,
+		RequestedRoom: c.room,
+		ResumeToken:   c.resumeToken,
+	})
 	if err != nil {
 		return err
 	}
