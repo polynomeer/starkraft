@@ -21,10 +21,12 @@ import starkraft.sim.client.savePlayPreset
 import starkraft.sim.client.renderPlayPreset
 import starkraft.sim.client.renderPlayControlState
 import starkraft.sim.client.shouldRestartPlay
+import starkraft.sim.client.waitForInitialSnapshot
 import starkraft.sim.client.writePlayScenario
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 
 class PlayLauncherTest {
     @Test
@@ -154,6 +156,29 @@ class PlayLauncherTest {
     fun `restart exit code is recognized`() {
         assertTrue(shouldRestartPlay(CLIENT_EXIT_RESTART))
         assertTrue(!shouldRestartPlay(0))
+    }
+
+    @Test
+    fun `waitForInitialSnapshot detects written snapshot`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        Files.createFile(snapshotPath)
+        val process = ProcessBuilder("bash", "-lc", "sleep 1").start()
+        try {
+            Files.writeString(snapshotPath, "{\"recordType\":\"snapshot\"}\n")
+            assertTrue(waitForInitialSnapshot(process, snapshotPath, timeoutMs = 300L, pollMs = 5L))
+        } finally {
+            process.destroy()
+            process.waitFor(200, TimeUnit.MILLISECONDS)
+        }
+    }
+
+    @Test
+    fun `waitForInitialSnapshot returns false when process exits without snapshots`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        Files.createFile(snapshotPath)
+        val process = ProcessBuilder("bash", "-lc", "exit 0").start()
+        process.waitFor(200, TimeUnit.MILLISECONDS)
+        assertTrue(!waitForInitialSnapshot(process, snapshotPath, timeoutMs = 200L, pollMs = 5L))
     }
 
     @Test

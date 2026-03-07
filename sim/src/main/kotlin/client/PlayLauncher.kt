@@ -158,6 +158,25 @@ internal fun resetPlayFiles(paths: PlayPaths) {
 
 internal fun shouldRestartPlay(exitCode: Int): Boolean = exitCode == CLIENT_EXIT_RESTART
 
+internal fun waitForInitialSnapshot(
+    simProcess: Process,
+    snapshotPath: Path,
+    timeoutMs: Long = 5000L,
+    pollMs: Long = 25L
+): Boolean {
+    val deadline = System.currentTimeMillis() + timeoutMs.coerceAtLeast(pollMs)
+    while (System.currentTimeMillis() <= deadline) {
+        if (Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)) {
+            return true
+        }
+        if (!simProcess.isAlive) {
+            return Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)
+        }
+        Thread.sleep(pollMs.coerceAtLeast(1L))
+    }
+    return Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)
+}
+
 fun main(args: Array<String>) {
     val root =
         if (args.isNotEmpty()) {
@@ -202,6 +221,14 @@ fun main(args: Array<String>) {
         Runtime.getRuntime().addShutdownHook(shutdownHook)
 
         try {
+            if (!waitForInitialSnapshot(simProcess, paths.snapshots)) {
+                val exitCode = if (simProcess.isAlive) null else simProcess.exitValue()
+                if (simProcess.isAlive) {
+                    simProcess.destroy()
+                    simProcess.waitFor()
+                }
+                error("sim startup failed: no snapshots produced within 5s (exitCode=$exitCode)")
+            }
             val clientProcess =
                 ProcessBuilder(buildPlayClientCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, paths.scenario, paths.root))
                     .inheritIO()
