@@ -20,6 +20,14 @@ jobs:
           java-version: "17"
           cache: gradle
 
+      - name: Validate script shell syntax
+        run: |
+          bash -n scripts/smoke_run.sh
+          bash -n scripts/e2e_server_bots_smoke.sh
+          bash -n scripts/play_stack_local.sh
+          bash -n scripts/play_sim_graphical.sh
+          bash -n scripts/tools_health.sh
+
       - name: Run soak harness
         run: ./gradlew --no-daemon :sim:soak --args="--minutes 1 --units 240 --seed 1234 --reportEverySec 30"
 
