@@ -77,3 +77,65 @@ func TestReadLoopRejectsMismatchedEnvelopeProtocol(t *testing.T) {
 		t.Fatal("timed out waiting for protocol mismatch error")
 	}
 }
+
+func TestReadLoopRejectsUnknownMessageType(t *testing.T) {
+	upgrader := websocket.Upgrader{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		var hs protocol.ProtocolEnvelope
+		if err := conn.ReadJSON(&hs); err != nil {
+			t.Errorf("read handshake: %v", err)
+			return
+		}
+
+		ackRaw, _ := json.Marshal(protocol.HandshakeAckMessage{
+			Type:            "handshakeAck",
+			RoomID:          "test-room",
+			ClientID:        "player-1",
+			ServerTickMs:    20,
+			ProtocolVersion: protocol.CurrentProtocolVersion,
+		})
+		if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+			ProtocolVersion: protocol.CurrentProtocolVersion,
+			SimVersion:      "test",
+			Message:         ackRaw,
+		}); err != nil {
+			t.Errorf("write handshake ack: %v", err)
+			return
+		}
+
+		unknownRaw := []byte(`{"type":"serverHint","tick":1}`)
+		if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+			ProtocolVersion: protocol.CurrentProtocolVersion,
+			SimVersion:      "test",
+			Message:         unknownRaw,
+		}); err != nil {
+			t.Errorf("write unknown message: %v", err)
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+	}))
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, err := Dial(wsURL, "test", "bot-a", nil)
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	defer client.Close()
+
+	select {
+	case err := <-client.ErrCh:
+		if !strings.Contains(err.Error(), "unknown message type") {
+			t.Fatalf("expected unknown message type error, got: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for unknown message type error")
+	}
+}

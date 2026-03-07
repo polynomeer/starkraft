@@ -229,6 +229,9 @@ func (c *Client) readLoop() {
 				return
 			}
 			c.MatchEndCh <- end
+		default:
+			c.ErrCh <- fmt.Errorf("unknown message type: %s", mt)
+			return
 		}
 	}
 }
