@@ -44,6 +44,9 @@ jobs:
           ./gradlew --no-daemon :sim:run --args="--ticks 20 --noSleep --snapshotEvery 1 --snapshotOut /tmp/starkraft-snapshots.ndjson"
           ./gradlew --no-daemon :sim:graphicalClient --args="--headless --headlessTicks 20 /tmp/starkraft-snapshots.ndjson /tmp/starkraft-client-input.ndjson"
 
+      - name: Smoke run sim play pipeline
+        run: ./scripts/play_sim_smoke.sh
+
   tools-build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
