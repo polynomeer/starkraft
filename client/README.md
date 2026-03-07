@@ -5,6 +5,7 @@ Headless websocket client tools.
 ## Current scope
 
 - websocket handshake + protocol envelope messaging
+- protocol compatibility enforcement (rejects mismatched envelope/handshake versions)
 - interactive CLI client for select/move/attack/build/queue commands
 - snapshot buffer with basic interpolation for text display
 - autonomous bot client with simple build/queue + attack routine
