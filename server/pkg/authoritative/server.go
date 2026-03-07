@@ -97,6 +97,25 @@ type resumeSessionStat struct {
 	ExpiresInMs int64  `json:"expiresInMs"`
 }
 
+type handshakeError struct {
+	closeCode int
+	reason    string
+}
+
+func (e *handshakeError) Error() string { return e.reason }
+
+func writeHandshakeClose(conn *websocket.Conn, err error) {
+	var hsErr *handshakeError
+	if !errors.As(err, &hsErr) {
+		return
+	}
+	_ = conn.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(hsErr.closeCode, hsErr.reason),
+		time.Now().Add(250*time.Millisecond),
+	)
+}
+
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
 
 func NewServer(cfg Config) *Server {
@@ -230,6 +249,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	client, room, err := s.handshake(conn)
 	if err != nil {
+		writeHandshakeClose(conn, err)
 		_ = conn.Close()
 		return
 	}
@@ -361,21 +381,21 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		return nil, nil, err
 	}
 	if env.ProtocolVersion != protocol.CurrentProtocolVersion {
-		return nil, nil, fmt.Errorf("protocol mismatch")
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "protocol mismatch"}
 	}
 	msgType, err := protocol.DecodeMessageType(env.Message)
 	if err != nil || msgType != "handshake" {
-		return nil, nil, fmt.Errorf("invalid handshake")
+		return nil, nil, &handshakeError{closeCode: websocket.CloseUnsupportedData, reason: "invalid handshake"}
 	}
 	var hs protocol.HandshakeMessage
 	if err := json.Unmarshal(env.Message, &hs); err != nil {
-		return nil, nil, err
+		return nil, nil, &handshakeError{closeCode: websocket.CloseUnsupportedData, reason: "invalid handshake"}
 	}
 	if hs.ClientName == "" {
-		return nil, nil, fmt.Errorf("empty client name")
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "empty client name"}
 	}
 	if len(hs.ClientName) > s.cfg.MaxClientNameLength || !safeTokenPattern.MatchString(hs.ClientName) {
-		return nil, nil, fmt.Errorf("invalid client name")
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "invalid client name"}
 	}
 
 	s.mu.Lock()
@@ -387,7 +407,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	if hs.ResumeToken != nil && *hs.ResumeToken != "" {
 		session, ok := s.resumeSessions[*hs.ResumeToken]
 		if !ok || time.Now().After(session.expires) {
-			return nil, nil, fmt.Errorf("invalid resume token")
+			return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "invalid resume token"}
 		}
 		delete(s.resumeSessions, *hs.ResumeToken)
 		clientID = session.clientID
@@ -402,7 +422,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		}
 	}
 	if len(roomID) > s.cfg.MaxRoomIDLength || !safeTokenPattern.MatchString(roomID) {
-		return nil, nil, fmt.Errorf("invalid room id")
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "invalid room id"}
 	}
 	rm, ok := s.rooms[roomID]
 	if !ok {

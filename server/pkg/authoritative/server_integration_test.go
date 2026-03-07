@@ -410,8 +410,12 @@ func TestHandshakeRejectsInvalidClientName(t *testing.T) {
 	}
 	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	var env protocol.ProtocolEnvelope
-	if err := conn.ReadJSON(&env); err == nil {
+	err = conn.ReadJSON(&env)
+	if err == nil {
 		t.Fatalf("expected handshake to be rejected and connection closed")
+	}
+	if !strings.Contains(err.Error(), "invalid client name") {
+		t.Fatalf("expected invalid client name close reason, got: %v", err)
 	}
 }
 
@@ -441,8 +445,12 @@ func TestHandshakeRejectsProtocolMismatch(t *testing.T) {
 	}
 	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	var env protocol.ProtocolEnvelope
-	if err := conn.ReadJSON(&env); err == nil {
+	err = conn.ReadJSON(&env)
+	if err == nil {
 		t.Fatalf("expected protocol-mismatch handshake rejection")
+	}
+	if !strings.Contains(err.Error(), "protocol mismatch") {
+		t.Fatalf("expected protocol mismatch close reason, got: %v", err)
 	}
 }
 
