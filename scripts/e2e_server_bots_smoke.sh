@@ -13,6 +13,7 @@ BOT1_LOG="$E2E_TMP_DIR/bot-a.log"
 BOT2_LOG="$E2E_TMP_DIR/bot-b.log"
 REPLAYCHECK_LOG="$E2E_TMP_DIR/replaycheck.log"
 touch "$REPLAY_FILE" "$SERVER_LOG" "$BOT1_LOG" "$BOT2_LOG" "$REPLAYCHECK_LOG"
+echo "[e2e] tmp=$E2E_TMP_DIR addr=$ADDR simVersion=$SIM_VERSION"
 
 http_ready() {
   local url="$1"
