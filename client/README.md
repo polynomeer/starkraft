@@ -10,6 +10,7 @@ Headless websocket client tools.
 - snapshot buffer with basic interpolation for text display
 - autonomous bot client with simple build/queue + attack routine
 - runtime failures (connect/protocol/stream timeout) exit with explicit stderr errors and non-zero code
+- CLI script load failures also exit with explicit stderr errors and non-zero code
 
 ## Run CLI client
 
