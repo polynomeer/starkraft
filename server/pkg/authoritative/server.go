@@ -125,6 +125,17 @@ func writeProtocolClose(conn *websocket.Conn, closeCode int, reason string) {
 	)
 }
 
+func protocolMismatchReason(localVersion, remoteVersion int) string {
+	switch protocol.Compatibility(localVersion, remoteVersion) {
+	case protocol.UpgradeClient:
+		return "protocol mismatch: upgrade client"
+	case protocol.UpgradeServer:
+		return "protocol mismatch: upgrade server"
+	default:
+		return "protocol mismatch"
+	}
+}
+
 var safeTokenPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
 
 func NewServer(cfg Config) *Server {
@@ -287,6 +298,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if env.ProtocolVersion != protocol.CurrentProtocolVersion {
+			writeProtocolClose(conn, websocket.ClosePolicyViolation, protocolMismatchReason(protocol.CurrentProtocolVersion, env.ProtocolVersion))
 			return
 		}
 		if strings.TrimSpace(env.SimVersion) == "" {
@@ -398,13 +410,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		return nil, nil, err
 	}
 	if env.ProtocolVersion != protocol.CurrentProtocolVersion {
-		reason := "protocol mismatch"
-		switch protocol.Compatibility(protocol.CurrentProtocolVersion, env.ProtocolVersion) {
-		case protocol.UpgradeClient:
-			reason = "protocol mismatch: upgrade client"
-		case protocol.UpgradeServer:
-			reason = "protocol mismatch: upgrade server"
-		}
+		reason := protocolMismatchReason(protocol.CurrentProtocolVersion, env.ProtocolVersion)
 		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: reason}
 	}
 	if strings.TrimSpace(env.SimVersion) == "" {
