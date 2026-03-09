@@ -302,14 +302,12 @@ internal class SwingClientRenderer(
         for (i in statusLines.indices) {
             g.drawString(fitCommandPanelStatusLine(statusLines[i]), panel.x + 12, panel.y + 38 + (i * 14))
         }
-        val snapshot = state.snapshot
-        val canTrain = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
-        val canResearch = snapshot != null && state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
-        val buttons = buildCommandButtons(defaultClientCatalog(), state.selectedIds.isNotEmpty(), canTrain, canResearch)
+        val viewState = state.viewState
+        val buttons = buildCommandButtons(defaultClientCatalog(), viewState.hasSelection, viewState.canTrain, viewState.canResearch)
         for (i in buttons.indices) {
             val bounds = commandButtonBounds(width, i, statusLines.size)
             val active = isCommandButtonActive(buttons[i].actionId, overlayLines)
-            val enabled = isCommandButtonEnabled(buttons[i].actionId, state.selectedIds.isNotEmpty(), canTrain, canResearch, state.viewedFaction)
+            val enabled = isCommandButtonEnabled(buttons[i].actionId, viewState.hasSelection, viewState.canTrain, viewState.canResearch, state.viewedFaction)
             g.color =
                 when {
                     !enabled -> Color(0x14, 0x1B, 0x22, 180)

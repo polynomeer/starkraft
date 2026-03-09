@@ -10,11 +10,19 @@ internal data class ClientSessionState(
     var visionState: ClientVisionState? = null,
     var viewedFaction: Int? = 1,
     val selectedIds: LinkedHashSet<Int> = LinkedHashSet(),
+    var viewState: ClientViewState = ClientViewState(),
     var lastAck: ClientCommandAck? = null,
     var lastConstructionActivity: ClientConstructionActivity? = null,
     var lastProductionActivity: ClientProductionActivity? = null,
     var lastResearchActivity: ClientResearchActivity? = null,
     var lastTickActivity: ClientTickActivity? = null
+)
+
+internal data class ClientViewState(
+    val hasSelection: Boolean = false,
+    val canTrain: Boolean = false,
+    val canResearch: Boolean = false,
+    val selectionHudLine: String? = null
 )
 
 internal class ClientSession(
@@ -90,6 +98,24 @@ internal class ClientSession(
         return changed
     }
 
+    fun clearSelection() {
+        if (state.selectedIds.isEmpty()) return
+        state.selectedIds.clear()
+        rebuildViewState()
+    }
+
+    fun replaceSelection(ids: IntArray) {
+        state.selectedIds.clear()
+        for (i in ids.indices) {
+            state.selectedIds.add(ids[i])
+        }
+        rebuildViewState()
+    }
+
+    fun refreshViewState() {
+        rebuildViewState()
+    }
+
     fun append(intent: ClientIntent) {
         when (intent) {
             is ClientIntent.Selection -> inputSink.append(intent.record)
@@ -108,6 +134,11 @@ internal class ClientSession(
             liveIds.add(entity.id)
         }
         state.selectedIds.retainAll(liveIds)
+        rebuildViewState()
+    }
+
+    private fun rebuildViewState() {
+        state.viewState = deriveClientViewState(state.snapshot, state.selectedIds)
     }
 }
 
@@ -139,4 +170,28 @@ internal fun applyVisionChanges(
         normalized[faction] = tiles
     }
     return ClientVisionState(visibleTilesByFaction = normalized)
+}
+
+internal fun deriveClientViewState(
+    snapshot: ClientSnapshot?,
+    selectedIds: Set<Int>
+): ClientViewState {
+    if (snapshot == null || selectedIds.isEmpty()) return ClientViewState()
+    val counts = LinkedHashMap<String, Int>()
+    var canTrain = false
+    var canResearch = false
+    for (entity in snapshot.entities) {
+        if (entity.id !in selectedIds) continue
+        counts[entity.typeId] = (counts[entity.typeId] ?: 0) + 1
+        if (entity.supportsTraining == true) canTrain = true
+        if (entity.supportsResearch == true) canResearch = true
+    }
+    if (counts.isEmpty()) return ClientViewState()
+    val summary = counts.entries.joinToString(" ") { "${it.key}x${it.value}" }
+    return ClientViewState(
+        hasSelection = true,
+        canTrain = canTrain,
+        canResearch = canResearch,
+        selectionHudLine = "selection hud: $summary"
+    )
 }

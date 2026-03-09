@@ -20,6 +20,7 @@ import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.ClientStreamState
 import starkraft.sim.client.ClientStreamSubscription
 import starkraft.sim.client.ClientTickActivity
+import starkraft.sim.client.ClientViewState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FileClientInputSink
 import starkraft.sim.client.FactionSnapshot
@@ -182,6 +183,92 @@ class ClientSessionTest {
         assertArrayEquals(intArrayOf(4, 9), record.units)
         assertEquals(10f, record.x)
         assertEquals(12f, record.y)
+    }
+
+    @Test
+    fun `poll derives selection hud and command affordances`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        val inputPath = tempDir.resolve("client-input.ndjson")
+        val snapshot =
+            ClientSnapshot(
+                tick = 8,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 24,
+                mapHeight = 24,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 6)),
+                entities =
+                    listOf(
+                        EntitySnapshot(
+                            id = 11,
+                            faction = 1,
+                            typeId = "Depot",
+                            archetype = "producer",
+                            x = 6f,
+                            y = 7f,
+                            dir = 0f,
+                            hp = 120,
+                            maxHp = 120,
+                            armor = 1,
+                            supportsTraining = true,
+                            supportsResearch = true
+                        )
+                    ),
+                resourceNodes = emptyList()
+            )
+        Files.writeString(
+            snapshotPath,
+            "{\"recordType\":\"snapshot\",\"snapshot\":${json.encodeToString(ClientSnapshot.serializer(), snapshot)}}\n"
+        )
+
+        ClientSession(snapshotPath, inputPath, ClientSessionState(selectedIds = linkedSetOf(11))).use { session ->
+            assertTrue(session.poll())
+            assertEquals(
+                ClientViewState(
+                    hasSelection = true,
+                    canTrain = true,
+                    canResearch = true,
+                    selectionHudLine = "selection hud: Depotx1"
+                ),
+                session.state.viewState
+            )
+
+            session.clearSelection()
+            assertEquals(ClientViewState(), session.state.viewState)
+        }
+    }
+
+    @Test
+    fun `replace selection refreshes derived view state`(@TempDir tempDir: Path) {
+        val inputPath = tempDir.resolve("client-input.ndjson")
+        val snapshot =
+            ClientSnapshot(
+                tick = 5,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 16,
+                mapHeight = 16,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 4)),
+                entities =
+                    listOf(
+                        EntitySnapshot(id = 4, faction = 1, typeId = "Worker", archetype = "worker", x = 2f, y = 2f, dir = 0f, hp = 20, maxHp = 20, armor = 0),
+                        EntitySnapshot(id = 9, faction = 1, typeId = "Lab", archetype = "producer", x = 4f, y = 4f, dir = 0f, hp = 80, maxHp = 80, armor = 1, supportsResearch = true)
+                    ),
+                resourceNodes = emptyList()
+            )
+
+        ClientSession(
+            subscription = TestSubscription(ArrayDeque(listOf(ClientStreamState(snapshot = snapshot)))),
+            inputSink = FileClientInputSink(inputPath)
+        ).use { session ->
+            assertTrue(session.poll())
+            session.replaceSelection(intArrayOf(4, 9))
+
+            assertTrue(session.state.viewState.hasSelection)
+            assertFalse(session.state.viewState.canTrain)
+            assertTrue(session.state.viewState.canResearch)
+            assertEquals("selection hud: Workerx1 Labx1", session.state.viewState.selectionHudLine)
+        }
     }
 
     private class TestSubscription(

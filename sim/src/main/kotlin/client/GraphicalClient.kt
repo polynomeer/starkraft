@@ -499,7 +499,7 @@ private class ClientPanel(
                             repaint()
                             return
                         }
-                        session.state.selectedIds.clear()
+                        session.clearSelection()
                         groundMode = null
                         buildModeTypeId = null
                     }
@@ -571,6 +571,7 @@ private class ClientPanel(
         ) {
             is ClientIntent.Selection -> {
                 session.append(intent)
+                session.refreshViewState()
                 repaint()
             }
             is ClientIntent.Command -> {
@@ -596,6 +597,7 @@ private class ClientPanel(
                 additiveSelection = e.isShiftDown
             )
         session.append(intent)
+        session.refreshViewState()
     }
 
     private fun isSelectionDrag(): Boolean =
@@ -635,9 +637,7 @@ private class ClientPanel(
             ) + buildHelpOverlayLines(helpOverlayOpen)
 
     private fun handleCommandPanelClick(e: MouseEvent): Boolean {
-        val snapshot = session.state.snapshot
-        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
-        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val viewState = session.state.viewState
         val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
         val button =
             commandButtonAt(
@@ -646,11 +646,11 @@ private class ClientPanel(
                 e.y,
                 catalog,
                 statusLineCount = statusLineCount,
-                hasSelection = session.state.selectedIds.isNotEmpty(),
-                canTrain = canTrain,
-                canResearch = canResearch
+                hasSelection = viewState.hasSelection,
+                canTrain = viewState.canTrain,
+                canResearch = viewState.canResearch
             ) ?: return false
-        if (!isCommandButtonEnabled(button.actionId, session.state.selectedIds.isNotEmpty(), canTrain, canResearch, session.state.viewedFaction)) {
+        if (!isCommandButtonEnabled(button.actionId, viewState.hasSelection, viewState.canTrain, viewState.canResearch, session.state.viewedFaction)) {
             showNotice("command unavailable")
             return true
         }
@@ -679,7 +679,7 @@ private class ClientPanel(
                 buildCancelIntent(snapshot, session.state.selectedIds, button.actionId, requestIds)?.let(session::append)
             }
             "clear" -> {
-                session.state.selectedIds.clear()
+                session.clearSelection()
                 groundMode = null
                 buildModeTypeId = null
             }
@@ -883,9 +883,7 @@ private class ClientPanel(
     }
 
     private fun commandButtonTooltipAt(mouseX: Int, mouseY: Int): String? {
-        val snapshot = session.state.snapshot
-        val canTrain = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsTraining == true } }
-        val canResearch = snapshot != null && session.state.selectedIds.any { id -> snapshot.entities.any { it.id == id && it.supportsResearch == true } }
+        val viewState = session.state.viewState
         val statusLineCount = buildCommandPanelStatusLines(buildOverlayLines()).size
         val button =
             commandButtonAt(
@@ -894,12 +892,12 @@ private class ClientPanel(
                 mouseY,
                 catalog,
                 statusLineCount = statusLineCount,
-                hasSelection = session.state.selectedIds.isNotEmpty(),
-                canTrain = canTrain,
-                canResearch = canResearch
+                hasSelection = viewState.hasSelection,
+                canTrain = viewState.canTrain,
+                canResearch = viewState.canResearch
             ) ?: return null
         val tooltip = commandButtonTooltip(button.actionId) ?: return null
-        val enabled = isCommandButtonEnabled(button.actionId, session.state.selectedIds.isNotEmpty(), canTrain, canResearch, session.state.viewedFaction)
+        val enabled = isCommandButtonEnabled(button.actionId, viewState.hasSelection, viewState.canTrain, viewState.canResearch, session.state.viewedFaction)
         return if (enabled) tooltip else "$tooltip (unavailable)"
     }
 
@@ -912,10 +910,7 @@ private class ClientPanel(
     }
 
     private fun selectionHudLine(): String? {
-        val snapshot = session.state.snapshot ?: return null
-        val selected = session.state.selectedIds
-        if (selected.isEmpty()) return null
-        return "selection hud: ${buildSelectionSummary(snapshot, selected).removePrefix("selection: ")}"
+        return session.state.viewState.selectionHudLine
     }
 
     private fun controlGroupSummaryLine(): String? {
@@ -932,8 +927,7 @@ private class ClientPanel(
             return
         }
         val ids = collectFactionSelectionIds(snapshot, faction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildFactionSelectionRecord(snapshot.tick + 1, faction)
@@ -989,8 +983,7 @@ private class ClientPanel(
         }
         val faction = session.state.viewedFaction ?: selected.faction
         val ids = collectTypeSelectionIds(snapshot, selected.typeId, faction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildTypeSelectionRecord(snapshot.tick + 1, selected.typeId)
@@ -1018,8 +1011,7 @@ private class ClientPanel(
         }
         val faction = session.state.viewedFaction ?: selected.faction
         val ids = collectArchetypeSelectionIds(snapshot, archetype, faction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildArchetypeSelectionRecord(snapshot.tick + 1, archetype)
@@ -1031,8 +1023,7 @@ private class ClientPanel(
     private fun selectAllVisible() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectAllSelectionIds(snapshot)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildAllSelectionRecord(snapshot.tick + 1)
@@ -1044,8 +1035,7 @@ private class ClientPanel(
     private fun selectIdleWorkers() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectIdleWorkerSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1057,8 +1047,7 @@ private class ClientPanel(
     private fun selectDamagedUnits() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectDamagedSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1070,8 +1059,7 @@ private class ClientPanel(
     private fun selectCombatUnits() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectCombatSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1083,8 +1071,7 @@ private class ClientPanel(
     private fun selectProducers() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectProducerSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1096,8 +1083,7 @@ private class ClientPanel(
     private fun selectTrainingBuildings() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectTrainingSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1109,8 +1095,7 @@ private class ClientPanel(
     private fun selectResearchBuildings() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectResearchSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1122,8 +1107,7 @@ private class ClientPanel(
     private fun selectConstructionSites() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectConstructionSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1135,8 +1119,7 @@ private class ClientPanel(
     private fun selectHarvesters() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectHarvesterSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1148,8 +1131,7 @@ private class ClientPanel(
     private fun selectReturningHarvesters() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectReturningHarvesterSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1161,8 +1143,7 @@ private class ClientPanel(
     private fun selectCargoHarvesters() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectCargoHarvesterSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1174,8 +1155,7 @@ private class ClientPanel(
     private fun selectDropoffBuildings() {
         val snapshot = session.state.snapshot ?: return
         val ids = collectDropoffSelectionIds(snapshot, session.state.viewedFaction)
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
@@ -1196,8 +1176,7 @@ private class ClientPanel(
             showNotice("group $group empty")
             return
         }
-        session.state.selectedIds.clear()
-        for (i in ids.indices) session.state.selectedIds.add(ids[i])
+        session.replaceSelection(ids)
         session.append(
             ClientIntent.Selection(
                 buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())
