@@ -25,6 +25,7 @@ go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --sim
 ```
 
 `--simVersion` must be non-empty (server rejects empty protocol sim version tags).
+On connect, the CLI prints `resumeToken=<token>` when the server provides one.
 
 Resume a prior session identity (if token is still valid):
 
@@ -69,6 +70,7 @@ CLI tips:
 cd client
 go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --simVersion dev
 ```
+On connect, the bot prints `bot resumeToken=<token>` when available.
 
 Resume bot identity with a saved token:
 
