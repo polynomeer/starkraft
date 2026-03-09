@@ -91,6 +91,9 @@ func Dial(url, simVersion, name string, room *string) (*Client, error) {
 }
 
 func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*Client, error) {
+	if simVersion == "" {
+		return nil, fmt.Errorf("simVersion must be non-empty")
+	}
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, err

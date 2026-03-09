@@ -1,6 +1,7 @@
 package headless
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/starkraft/client/pkg/protocol"
@@ -16,5 +17,15 @@ func TestSnapshotInterpolation(t *testing.T) {
 	}
 	if out[0].X != 5 || out[0].Y != 5 {
 		t.Fatalf("expected interpolated 5,5 got %.2f,%.2f", out[0].X, out[0].Y)
+	}
+}
+
+func TestDialWithResumeRejectsEmptySimVersion(t *testing.T) {
+	_, err := DialWithResume("ws://127.0.0.1:1/ws", "", "bot-a", nil, nil)
+	if err == nil {
+		t.Fatal("expected non-empty simVersion error")
+	}
+	if !strings.Contains(err.Error(), "simVersion") {
+		t.Fatalf("expected simVersion error, got %v", err)
 	}
 }
