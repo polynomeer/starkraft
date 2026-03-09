@@ -125,6 +125,8 @@ func (c *Client) Close() error {
 
 func (c *Client) ClientID() string { return c.clientID }
 
+func (c *Client) ResumeToken() *string { return c.resumeToken }
+
 func (c *Client) SendBatch(tick int, commands []protocol.WireCommand) error {
 	if len(commands) == 0 {
 		return nil

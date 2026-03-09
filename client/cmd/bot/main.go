@@ -37,6 +37,9 @@ func main() {
 	}
 	defer c.Close()
 	fmt.Printf("bot connected as %s\n", c.ClientID())
+	if token := c.ResumeToken(); token != nil && strings.TrimSpace(*token) != "" {
+		fmt.Printf("bot resumeToken=%s\n", *token)
+	}
 
 	lastTick := 0
 	for {

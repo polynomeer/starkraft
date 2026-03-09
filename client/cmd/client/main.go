@@ -44,6 +44,9 @@ func main() {
 	defer c.Close()
 
 	fmt.Printf("connected as %s\n", c.ClientID())
+	if token := c.ResumeToken(); token != nil && strings.TrimSpace(*token) != "" {
+		fmt.Printf("resumeToken=%s\n", *token)
+	}
 	var currentTick atomic.Int64
 	var requestSeq atomic.Int64
 	buffer := &headless.SnapshotBuffer{}
