@@ -151,6 +151,9 @@ func TestDialWithResumeSendsResumeToken(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	defer client.Close()
+	if client.ResumeToken() == nil || *client.ResumeToken() != "resume-2" {
+		t.Fatalf("expected updated resume token resume-2, got %v", client.ResumeToken())
+	}
 }
 
 func TestDialWithResumeTrimsSimVersion(t *testing.T) {
