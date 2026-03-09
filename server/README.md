@@ -62,6 +62,7 @@ Runtime tuning env vars:
 - `STARKRAFT_EMPTY_ROOM_TTL` (duration, default `30s`)
 - `STARKRAFT_RESUME_WINDOW` (duration, default `15s`)
 - `STARKRAFT_KEYFRAME_EVERY` (int ticks, default `50`)
+- whitespace-only launcher env values fall back to defaults after trimming
 
 Operational endpoints:
 - `GET /healthz`:
