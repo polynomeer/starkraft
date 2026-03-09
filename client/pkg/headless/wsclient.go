@@ -3,6 +3,7 @@ package headless
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -91,7 +92,8 @@ func Dial(url, simVersion, name string, room *string) (*Client, error) {
 }
 
 func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*Client, error) {
-	if simVersion == "" {
+	normalizedSimVersion := strings.TrimSpace(simVersion)
+	if normalizedSimVersion == "" {
 		return nil, fmt.Errorf("simVersion must be non-empty")
 	}
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
@@ -100,7 +102,7 @@ func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*C
 	}
 	c := &Client{
 		conn:       conn,
-		simVersion: simVersion,
+		simVersion: normalizedSimVersion,
 		name:       name,
 		room:       room,
 		resumeToken: resumeToken,
