@@ -10,7 +10,6 @@ internal class StarkraftGdxGame(
     private val launchConfig: GraphicalClientLaunchConfig,
     private val onRestartRequested: () -> Unit
 ) : Game(), Disposable {
-    private val assets = GdxUiAssets()
     private val runtime =
         GdxClientRuntime(
             session = session,
@@ -22,13 +21,17 @@ internal class StarkraftGdxGame(
                 Gdx.app.exit()
             }
         )
+    private var assets: GdxUiAssets? = null
     private var gameScreen: Screen? = null
 
     override fun create() {
+        val assets = GdxUiAssets()
+        this.assets = assets
         setScreen(MainMenuScreen(this, assets, runtime))
     }
 
     fun openGameScreen() {
+        val assets = requireNotNull(assets) { "assets not initialized" }
         val existing = gameScreen
         if (existing != null) {
             setScreen(existing)
@@ -40,13 +43,14 @@ internal class StarkraftGdxGame(
     }
 
     fun openMainMenu() {
+        val assets = requireNotNull(assets) { "assets not initialized" }
         setScreen(MainMenuScreen(this, assets, runtime))
     }
 
     override fun dispose() {
         screen?.dispose()
         gameScreen?.takeIf { it !== screen }?.dispose()
-        assets.dispose()
+        assets?.dispose()
         session.close()
     }
 }
