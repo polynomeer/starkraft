@@ -26,6 +26,7 @@ go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --sim
 
 `--simVersion` must be non-empty (server rejects empty protocol sim version tags).
 On connect, the CLI prints `resumeToken=<token>` when the server provides one.
+Whitespace-only `--room` and `--resumeToken` values are trimmed away before handshake; whitespace-only `--name` is rejected locally.
 
 Resume a prior session identity (if token is still valid):
 
