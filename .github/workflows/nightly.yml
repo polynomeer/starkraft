@@ -24,10 +24,20 @@ jobs:
           cd server
           go vet ./...
 
+      - name: Verify server module checksums
+        run: |
+          cd server
+          go mod verify
+
       - name: Vet client packages
         run: |
           cd client
           go vet ./...
+
+      - name: Verify client module checksums
+        run: |
+          cd client
+          go mod verify
 
   sim-soak:
     runs-on: ubuntu-latest
