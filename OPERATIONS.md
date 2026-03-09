@@ -56,6 +56,9 @@ cd /Users/hammac/Projects/starkraft
 ./scripts/e2e_server_bots_smoke.sh
 ```
 
+Optional:
+- `STARKRAFT_E2E_SIM_VERSION=<tag>` to set bot handshake `simVersion` in this smoke.
+
 Sim play pipeline smoke:
 
 ```bash
