@@ -96,6 +96,24 @@ func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*C
 	if normalizedSimVersion == "" {
 		return nil, fmt.Errorf("simVersion must be non-empty")
 	}
+	normalizedName := strings.TrimSpace(name)
+	if normalizedName == "" {
+		return nil, fmt.Errorf("name must be non-empty")
+	}
+	var normalizedRoom *string
+	if room != nil {
+		value := strings.TrimSpace(*room)
+		if value != "" {
+			normalizedRoom = &value
+		}
+	}
+	var normalizedResumeToken *string
+	if resumeToken != nil {
+		value := strings.TrimSpace(*resumeToken)
+		if value != "" {
+			normalizedResumeToken = &value
+		}
+	}
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, err
@@ -103,9 +121,9 @@ func DialWithResume(url, simVersion, name string, room, resumeToken *string) (*C
 	c := &Client{
 		conn:       conn,
 		simVersion: normalizedSimVersion,
-		name:       name,
-		room:       room,
-		resumeToken: resumeToken,
+		name:       normalizedName,
+		room:       normalizedRoom,
+		resumeToken: normalizedResumeToken,
 		SnapshotCh: make(chan protocol.SnapshotMessage, 64),
 		MatchEndCh: make(chan protocol.MatchEndMessage, 8),
 		AckCh:      make(chan protocol.CommandAckMessage, 128),

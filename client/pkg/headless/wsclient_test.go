@@ -39,3 +39,13 @@ func TestDialWithResumeRejectsWhitespaceSimVersion(t *testing.T) {
 		t.Fatalf("expected simVersion error, got %v", err)
 	}
 }
+
+func TestDialWithResumeRejectsWhitespaceName(t *testing.T) {
+	_, err := DialWithResume("ws://127.0.0.1:1/ws", "dev", "   ", nil, nil)
+	if err == nil {
+		t.Fatal("expected non-empty name error")
+	}
+	if !strings.Contains(err.Error(), "name") {
+		t.Fatalf("expected name error, got %v", err)
+	}
+}
