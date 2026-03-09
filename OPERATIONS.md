@@ -58,6 +58,7 @@ cd /Users/hammac/Projects/starkraft
 
 Optional:
 - `STARKRAFT_E2E_SIM_VERSION=<tag>` to set bot handshake `simVersion` in this smoke.
+- empty/whitespace sim version env values are rejected before launch.
 
 Sim play pipeline smoke:
 
