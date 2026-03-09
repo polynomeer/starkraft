@@ -24,6 +24,8 @@ cd client
 go run ./cmd/client --url ws://127.0.0.1:8080/ws --name cli --room default --simVersion dev
 ```
 
+`--simVersion` must be non-empty (server rejects empty protocol sim version tags).
+
 Resume a prior session identity (if token is still valid):
 
 ```bash

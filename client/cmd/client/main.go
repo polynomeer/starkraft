@@ -25,13 +25,18 @@ func main() {
 	resumeToken := flag.String("resumeToken", "", "optional resume token from prior handshake")
 	scriptPath := flag.String("script", "", "optional JSON script path for auto command batches")
 	flag.Parse()
+	normalizedSimVersion := strings.TrimSpace(*simVersion)
+	if normalizedSimVersion == "" {
+		fmt.Fprintln(os.Stderr, "invalid --simVersion: value must be non-empty")
+		os.Exit(1)
+	}
 
 	var resumePtr *string
 	if strings.TrimSpace(*resumeToken) != "" {
 		token := strings.TrimSpace(*resumeToken)
 		resumePtr = &token
 	}
-	c, err := headless.DialWithResume(*url, *simVersion, *name, room, resumePtr)
+	c, err := headless.DialWithResume(*url, normalizedSimVersion, *name, room, resumePtr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "connect failed: %v\n", err)
 		os.Exit(1)
