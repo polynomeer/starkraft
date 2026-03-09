@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Env:
+# - STARKRAFT_TOOLS_HEALTH_TMP_DIR (default mktemp under /tmp)
+# Writes JSON artifacts plus summary.json under TMP_DIR.
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP_DIR="${STARKRAFT_TOOLS_HEALTH_TMP_DIR:-$(mktemp -d /tmp/starkraft-tools-health-XXXXXX)}"
 REPLAY_JSON="$TMP_DIR/replay.json"
