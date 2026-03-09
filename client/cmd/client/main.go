@@ -54,7 +54,11 @@ func main() {
 	groups := newControlGroups()
 	statuses := newRequestStatusBook()
 	hud := newHudState(c.ClientID())
-	scriptBatches := loadScriptBatches(*scriptPath)
+	scriptBatches, err := loadScriptBatches(*scriptPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "script load failed: %v\n", err)
+		os.Exit(1)
+	}
 	nextScriptIndex := 0
 
 	go func() {
@@ -541,23 +545,23 @@ func blankIfEmpty(value string) string {
 	return value
 }
 
-func loadScriptBatches(path string) []scriptBatch {
+func loadScriptBatches(path string) ([]scriptBatch, error) {
 	if path == "" {
-		return nil
+		return nil, nil
 	}
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		panic(fmt.Sprintf("read script: %v", err))
+		return nil, fmt.Errorf("read script: %w", err)
 	}
 	var batches []scriptBatch
 	if err := json.Unmarshal(raw, &batches); err != nil {
-		panic(fmt.Sprintf("parse script: %v", err))
+		return nil, fmt.Errorf("parse script: %w", err)
 	}
 	for i := range batches {
 		if batches[i].Tick < 0 {
-			panic(fmt.Sprintf("script batch %d has negative tick", i))
+			return nil, fmt.Errorf("script batch %d has negative tick", i)
 		}
 	}
 	fmt.Printf("loaded script batches=%d path=%s\n", len(batches), path)
-	return batches
+	return batches, nil
 }

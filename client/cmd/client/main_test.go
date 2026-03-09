@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/starkraft/client/pkg/protocol"
@@ -105,4 +108,42 @@ func TestRequestStatusBookCountByState(t *testing.T) {
 
 func ptr(value string) *string {
 	return &value
+}
+
+func TestLoadScriptBatchesReturnsReadError(t *testing.T) {
+	_, err := loadScriptBatches(filepath.Join(t.TempDir(), "missing.json"))
+	if err == nil {
+		t.Fatal("expected read error")
+	}
+	if !strings.Contains(err.Error(), "read script") {
+		t.Fatalf("expected read script error, got %v", err)
+	}
+}
+
+func TestLoadScriptBatchesReturnsParseError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "bad.json")
+	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+	_, err := loadScriptBatches(path)
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if !strings.Contains(err.Error(), "parse script") {
+		t.Fatalf("expected parse script error, got %v", err)
+	}
+}
+
+func TestLoadScriptBatchesRejectsNegativeTick(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "negative.json")
+	if err := os.WriteFile(path, []byte(`[{"tick":-1,"commands":[]}]`), 0o644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+	_, err := loadScriptBatches(path)
+	if err == nil {
+		t.Fatal("expected negative tick error")
+	}
+	if !strings.Contains(err.Error(), "negative tick") {
+		t.Fatalf("expected negative tick error, got %v", err)
+	}
 }
