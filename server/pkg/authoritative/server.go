@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -112,6 +113,14 @@ func writeHandshakeClose(conn *websocket.Conn, err error) {
 	_ = conn.WriteControl(
 		websocket.CloseMessage,
 		websocket.FormatCloseMessage(hsErr.closeCode, hsErr.reason),
+		time.Now().Add(250*time.Millisecond),
+	)
+}
+
+func writeProtocolClose(conn *websocket.Conn, closeCode int, reason string) {
+	_ = conn.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(closeCode, reason),
 		time.Now().Add(250*time.Millisecond),
 	)
 }
@@ -280,6 +289,10 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		if env.ProtocolVersion != protocol.CurrentProtocolVersion {
 			return
 		}
+		if strings.TrimSpace(env.SimVersion) == "" {
+			writeProtocolClose(conn, websocket.ClosePolicyViolation, "invalid sim version")
+			return
+		}
 		t, err := protocol.DecodeMessageType(env.Message)
 		if err != nil {
 			return
@@ -389,6 +402,9 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 			reason = "protocol mismatch: upgrade server"
 		}
 		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: reason}
+	}
+	if strings.TrimSpace(env.SimVersion) == "" {
+		return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "invalid sim version"}
 	}
 	msgType, err := protocol.DecodeMessageType(env.Message)
 	if err != nil || msgType != "handshake" {
