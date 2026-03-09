@@ -144,6 +144,9 @@ jobs:
       - name: Vet server packages
         run: go vet ./...
 
+      - name: Verify server module checksums
+        run: go mod verify
+
       - name: Verify server module files are tidy
         run: |
           go mod tidy
@@ -173,6 +176,9 @@ jobs:
 
       - name: Vet client packages
         run: go vet ./...
+
+      - name: Verify client module checksums
+        run: go mod verify
 
       - name: Verify client module files are tidy
         run: |
