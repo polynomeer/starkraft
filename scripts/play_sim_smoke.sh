@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Env:
+# - STARKRAFT_PLAY_SIM_SMOKE_TMP_DIR (default mktemp under /tmp)
+# - STARKRAFT_PLAY_SIM_SMOKE_KEEP_TMP (1 keeps temp dir, default 0)
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP_DIR="${STARKRAFT_PLAY_SIM_SMOKE_TMP_DIR:-$(mktemp -d /tmp/starkraft-play-smoke-XXXXXX)}"
 SNAPSHOT_FILE="$TMP_DIR/snapshots.ndjson"

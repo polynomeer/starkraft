@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Downloads Gradle wrapper runtime and Go module deps for server/client.
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "[bootstrap] resolving Gradle wrapper and module deps"
