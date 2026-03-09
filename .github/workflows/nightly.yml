@@ -63,6 +63,17 @@ jobs:
           bash -n scripts/play_sim_graphical.sh
           bash -n scripts/tools_health.sh
 
+      - name: Validate script env guard rails
+        run: |
+          if STARKRAFT_E2E_SIM_VERSION='   ' ./scripts/e2e_server_bots_smoke.sh; then
+            echo "expected e2e script to reject whitespace sim version"
+            exit 1
+          fi
+          if STARKRAFT_PLAY_SIM_VERSION='   ' ./scripts/play_stack_local.sh; then
+            echo "expected play stack script to reject whitespace sim version"
+            exit 1
+          fi
+
       - name: Run soak harness
         run: ./gradlew --no-daemon :sim:soak --args="--minutes 1 --units 240 --seed 1234 --reportEverySec 30"
 
