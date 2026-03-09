@@ -312,6 +312,7 @@ One-command local play:
   - `gas`
   - `scripted`
   Each launch resets the play workspace NDJSON files so the next match starts cleanly.
+  The libGDX client opens on a main menu first, then enters the live game screen.
   While the graphical client is open, press `F5` to restart the current play scenario in the same workspace.
   The play workspace also includes `play-control.txt`, which the client updates for pause and speed control.
   Press `F6` / `F7` in the client to switch scenario and immediately restart into the previous/next preset.

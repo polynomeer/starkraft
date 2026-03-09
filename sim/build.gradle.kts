@@ -6,6 +6,7 @@ plugins {
 
 group = "starkraft"
 version = "1.0-SNAPSHOT"
+val gdxVersion = "1.12.1"
 
 repositories {
     mavenCentral()
@@ -14,6 +15,9 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
+    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    runtimeOnly("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -60,14 +64,14 @@ tasks.register<JavaExec>("consumeSnapshotStream") {
 
 tasks.register<JavaExec>("graphicalClient") {
     group = "application"
-    description = "Run the minimal snapshot-driven graphical client"
+    description = "Run the libGDX snapshot-driven graphical client"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.GraphicalClientKt")
 }
 
 tasks.register<JavaExec>("play") {
     group = "application"
-    description = "Launch the sim and graphical client together"
+    description = "Launch the sim and libGDX graphical client together"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("starkraft.sim.client.PlayLauncherKt")
 }

@@ -1210,48 +1210,23 @@ private class ClientPanel(
 }
 
 fun main(args: Array<String>) {
+    Lwjgl3StartupHelper.startNewJvmIfRequired("starkraft.sim.client.GraphicalClientKt", args)
     val config = parseGraphicalClientArgs(args)
 
-    val session = ClientSession(openClientStreamSubscription(config.snapshotSpec), openClientInputSink(config.inputSpec))
-    if (config.headless) {
-        session.use {
+    ClientSession(openClientStreamSubscription(config.snapshotSpec), openClientInputSink(config.inputSpec)).use { session ->
+        if (config.headless) {
             repeat(config.headlessTicks) {
                 if (!session.poll()) return@repeat
             }
             println(renderClientTextFrame(session.state))
+            return
         }
-        return
-    }
-    var restartRequested = false
-    val panel = ClientPanel(session, controlPath = config.controlPath, scenarioPath = config.scenarioPath, playRoot = config.playRoot) { restartRequested = true }
-    val appLoop = ClientAppLoop(session) { panel.repaint() }
-
-    val frame = JFrame("Starkraft Client")
-    frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-    frame.contentPane.add(panel)
-    frame.pack()
-    frame.setLocationRelativeTo(null)
-    frame.isVisible = true
-    panel.setFocusTraversalKeysEnabled(false)
-    panel.focusTraversalKeysEnabled = false
-    panel.requestFocusInWindow()
-
-    Timer(50) {
-        appLoop.tick()
+        var restartRequested = false
+        launchLibgdxClient(session, config) { restartRequested = true }
         if (restartRequested) {
-            frame.dispose()
+            System.exit(CLIENT_EXIT_RESTART)
         }
-    }.start()
-
-    frame.addWindowListener(
-        object : java.awt.event.WindowAdapter() {
-            override fun windowClosed(e: java.awt.event.WindowEvent?) {
-                if (restartRequested) {
-                    System.exit(CLIENT_EXIT_RESTART)
-                }
-            }
-        }
-    )
+    }
 }
 
 internal data class GraphicalClientLaunchConfig(
