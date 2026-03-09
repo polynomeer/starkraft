@@ -159,6 +159,7 @@ Play pipeline smoke check (snapshot producer + headless graphical client):
 
 Authoritative stack smoke check (server + 2 bots + replay):
 `./scripts/e2e_server_bots_smoke.sh`
+  - set `STARKRAFT_E2E_SIM_VERSION` to override bot handshake sim version tag
 
 Tools JSON contract smoke check:
 `./scripts/tools_health.sh`

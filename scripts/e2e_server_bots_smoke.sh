@@ -6,6 +6,7 @@ E2E_TMP_DIR="${STARKRAFT_E2E_TMP_DIR:-$(mktemp -d /tmp/starkraft-e2e-XXXXXX)}"
 mkdir -p "$E2E_TMP_DIR"
 PORT="${STARKRAFT_E2E_PORT:-18080}"
 ADDR="127.0.0.1:${PORT}"
+SIM_VERSION="${STARKRAFT_E2E_SIM_VERSION:-dev}"
 REPLAY_FILE="$E2E_TMP_DIR/server.replay.jsonl"
 SERVER_LOG="$E2E_TMP_DIR/server.log"
 BOT1_LOG="$E2E_TMP_DIR/bot-a.log"
@@ -76,13 +77,13 @@ fi
 
 (
   cd "$ROOT_DIR/client"
-  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-a --room smoke >"$BOT1_LOG" 2>&1
+  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-a --room smoke --simVersion "$SIM_VERSION" >"$BOT1_LOG" 2>&1
 ) &
 BOT1_PID=$!
 
 (
   cd "$ROOT_DIR/client"
-  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-b --room smoke >"$BOT2_LOG" 2>&1
+  go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-b --room smoke --simVersion "$SIM_VERSION" >"$BOT2_LOG" 2>&1
 ) &
 BOT2_PID=$!
 
