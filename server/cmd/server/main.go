@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -42,14 +43,14 @@ func main() {
 }
 
 func getenv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
 		return v
 	}
 	return fallback
 }
 
 func getenvInt(key string, fallback int) int {
-	raw := os.Getenv(key)
+	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
 		return fallback
 	}
@@ -62,7 +63,7 @@ func getenvInt(key string, fallback int) int {
 }
 
 func getenvDuration(key string, fallback time.Duration) time.Duration {
-	raw := os.Getenv(key)
+	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
 		return fallback
 	}
