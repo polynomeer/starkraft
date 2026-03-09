@@ -638,6 +638,50 @@ func TestBatchTickOutsideWindowIsRejected(t *testing.T) {
 	}
 }
 
+func TestPostHandshakeEmptySimVersionClosesConnection(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	hsRaw, _ := json.Marshal(protocol.HandshakeMessage{Type: "handshake", ClientName: "bot-a"})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "test", Message: hsRaw}); err != nil {
+		t.Fatalf("write handshake: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = readEnvelope(t, conn) // handshake ack
+	_ = readEnvelope(t, conn) // initial snapshot
+
+	req := "r-empty-sim"
+	x, y := 10.0, 10.0
+	batchRaw, _ := json.Marshal(protocol.CommandBatchMessage{
+		Type: "commandBatch",
+		Tick: 1,
+		Commands: []protocol.WireCommand{
+			{CommandType: "move", RequestID: &req, UnitIDs: []int{1}, X: &x, Y: &y},
+		},
+	})
+	if err := conn.WriteJSON(protocol.ProtocolEnvelope{ProtocolVersion: protocol.CurrentProtocolVersion, SimVersion: "", Message: batchRaw}); err != nil {
+		t.Fatalf("write batch: %v", err)
+	}
+	conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	var env protocol.ProtocolEnvelope
+	err = conn.ReadJSON(&env)
+	if err == nil {
+		t.Fatalf("expected connection close for empty sim version")
+	}
+	if !strings.Contains(err.Error(), "invalid sim version") {
+		t.Fatalf("expected invalid sim version close reason, got: %v", err)
+	}
+}
+
 func TestPendingQueueLimitRejectsOverflow(t *testing.T) {
 	srv := NewServer(Config{
 		SimVersion:                 "test",
