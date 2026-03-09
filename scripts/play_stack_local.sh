@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${STARKRAFT_PLAY_PORT:-18080}"
 ADDR="127.0.0.1:${PORT}"
 ROOM="${STARKRAFT_PLAY_ROOM:-local-play}"
+SIM_VERSION="${STARKRAFT_PLAY_SIM_VERSION:-dev}"
 TMP_DIR="${STARKRAFT_PLAY_TMP_DIR:-$(mktemp -d /tmp/starkraft-play-XXXXXX)}"
 REPLAY_FILE="${STARKRAFT_PLAY_REPLAY:-$TMP_DIR/replay.jsonl}"
 SERVER_LOG="$TMP_DIR/server.log"
@@ -40,7 +41,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "[play] logs=$TMP_DIR replay=$REPLAY_FILE room=$ROOM addr=$ADDR"
+echo "[play] logs=$TMP_DIR replay=$REPLAY_FILE room=$ROOM addr=$ADDR simVersion=$SIM_VERSION"
 
 (
   cd "$ROOT_DIR/server"
@@ -69,7 +70,7 @@ fi
 if [[ "$RUN_BOT" == "1" ]]; then
   (
     cd "$ROOT_DIR/client"
-    go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-a --room "$ROOM" >"$BOT_LOG" 2>&1
+    go run ./cmd/bot --url "ws://${ADDR}/ws" --name bot-a --room "$ROOM" --simVersion "$SIM_VERSION" >"$BOT_LOG" 2>&1
   ) &
   BOT_PID=$!
   echo "[play] started bot-a (log: $BOT_LOG)"
@@ -78,7 +79,7 @@ fi
 echo "[play] starting interactive CLI. Type 'quit' to stop."
 (
   cd "$ROOT_DIR/client"
-  go run ./cmd/client --url "ws://${ADDR}/ws" --name player-cli --room "$ROOM"
+  go run ./cmd/client --url "ws://${ADDR}/ws" --name player-cli --room "$ROOM" --simVersion "$SIM_VERSION"
 ) &
 CLI_PID=$!
 wait "$CLI_PID"

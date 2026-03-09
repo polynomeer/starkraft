@@ -185,6 +185,7 @@ Quick play modes:
 Optional env vars:
 - `STARKRAFT_PLAY_PORT` (default `18080`)
 - `STARKRAFT_PLAY_ROOM` (default `local-play`)
+- `STARKRAFT_PLAY_SIM_VERSION` (default `dev`)
 - `STARKRAFT_PLAY_BOT=0` (disable auto-start bot)
 - `STARKRAFT_PLAY_TMP_DIR` (custom logs/replay dir)
 - `STARKRAFT_SIM_PLAY_DIR` (default `/tmp/starkraft-play`)
