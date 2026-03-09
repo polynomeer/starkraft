@@ -15,6 +15,11 @@ RUN_BOT="${STARKRAFT_PLAY_BOT:-1}"
 mkdir -p "$TMP_DIR"
 touch "$SERVER_LOG" "$BOT_LOG"
 
+if [[ -z "${SIM_VERSION//[[:space:]]/}" ]]; then
+  echo "[play] invalid STARKRAFT_PLAY_SIM_VERSION: value must be non-empty"
+  exit 1
+fi
+
 http_ready() {
   local url="$1"
   if command -v curl >/dev/null 2>&1; then
