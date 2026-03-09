@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Env:
+# - STARKRAFT_E2E_PORT (default 18080)
+# - STARKRAFT_E2E_TMP_DIR (default mktemp under /tmp)
+# - STARKRAFT_E2E_SIM_VERSION (default dev, must be non-empty)
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 E2E_TMP_DIR="${STARKRAFT_E2E_TMP_DIR:-$(mktemp -d /tmp/starkraft-e2e-XXXXXX)}"
 mkdir -p "$E2E_TMP_DIR"

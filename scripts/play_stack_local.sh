@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Env:
+# - STARKRAFT_PLAY_PORT (default 18080)
+# - STARKRAFT_PLAY_ROOM (default local-play)
+# - STARKRAFT_PLAY_SIM_VERSION (default dev, must be non-empty)
+# - STARKRAFT_PLAY_BOT (1/0, default 1)
+# - STARKRAFT_PLAY_TMP_DIR (default mktemp under /tmp)
+# - STARKRAFT_PLAY_REPLAY (default under tmp dir)
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${STARKRAFT_PLAY_PORT:-18080}"
 ADDR="127.0.0.1:${PORT}"
