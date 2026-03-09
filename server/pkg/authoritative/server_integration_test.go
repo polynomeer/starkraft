@@ -1016,8 +1016,8 @@ func TestUnknownCommandTypeIsRejected(t *testing.T) {
 	if err := json.Unmarshal(ackEnv.Message, &ack); err != nil {
 		t.Fatalf("decode ack: %v", err)
 	}
-	if ack.Accepted || ack.Reason != "invalidPayload" {
-		t.Fatalf("expected invalidPayload rejection, got %+v", ack)
+	if ack.Accepted || ack.Reason != "unsupportedCommand" {
+		t.Fatalf("expected unsupportedCommand rejection, got %+v", ack)
 	}
 }
 

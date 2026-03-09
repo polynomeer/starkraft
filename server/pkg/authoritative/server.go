@@ -309,10 +309,14 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 				})
 				continue
 			}
-			if !s.validateCommandBatch(batch) {
+			ok, reason := s.validateCommandBatch(batch)
+			if !ok {
+				if reason == "" {
+					reason = "invalidPayload"
+				}
 				_ = client.sendEnvelope(protocol.CommandAckMessage{
 					Type: "commandAck", Tick: batch.Tick, CommandType: "commandBatch",
-					Accepted: false, Reason: "invalidPayload",
+					Accepted: false, Reason: reason,
 				})
 				continue
 			}
@@ -461,49 +465,49 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	}, rm, nil
 }
 
-func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) bool {
+func (s *Server) validateCommandBatch(batch protocol.CommandBatchMessage) (bool, string) {
 	for _, cmd := range batch.Commands {
 		if cmd.CommandType == "" || !safeTokenPattern.MatchString(cmd.CommandType) {
-			return false
+			return false, "invalidPayload"
 		}
 		if cmd.RequestID != nil {
 			if len(*cmd.RequestID) > s.cfg.MaxRequestIDLength || !safeTokenPattern.MatchString(*cmd.RequestID) {
-				return false
+				return false, "invalidPayload"
 			}
 		}
 		if len(cmd.UnitIDs) > s.cfg.MaxUnitIDsPerCommand {
-			return false
+			return false, "invalidPayload"
 		}
 		if cmd.X != nil && !isFinite(*cmd.X) {
-			return false
+			return false, "invalidPayload"
 		}
 		if cmd.Y != nil && !isFinite(*cmd.Y) {
-			return false
+			return false, "invalidPayload"
 		}
 		switch cmd.CommandType {
 		case "move":
 			if len(cmd.UnitIDs) == 0 || cmd.X == nil || cmd.Y == nil {
-				return false
+				return false, "invalidPayload"
 			}
 		case "attack":
 			if len(cmd.UnitIDs) == 0 || cmd.TargetUnitID == nil {
-				return false
+				return false, "invalidPayload"
 			}
 		case "build":
 			if cmd.X == nil || cmd.Y == nil {
-				return false
+				return false, "invalidPayload"
 			}
 		case "queue":
 			// no-op: optional UnitType only
 		case "surrender":
 			if len(cmd.UnitIDs) > 0 || cmd.X != nil || cmd.Y != nil || cmd.TargetUnitID != nil || cmd.UnitType != nil {
-				return false
+				return false, "invalidPayload"
 			}
 		default:
-			return false
+			return false, "unsupportedCommand"
 		}
 	}
-	return true
+	return true, ""
 }
 
 func isFinite(v float64) bool {
