@@ -152,3 +152,49 @@ func TestDialWithResumeSendsResumeToken(t *testing.T) {
 	}
 	defer client.Close()
 }
+
+func TestDialWithResumeTrimsSimVersion(t *testing.T) {
+	upgrader := websocket.Upgrader{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		var hsEnv protocol.ProtocolEnvelope
+		if err := conn.ReadJSON(&hsEnv); err != nil {
+			t.Errorf("read handshake: %v", err)
+			return
+		}
+		if hsEnv.SimVersion != "dev" {
+			t.Errorf("expected trimmed sim version dev, got %q", hsEnv.SimVersion)
+			return
+		}
+
+		ackRaw, _ := json.Marshal(protocol.HandshakeAckMessage{
+			Type:            "handshakeAck",
+			RoomID:          "test-room",
+			ClientID:        "player-1",
+			ServerTickMs:    20,
+			ProtocolVersion: protocol.CurrentProtocolVersion,
+		})
+		if err := conn.WriteJSON(protocol.ProtocolEnvelope{
+			ProtocolVersion: protocol.CurrentProtocolVersion,
+			SimVersion:      "test",
+			Message:         ackRaw,
+		}); err != nil {
+			t.Errorf("write handshake ack: %v", err)
+			return
+		}
+	}))
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, err := DialWithResume(wsURL, "  dev  ", "bot-a", nil, nil)
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	defer client.Close()
+}
