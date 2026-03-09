@@ -79,3 +79,11 @@ Resume bot identity with a saved token:
 cd client
 go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --simVersion dev --resumeToken <token>
 ```
+
+## Verify module integrity
+
+```bash
+cd client
+go test ./...
+go mod verify
+```

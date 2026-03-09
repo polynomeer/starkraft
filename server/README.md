@@ -87,4 +87,5 @@ go run ./cmd/replaycheck --replay /tmp/starkraft-room.replay.jsonl
 ```bash
 cd server
 go test ./...
+go mod verify
 ```
