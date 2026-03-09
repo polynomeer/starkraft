@@ -17,6 +17,8 @@ cd /Users/hammac/Projects/starkraft
 
 ## Quick Start (Authoritative Server + 2 Bots)
 
+Set `STARKRAFT_PLAY_SIM_VERSION` when you want client envelopes to carry a non-default sim tag.
+
 1. Start server:
 
 ```bash
