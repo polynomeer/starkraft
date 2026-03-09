@@ -18,6 +18,7 @@ Implemented and wired for local play/smoke:
 - required first message: protocol envelope with `message.type=handshake`
 - protocol envelope requires non-empty `simVersion` (empty value is rejected with close reason `invalid sim version`)
 - handshake rejects now close socket with explicit reasons (e.g. `protocol mismatch: upgrade client`, `invalid room id`)
+- post-handshake protocol mismatches also close with explicit websocket reasons
 - handshake ack includes `resumeToken`; reconnecting clients can send it via handshake `resumeToken` to restore identity within `STARKRAFT_RESUME_WINDOW`
 - room create/join by `requestedRoom` (default room if omitted)
 - deterministic room snapshot broadcast support
