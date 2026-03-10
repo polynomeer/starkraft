@@ -43,6 +43,7 @@ internal class GameScreen(
 
     override fun render(delta: Float) {
         runtime.tick()
+        runtime.ensureInitialCamera(Gdx.graphics.width, Gdx.graphics.height)
         refreshHud()
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, dragSelection)
         stage.act(delta)

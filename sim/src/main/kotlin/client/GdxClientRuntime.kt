@@ -19,6 +19,7 @@ internal class GdxClientRuntime(
     private val controlGroups = arrayOfNulls<IntArray>(10)
     private var lastGroupRecall: Int? = null
     private var lastGroupRecallAtNanos: Long = 0L
+    private var initialCameraApplied: Boolean = false
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -182,6 +183,7 @@ internal class GdxClientRuntime(
         val ids = session.state.selectedIds.toIntArray()
         val focus = computeSelectionCentroid(snapshot, ids) ?: return
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        initialCameraApplied = true
     }
 
     fun centerOnViewedFaction(viewWidth: Int, viewHeight: Int) {
@@ -190,14 +192,17 @@ internal class GdxClientRuntime(
         val ids = collectFactionSelectionIds(snapshot, faction)
         val focus = computeSelectionCentroid(snapshot, ids) ?: return
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        initialCameraApplied = true
     }
 
     fun zoomAt(screenX: Float, screenY: Float, factor: Float) {
         camera = zoomCameraAt(camera, screenX, screenY, factor)
+        initialCameraApplied = true
     }
 
     fun panBy(deltaX: Float, deltaY: Float) {
         camera = camera.copy(panX = camera.panX + deltaX, panY = camera.panY + deltaY)
+        initialCameraApplied = true
     }
 
     fun togglePauseOverlay() {
@@ -245,6 +250,7 @@ internal class GdxClientRuntime(
 
     fun resetCamera() {
         camera = CameraView()
+        initialCameraApplied = false
     }
 
     fun setHoverHint(text: String?) {
@@ -255,7 +261,21 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return false
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
+        initialCameraApplied = true
         return true
+    }
+
+    fun ensureInitialCamera(viewWidth: Int, viewHeight: Int) {
+        if (initialCameraApplied) return
+        val snapshot = session.state.snapshot ?: return
+        val focus =
+            session.state.viewedFaction?.let { faction ->
+                computeSelectionCentroid(snapshot, collectFactionSelectionIds(snapshot, faction))
+            }
+                ?: computeSelectionCentroid(snapshot, snapshot.entities.map { it.id }.toIntArray())
+                ?: (snapshot.mapWidth / 2f to snapshot.mapHeight / 2f)
+        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        initialCameraApplied = true
     }
 
     fun savePreset(name: String) {

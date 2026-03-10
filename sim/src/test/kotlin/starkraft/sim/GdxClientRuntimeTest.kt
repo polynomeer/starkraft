@@ -90,6 +90,16 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `initial camera centers on the viewed faction`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.ensureInitialCamera(viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(510f, runtime.camera.panX)
+        assertEquals(230f, runtime.camera.panY)
+    }
+
+    @Test
     fun `hover hint and menu summary expose current ui state`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
