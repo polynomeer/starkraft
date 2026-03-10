@@ -21,6 +21,7 @@ internal class GdxClientRuntime(
     private var lastGroupRecallAtNanos: Long = 0L
     private var initialCameraApplied: Boolean = false
     private var activeScenario: PlayScenario? = null
+    private var lastAutoRecoveredView: Int? = Int.MIN_VALUE
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -299,6 +300,56 @@ internal class GdxClientRuntime(
         initialCameraApplied = true
     }
 
+    fun constrainCamera(viewWidth: Int, viewHeight: Int) {
+        val snapshot = session.state.snapshot ?: return
+        val worldWidthPx = snapshot.mapWidth * camera.tileSize
+        val worldHeightPx = snapshot.mapHeight * camera.tileSize
+        val minPanX = viewWidth - worldWidthPx
+        val minPanY = viewHeight - worldHeightPx
+        val clampedPanX =
+            if (worldWidthPx <= viewWidth) {
+                (viewWidth - worldWidthPx) / 2f
+            } else {
+                camera.panX.coerceIn(minPanX, 0f)
+            }
+        val clampedPanY =
+            if (worldHeightPx <= viewHeight) {
+                (viewHeight - worldHeightPx) / 2f
+            } else {
+                camera.panY.coerceIn(minPanY, 0f)
+            }
+        camera = camera.copy(panX = clampedPanX, panY = clampedPanY)
+    }
+
+    fun ensurePlayableView(viewWidth: Int, viewHeight: Int) {
+        val snapshot = session.state.snapshot ?: return
+        val viewedFaction = session.state.viewedFaction ?: return
+        val visibleTiles =
+            snapshot.factions.firstOrNull { it.faction == viewedFaction }?.visibleTiles
+                ?: session.state.visionState?.visibleTiles(viewedFaction)?.size
+                ?: 0
+        if (visibleTiles > 0) {
+            lastAutoRecoveredView = Int.MIN_VALUE
+            return
+        }
+        val fallbackFaction =
+            snapshot.factions
+                .filter { it.visibleTiles > 0 }
+                .maxByOrNull { it.visibleTiles }
+                ?.faction
+        val recoveredView = fallbackFaction
+        if (lastAutoRecoveredView == recoveredView) return
+        if (fallbackFaction != null) {
+            session.state.viewedFaction = fallbackFaction
+            centerOnViewedFaction(viewWidth, viewHeight)
+            showNotice("view auto-switched to f$fallbackFaction")
+        } else {
+            session.state.viewedFaction = null
+            showNotice("view auto-switched to observer")
+        }
+        lastAutoRecoveredView = recoveredView
+    }
+
     fun savePreset(name: String) {
         val root = playRoot ?: return
         savePlayPreset(root.resolve("presets"), name, PlayPresetState(playScenario, playControlState))
@@ -433,46 +484,55 @@ internal class GdxClientRuntime(
     fun buttonModels(): List<ClientCommandButton> {
         val state = session.state.viewState
         return buildList {
-            add(ClientCommandButton("Move", "move"))
-            add(ClientCommandButton("Attack", "attackMove"))
-            add(ClientCommandButton("Patrol", "patrol"))
-            add(ClientCommandButton("Hold", "hold"))
-            catalog.buildOptions.forEach { add(ClientCommandButton("Build ${it.label}", "build:${it.typeId}")) }
-            if (state.canTrain) catalog.trainOptions.forEach { add(ClientCommandButton("Train ${it.label}", "train:${it.typeId}")) }
-            if (state.canResearch) catalog.researchOptions.forEach { add(ClientCommandButton("Research ${it.label}", "research:${it.typeId}")) }
-            add(ClientCommandButton("Cancel Build", "cancelBuild"))
-            add(ClientCommandButton("Cancel Train", "cancelTrain"))
-            add(ClientCommandButton("Cancel Research", "cancelResearch"))
-            add(ClientCommandButton("Pause", "pause"))
-            add(ClientCommandButton("Slower", "slower"))
-            add(ClientCommandButton("Faster", "faster"))
-            add(ClientCommandButton("Debug", "debug"))
-            add(ClientCommandButton("Center", "centerSelection"))
+            if (state.hasSelection) {
+                add(ClientCommandButton("Move", "move"))
+                add(ClientCommandButton("Attack", "attackMove"))
+                add(ClientCommandButton("Patrol", "patrol"))
+                add(ClientCommandButton("Hold", "hold"))
+                catalog.buildOptions
+                    .filter { isActionEnabled("build:${it.typeId}") }
+                    .forEach { add(ClientCommandButton("Build ${it.label}", "build:${it.typeId}")) }
+                add(ClientCommandButton("Clear", "clear"))
+            }
+            if (state.canTrain) {
+                catalog.trainOptions
+                    .filter { isActionEnabled("train:${it.typeId}") }
+                    .forEach { add(ClientCommandButton("Train ${it.label}", "train:${it.typeId}")) }
+            }
+            if (state.canResearch) {
+                catalog.researchOptions
+                    .filter { isActionEnabled("research:${it.typeId}") }
+                    .forEach { add(ClientCommandButton("Research ${it.label}", "research:${it.typeId}")) }
+            }
+            listOf(
+                ClientCommandButton("Cancel Build", "cancelBuild"),
+                ClientCommandButton("Cancel Train", "cancelTrain"),
+                ClientCommandButton("Cancel Research", "cancelResearch")
+            ).filterTo(this) { isActionEnabled(it.actionId) }
+            if (state.hasSelection) {
+                add(ClientCommandButton("Center", "centerSelection"))
+                if (debugVisible) {
+                    listOf(
+                        ClientCommandButton("Select Type", "selectType"),
+                        ClientCommandButton("Select Role", "selectRole"),
+                        ClientCommandButton("Damaged", "selectDamaged"),
+                        ClientCommandButton("Combat", "selectCombat")
+                    ).filterTo(this) { isActionEnabled(it.actionId) }
+                }
+            } else {
+                listOf(
+                    ClientCommandButton("Select F", "selectViewedFaction"),
+                    ClientCommandButton("Idle", "selectIdleWorkers"),
+                    ClientCommandButton("Select All", "selectAll")
+                ).filterTo(this) { isActionEnabled(it.actionId) }
+            }
             add(ClientCommandButton("Faction", "centerFaction"))
             add(ClientCommandButton("F1", "viewF1"))
             add(ClientCommandButton("F2", "viewF2"))
             add(ClientCommandButton("Obs", "observer"))
-            add(ClientCommandButton("Select F", "selectViewedFaction"))
-            add(ClientCommandButton("Select Type", "selectType"))
-            add(ClientCommandButton("Select Role", "selectRole"))
-            add(ClientCommandButton("Select All", "selectAll"))
-            add(ClientCommandButton("Idle", "selectIdleWorkers"))
-            add(ClientCommandButton("Damaged", "selectDamaged"))
-            add(ClientCommandButton("Combat", "selectCombat"))
-            add(ClientCommandButton("Producers", "selectProducers"))
-            add(ClientCommandButton("Trainers", "selectTrainers"))
-            add(ClientCommandButton("Researchers", "selectResearchers"))
-            add(ClientCommandButton("Construction", "selectConstruction"))
-            add(ClientCommandButton("Harvesters", "selectHarvesters"))
-            add(ClientCommandButton("Returning", "selectReturning"))
-            add(ClientCommandButton("Cargo", "selectCargo"))
-            add(ClientCommandButton("Dropoffs", "selectDropoffs"))
-            add(ClientCommandButton("Save Quick", "saveQuick"))
-            add(ClientCommandButton("Load Quick", "loadQuick"))
-            add(ClientCommandButton("Save Alt", "saveAlt"))
-            add(ClientCommandButton("Load Alt", "loadAlt"))
+            add(ClientCommandButton("Pause", "pause"))
             add(ClientCommandButton("Help", "help"))
-            add(ClientCommandButton("Clear", "clear"))
+            add(ClientCommandButton("Debug", "debug"))
         }
     }
 

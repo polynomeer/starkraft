@@ -55,7 +55,7 @@ class GdxClientRuntimeTest {
     fun `changing scenario marks restart required and enterMatch restarts`(@TempDir tempDir: Path) {
         var restarted = false
         var opened = false
-        val runtime = runtime(tempDir) { restarted = true }
+        val runtime = runtime(tempDir, onRestart = { restarted = true })
 
         runtime.cycleScenario(1)
         runtime.enterMatch { opened = true }
@@ -70,7 +70,7 @@ class GdxClientRuntimeTest {
     fun `enterMatch opens game immediately when scenario is live`(@TempDir tempDir: Path) {
         var restarted = false
         var opened = false
-        val runtime = runtime(tempDir) { restarted = true }
+        val runtime = runtime(tempDir, onRestart = { restarted = true })
 
         runtime.enterMatch { opened = true }
 
@@ -128,6 +128,48 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `camera is clamped back inside the map bounds`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.camera = runtime.camera.copy(panX = 500f, panY = 500f)
+
+        runtime.constrainCamera(viewWidth = 640, viewHeight = 480)
+
+        assertEquals(0f, runtime.camera.panX)
+        assertEquals(0f, runtime.camera.panY)
+    }
+
+    @Test
+    fun `view auto-recovers to a faction with vision`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 11,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions =
+                            listOf(
+                                FactionSnapshot(faction = 1, visibleTiles = 0),
+                                FactionSnapshot(faction = 2, visibleTiles = 24)
+                            ),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 8, faction = 2, typeId = "Marine", archetype = "infantry", x = 20f, y = 20f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Gauss")
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+
+        runtime.ensurePlayableView(viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(2, runtime.session.state.viewedFaction)
+        assertTrue(runtime.noticeLine()?.contains("auto-switched") == true)
+    }
+
+    @Test
     fun `hover hint and menu summary expose current ui state`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
@@ -139,15 +181,30 @@ class GdxClientRuntimeTest {
         assertNull(runtime.currentHudLines().firstOrNull { it.startsWith("hint:") })
     }
 
-    private fun runtime(tempDir: Path, onRestart: () -> Unit = {}): GdxClientRuntime {
-        val snapshotPath = tempDir.resolve("snapshots.ndjson")
-        val inputPath = tempDir.resolve("client-input.ndjson")
-        val controlPath = tempDir.resolve("play-control.txt")
-        val scenarioPath = tempDir.resolve("play-scenario.txt")
-        Files.writeString(controlPath, "paused=0\nspeed=1\n")
-        Files.writeString(scenarioPath, "skirmish\n")
+    @Test
+    fun `button deck keeps advanced filters behind debug mode`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.refreshViewState()
 
-        val snapshot =
+        val defaultButtons = runtime.buttonModels().map { it.actionId }
+
+        assertTrue("move" in defaultButtons)
+        assertTrue("clear" in defaultButtons)
+        assertFalse("selectType" in defaultButtons)
+        assertFalse("selectRole" in defaultButtons)
+
+        runtime.toggleDebug()
+        val debugButtons = runtime.buttonModels().map { it.actionId }
+
+        assertTrue("selectType" in debugButtons)
+        assertTrue("selectRole" in debugButtons)
+    }
+
+    private fun runtime(
+        tempDir: Path,
+        onRestart: () -> Unit = {},
+        snapshot: ClientSnapshot =
             ClientSnapshot(
                 tick = 7,
                 mapId = "demo-map",
@@ -162,6 +219,13 @@ class GdxClientRuntimeTest {
                     ),
                 resourceNodes = emptyList()
             )
+    ): GdxClientRuntime {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        val inputPath = tempDir.resolve("client-input.ndjson")
+        val controlPath = tempDir.resolve("play-control.txt")
+        val scenarioPath = tempDir.resolve("play-scenario.txt")
+        Files.writeString(controlPath, "paused=0\nspeed=1\n")
+        Files.writeString(scenarioPath, "skirmish\n")
         Files.writeString(
             snapshotPath,
             "{\"recordType\":\"snapshot\",\"snapshot\":${json.encodeToString(ClientSnapshot.serializer(), snapshot)}}\n"

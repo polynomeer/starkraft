@@ -24,21 +24,24 @@ internal class GameScreen(
 ) : ScreenAdapter() {
     private val worldRenderer = GdxWorldRenderer(assets)
     private val stage = Stage(ScreenViewport())
+    private val edgePanMargin = 20f
+    private val edgePanSpeed = 14f
     private val topBar = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
     private val modeLabel = Label("", assets.accentLabelStyle)
     private val statusBadgeLabel = Label("", assets.bodyLabelStyle)
-    private val statusHeader = Label("Field Status", assets.titleLabelStyle)
+    private val statusHeader = Label("Selection", assets.titleLabelStyle)
     private val selectionMetaLabel = Label("", assets.mutedLabelStyle)
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
-    private val statusContent = Table()
-    private val statusScroll = ScrollPane(statusContent)
-    private val commandHeaderLabel = Label("Commands", assets.titleLabelStyle)
+    private val commandHeaderLabel = Label("Command Deck", assets.titleLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
     private val actionBanner = Table()
     private val actionBannerLabel = Label("", assets.bodyLabelStyle)
+    private val bottomHud = Table()
+    private val statusCard = Table()
+    private val commandCard = Table()
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
@@ -55,7 +58,10 @@ internal class GameScreen(
 
     override fun render(delta: Float) {
         runtime.tick()
+        runtime.ensurePlayableView(Gdx.graphics.width, Gdx.graphics.height)
         runtime.ensureInitialCamera(Gdx.graphics.width, Gdx.graphics.height)
+        applyEdgePan()
+        runtime.constrainCamera(Gdx.graphics.width, Gdx.graphics.height)
         refreshHud()
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, dragSelection)
         stage.act(delta)
@@ -85,34 +91,27 @@ internal class GameScreen(
             add(statusBadgeLabel).right()
         }
 
-        val leftPanel =
-            Table().apply {
-                background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.78f))
-                pad(12f)
-                touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-                add(statusHeader).left().row()
-                add(statusScroll).top().left().padTop(6f).row()
-            }
-        statusContent.top().left()
-        statusScroll.setFadeScrollBars(false)
-        statusScroll.setScrollingDisabled(true, false)
-        statusScroll.setOverscroll(false, false)
-        statusContent.add(selectionLabel).left().top().row()
-        statusContent.add(selectionMetaLabel).left().top().padTop(2f).row()
-        statusContent.add(hudLinesLabel).left().top().padTop(6f).row()
-        statusContent.add(footerLabel).left().top().padTop(10f).row()
+        statusCard.apply {
+            background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.86f))
+            pad(12f)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(statusHeader).left().row()
+            add(selectionLabel).left().top().padTop(6f).row()
+            add(selectionMetaLabel).left().top().padTop(2f).row()
+            add(hudLinesLabel).left().top().padTop(8f).row()
+            add(footerLabel).left().top().padTop(10f).row()
+        }
 
-        val rightPanel =
-            Table().apply {
-                background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.84f))
-                pad(10f)
-                top()
-            }
+        commandCard.apply {
+            background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.88f))
+            pad(10f)
+            top()
+        }
         buttonTable.top().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        rightPanel.add(commandHeaderLabel).left().row()
-        rightPanel.add(commandScroll).top()
+        commandCard.add(commandHeaderLabel).left().expandX().fillX().row()
+        commandCard.add(commandScroll).top().left()
 
         actionBanner.apply {
             background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.82f))
@@ -120,13 +119,17 @@ internal class GameScreen(
             add(actionBannerLabel).center()
         }
 
-        root.add(topBar).colspan(3).expandX().fillX().top().pad(10f, 10f, 0f, 10f).row()
-        root.add(leftPanel).left().top().pad(10f)
-        root.add().expand().fill()
-        root.add(rightPanel).right().bottom().pad(10f).row()
-        root.add().expandY().fillY()
-        root.add(actionBanner).bottom().padBottom(10f)
-        root.add().expandY().fillY()
+        bottomHud.apply {
+            pad(0f, 10f, 10f, 10f)
+            add(statusCard).left().bottom()
+            add().expandX().fillX()
+            add(actionBanner).bottom().padRight(10f)
+            add(commandCard).right().bottom()
+        }
+
+        root.add(topBar).expandX().fillX().top().pad(10f, 10f, 0f, 10f).row()
+        root.add().expand().fill().row()
+        root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
 
         pauseOverlay.apply {
@@ -163,11 +166,17 @@ internal class GameScreen(
 
     private fun refreshHud() {
         val snapshot = runtime.snapshot
-        val statusWidth = (Gdx.graphics.width * 0.24f).coerceIn(240f, 360f)
-        val statusHeight = (Gdx.graphics.height * 0.42f).coerceIn(220f, 420f)
-        val commandWidth = (Gdx.graphics.width * 0.20f).coerceIn(220f, 310f)
-        val commandHeight = (Gdx.graphics.height * 0.40f).coerceIn(220f, 380f)
-        val compactLines = compactHudLines()
+        val width = Gdx.graphics.width
+        val height = Gdx.graphics.height
+        val statusWidth = (width * 0.23f).coerceIn(260f, 340f)
+        val statusHeight = (height * 0.20f).coerceIn(148f, 214f)
+        val commandWidth = (width * 0.34f).coerceIn(360f, 560f)
+        val commandHeight = (height * 0.22f).coerceIn(150f, 210f)
+        val commandColumns = when {
+            commandWidth >= 500f -> 3
+            commandWidth >= 400f -> 2
+            else -> 1
+        }
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         hudLinesLabel.setWrap(true)
@@ -176,14 +185,15 @@ internal class GameScreen(
         selectionMetaLabel.setWidth(statusWidth)
         hudLinesLabel.setWidth(statusWidth)
         footerLabel.setWidth(statusWidth)
-        statusScroll.setSize(statusWidth + 8f, statusHeight)
+        statusCard.setSize(statusWidth, statusHeight)
+        commandCard.setWidth(commandWidth)
         commandScroll.setSize(commandWidth, commandHeight)
-        selectionLabel.setText(runtime.session.state.viewState.selectionHudLine ?: "selection hud: none")
+        selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
-        hudLinesLabel.setText(compactLines.joinToString("\n"))
-        footerLabel.setText("LMB select  RMB command  MMB/scroll camera  F1 help  F5 restart  F6/F7 scenario")
-        statusHeader.setText(if (runtime.debugVisible) "Field Status + Debug" else "Field Status")
-        commandHeaderLabel.setText("Commands ${runtime.overlayModeLabel()}")
+        hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
+        footerLabel.setText("LMB select  RMB order  drag box select  wheel zoom  F1 help")
+        statusHeader.setText(if (runtime.session.state.selectedIds.isEmpty()) "Field Status" else "Selection")
+        commandHeaderLabel.setText("Command Deck  ${runtime.overlayModeLabel()}")
         economyLabel.setText(buildTopEconomyLine())
         modeLabel.setText(buildTopModeLine())
         statusBadgeLabel.setText(buildStatusBadgeLine())
@@ -192,11 +202,10 @@ internal class GameScreen(
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         actionBanner.isVisible = actionBannerLabel.text.toString().isNotBlank()
-        statusScroll.layout()
 
         buttonTable.clearChildren()
-        buttonTable.defaults().padBottom(4f)
-        for (button in runtime.buttonModels()) {
+        buttonTable.defaults().pad(0f, 0f, 6f, 6f)
+        runtime.buttonModels().forEachIndexed { index, button ->
             val actor = makeButton(
                 button.label,
                 runtime.actionHint(button.actionId),
@@ -204,22 +213,24 @@ internal class GameScreen(
             ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
             actor.isDisabled = !runtime.isActionEnabled(button.actionId)
             actor.isChecked = runtime.isActionActive(button.actionId)
-            buttonTable.add(actor).width(commandWidth - 10f).left().padBottom(4f).row()
+            buttonTable.add(actor).width((commandWidth / commandColumns) - 12f).left()
+            if ((index + 1) % commandColumns == 0) {
+                buttonTable.row()
+            }
+        }
+        if (runtime.buttonModels().size % commandColumns != 0) {
+            buttonTable.row()
         }
         if (runtime.debugVisible && snapshot != null) {
-            buttonTable.add(Label("debug: entities=${snapshot.entities.size} resources=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).left().padTop(10f).row()
+            buttonTable.add(Label("debug: entities=${snapshot.entities.size} resources=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).colspan(commandColumns).left().padTop(6f).row()
         }
     }
 
-    private fun compactHudLines(): List<String> {
+    private fun buildStatusSummaryLines(): List<String> {
         val lines = runtime.currentHudLines()
         val preferredPrefixes =
             listOf(
-                "mode=",
-                "play:",
-                "scenario=",
                 "economy:",
-                "selection factions:",
                 "selection classes:",
                 "selection health:",
                 "selection orders:",
@@ -228,19 +239,51 @@ internal class GameScreen(
                 "production:",
                 "research:",
                 "fog:",
-                "groups:",
-                "presets:",
-                "notice:",
-                "hint:"
+                "last ack:"
             )
         val picked = ArrayList<String>()
         for (prefix in preferredPrefixes) {
             lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
         }
-        if (picked.isEmpty()) {
-            picked.addAll(lines.take(8))
+        if (runtime.session.state.viewedFaction != null && buildTopEconomyLine().contains("vis 0")) {
+            picked.add(0, "warning: current faction has no vision, press 1/2/3 to switch view")
         }
-        return picked.distinct().take(10)
+        if (picked.isEmpty()) {
+            picked.addAll(lines.take(6))
+        }
+        return picked.distinct().take(if (runtime.debugVisible) 10 else 7)
+    }
+
+    private fun buildSelectionHeadline(): String {
+        val raw = runtime.session.state.viewState.selectionHudLine
+        if (!raw.isNullOrBlank() && !raw.equals("selection hud: none", ignoreCase = true)) {
+            return raw
+        }
+        val snapshot = runtime.snapshot ?: return "Waiting for battlefield state"
+        return if (runtime.session.state.selectedIds.isEmpty()) {
+            val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
+            "Viewing $faction · ${snapshot.entities.size} live entities"
+        } else {
+            "${runtime.session.state.selectedIds.size} entities selected"
+        }
+    }
+
+    private fun applyEdgePan() {
+        if (runtime.pauseOverlayVisible || runtime.helpOverlayVisible) return
+        if (Gdx.input.isTouched) return
+        var deltaX = 0f
+        var deltaY = 0f
+        val mouseX = Gdx.input.x.toFloat()
+        val mouseY = Gdx.input.y.toFloat()
+        val width = Gdx.graphics.width.toFloat()
+        val height = Gdx.graphics.height.toFloat()
+        if (mouseX <= edgePanMargin) deltaX += edgePanSpeed
+        if (mouseX >= width - edgePanMargin) deltaX -= edgePanSpeed
+        if (mouseY <= edgePanMargin) deltaY += edgePanSpeed
+        if (mouseY >= height - edgePanMargin) deltaY -= edgePanSpeed
+        if (deltaX != 0f || deltaY != 0f) {
+            runtime.panBy(deltaX, deltaY)
+        }
     }
 
     private fun buildSelectionMetaLine(): String {

@@ -16,9 +16,11 @@ internal class GdxWorldRenderer(
     private val enemyColor = Color(0.90f, 0.36f, 0.28f, 1f)
     private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
     private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
+    private val selectionSoftColor = Color(0.44f, 0.80f, 0.92f, 0.28f)
     private val fogColor = Color(0.02f, 0.05f, 0.08f, 0.78f)
     private val terrainA = Color(0.08f, 0.12f, 0.15f, 1f)
     private val terrainB = Color(0.10f, 0.15f, 0.18f, 1f)
+    private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
@@ -33,8 +35,8 @@ internal class GdxWorldRenderer(
         shape.begin(ShapeRenderer.ShapeType.Filled)
         drawTerrain(shape, runtime)
         drawResources(shape, runtime)
-        drawEntities(shape, runtime)
         drawFog(shape, runtime)
+        drawEntities(shape, runtime)
         drawMiniMap(shape, runtime, width, height)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
@@ -42,6 +44,7 @@ internal class GdxWorldRenderer(
 
         shape.begin(ShapeRenderer.ShapeType.Line)
         drawGrid(shape, runtime)
+        drawWorldFrame(shape, runtime)
         drawSelectionOverlays(shape, runtime)
         drawMiniMapViewport(shape, runtime, width, height)
         shape.end()
@@ -104,8 +107,10 @@ internal class GdxWorldRenderer(
         val snapshot = runtime.snapshot ?: return
         val viewedFaction = runtime.session.state.viewedFaction
         for (entity in snapshot.entities) {
+            if (!isEntityVisible(entity, runtime)) continue
             val screenX = runtime.camera.worldToScreenX(entity.x)
             val screenY = runtime.camera.worldToScreenY(entity.y)
+            if (!isOnScreen(screenX, screenY)) continue
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
             val selected = entity.id in runtime.session.state.selectedIds
@@ -114,20 +119,30 @@ internal class GdxWorldRenderer(
                 val tileY = floor(entity.y).toInt()
                 val w = footprintWidth * runtime.camera.tileSize
                 val h = footprintHeight * runtime.camera.tileSize
+                shape.color = Color(0f, 0f, 0f, 0.28f)
+                shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 3f, runtime.camera.worldToScreenY(tileY.toFloat()) + 3f, w, h)
                 shape.color = factionColor(entity.faction, viewedFaction)
                 shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()), runtime.camera.worldToScreenY(tileY.toFloat()), w, h)
                 shape.color = Color(1f, 1f, 1f, 0.10f)
                 shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 2f, runtime.camera.worldToScreenY(tileY.toFloat()) + 2f, w - 4f, h - 4f)
                 if (selected) {
+                    shape.color = selectionSoftColor
+                    shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 5f, runtime.camera.worldToScreenY(tileY.toFloat()) - 5f, w + 10f, h + 10f)
                     shape.color = selectionColor
                     shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 3f, runtime.camera.worldToScreenY(tileY.toFloat()) - 3f, w + 6f, h + 6f)
                 }
             } else {
+                shape.color = Color(0f, 0f, 0f, 0.32f)
+                shape.circle(screenX + 1.5f, screenY + 1.5f, if (selected) 9f else 7f)
                 shape.color = factionColor(entity.faction, viewedFaction)
                 val radius = if (selected) 8f else 6f
                 shape.circle(screenX, screenY, radius)
                 shape.color = Color(1f, 1f, 1f, if (selected) 0.30f else 0.16f)
                 shape.circle(screenX - 1.5f, screenY - 1.5f, radius * 0.45f)
+                if (selected) {
+                    shape.color = selectionSoftColor
+                    shape.circle(screenX, screenY, 11f)
+                }
             }
             drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp)
         }
@@ -152,8 +167,10 @@ internal class GdxWorldRenderer(
         val entitiesById = snapshot.entities.associateBy { it.id }
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
+            if (!isEntityVisible(entity, runtime)) continue
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
+            if (!isOnScreen(startX, startY)) continue
             shape.color = Color(0.48f, 0.84f, 0.95f, 1f)
             shape.circle(startX, startY, 11f)
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
@@ -188,28 +205,33 @@ internal class GdxWorldRenderer(
 
     private fun drawMiniMap(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
         val snapshot = runtime.snapshot ?: return
-        val boundsWidth = minOf(176, width / 5)
-        val boundsHeight = minOf(176, height / 5)
-        val left = 18f
-        val top = 18f
+        val bounds = gdxMiniMapBounds(width, height)
+        val boundsWidth = bounds.width
+        val boundsHeight = bounds.height
+        val left = bounds.left
+        val top = bounds.top
         shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
-        shape.rect(left, top, boundsWidth.toFloat(), boundsHeight.toFloat())
+        shape.rect(left, top, boundsWidth, boundsHeight)
         shape.color = Color(0.16f, 0.25f, 0.29f, 0.70f)
-        shape.rect(left + 4f, top + 4f, boundsWidth.toFloat() - 8f, boundsHeight.toFloat() - 8f)
+        shape.rect(left + 4f, top + 4f, boundsWidth - 8f, boundsHeight - 8f)
+        val viewedFaction = runtime.session.state.viewedFaction
+        val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
             val y = top + (entity.y / snapshot.mapHeight) * boundsHeight
-            shape.color = factionColor(entity.faction, runtime.session.state.viewedFaction)
+            val visible = visibleTiles == null || isEntityVisible(entity, runtime)
+            shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
             shape.rect(x - 2f, y - 2f, 4f, 4f)
         }
     }
 
     private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
         val snapshot = runtime.snapshot ?: return
-        val boundsWidth = minOf(176, width / 5)
-        val boundsHeight = minOf(176, height / 5)
-        val left = 18f
-        val top = 18f
+        val bounds = gdxMiniMapBounds(width, height)
+        val boundsWidth = bounds.width
+        val boundsHeight = bounds.height
+        val left = bounds.left
+        val top = bounds.top
         val leftWorld = runtime.camera.screenToWorldX(0f).coerceIn(0f, snapshot.mapWidth.toFloat())
         val rightWorld = runtime.camera.screenToWorldX(width.toFloat()).coerceIn(0f, snapshot.mapWidth.toFloat())
         val topWorld = runtime.camera.screenToWorldY(0f).coerceIn(0f, snapshot.mapHeight.toFloat())
@@ -222,7 +244,7 @@ internal class GdxWorldRenderer(
             ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         )
         shape.color = Color(0.86f, 0.94f, 0.98f, 0.55f)
-        shape.rect(left, top, boundsWidth.toFloat(), boundsHeight.toFloat())
+        shape.rect(left, top, boundsWidth, boundsHeight)
     }
 
     private fun drawBuildPreview(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -279,6 +301,7 @@ internal class GdxWorldRenderer(
         }
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
+            if (!isEntityVisible(entity, runtime)) continue
             val status = buildEntityStatusLabel(entity) ?: continue
             assets.font.color = Color(0.94f, 0.96f, 0.98f, 1f)
             assets.font.draw(
@@ -304,6 +327,38 @@ internal class GdxWorldRenderer(
             faction == viewedFaction -> friendlyColor
             else -> enemyColor
         }
+
+    private fun drawWorldFrame(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        val left = runtime.camera.worldToScreenX(0f)
+        val top = runtime.camera.worldToScreenY(0f)
+        val right = runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat())
+        val bottom = runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())
+        shape.color = mapFrameColor
+        shape.rect(left, top, right - left, bottom - top)
+    }
+
+    private fun isOnScreen(screenX: Float, screenY: Float): Boolean =
+        screenX >= -32f &&
+            screenX <= Gdx.graphics.width + 32f &&
+            screenY >= -32f &&
+            screenY <= Gdx.graphics.height + 32f
+
+    private fun isEntityVisible(entity: EntitySnapshot, runtime: GdxClientRuntime): Boolean {
+        val viewedFaction = runtime.session.state.viewedFaction ?: return true
+        val visibleTiles = runtime.session.state.visionState?.visibleTiles(viewedFaction) ?: return true
+        if (entity.footprintWidth != null && entity.footprintHeight != null) {
+            val tileX = floor(entity.x).toInt()
+            val tileY = floor(entity.y).toInt()
+            for (x in tileX until (tileX + entity.footprintWidth)) {
+                for (y in tileY until (tileY + entity.footprintHeight)) {
+                    if ((x to y) in visibleTiles) return true
+                }
+            }
+            return false
+        }
+        return (floor(entity.x).toInt() to floor(entity.y).toInt()) in visibleTiles
+    }
 }
 
 internal data class DragSelectionBox(
