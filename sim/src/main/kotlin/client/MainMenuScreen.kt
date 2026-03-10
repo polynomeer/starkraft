@@ -1,6 +1,9 @@
 package starkraft.sim.client
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
+import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.InputEvent
@@ -19,6 +22,8 @@ internal class MainMenuScreen(
 ) : ScreenAdapter() {
     private val stage = Stage(ScreenViewport())
     private val scenarioLabel = Label("", assets.accentLabelStyle)
+    private val summaryLabel = Label("", assets.mutedLabelStyle)
+    private val controlsLabel = Label("", assets.mutedLabelStyle)
 
     init {
         val root =
@@ -30,8 +35,15 @@ internal class MainMenuScreen(
         root.add(Label("STARKRAFT", assets.titleLabelStyle)).padBottom(16f).row()
         root.add(Label("libGDX client on top of the existing deterministic sim", assets.mutedLabelStyle)).padBottom(24f).row()
         root.add(scenarioLabel).row()
+        root.add(summaryLabel).padBottom(12f).row()
+        controlsLabel.setText("keys: left/right scenario  enter play  s/l quick  a/k alt  esc quit")
+        root.add(controlsLabel).padBottom(12f).row()
         root.add(makeButton("Previous Scenario") { runtime.cycleScenario(-1); refresh() }).width(280f).row()
         root.add(makeButton("Next Scenario") { runtime.cycleScenario(1); refresh() }).width(280f).row()
+        root.add(makeButton("Save Quick Preset") { runtime.savePreset("quick"); refresh() }).width(280f).row()
+        root.add(makeButton("Load Quick Preset") { runtime.loadPreset("quick"); refresh() }).width(280f).row()
+        root.add(makeButton("Save Alt Preset") { runtime.savePreset("alt"); refresh() }).width(280f).row()
+        root.add(makeButton("Load Alt Preset") { runtime.loadPreset("alt"); refresh() }).width(280f).row()
         root.add(makeButton("Enter Match") { game.openGameScreen() }).width(280f).padTop(16f).row()
         root.add(makeButton("Restart Match") { runtime.applyScenarioAndRestart() }).width(280f).row()
         root.add(makeButton("Quit") { Gdx.app.exit() }).width(280f).row()
@@ -40,11 +52,12 @@ internal class MainMenuScreen(
     }
 
     override fun show() {
-        Gdx.input.inputProcessor = stage
+        Gdx.input.inputProcessor = InputMultiplexer(stage, MenuInputController())
     }
 
     override fun render(delta: Float) {
         runtime.tick()
+        refresh()
         ScreenUtils.clear(0.03f, 0.05f, 0.07f, 1f)
         stage.act(delta)
         stage.draw()
@@ -60,6 +73,7 @@ internal class MainMenuScreen(
 
     private fun refresh() {
         scenarioLabel.setText("Scenario: ${runtime.playScenario.id}")
+        summaryLabel.setText(runtime.mainMenuSummaryLines().joinToString("\n"))
     }
 
     private fun makeButton(text: String, onClick: () -> Unit): TextButton =
@@ -72,4 +86,23 @@ internal class MainMenuScreen(
                 }
             )
         }
+
+    private inner class MenuInputController : InputAdapter() {
+        override fun keyDown(keycode: Int): Boolean {
+            when (keycode) {
+                Input.Keys.LEFT -> runtime.cycleScenario(-1)
+                Input.Keys.RIGHT -> runtime.cycleScenario(1)
+                Input.Keys.ENTER, Input.Keys.SPACE -> game.openGameScreen()
+                Input.Keys.S -> runtime.savePreset("quick")
+                Input.Keys.L -> runtime.loadPreset("quick")
+                Input.Keys.A -> runtime.savePreset("alt")
+                Input.Keys.K -> runtime.loadPreset("alt")
+                Input.Keys.F5 -> runtime.applyScenarioAndRestart()
+                Input.Keys.ESCAPE -> Gdx.app.exit()
+                else -> return false
+            }
+            refresh()
+            return true
+        }
+    }
 }

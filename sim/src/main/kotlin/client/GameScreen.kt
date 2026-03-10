@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import kotlin.math.abs
 
@@ -27,6 +28,9 @@ internal class GameScreen(
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val buttonTable = Table()
     private val pauseOverlay = Table()
+    private val helpOverlay = Table()
+    private val helpLabel = Label("", assets.mutedLabelStyle)
+    private val footerLabel = Label("", assets.mutedLabelStyle)
     private var dragSelection: DragSelectionBox? = null
 
     init {
@@ -67,6 +71,7 @@ internal class GameScreen(
                 add(Label("Status", assets.titleLabelStyle)).left().row()
                 add(selectionLabel).left().width(420f).row()
                 add(hudLinesLabel).left().width(420f).top().row()
+                add(footerLabel).left().width(420f).padTop(10f).row()
             }
 
         val rightPanel =
@@ -92,6 +97,10 @@ internal class GameScreen(
             add(makeButton("Resume") { runtime.togglePauseOverlay() }).width(220f).row()
             add(makeButton("Toggle Sim Pause") { runtime.togglePlayPause() }).width(220f).row()
             add(makeButton("Restart Match") { runtime.restartMatch() }).width(220f).row()
+            add(makeButton("Save Quick") { runtime.savePreset("quick") }).width(220f).row()
+            add(makeButton("Load Quick") { runtime.loadPreset("quick") }).width(220f).row()
+            add(makeButton("Save Alt") { runtime.savePreset("alt") }).width(220f).row()
+            add(makeButton("Load Alt") { runtime.loadPreset("alt") }).width(220f).row()
             add(makeButton("Main Menu") {
                 runtime.togglePauseOverlay()
                 game.openMainMenu()
@@ -99,18 +108,32 @@ internal class GameScreen(
             add(makeButton("Quit") { Gdx.app.exit() }).width(220f).row()
         }
         stage.addActor(pauseOverlay)
+
+        helpOverlay.apply {
+            setFillParent(true)
+            isVisible = false
+            top().left()
+            pad(18f)
+            background = assets.panelDrawable(Color(0.04f, 0.07f, 0.10f, 0.90f))
+            add(helpLabel).left().top()
+        }
+        stage.addActor(helpOverlay)
     }
 
     private fun refreshHud() {
         val snapshot = runtime.snapshot
         selectionLabel.setText(runtime.session.state.viewState.selectionHudLine ?: "selection hud: none")
         hudLinesLabel.setText(runtime.currentHudLines().joinToString("\n"))
+        footerLabel.setText("LMB select  RMB command  MMB/scroll camera  F1 help  F5 restart  F6/F7 scenario")
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
+        helpOverlay.isVisible = runtime.helpOverlayVisible
+        helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
 
         buttonTable.clearChildren()
         for (button in runtime.buttonModels()) {
-            val actor = makeButton(button.label) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
+            val actor = makeButton(button.label, runtime.actionHint(button.actionId)) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
             actor.isDisabled = !runtime.isActionEnabled(button.actionId)
+            actor.isChecked = runtime.isActionActive(button.actionId)
             buttonTable.add(actor).width(260f).left().row()
         }
         if (runtime.debugVisible && snapshot != null) {
@@ -118,12 +141,27 @@ internal class GameScreen(
         }
     }
 
-    private fun makeButton(text: String, onClick: () -> Unit): TextButton =
+    private fun makeButton(text: String, hint: String? = null, onClick: () -> Unit): TextButton =
         TextButton(text, assets.buttonStyle(Color(0.17f, 0.30f, 0.38f, 1f))).apply {
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
                         onClick()
+                    }
+
+                    override fun enter(event: InputEvent?, x: Float, y: Float, pointer: Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
+                        runtime.setHoverHint(hint ?: text)
+                    }
+
+                    override fun exit(event: InputEvent?, x: Float, y: Float, pointer: Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
+                        runtime.setHoverHint(null)
+                    }
+                }
+            )
+            addListener(
+                object : ChangeListener() {
+                    override fun changed(event: ChangeEvent?, actor: com.badlogic.gdx.scenes.scene2d.Actor?) {
+                        runtime.setHoverHint(null)
                     }
                 }
             )
@@ -132,6 +170,7 @@ internal class GameScreen(
     private inner class GameInputController : InputAdapter() {
         private var dragging = false
         private var panning = false
+        private var minimapDragging = false
         private var startX = 0f
         private var startY = 0f
         private var lastX = 0f
@@ -147,6 +186,11 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.LEFT -> {
+                    if (runtime.centerFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)) {
+                        minimapDragging = true
+                        dragSelection = null
+                        return true
+                    }
                     startX = screenX.toFloat()
                     startY = screenY.toFloat()
                     lastX = startX
@@ -163,6 +207,10 @@ internal class GameScreen(
         }
 
         override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+            if (minimapDragging) {
+                runtime.centerFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)
+                return true
+            }
             if (panning) {
                 runtime.panBy(screenX - lastX, screenY - lastY)
                 lastX = screenX.toFloat()
@@ -181,6 +229,10 @@ internal class GameScreen(
         override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             if (button == Input.Buttons.MIDDLE) {
                 panning = false
+                return true
+            }
+            if (button == Input.Buttons.LEFT && minimapDragging) {
+                minimapDragging = false
                 return true
             }
             if (button != Input.Buttons.LEFT || !dragging) return false
@@ -213,6 +265,7 @@ internal class GameScreen(
                     }
                 }
                 Input.Keys.SPACE -> runtime.togglePlayPause()
+                Input.Keys.F1 -> runtime.toggleHelpOverlay()
                 Input.Keys.TAB -> runtime.toggleDebug()
                 Input.Keys.LEFT -> runtime.panBy(28f, 0f)
                 Input.Keys.RIGHT -> runtime.panBy(-28f, 0f)
@@ -220,7 +273,13 @@ internal class GameScreen(
                 Input.Keys.DOWN -> runtime.panBy(0f, -28f)
                 Input.Keys.EQUALS, Input.Keys.PLUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 1.1f)
                 Input.Keys.MINUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 0.9f)
-                Input.Keys.NUM_0 -> runtime.resetCamera()
+                Input.Keys.NUM_0 -> {
+                    if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)) {
+                        runtime.clearControlGroups()
+                    } else {
+                        runtime.resetCamera()
+                    }
+                }
                 Input.Keys.NUM_1 -> runtime.setViewFaction(1)
                 Input.Keys.NUM_2 -> runtime.setViewFaction(2)
                 Input.Keys.NUM_3 -> runtime.setViewFaction(null)
@@ -249,12 +308,31 @@ internal class GameScreen(
                 Input.Keys.F -> runtime.executeAction("selectDamaged", Gdx.graphics.width, Gdx.graphics.height)
                 Input.Keys.V -> runtime.executeAction("selectCombat", Gdx.graphics.width, Gdx.graphics.height)
                 Input.Keys.N -> runtime.executeAction("selectProducers", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.Z -> runtime.executeAction("selectTrainers", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.C -> runtime.executeAction("selectResearchers", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.J -> runtime.executeAction("selectConstruction", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.K -> runtime.executeAction("selectHarvesters", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.Q -> runtime.executeAction("selectReturning", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.E -> runtime.executeAction("selectCargo", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.D -> runtime.executeAction("selectDropoffs", Gdx.graphics.width, Gdx.graphics.height)
                 Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
                 Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, Gdx.graphics.height)
                 Input.Keys.LEFT_BRACKET -> runtime.adjustSpeed(-1)
                 Input.Keys.RIGHT_BRACKET -> runtime.adjustSpeed(1)
+                Input.Keys.NUM_4 -> handleGroupKey(4)
+                Input.Keys.NUM_5 -> handleGroupKey(5)
+                Input.Keys.NUM_6 -> handleGroupKey(6)
+                Input.Keys.NUM_7 -> handleGroupKey(7)
+                Input.Keys.NUM_8 -> handleGroupKey(8)
+                Input.Keys.NUM_9 -> handleGroupKey(9)
             }
             return true
+        }
+
+        private fun handleGroupKey(group: Int) {
+            val assign = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
+            val add = Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)
+            runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = Gdx.graphics.height)
         }
     }
 }

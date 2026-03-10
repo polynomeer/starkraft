@@ -15,6 +15,10 @@ internal class GdxClientRuntime(
     private val requestIds = ClientCommandIds("gdx")
     private var noticeMessage: String? = null
     private var noticeUntilMillis: Long = 0L
+    private var hoverHint: String? = null
+    private val controlGroups = arrayOfNulls<IntArray>(10)
+    private var lastGroupRecall: Int? = null
+    private var lastGroupRecallAtNanos: Long = 0L
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -34,6 +38,7 @@ internal class GdxClientRuntime(
         }
     var debugVisible: Boolean = false
     var pauseOverlayVisible: Boolean = false
+    var helpOverlayVisible: Boolean = false
 
     val snapshot: ClientSnapshot?
         get() = session.state.snapshot
@@ -60,6 +65,9 @@ internal class GdxClientRuntime(
         lines.add(0, "mode=${overlayModeLabel()} view=${session.state.viewedFaction?.let { "f$it" } ?: "observer"}")
         lines.add(1, playStateLabel())
         lines.add(2, "scenario=${playScenario.id}")
+        controlGroupSummaryLine()?.let(lines::add)
+        presetAvailabilityLine()?.let(lines::add)
+        hoverHint?.let { lines.add("hint: $it") }
         noticeLine()?.let(lines::add)
         return lines
     }
@@ -231,8 +239,79 @@ internal class GdxClientRuntime(
         debugVisible = !debugVisible
     }
 
+    fun toggleHelpOverlay() {
+        helpOverlayVisible = !helpOverlayVisible
+    }
+
     fun resetCamera() {
         camera = CameraView()
+    }
+
+    fun setHoverHint(text: String?) {
+        hoverHint = text
+    }
+
+    fun centerFromMinimap(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
+        return true
+    }
+
+    fun savePreset(name: String) {
+        val root = playRoot ?: return
+        savePlayPreset(root.resolve("presets"), name, PlayPresetState(playScenario, playControlState))
+        showNotice("preset saved: $name")
+    }
+
+    fun loadPreset(name: String) {
+        val root = playRoot ?: return
+        val preset = loadPlayPreset(root.resolve("presets"), name, playScenario)
+        if (preset == null) {
+            showNotice("preset missing: $name")
+            return
+        }
+        playScenario = preset.scenario
+        playControlState = preset.control
+        scenarioPath?.let { writePlayScenario(it, playScenario) }
+        writePlayControl()
+        showNotice("preset loaded: $name")
+    }
+
+    fun isPresetAvailable(name: String): Boolean {
+        val root = playRoot ?: return false
+        return Files.exists(presetFilePath(root.resolve("presets"), name))
+    }
+
+    fun presetAvailabilityLine(): String? {
+        if (playRoot == null) return null
+        return formatPresetAvailability(isPresetAvailable("quick"), isPresetAvailable("alt"))
+    }
+
+    fun controlGroupSummaryLine(): String? {
+        val highlighted = activeControlGroupHighlight(lastGroupRecall, lastGroupRecallAtNanos, System.nanoTime())
+        return formatControlGroupSummary(controlGroups, highlighted)?.let { "groups: $it" }
+    }
+
+    fun handleControlGroup(group: Int, assign: Boolean, add: Boolean, viewWidth: Int, viewHeight: Int) {
+        when {
+            assign -> {
+                assignControlGroupSlot(controlGroups, group, session.state.selectedIds)
+                showNotice("group $group set (${session.state.selectedIds.size})")
+            }
+            add -> {
+                mergeControlGroupSlot(controlGroups, group, session.state.selectedIds)
+                val size = controlGroups[group]?.size ?: 0
+                showNotice("group $group add -> $size")
+            }
+            else -> recallControlGroup(group, viewWidth, viewHeight)
+        }
+    }
+
+    fun clearControlGroups() {
+        clearControlGroupSlots(controlGroups)
+        lastGroupRecall = null
+        showNotice("groups cleared")
     }
 
     fun executeAction(actionId: String, viewWidth: Int, viewHeight: Int) {
@@ -277,6 +356,18 @@ internal class GdxClientRuntime(
             actionId == "selectDamaged" -> selectDamaged()
             actionId == "selectCombat" -> selectCombat()
             actionId == "selectProducers" -> selectProducers()
+            actionId == "selectTrainers" -> selectTrainers()
+            actionId == "selectResearchers" -> selectResearchers()
+            actionId == "selectConstruction" -> selectConstruction()
+            actionId == "selectHarvesters" -> selectHarvesters()
+            actionId == "selectReturning" -> selectReturningHarvesters()
+            actionId == "selectCargo" -> selectCargoHarvesters()
+            actionId == "selectDropoffs" -> selectDropoffs()
+            actionId == "saveQuick" -> savePreset("quick")
+            actionId == "loadQuick" -> loadPreset("quick")
+            actionId == "saveAlt" -> savePreset("alt")
+            actionId == "loadAlt" -> loadPreset("alt")
+            actionId == "help" -> toggleHelpOverlay()
             actionId.startsWith("build:") -> {
                 buildModeTypeId = actionId.removePrefix("build:")
                 groundMode = null
@@ -322,6 +413,18 @@ internal class GdxClientRuntime(
             add(ClientCommandButton("Damaged", "selectDamaged"))
             add(ClientCommandButton("Combat", "selectCombat"))
             add(ClientCommandButton("Producers", "selectProducers"))
+            add(ClientCommandButton("Trainers", "selectTrainers"))
+            add(ClientCommandButton("Researchers", "selectResearchers"))
+            add(ClientCommandButton("Construction", "selectConstruction"))
+            add(ClientCommandButton("Harvesters", "selectHarvesters"))
+            add(ClientCommandButton("Returning", "selectReturning"))
+            add(ClientCommandButton("Cargo", "selectCargo"))
+            add(ClientCommandButton("Dropoffs", "selectDropoffs"))
+            add(ClientCommandButton("Save Quick", "saveQuick"))
+            add(ClientCommandButton("Load Quick", "loadQuick"))
+            add(ClientCommandButton("Save Alt", "saveAlt"))
+            add(ClientCommandButton("Load Alt", "loadAlt"))
+            add(ClientCommandButton("Help", "help"))
             add(ClientCommandButton("Clear", "clear"))
         }
     }
@@ -346,12 +449,88 @@ internal class GdxClientRuntime(
                     "selectDamaged" -> "select:damaged"
                     "selectCombat" -> "select:combat"
                     "selectProducers" -> "select:producers"
+                    "selectTrainers" -> "select:trainers"
+                    "selectResearchers" -> "select:researchers"
+                    "selectConstruction" -> "select:construction"
+                    "selectHarvesters" -> "select:harvesters"
+                    "selectReturning" -> "select:returningHarvesters"
+                    "selectCargo" -> "select:cargoHarvesters"
+                    "selectDropoffs" -> "select:dropoffs"
                     else -> actionId
                 },
             hasSelection = session.state.viewState.hasSelection,
             canTrain = session.state.viewState.canTrain,
             canResearch = session.state.viewState.canResearch,
             viewedFaction = session.state.viewedFaction
+        )
+
+    fun isActionActive(actionId: String): Boolean =
+        when (actionId) {
+            "move" -> groundMode == ClientGroundCommandMode.MOVE
+            "attackMove" -> groundMode == ClientGroundCommandMode.ATTACK_MOVE
+            "patrol" -> groundMode == ClientGroundCommandMode.PATROL
+            "debug" -> debugVisible
+            "help" -> helpOverlayVisible
+            "viewF1" -> session.state.viewedFaction == 1
+            "viewF2" -> session.state.viewedFaction == 2
+            "observer" -> session.state.viewedFaction == null
+            else -> actionId.startsWith("build:") && buildModeTypeId == actionId.removePrefix("build:")
+        }
+
+    fun actionHint(actionId: String): String? =
+        when (actionId) {
+            "pause" -> "Toggle play pause and resume"
+            "slower" -> "Lower sim speed by one step"
+            "faster" -> "Raise sim speed by one step"
+            "debug" -> "Toggle extra runtime info in the command panel"
+            "clear" -> "Clear selection and reset current mode"
+            "centerSelection" -> "Center the camera on the current selection"
+            "centerFaction" -> "Center the camera on the viewed faction"
+            "viewF1" -> "Switch to faction 1 view"
+            "viewF2" -> "Switch to faction 2 view"
+            "observer" -> "Switch to observer view"
+            "selectViewedFaction" -> "Select all units for the viewed faction"
+            "selectType" -> "Select all units matching the first selected type"
+            "selectRole" -> "Select all units matching the first selected archetype"
+            "selectAll" -> "Select all entities in the current snapshot"
+            "selectIdleWorkers" -> "Select idle workers in the current scope"
+            "selectDamaged" -> "Select damaged units in the current scope"
+            "selectCombat" -> "Select combat units in the current scope"
+            "selectProducers" -> "Select producer buildings in the current scope"
+            "selectTrainers" -> "Select training-capable buildings"
+            "selectResearchers" -> "Select research-capable buildings"
+            "selectConstruction" -> "Select unfinished structures"
+            "selectHarvesters" -> "Select active harvesters"
+            "selectReturning" -> "Select returning harvesters"
+            "selectCargo" -> "Select workers carrying cargo"
+            "selectDropoffs" -> "Select drop-off buildings"
+            "saveQuick" -> "Save scenario and speed into the quick preset"
+            "loadQuick" -> "Load the quick preset into the current workspace"
+            "saveAlt" -> "Save scenario and speed into the alt preset"
+            "loadAlt" -> "Load the alt preset into the current workspace"
+            "help" -> "Toggle the in-game help overlay"
+            "move" -> "Arm move mode for the next ground right click"
+            "attackMove" -> "Arm attack-move mode for the next ground right click"
+            "patrol" -> "Arm patrol mode for the next ground right click"
+            "hold" -> "Issue hold position immediately"
+            "cancelBuild" -> "Cancel build on the first selected construction site"
+            "cancelTrain" -> "Cancel the last queued train job on the first selected producer"
+            "cancelResearch" -> "Cancel the last queued research job on the first selected lab"
+            else ->
+                when {
+                    actionId.startsWith("build:") -> "Enter placement mode for ${actionId.removePrefix("build:")}"
+                    actionId.startsWith("train:") -> "Queue ${actionId.removePrefix("train:")} on the first selected trainer"
+                    actionId.startsWith("research:") -> "Queue ${actionId.removePrefix("research:")} on the first selected lab"
+                    else -> null
+                }
+        }
+
+    fun mainMenuSummaryLines(): List<String> =
+        listOfNotNull(
+            "scenario: ${playScenario.id}",
+            "play: ${if (playControlState.paused) "paused" else "running"} x${playControlState.speed}",
+            presetAvailabilityLine(),
+            noticeLine()
         )
 
     private fun selectViewedFaction() {
@@ -410,6 +589,48 @@ internal class GdxClientRuntime(
         applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "producers (${ids.size})")
     }
 
+    private fun selectTrainers() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectTrainingSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "trainers (${ids.size})")
+    }
+
+    private fun selectResearchers() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectResearchSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "researchers (${ids.size})")
+    }
+
+    private fun selectConstruction() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectConstructionSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "construction (${ids.size})")
+    }
+
+    private fun selectHarvesters() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectHarvesterSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "harvesters (${ids.size})")
+    }
+
+    private fun selectReturningHarvesters() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectReturningHarvesterSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "returning (${ids.size})")
+    }
+
+    private fun selectCargoHarvesters() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectCargoHarvesterSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "cargo (${ids.size})")
+    }
+
+    private fun selectDropoffs() {
+        val snapshot = session.state.snapshot ?: return
+        val ids = collectDropoffSelectionIds(snapshot, session.state.viewedFaction)
+        applySelection(ids, buildUnitSelectionRecord(snapshot.tick + 1, ids.asList()), "dropoffs (${ids.size})")
+    }
+
     private fun applySelection(ids: IntArray, record: InputJson.InputSelectionRecord, notice: String) {
         session.replaceSelection(ids)
         session.append(ClientIntent.Selection(record))
@@ -424,5 +645,27 @@ internal class GdxClientRuntime(
     private fun showNotice(message: String) {
         noticeMessage = message
         noticeUntilMillis = System.currentTimeMillis() + 2500L
+    }
+
+    private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {
+        val snapshot = session.state.snapshot ?: return
+        val ids = recallControlGroupSlot(controlGroups, group, snapshot)
+        if (ids.isEmpty()) {
+            showNotice("group $group empty")
+            return
+        }
+        val now = System.nanoTime()
+        val focusOnRecall = lastGroupRecall == group && (now - lastGroupRecallAtNanos) <= 350_000_000L
+        session.replaceSelection(ids)
+        session.append(ClientIntent.Selection(buildUnitSelectionRecord(snapshot.tick + 1, ids.asList())))
+        if (focusOnRecall) {
+            val focus = computeSelectionCentroid(snapshot, ids)
+            if (focus != null) {
+                camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+            }
+        }
+        lastGroupRecall = group
+        lastGroupRecallAtNanos = now
+        showNotice("group $group recalled (${ids.size})")
     }
 }

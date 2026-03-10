@@ -255,6 +255,17 @@ internal class GdxWorldRenderer(
                 assets.font.draw(batch, "${label.title} ${label.cost} ${label.size}", 18f, height - 22f)
             }
         }
+        for (entity in snapshot.entities) {
+            if (entity.id !in runtime.session.state.selectedIds) continue
+            val status = buildEntityStatusLabel(entity) ?: continue
+            assets.font.color = Color(0.94f, 0.96f, 0.98f, 1f)
+            assets.font.draw(
+                batch,
+                status,
+                runtime.camera.worldToScreenX(entity.x) + 10f,
+                height - runtime.camera.worldToScreenY(entity.y) + 14f
+            )
+        }
         if (snapshot.matchEnded) {
             assets.font.color = Color(1f, 0.86f, 0.63f, 1f)
             val state = buildGameState(snapshot, runtime.session.state.viewedFaction)
@@ -280,3 +291,35 @@ internal data class DragSelectionBox(
     val currentY: Float,
     val isVisible: Boolean
 )
+
+internal data class GdxMiniMapBounds(
+    val left: Float,
+    val top: Float,
+    val width: Float,
+    val height: Float
+) {
+    fun contains(x: Float, y: Float): Boolean =
+        x in left..(left + width) && y in top..(top + height)
+}
+
+internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
+    GdxMiniMapBounds(
+        left = 18f,
+        top = 18f,
+        width = minOf(176, screenWidth / 5).toFloat(),
+        height = minOf(176, screenHeight / 5).toFloat()
+    )
+
+internal fun gdxMiniMapWorldPosition(
+    screenX: Float,
+    screenY: Float,
+    screenWidth: Int,
+    screenHeight: Int,
+    snapshot: ClientSnapshot
+): Pair<Float, Float>? {
+    val bounds = gdxMiniMapBounds(screenWidth, screenHeight)
+    if (!bounds.contains(screenX, screenY)) return null
+    val worldX = (((screenX - bounds.left) / bounds.width) * snapshot.mapWidth).coerceIn(0f, snapshot.mapWidth.toFloat())
+    val worldY = (((screenY - bounds.top) / bounds.height) * snapshot.mapHeight).coerceIn(0f, snapshot.mapHeight.toFloat())
+    return worldX to worldY
+}

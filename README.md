@@ -176,6 +176,9 @@ Interactive local stack play (server + optional bot + CLI):
 Interactive local sim + graphical client play:
 `./scripts/play_sim_graphical.sh`
 
+The graphical client is a libGDX desktop app backed by the existing snapshot/input
+pipeline. It opens on a main menu, then transitions into the live match screen.
+
 Quick play modes:
 1. Sim-only graphical sandbox:
    `./scripts/play_sim_graphical.sh`
@@ -316,6 +319,7 @@ One-command local play:
   While the graphical client is open, press `F5` to restart the current play scenario in the same workspace.
   The play workspace also includes `play-control.txt`, which the client updates for pause and speed control.
   Press `F6` / `F7` in the client to switch scenario and immediately restart into the previous/next preset.
+  The main menu and pause overlay can also save/load `quick` and `alt` presets.
 
 Alternative client transports/renderers:
 - Text client over file stream:
@@ -332,28 +336,19 @@ The text client frame now includes selected research queue state and the latest 
 The snapshot-stream consumer also summarizes `researchState` records, including unlocked tech count, active research buildings, queued jobs, and active tech ids when present.
 
 Client controls:
-- left click: select nearest faction 1 unit
-- left drag: box-select faction 1 units
-- shift + left click: add/remove the nearest faction 1 unit from the current selection
+- left click: select the nearest visible unit/building for the current view faction
+- left drag: box-select visible units/buildings
+- shift + left click: add/remove the nearest unit from the current selection
 - shift + left drag: add a box selection to the current selection
-- command panel status now includes a `selection hud` line with selected type counts
-- command panel status now includes current command mode (e.g. `mode: attack-move`)
-- command panel buttons now highlight active mode/view/menu toggles (build mode, view target, help/menu open)
-- unavailable command buttons now render dimmed and show tooltip `(unavailable)` context
-- command panel status now includes in-panel scenario menu guidance while the menu is open
-- hovering command panel buttons now mirrors their tooltip into a `hint:` status line
-- command panel status lines are width-fitted with ellipsis to keep the panel readable
-- middle drag or `WASD` / arrow keys: pan the camera
+- left click on the minimap recenters the camera
+- middle drag or arrow keys: pan the camera
 - mouse wheel or `+` / `-`: zoom
 - `0`: reset camera
+- `Alt+0`: clear all control groups
 - `Space`: pause/resume `:sim:play`
 - `[` / `]`: decrease/increase `:sim:play` speed
 - `F6` / `F7`: switch `:sim:play` scenario and restart
-- `F8`: save the current scenario and speed into the `quick` preset
-- `F9`: load the `quick` preset and restart into it
-- `Shift+F8`: save into the `alt` preset
-- `Shift+F9`: load the `alt` preset and restart into it
-- `F10`: open the preset menu, `Up`/`Down` to pick slot, `S` save, `L`/`Enter` load
+- main menu keys: `Left` / `Right` scenario, `Enter` play, `S` / `L` quick preset, `A` / `K` alt preset, `Esc` quit
 - `F1`: toggle help overlay with quick control hints
 - `F2`: select all units for the currently viewed faction (1/2)
 - `F3`: select all units matching the first selected unit type (within viewed faction)
@@ -372,32 +367,9 @@ Client controls:
 - `D`: select resource drop-off buildings
 - `Home`: center camera on current selection
 - `End`: center camera on viewed faction
+- `4..9`: recall control groups
 - `Shift+4..9`: assign control groups
 - `Alt+4..9`: add current selection to control groups
-- `4..9`: recall control groups
-- `4..9` twice quickly: recall + center camera on that group
-- `Alt+0`: clear all control groups
-- command panel `groups:` line marks the last recalled group with `*` briefly
-- command panel status now shows populated control groups as `groups: 4=...`
-- `Tab`: open the in-client scenario chooser, `Up` / `Down` to change, `Enter` to restart into it
-- command panel includes `Select View` to do the same faction-wide selection
-- command panel includes `Select Type` for type-based selection
-- command panel includes `Select Role` for archetype-based selection
-- command panel includes `Select All` for full snapshot selection
-- command panel includes `Idle Workers` for quick economy control
-- command panel includes `Damaged` for quick retreat/regroup control
-- command panel includes `Combat` for quick army selection
-- command panel includes `Producers` for quick production control
-- command panel includes `Trainers` and `Researchers` for queue management
-- command panel includes `Construction` to inspect unfinished buildings
-- command panel includes `Harvesters` for economy-unit selection
-- command panel includes `Returning` to focus returning workers
-- command panel includes `Cargo` to focus loaded workers
-- command panel includes `Clear Groups` (same effect as `Alt+0`)
-- command panel includes `Center` to move camera to current selection
-- command panel includes `Center View` to move camera to viewed faction
-- command panel includes `View F1/F2/Obs` quick view mode switches
-- command panel includes `Dropoffs` to focus deposit buildings
 - `1`: view/control faction 1
 - `2`: view/control faction 2
 - `3`: observer view
@@ -416,34 +388,25 @@ Client controls:
 - `X`: cancel build on the first selected construction site
 - `T`: cancel train on the first selected producer queue
 - `Y`: cancel research on the first selected research queue
-- `Esc`: clear selection and reset command mode
+- `Esc`: clear selection/reset the current mode; press again to open the pause overlay
 - right click enemy: issue `attack`
 - right click resource node: issue `harvest`
 - right click empty ground: issue `move`
-- selected producers render rally markers, and entities now show simple health bars in the graphical client
-- selected units with active paths render path-goal markers and a path summary in the HUD
-- selected builders and harvesters now render simple assignment lines, and the HUD summarizes build/gather/return tasks
-- the command panel also exposes `Prev Scenario` / `Next Scenario` for `:sim:play`
-- the command panel also exposes `Pause`, `Slower`, and `Faster` for `:sim:play`
-- the command panel header now shows the live play state and current scenario
-- hovering command panel buttons shows short tooltip help for the action
-- the command panel also exposes `Save/Load Quick` and `Save/Load Alt` preset actions
-- an early-match startup overlay now highlights key controls plus current play state/scenario
-- preset save/load now shows a short in-client `notice:` status line for success/missing preset feedback
-- the panel status now also shows preset slot availability (`quick`/`alt`)
+- hovering command panel buttons mirrors action help into the HUD `hint:` line
+- the panel status shows populated control groups and preset slot availability
 - build/train/research actions in the client are sourced from the sim data defs, rather than being hardcoded only in the UI
-- selected buildings now render compact status labels for construction, training, and research progress
+- selected units render health bars, path/rally/task lines, and building footprint boxes
 - the graphical client now shows a simple victory/defeat overlay when one side has no surviving units left
-- the graphical client now darkens tiles outside the current faction 1 vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
+- the graphical client now darkens tiles outside the current viewed faction vision set and shows a fog visibility summary in the HUD when `vision` stream records are present
 - the active view faction changes selection filtering, enemy highlighting, fog rendering, and victory/defeat overlays
 - the console client now includes match end-state summaries, e.g. `state: victory Enemy faction eliminated`
 - the client now shows build placement preview boxes for supported depot types and only submits build orders on valid tiles
 - the build preview also shows structure name, footprint, clearance, and mineral/gas cost next to the ghost
-- a simple right-side command panel now exposes clickable buttons for move, attack-move, patrol, hold, build preview modes, and clear
+- a Scene2D right-side command panel exposes clickable buttons for move, attack-move, patrol, hold, selection tools, view switches, build preview modes, preset actions, and clear
 - the command panel also exposes cancel build/train/research actions for quick queue control
 - when a selected building supports it, the command panel also exposes `Train Worker`, `Train Marine`, `Train Zergling`, and `Research Adv`
 - the graphical client now renders a simple minimap with unit/resource dots and the current camera viewport
-- left click on the minimap recenters the camera
+- dragging across the minimap keeps the camera centered under the cursor
 - ctrl + right click empty ground: issue `attackMove`
 
 The client consumes `snapshot` and `commandAck` NDJSON records and writes append-only NDJSON commands compatible with `--inputTail`.
