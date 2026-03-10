@@ -24,6 +24,7 @@ internal class MainMenuScreen(
     private val scenarioLabel = Label("", assets.accentLabelStyle)
     private val summaryLabel = Label("", assets.mutedLabelStyle)
     private val controlsLabel = Label("", assets.mutedLabelStyle)
+    private val enterMatchButton = makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }
 
     init {
         val root =
@@ -36,7 +37,7 @@ internal class MainMenuScreen(
         root.add(Label("libGDX client on top of the existing deterministic sim", assets.mutedLabelStyle)).padBottom(24f).row()
         root.add(scenarioLabel).row()
         root.add(summaryLabel).padBottom(12f).row()
-        controlsLabel.setText("keys: left/right scenario  enter play  s/l quick  a/k alt  esc quit")
+        controlsLabel.setText("keys: left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
         root.add(controlsLabel).padBottom(12f).row()
         root.add(makeButton("Previous Scenario") { runtime.cycleScenario(-1); refresh() }).width(280f).row()
         root.add(makeButton("Next Scenario") { runtime.cycleScenario(1); refresh() }).width(280f).row()
@@ -44,7 +45,7 @@ internal class MainMenuScreen(
         root.add(makeButton("Load Quick Preset") { runtime.loadPreset("quick"); refresh() }).width(280f).row()
         root.add(makeButton("Save Alt Preset") { runtime.savePreset("alt"); refresh() }).width(280f).row()
         root.add(makeButton("Load Alt Preset") { runtime.loadPreset("alt"); refresh() }).width(280f).row()
-        root.add(makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }).width(280f).padTop(16f).row()
+        root.add(enterMatchButton).width(280f).padTop(16f).row()
         root.add(makeButton("Restart Match") { runtime.applyScenarioAndRestart() }).width(280f).row()
         root.add(makeButton("Quit") { Gdx.app.exit() }).width(280f).row()
         stage.addActor(root)
@@ -72,8 +73,21 @@ internal class MainMenuScreen(
     }
 
     private fun refresh() {
-        scenarioLabel.setText("Scenario: ${runtime.playScenario.id}")
+        scenarioLabel.setText(
+            if (runtime.scenarioRestartRequired()) {
+                "Scenario: ${runtime.playScenario.id} (restart required)"
+            } else {
+                "Scenario: ${runtime.playScenario.id}"
+            }
+        )
         summaryLabel.setText(runtime.mainMenuSummaryLines().joinToString("\n"))
+        enterMatchButton.setText(
+            if (runtime.scenarioRestartRequired()) {
+                "Restart And Enter Match"
+            } else {
+                "Enter Match"
+            }
+        )
     }
 
     private fun makeButton(text: String, onClick: () -> Unit): TextButton =
