@@ -17,6 +17,8 @@ internal class GdxWorldRenderer(
     private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
     private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
     private val fogColor = Color(0.02f, 0.05f, 0.08f, 0.78f)
+    private val terrainA = Color(0.08f, 0.12f, 0.15f, 1f)
+    private val terrainB = Color(0.10f, 0.15f, 0.18f, 1f)
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
@@ -50,18 +52,27 @@ internal class GdxWorldRenderer(
     private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState
-        shape.color = Color(0.09f, 0.13f, 0.16f, 1f)
+        shape.color = terrainA
         shape.rect(0f, 0f, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat()))
+        val bandSize = runtime.camera.tileSize * 4f
+        var row = 0
+        var bandY = 0f
+        while (bandY < runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())) {
+            shape.color = if (row % 2 == 0) terrainB else terrainA
+            shape.rect(0f, bandY, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), bandSize)
+            bandY += bandSize
+            row++
+        }
         mapState?.blockedTiles?.forEach { (x, y) ->
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
-            shape.color = Color(0.12f, 0.12f, 0.14f, 1f)
+            shape.color = Color(0.16f, 0.16f, 0.18f, 1f)
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
         }
         mapState?.staticOccupancyTiles?.forEach { (x, y) ->
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
-            shape.color = Color(0.23f, 0.17f, 0.13f, 0.75f)
+            shape.color = Color(0.29f, 0.21f, 0.16f, 0.78f)
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
         }
     }
@@ -84,6 +95,8 @@ internal class GdxWorldRenderer(
         for (node in snapshot.resourceNodes) {
             shape.color = if (node.kind == "gas") Color(0.24f, 0.77f, 0.57f, 1f) else neutralColor
             shape.circle(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y), 7f)
+            shape.color = Color(1f, 1f, 1f, 0.12f)
+            shape.circle(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y), 11f)
         }
     }
 
@@ -111,6 +124,8 @@ internal class GdxWorldRenderer(
                 shape.color = factionColor(entity.faction, viewedFaction)
                 val radius = if (selected) 8f else 6f
                 shape.circle(screenX, screenY, radius)
+                shape.color = Color(1f, 1f, 1f, if (selected) 0.30f else 0.16f)
+                shape.circle(screenX - 1.5f, screenY - 1.5f, radius * 0.45f)
             }
             drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp)
         }
@@ -174,8 +189,10 @@ internal class GdxWorldRenderer(
         val boundsHeight = minOf(176, height / 5)
         val left = 18f
         val top = 18f
-        shape.color = Color(0.06f, 0.10f, 0.12f, 0.95f)
+        shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
         shape.rect(left, top, boundsWidth.toFloat(), boundsHeight.toFloat())
+        shape.color = Color(0.16f, 0.25f, 0.29f, 0.70f)
+        shape.rect(left + 4f, top + 4f, boundsWidth.toFloat() - 8f, boundsHeight.toFloat() - 8f)
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
             val y = top + (entity.y / snapshot.mapHeight) * boundsHeight
@@ -201,6 +218,8 @@ internal class GdxWorldRenderer(
             ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth,
             ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         )
+        shape.color = Color(0.86f, 0.94f, 0.98f, 0.55f)
+        shape.rect(left, top, boundsWidth.toFloat(), boundsHeight.toFloat())
     }
 
     private fun drawBuildPreview(shape: ShapeRenderer, runtime: GdxClientRuntime) {

@@ -24,30 +24,59 @@ internal class MainMenuScreen(
     private val scenarioLabel = Label("", assets.accentLabelStyle)
     private val summaryLabel = Label("", assets.mutedLabelStyle)
     private val controlsLabel = Label("", assets.mutedLabelStyle)
+    private val statusLabel = Label("ready", assets.bodyLabelStyle)
     private val enterMatchButton = makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }
 
     init {
         val root =
             Table().apply {
                 setFillParent(true)
-                background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.95f))
-                defaults().pad(8f)
+                background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.96f))
+                pad(28f)
             }
-        root.add(Label("STARKRAFT", assets.titleLabelStyle)).padBottom(16f).row()
-        root.add(Label("libGDX client on top of the existing deterministic sim", assets.mutedLabelStyle)).padBottom(24f).row()
-        root.add(scenarioLabel).row()
-        root.add(summaryLabel).padBottom(12f).row()
+
+        val hero =
+            Table().apply {
+                background = assets.panelDrawable(Color(0.08f, 0.13f, 0.18f, 0.94f))
+                pad(24f)
+                defaults().left().padBottom(10f)
+                add(Label("STARKRAFT", assets.titleLabelStyle)).left().row()
+                add(Label("Deterministic RTS sandbox with a live libGDX command deck.", assets.bodyLabelStyle)).width(480f).left().row()
+                add(statusLabel).left().row()
+            }
+
+        val controlsPanel =
+            Table().apply {
+                background = assets.panelDrawable(Color(0.08f, 0.11f, 0.15f, 0.90f))
+                pad(18f)
+                defaults().left().pad(6f)
+            }
+        controlsPanel.add(Label("Scenario", assets.titleLabelStyle)).left().row()
+        controlsPanel.add(scenarioLabel).left().row()
+        controlsPanel.add(summaryLabel).width(340f).left().padBottom(10f).row()
         controlsLabel.setText("keys: left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
-        root.add(controlsLabel).padBottom(12f).row()
-        root.add(makeButton("Previous Scenario") { runtime.cycleScenario(-1); refresh() }).width(280f).row()
-        root.add(makeButton("Next Scenario") { runtime.cycleScenario(1); refresh() }).width(280f).row()
-        root.add(makeButton("Save Quick Preset") { runtime.savePreset("quick"); refresh() }).width(280f).row()
-        root.add(makeButton("Load Quick Preset") { runtime.loadPreset("quick"); refresh() }).width(280f).row()
-        root.add(makeButton("Save Alt Preset") { runtime.savePreset("alt"); refresh() }).width(280f).row()
-        root.add(makeButton("Load Alt Preset") { runtime.loadPreset("alt"); refresh() }).width(280f).row()
-        root.add(enterMatchButton).width(280f).padTop(16f).row()
-        root.add(makeButton("Restart Match") { runtime.applyScenarioAndRestart() }).width(280f).row()
-        root.add(makeButton("Quit") { Gdx.app.exit() }).width(280f).row()
+        controlsPanel.add(controlsLabel).width(340f).left().padBottom(12f).row()
+
+        val scenarioButtons = Table()
+        scenarioButtons.defaults().pad(4f)
+        scenarioButtons.add(makeButton("Previous Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(-1); refresh() }).width(164f)
+        scenarioButtons.add(makeButton("Next Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(1); refresh() }).width(164f)
+        controlsPanel.add(scenarioButtons).left().row()
+
+        val presetButtons = Table()
+        presetButtons.defaults().pad(4f)
+        presetButtons.add(makeButton("Save Quick", style = assets.secondaryButtonStyle()) { runtime.savePreset("quick"); refresh() }).width(164f)
+        presetButtons.add(makeButton("Load Quick", style = assets.secondaryButtonStyle()) { runtime.loadPreset("quick"); refresh() }).width(164f).row()
+        presetButtons.add(makeButton("Save Alt", style = assets.secondaryButtonStyle()) { runtime.savePreset("alt"); refresh() }).width(164f)
+        presetButtons.add(makeButton("Load Alt", style = assets.secondaryButtonStyle()) { runtime.loadPreset("alt"); refresh() }).width(164f)
+        controlsPanel.add(presetButtons).left().padBottom(8f).row()
+
+        controlsPanel.add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
+        controlsPanel.add(makeButton("Restart Match", style = assets.subtleButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
+        controlsPanel.add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(336f).row()
+
+        root.add(hero).expand().fill().left().top().padRight(16f)
+        root.add(controlsPanel).width(380f).right().top()
         stage.addActor(root)
         refresh()
     }
@@ -81,6 +110,14 @@ internal class MainMenuScreen(
             }
         )
         summaryLabel.setText(runtime.mainMenuSummaryLines().joinToString("\n"))
+        summaryLabel.setWrap(true)
+        statusLabel.setText(
+            if (runtime.scenarioRestartRequired()) {
+                "Pending scenario switch. Entering the match will restart the play session."
+            } else {
+                "Live scenario ready. Enter match to attach to the current play session."
+            }
+        )
         enterMatchButton.setText(
             if (runtime.scenarioRestartRequired()) {
                 "Restart And Enter Match"
@@ -90,8 +127,12 @@ internal class MainMenuScreen(
         )
     }
 
-    private fun makeButton(text: String, onClick: () -> Unit): TextButton =
-        TextButton(text, assets.buttonStyle(Color(0.17f, 0.30f, 0.38f, 1f))).apply {
+    private fun makeButton(
+        text: String,
+        style: TextButton.TextButtonStyle = assets.primaryButtonStyle(),
+        onClick: () -> Unit
+    ): TextButton =
+        TextButton(text, style).apply {
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {

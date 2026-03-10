@@ -24,9 +24,11 @@ internal class GameScreen(
 ) : ScreenAdapter() {
     private val worldRenderer = GdxWorldRenderer(assets)
     private val stage = Stage(ScreenViewport())
+    private val statusHeader = Label("Field Status", assets.titleLabelStyle)
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val buttonTable = Table()
+    private val commandScroll = ScrollPane(buttonTable)
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
@@ -62,51 +64,58 @@ internal class GameScreen(
         val root =
             Table().apply {
                 setFillParent(true)
-                defaults().pad(6f)
+                touchable = com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly
             }
 
         val leftPanel =
             Table().apply {
-                background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.84f))
-                pad(10f)
-                add(Label("Status", assets.titleLabelStyle)).left().row()
-                add(selectionLabel).left().width(420f).row()
-                add(hudLinesLabel).left().width(420f).top().row()
-                add(footerLabel).left().width(420f).padTop(10f).row()
+                background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.78f))
+                pad(12f)
+                touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+                add(statusHeader).left().row()
+                add(selectionLabel).left().top().padTop(4f).row()
+                add(hudLinesLabel).left().top().padTop(6f).row()
+                add(footerLabel).left().top().padTop(10f).row()
             }
 
         val rightPanel =
             Table().apply {
-                background = assets.panelDrawable(Color(0.10f, 0.14f, 0.18f, 0.88f))
-                pad(8f)
+                background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.84f))
+                pad(10f)
                 top()
             }
         buttonTable.top().left()
+        commandScroll.setFadeScrollBars(false)
+        commandScroll.setScrollingDisabled(true, false)
         rightPanel.add(Label("Commands", assets.titleLabelStyle)).left().row()
-        rightPanel.add(ScrollPane(buttonTable)).width(300f).height(620f).top()
+        rightPanel.add(commandScroll).top()
 
-        root.add(leftPanel).expand().left().top()
-        root.add(rightPanel).right().top().padRight(10f)
+        root.add(leftPanel).left().top().pad(10f)
+        root.add().expandX().fillX()
+        root.add().expandX().fillX().row()
+        root.add().expandY().fillY()
+        root.add().expand().fill()
+        root.add(rightPanel).right().bottom().pad(10f)
         stage.addActor(root)
 
         pauseOverlay.apply {
             setFillParent(true)
             isVisible = false
-            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.90f))
+            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.92f))
             defaults().pad(8f)
             add(Label("Paused", assets.titleLabelStyle)).row()
-            add(makeButton("Resume") { runtime.togglePauseOverlay() }).width(220f).row()
-            add(makeButton("Toggle Sim Pause") { runtime.togglePlayPause() }).width(220f).row()
-            add(makeButton("Restart Match") { runtime.restartMatch() }).width(220f).row()
-            add(makeButton("Save Quick") { runtime.savePreset("quick") }).width(220f).row()
-            add(makeButton("Load Quick") { runtime.loadPreset("quick") }).width(220f).row()
-            add(makeButton("Save Alt") { runtime.savePreset("alt") }).width(220f).row()
-            add(makeButton("Load Alt") { runtime.loadPreset("alt") }).width(220f).row()
-            add(makeButton("Main Menu") {
+            add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(240f).row()
+            add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(240f).row()
+            add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(240f).row()
+            add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(240f).row()
+            add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(240f).row()
+            add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(240f).row()
+            add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(240f).row()
+            add(makeButton("Main Menu", style = assets.subtleButtonStyle()) {
                 runtime.togglePauseOverlay()
                 game.openMainMenu()
-            }).width(220f).row()
-            add(makeButton("Quit") { Gdx.app.exit() }).width(220f).row()
+            }).width(240f).row()
+            add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(240f).row()
         }
         stage.addActor(pauseOverlay)
 
@@ -115,7 +124,7 @@ internal class GameScreen(
             isVisible = false
             top().left()
             pad(18f)
-            background = assets.panelDrawable(Color(0.04f, 0.07f, 0.10f, 0.90f))
+            background = assets.panelDrawable(Color(0.04f, 0.07f, 0.10f, 0.92f))
             add(helpLabel).left().top()
         }
         stage.addActor(helpOverlay)
@@ -123,27 +132,47 @@ internal class GameScreen(
 
     private fun refreshHud() {
         val snapshot = runtime.snapshot
+        val statusWidth = (Gdx.graphics.width * 0.25f).coerceIn(240f, 360f)
+        val commandWidth = (Gdx.graphics.width * 0.18f).coerceIn(200f, 280f)
+        val commandHeight = (Gdx.graphics.height * 0.40f).coerceIn(220f, 380f)
+        selectionLabel.setWrap(true)
+        hudLinesLabel.setWrap(true)
+        footerLabel.setWrap(true)
+        selectionLabel.setWidth(statusWidth)
+        hudLinesLabel.setWidth(statusWidth)
+        footerLabel.setWidth(statusWidth)
+        commandScroll.setSize(commandWidth, commandHeight)
         selectionLabel.setText(runtime.session.state.viewState.selectionHudLine ?: "selection hud: none")
         hudLinesLabel.setText(runtime.currentHudLines().joinToString("\n"))
         footerLabel.setText("LMB select  RMB command  MMB/scroll camera  F1 help  F5 restart  F6/F7 scenario")
+        statusHeader.setText(if (runtime.debugVisible) "Field Status + Debug" else "Field Status")
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
 
         buttonTable.clearChildren()
         for (button in runtime.buttonModels()) {
-            val actor = makeButton(button.label, runtime.actionHint(button.actionId)) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
+            val actor = makeButton(
+                button.label,
+                runtime.actionHint(button.actionId),
+                if (button.actionId == "pause" || button.actionId == "help") assets.secondaryButtonStyle() else assets.subtleButtonStyle()
+            ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
             actor.isDisabled = !runtime.isActionEnabled(button.actionId)
             actor.isChecked = runtime.isActionActive(button.actionId)
-            buttonTable.add(actor).width(260f).left().row()
+            buttonTable.add(actor).width(commandWidth - 10f).left().padBottom(4f).row()
         }
         if (runtime.debugVisible && snapshot != null) {
             buttonTable.add(Label("debug: entities=${snapshot.entities.size} resources=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).left().padTop(10f).row()
         }
     }
 
-    private fun makeButton(text: String, hint: String? = null, onClick: () -> Unit): TextButton =
-        TextButton(text, assets.buttonStyle(Color(0.17f, 0.30f, 0.38f, 1f))).apply {
+    private fun makeButton(
+        text: String,
+        hint: String? = null,
+        style: TextButton.TextButtonStyle = assets.primaryButtonStyle(),
+        onClick: () -> Unit
+    ): TextButton =
+        TextButton(text, style).apply {
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
