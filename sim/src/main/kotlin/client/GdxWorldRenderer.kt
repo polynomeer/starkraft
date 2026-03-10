@@ -116,6 +116,8 @@ internal class GdxWorldRenderer(
                 val h = footprintHeight * runtime.camera.tileSize
                 shape.color = factionColor(entity.faction, viewedFaction)
                 shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()), runtime.camera.worldToScreenY(tileY.toFloat()), w, h)
+                shape.color = Color(1f, 1f, 1f, 0.10f)
+                shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 2f, runtime.camera.worldToScreenY(tileY.toFloat()) + 2f, w - 4f, h - 4f)
                 if (selected) {
                     shape.color = selectionColor
                     shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 3f, runtime.camera.worldToScreenY(tileY.toFloat()) - 3f, w + 6f, h + 6f)
@@ -153,6 +155,7 @@ internal class GdxWorldRenderer(
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             shape.color = Color(0.48f, 0.84f, 0.95f, 1f)
+            shape.circle(startX, startY, 11f)
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
                 shape.line(startX, startY, runtime.camera.worldToScreenX(entity.pathGoalX + 0.5f), runtime.camera.worldToScreenY(entity.pathGoalY + 0.5f))
             }

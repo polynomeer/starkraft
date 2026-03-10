@@ -24,11 +24,21 @@ internal class GameScreen(
 ) : ScreenAdapter() {
     private val worldRenderer = GdxWorldRenderer(assets)
     private val stage = Stage(ScreenViewport())
+    private val topBar = Table()
+    private val economyLabel = Label("", assets.bodyLabelStyle)
+    private val modeLabel = Label("", assets.accentLabelStyle)
+    private val statusBadgeLabel = Label("", assets.bodyLabelStyle)
     private val statusHeader = Label("Field Status", assets.titleLabelStyle)
+    private val selectionMetaLabel = Label("", assets.mutedLabelStyle)
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
+    private val statusContent = Table()
+    private val statusScroll = ScrollPane(statusContent)
+    private val commandHeaderLabel = Label("Commands", assets.titleLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
+    private val actionBanner = Table()
+    private val actionBannerLabel = Label("", assets.bodyLabelStyle)
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
@@ -67,16 +77,30 @@ internal class GameScreen(
                 touchable = com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly
             }
 
+        topBar.apply {
+            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.12f, 0.78f))
+            pad(8f, 12f, 8f, 12f)
+            add(economyLabel).left().expandX().fillX()
+            add(modeLabel).center().padLeft(12f).padRight(12f)
+            add(statusBadgeLabel).right()
+        }
+
         val leftPanel =
             Table().apply {
                 background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.78f))
                 pad(12f)
                 touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
                 add(statusHeader).left().row()
-                add(selectionLabel).left().top().padTop(4f).row()
-                add(hudLinesLabel).left().top().padTop(6f).row()
-                add(footerLabel).left().top().padTop(10f).row()
+                add(statusScroll).top().left().padTop(6f).row()
             }
+        statusContent.top().left()
+        statusScroll.setFadeScrollBars(false)
+        statusScroll.setScrollingDisabled(true, false)
+        statusScroll.setOverscroll(false, false)
+        statusContent.add(selectionLabel).left().top().row()
+        statusContent.add(selectionMetaLabel).left().top().padTop(2f).row()
+        statusContent.add(hudLinesLabel).left().top().padTop(6f).row()
+        statusContent.add(footerLabel).left().top().padTop(10f).row()
 
         val rightPanel =
             Table().apply {
@@ -87,15 +111,22 @@ internal class GameScreen(
         buttonTable.top().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        rightPanel.add(Label("Commands", assets.titleLabelStyle)).left().row()
+        rightPanel.add(commandHeaderLabel).left().row()
         rightPanel.add(commandScroll).top()
 
+        actionBanner.apply {
+            background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.82f))
+            pad(6f, 12f, 6f, 12f)
+            add(actionBannerLabel).center()
+        }
+
+        root.add(topBar).colspan(3).expandX().fillX().top().pad(10f, 10f, 0f, 10f).row()
         root.add(leftPanel).left().top().pad(10f)
-        root.add().expandX().fillX()
-        root.add().expandX().fillX().row()
-        root.add().expandY().fillY()
         root.add().expand().fill()
-        root.add(rightPanel).right().bottom().pad(10f)
+        root.add(rightPanel).right().bottom().pad(10f).row()
+        root.add().expandY().fillY()
+        root.add(actionBanner).bottom().padBottom(10f)
+        root.add().expandY().fillY()
         stage.addActor(root)
 
         pauseOverlay.apply {
@@ -132,25 +163,39 @@ internal class GameScreen(
 
     private fun refreshHud() {
         val snapshot = runtime.snapshot
-        val statusWidth = (Gdx.graphics.width * 0.25f).coerceIn(240f, 360f)
-        val commandWidth = (Gdx.graphics.width * 0.18f).coerceIn(200f, 280f)
+        val statusWidth = (Gdx.graphics.width * 0.24f).coerceIn(240f, 360f)
+        val statusHeight = (Gdx.graphics.height * 0.42f).coerceIn(220f, 420f)
+        val commandWidth = (Gdx.graphics.width * 0.20f).coerceIn(220f, 310f)
         val commandHeight = (Gdx.graphics.height * 0.40f).coerceIn(220f, 380f)
+        val compactLines = compactHudLines()
         selectionLabel.setWrap(true)
+        selectionMetaLabel.setWrap(true)
         hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
         selectionLabel.setWidth(statusWidth)
+        selectionMetaLabel.setWidth(statusWidth)
         hudLinesLabel.setWidth(statusWidth)
         footerLabel.setWidth(statusWidth)
+        statusScroll.setSize(statusWidth + 8f, statusHeight)
         commandScroll.setSize(commandWidth, commandHeight)
         selectionLabel.setText(runtime.session.state.viewState.selectionHudLine ?: "selection hud: none")
-        hudLinesLabel.setText(runtime.currentHudLines().joinToString("\n"))
+        selectionMetaLabel.setText(buildSelectionMetaLine())
+        hudLinesLabel.setText(compactLines.joinToString("\n"))
         footerLabel.setText("LMB select  RMB command  MMB/scroll camera  F1 help  F5 restart  F6/F7 scenario")
         statusHeader.setText(if (runtime.debugVisible) "Field Status + Debug" else "Field Status")
+        commandHeaderLabel.setText("Commands ${runtime.overlayModeLabel()}")
+        economyLabel.setText(buildTopEconomyLine())
+        modeLabel.setText(buildTopModeLine())
+        statusBadgeLabel.setText(buildStatusBadgeLine())
+        actionBannerLabel.setText(buildActionBannerLine())
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
+        actionBanner.isVisible = actionBannerLabel.text.toString().isNotBlank()
+        statusScroll.layout()
 
         buttonTable.clearChildren()
+        buttonTable.defaults().padBottom(4f)
         for (button in runtime.buttonModels()) {
             val actor = makeButton(
                 button.label,
@@ -163,6 +208,87 @@ internal class GameScreen(
         }
         if (runtime.debugVisible && snapshot != null) {
             buttonTable.add(Label("debug: entities=${snapshot.entities.size} resources=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).left().padTop(10f).row()
+        }
+    }
+
+    private fun compactHudLines(): List<String> {
+        val lines = runtime.currentHudLines()
+        val preferredPrefixes =
+            listOf(
+                "mode=",
+                "play:",
+                "scenario=",
+                "economy:",
+                "selection factions:",
+                "selection classes:",
+                "selection health:",
+                "selection orders:",
+                "selection tasks:",
+                "selection path:",
+                "production:",
+                "research:",
+                "fog:",
+                "groups:",
+                "presets:",
+                "notice:",
+                "hint:"
+            )
+        val picked = ArrayList<String>()
+        for (prefix in preferredPrefixes) {
+            lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
+        }
+        if (picked.isEmpty()) {
+            picked.addAll(lines.take(8))
+        }
+        return picked.distinct().take(10)
+    }
+
+    private fun buildSelectionMetaLine(): String {
+        val snapshot = runtime.snapshot ?: return "No live snapshot"
+        if (runtime.session.state.selectedIds.isEmpty()) {
+            return "Viewed faction ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"} · entities ${snapshot.entities.size}"
+        }
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        val combat = selected.count { it.weaponId != null }
+        val workers = selected.count { it.archetype == "worker" }
+        val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
+        return "selected=${selected.size} combat=$combat workers=$workers structures=$structures"
+    }
+
+    private fun buildTopEconomyLine(): String {
+        val snapshot = runtime.snapshot ?: return "Awaiting snapshot"
+        val viewedFaction = runtime.session.state.viewedFaction
+        val faction = snapshot.factions.firstOrNull { it.faction == viewedFaction }
+        return if (faction != null) {
+            "Tick ${snapshot.tick}  F${faction.faction}  minerals ${faction.minerals}  gas ${faction.gas}  vis ${faction.visibleTiles}"
+        } else {
+            "Tick ${snapshot.tick}  Observer  entities ${snapshot.entities.size}  nodes ${snapshot.resourceNodes.size}"
+        }
+    }
+
+    private fun buildTopModeLine(): String {
+        val mode = runtime.overlayModeLabel()
+        val viewed = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
+        return "Mode ${mode.uppercase()}  View ${viewed.uppercase()}"
+    }
+
+    private fun buildStatusBadgeLine(): String {
+        val snapshot = runtime.snapshot ?: return "SYNC"
+        if (snapshot.matchEnded) {
+            return buildGameState(snapshot, runtime.session.state.viewedFaction)?.title?.uppercase() ?: "ENDED"
+        }
+        return if (runtime.pauseOverlayVisible) "PAUSED" else if (runtime.playControlState.paused) "SIM PAUSED" else "LIVE"
+    }
+
+    private fun buildActionBannerLine(): String {
+        runtime.noticeLine()?.removePrefix("notice: ")?.let { return it }
+        runtime.currentHudLines().firstOrNull { it.startsWith("hint:") }?.removePrefix("hint: ")?.let { return it }
+        val selectionCount = runtime.session.state.selectedIds.size
+        return when {
+            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId} with right click"
+            runtime.groundMode != null -> "Issue ${runtime.overlayModeLabel()} with right click"
+            selectionCount > 0 -> "$selectionCount selected · home to center · esc to clear"
+            else -> "Drag to select · right click to command · mouse wheel to zoom"
         }
     }
 
