@@ -1,8 +1,8 @@
-# Starkraft (Headless RTS Prototype)
+# Starkraft
 
 ## Status
 
-The `sim` module is complete as a deterministic headless RTS sandbox.
+The `sim` module is complete as a deterministic RTS sandbox with both headless and libGDX desktop play flows.
 
 Current repository layout:
 - `sim/` deterministic simulation core (authoritative rules)
@@ -24,7 +24,7 @@ Completed scope:
 - victory detection (last surviving faction wins) and match-end state
 - deterministic match-end reason tagging (`elimination`, `timeout`, `draw`, `surrender` reserved)
 - replay, benchmark, golden determinism checks, and snapshot/replay tooling
-- client-facing snapshot, event stream, live input, and minimal graphical/console clients
+- client-facing snapshot, event stream, live input, console tooling, and a libGDX desktop client
 
 Release/process assets:
 - versioned protocol baseline (`shared-protocol/schema/rts-protocol-v1.schema.json`)
@@ -35,8 +35,7 @@ Release/process assets:
 - release gate checklist (`RELEASE_CHECKLIST.md`) for build/test/perf/package signoff
 
 Out of scope for this module:
-- a polished game UI
-- art, audio, menus, and campaign content
+- production art/audio pipelines, campaign content, and shipped presentation polish
 - full online multiplayer
 - non-headless rendering engine integration
 
