@@ -44,7 +44,7 @@ internal class MainMenuScreen(
         root.add(makeButton("Load Quick Preset") { runtime.loadPreset("quick"); refresh() }).width(280f).row()
         root.add(makeButton("Save Alt Preset") { runtime.savePreset("alt"); refresh() }).width(280f).row()
         root.add(makeButton("Load Alt Preset") { runtime.loadPreset("alt"); refresh() }).width(280f).row()
-        root.add(makeButton("Enter Match") { game.openGameScreen() }).width(280f).padTop(16f).row()
+        root.add(makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }).width(280f).padTop(16f).row()
         root.add(makeButton("Restart Match") { runtime.applyScenarioAndRestart() }).width(280f).row()
         root.add(makeButton("Quit") { Gdx.app.exit() }).width(280f).row()
         stage.addActor(root)
@@ -92,7 +92,7 @@ internal class MainMenuScreen(
             when (keycode) {
                 Input.Keys.LEFT -> runtime.cycleScenario(-1)
                 Input.Keys.RIGHT -> runtime.cycleScenario(1)
-                Input.Keys.ENTER, Input.Keys.SPACE -> game.openGameScreen()
+                Input.Keys.ENTER, Input.Keys.SPACE -> runtime.enterMatch(game::openGameScreen)
                 Input.Keys.S -> runtime.savePreset("quick")
                 Input.Keys.L -> runtime.loadPreset("quick")
                 Input.Keys.A -> runtime.savePreset("alt")

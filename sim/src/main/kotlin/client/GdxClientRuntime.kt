@@ -20,6 +20,7 @@ internal class GdxClientRuntime(
     private var lastGroupRecall: Int? = null
     private var lastGroupRecallAtNanos: Long = 0L
     private var initialCameraApplied: Boolean = false
+    private var activeScenario: PlayScenario? = null
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -40,6 +41,10 @@ internal class GdxClientRuntime(
     var debugVisible: Boolean = false
     var pauseOverlayVisible: Boolean = false
     var helpOverlayVisible: Boolean = false
+
+    init {
+        activeScenario = playScenario
+    }
 
     val snapshot: ClientSnapshot?
         get() = session.state.snapshot
@@ -223,7 +228,13 @@ internal class GdxClientRuntime(
         val path = scenarioPath ?: return
         playScenario = PlayScenario.cycle(playScenario, delta)
         writePlayScenario(path, playScenario)
-        showNotice("scenario=${playScenario.id}")
+        showNotice(
+            if (scenarioRestartRequired()) {
+                "scenario=${playScenario.id} (restart required)"
+            } else {
+                "scenario=${playScenario.id}"
+            }
+        )
     }
 
     fun cycleScenarioAndRestart(delta: Int) {
@@ -234,6 +245,16 @@ internal class GdxClientRuntime(
     fun applyScenarioAndRestart() {
         scenarioPath?.let { writePlayScenario(it, playScenario) }
         requestRestart()
+    }
+
+    fun scenarioRestartRequired(): Boolean = playScenario != activeScenario
+
+    fun enterMatch(openGameScreen: () -> Unit) {
+        if (scenarioRestartRequired()) {
+            applyScenarioAndRestart()
+        } else {
+            openGameScreen()
+        }
     }
 
     fun restartMatch() {
@@ -295,7 +316,13 @@ internal class GdxClientRuntime(
         playControlState = preset.control
         scenarioPath?.let { writePlayScenario(it, playScenario) }
         writePlayControl()
-        showNotice("preset loaded: $name")
+        showNotice(
+            if (scenarioRestartRequired()) {
+                "preset loaded: $name (restart required)"
+            } else {
+                "preset loaded: $name"
+            }
+        )
     }
 
     fun isPresetAvailable(name: String): Boolean {
@@ -548,6 +575,7 @@ internal class GdxClientRuntime(
     fun mainMenuSummaryLines(): List<String> =
         listOfNotNull(
             "scenario: ${playScenario.id}",
+            if (scenarioRestartRequired()) "scenario status: restart required before match" else "scenario status: live",
             "play: ${if (playControlState.paused) "paused" else "running"} x${playControlState.speed}",
             presetAvailabilityLine(),
             noticeLine()

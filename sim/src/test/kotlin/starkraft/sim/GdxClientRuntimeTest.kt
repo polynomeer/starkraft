@@ -52,6 +52,34 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `changing scenario marks restart required and enterMatch restarts`(@TempDir tempDir: Path) {
+        var restarted = false
+        var opened = false
+        val runtime = runtime(tempDir) { restarted = true }
+
+        runtime.cycleScenario(1)
+        runtime.enterMatch { opened = true }
+
+        assertTrue(runtime.scenarioRestartRequired())
+        assertTrue(restarted)
+        assertFalse(opened)
+        assertTrue(runtime.mainMenuSummaryLines().any { it.contains("restart required") })
+    }
+
+    @Test
+    fun `enterMatch opens game immediately when scenario is live`(@TempDir tempDir: Path) {
+        var restarted = false
+        var opened = false
+        val runtime = runtime(tempDir) { restarted = true }
+
+        runtime.enterMatch { opened = true }
+
+        assertFalse(runtime.scenarioRestartRequired())
+        assertFalse(restarted)
+        assertTrue(opened)
+    }
+
+    @Test
     fun `control groups assign recall and clear`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.addAll(listOf(4, 5))
@@ -111,7 +139,7 @@ class GdxClientRuntimeTest {
         assertNull(runtime.currentHudLines().firstOrNull { it.startsWith("hint:") })
     }
 
-    private fun runtime(tempDir: Path): GdxClientRuntime {
+    private fun runtime(tempDir: Path, onRestart: () -> Unit = {}): GdxClientRuntime {
         val snapshotPath = tempDir.resolve("snapshots.ndjson")
         val inputPath = tempDir.resolve("client-input.ndjson")
         val controlPath = tempDir.resolve("play-control.txt")
@@ -146,7 +174,7 @@ class GdxClientRuntimeTest {
             controlPath = controlPath,
             scenarioPath = scenarioPath,
             playRoot = tempDir,
-            requestRestart = {}
+            requestRestart = onRestart
         )
     }
 }
