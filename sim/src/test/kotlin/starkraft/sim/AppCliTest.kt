@@ -19,4 +19,11 @@ class AppCliTest {
     fun `bootstrap orders remain enabled for normal headless runs`() {
         assertTrue(shouldIssueBootstrapOrders(emptyArray(), replayPath = null))
     }
+
+    @Test
+    fun `interactive gdx requests replace queued orders`() {
+        assertTrue(shouldReplaceInteractiveOrders("gdx-17"))
+        assertFalse(shouldReplaceInteractiveOrders(null))
+        assertFalse(shouldReplaceInteractiveOrders("script-17"))
+    }
 }

@@ -1008,6 +1008,9 @@ private fun hasFlag(args: Array<String>, flag: String): Boolean =
 internal fun shouldIssueBootstrapOrders(args: Array<String>, replayPath: String?): Boolean =
     replayPath == null && !hasFlag(args, "--noBootstrapOrders")
 
+internal fun shouldReplaceInteractiveOrders(requestId: String?): Boolean =
+    requestId?.startsWith("gdx-") == true
+
 private fun isOptionToken(token: String): Boolean {
     if (!token.startsWith("-")) return false
     val key = token.substringBefore("=")
@@ -4531,6 +4534,13 @@ fun issue(
             snapshotOutPath
         )
     }
+    fun replaceInteractiveQueue(ids: IntArray) {
+        if (!shouldReplaceInteractiveOrders(requestId)) return
+        ids.forEach { id ->
+            val actual = resolveLabelId(id, labelIdMap)
+            world.orders[actual]?.items?.clear()
+        }
+    }
     when (cmd) {
         is Command.Move -> {
             val applied = collectDirectTargets(cmd.units, world, labelIdMap)
@@ -4541,6 +4551,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
                 }
             } else {
+                replaceInteractiveQueue(cmd.units)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
@@ -4593,6 +4604,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
                 }
             } else {
+                replaceInteractiveQueue(cmd.units)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     val tr = world.transforms[actual] ?: return@forEach
@@ -4648,6 +4660,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.AttackMove(cmd.x, cmd.y))
                 }
             } else {
+                replaceInteractiveQueue(cmd.units)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.AttackMove(cmd.x, cmd.y))
