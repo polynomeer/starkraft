@@ -15,6 +15,7 @@ import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.GdxClientRuntime
+import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.PlayControlState
 import starkraft.sim.client.PlayScenario
 import java.nio.file.Files
@@ -204,6 +205,16 @@ class GdxClientRuntimeTest {
         assertFalse(runtime.isDamageFlashActive(5))
         assertTrue(runtime.consumeAttackAlertSound())
         assertFalse(runtime.consumeAttackAlertSound())
+    }
+
+    @Test
+    fun `right click records move ping for rendering`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.issueRightClick(screenX = 160f, screenY = 160f, attackMoveModifier = false)
+
+        assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
     }
 
     @Test

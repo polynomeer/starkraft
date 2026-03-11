@@ -47,6 +47,7 @@ internal class GdxWorldRenderer(
         drawEntities(shape, runtime)
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
+        drawGroundPing(shape, runtime)
         drawMiniMap(shape, runtime, width, height)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
@@ -507,6 +508,18 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
             }
         }
+        runtime.currentGroundPing()?.let { ping ->
+            val x = left + (ping.worldX / snapshot.mapWidth) * boundsWidth
+            val y = top + (ping.worldY / snapshot.mapHeight) * boundsHeight
+            shape.color =
+                when (ping.kind) {
+                    GroundPingKind.MOVE -> Color(0.38f, 0.92f, 0.56f, 0.75f)
+                    GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.82f)
+                    GroundPingKind.BUILD -> Color(0.56f, 0.82f, 1.00f, 0.82f)
+                    GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.85f)
+                }
+            shape.circle(x, y, 5f)
+        }
     }
 
     private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
@@ -578,6 +591,42 @@ internal class GdxWorldRenderer(
             spec.width * runtime.camera.tileSize,
             spec.height * runtime.camera.tileSize
         )
+    }
+
+    private fun drawGroundPing(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val ping = runtime.currentGroundPing() ?: return
+        val x = runtime.camera.worldToScreenX(ping.worldX)
+        val y = runtime.camera.worldToScreenY(ping.worldY)
+        val pulse = ambientPulse(900L)
+        when (ping.kind) {
+            GroundPingKind.MOVE -> {
+                shape.color = Color(0.34f, 0.92f, 0.54f, 0.22f + (pulse * 0.10f))
+                shape.circle(x, y, 16f + (pulse * 8f))
+                shape.color = Color(0.58f, 0.98f, 0.70f, 0.90f)
+                shape.rect(x - 2f, y - 10f, 4f, 20f)
+                shape.rect(x - 10f, y - 2f, 20f, 4f)
+            }
+            GroundPingKind.ATTACK -> {
+                shape.color = Color(0.98f, 0.42f, 0.24f, 0.22f + (pulse * 0.10f))
+                shape.circle(x, y, 18f + (pulse * 10f))
+                shape.color = Color(1.00f, 0.76f, 0.46f, 0.96f)
+                shape.rectLine(x - 10f, y - 10f, x + 10f, y + 10f, 2.2f)
+                shape.rectLine(x - 10f, y + 10f, x + 10f, y - 10f, 2.2f)
+            }
+            GroundPingKind.BUILD -> {
+                shape.color = Color(0.48f, 0.78f, 1.00f, 0.22f + (pulse * 0.10f))
+                shape.rect(x - 14f - (pulse * 2f), y - 14f - (pulse * 2f), 28f + (pulse * 4f), 28f + (pulse * 4f))
+                shape.color = Color(0.72f, 0.90f, 1.00f, 0.90f)
+                shape.rect(x - 8f, y - 8f, 16f, 16f)
+            }
+            GroundPingKind.INVALID -> {
+                shape.color = Color(0.96f, 0.28f, 0.28f, 0.18f + (pulse * 0.08f))
+                shape.circle(x, y, 18f + (pulse * 8f))
+                shape.color = Color(1.00f, 0.70f, 0.70f, 0.92f)
+                shape.rectLine(x - 9f, y - 9f, x + 9f, y + 9f, 2f)
+                shape.rectLine(x - 9f, y + 9f, x + 9f, y - 9f, 2f)
+            }
+        }
     }
 
     private fun drawSelectionBox(shape: ShapeRenderer, dragBox: DragSelectionBox?) {

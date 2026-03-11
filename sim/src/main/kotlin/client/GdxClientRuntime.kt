@@ -28,6 +28,8 @@ internal class GdxClientRuntime(
     private var pendingAttackAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
     private var recentDamageUntilMillis: Long = 0L
+    private var recentGroundPing: GroundPing? = null
+    private var recentGroundPingUntilMillis: Long = 0L
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -68,6 +70,9 @@ internal class GdxClientRuntime(
         if (recentDamageEntityIds.isNotEmpty() && System.currentTimeMillis() > recentDamageUntilMillis) {
             recentDamageEntityIds = emptySet()
         }
+        if (recentGroundPing != null && System.currentTimeMillis() > recentGroundPingUntilMillis) {
+            recentGroundPing = null
+        }
         maybeRaiseAttackAlert()
     }
 
@@ -75,6 +80,7 @@ internal class GdxClientRuntime(
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
+    fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
@@ -140,6 +146,8 @@ internal class GdxClientRuntime(
 
     fun issueRightClick(screenX: Float, screenY: Float, attackMoveModifier: Boolean) {
         val snapshot = session.state.snapshot ?: return
+        val worldX = camera.screenToWorldX(screenX)
+        val worldY = camera.screenToWorldY(screenY)
         if (buildModeTypeId != null) {
             placeBuildingAt(screenX, screenY)
             return
@@ -149,8 +157,8 @@ internal class GdxClientRuntime(
                 snapshot = snapshot,
                 selectedIds = session.state.selectedIds,
                 viewedFaction = session.state.viewedFaction,
-                worldX = camera.screenToWorldX(screenX),
-                worldY = camera.screenToWorldY(screenY),
+                worldX = worldX,
+                worldY = worldY,
                 leftClick = false,
                 rightClick = true,
                 attackMoveModifier = attackMoveModifier,
@@ -160,6 +168,8 @@ internal class GdxClientRuntime(
             ) ?: return
         if (intent is ClientIntent.Command) {
             session.append(intent)
+            recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
+            recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
             groundMode = null
         }
     }
@@ -172,6 +182,8 @@ internal class GdxClientRuntime(
         val tileX = floor(camera.screenToWorldX(screenX)).toInt()
         val tileY = floor(camera.screenToWorldY(screenY)).toInt()
         if (!isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)) {
+            recentGroundPing = GroundPing(tileX + 0.5f, tileY + 0.5f, GroundPingKind.INVALID)
+            recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
             showNotice("invalid build placement")
             return
         }
@@ -188,6 +200,8 @@ internal class GdxClientRuntime(
                 )
             )
         )
+        recentGroundPing = GroundPing(tileX + (spec.width / 2f), tileY + (spec.height / 2f), GroundPingKind.BUILD)
+        recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
         buildModeTypeId = null
     }
 
@@ -812,4 +826,17 @@ internal class GdxClientRuntime(
         lastGroupRecallAtNanos = now
         showNotice("group $group recalled (${ids.size})")
     }
+}
+
+internal data class GroundPing(
+    val worldX: Float,
+    val worldY: Float,
+    val kind: GroundPingKind
+)
+
+internal enum class GroundPingKind {
+    MOVE,
+    ATTACK,
+    BUILD,
+    INVALID
 }
