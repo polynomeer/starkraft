@@ -26,4 +26,10 @@ class AppCliTest {
         assertFalse(shouldReplaceInteractiveOrders(null))
         assertFalse(shouldReplaceInteractiveOrders("script-17"))
     }
+
+    @Test
+    fun `default demo map uses large play dimensions`() {
+        assertTrue(DEMO_MAP_WIDTH >= 96)
+        assertTrue(DEMO_MAP_HEIGHT >= 96)
+    }
 }

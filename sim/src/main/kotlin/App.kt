@@ -100,7 +100,9 @@ object Time {
     const val TICK_MS = 20
 }
 
-private const val DEMO_MAP_ID = "demo-32x32-obstacles"
+internal const val DEMO_MAP_WIDTH = 96
+internal const val DEMO_MAP_HEIGHT = 96
+private const val DEMO_MAP_ID = "demo-96x96-frontier"
 private const val BUILD_VERSION = "1.0-SNAPSHOT"
 private val pendingHarvesterRetargetEvents = ArrayList<HarvesterRetargetEventRecord>()
 private val RESOURCE_NODE_KINDS = setOf("MineralField", "GasGeyser")
@@ -172,8 +174,8 @@ fun main(args: Array<String>) {
     val data = DataRepo(unitsJson, weaponsJson, buildingsJson, techsJson)
     
     val world = World()
-    val map = MapGrid(32, 32)
-    val occ = OccupancyGrid(32, 32)
+    val map = MapGrid(DEMO_MAP_WIDTH, DEMO_MAP_HEIGHT)
+    val occ = OccupancyGrid(DEMO_MAP_WIDTH, DEMO_MAP_HEIGHT)
     val pathfinder = Pathfinder(map, occ, allowCornerCut = false)
     val pathPool = PathPool(map.width * map.height)
     val pathQueue = PathRequestQueue(256, 50)
@@ -189,15 +191,24 @@ fun main(args: Array<String>) {
     val alive = AliveSystem(world)
     val combat = CombatSystem(world, data)
     val victory = VictorySystem(world)
-    val fog1 = FogGrid(64, 64, 0.25f) // tileSize=0.25이면 대략 16x16 월드
-    val fog2 = FogGrid(64, 64, 0.25f)
+    val fog1 = FogGrid(DEMO_MAP_WIDTH, DEMO_MAP_HEIGHT, 1f)
+    val fog2 = FogGrid(DEMO_MAP_WIDTH, DEMO_MAP_HEIGHT, 1f)
     val visionSys = VisionSystem(world, fog1, fog2)
     val recorder = ReplayRecorder()
 
-    // Simple obstacles + rough terrain
-    for (x in 6..24) map.setBlocked(x, 14, true)
-    for (y in 6..14) map.setBlocked(12, y, true)
-    for (x in 18..22) for (y in 18..22) map.setCost(x, y, 3f)
+    // Large-map lanes, chokes, and rough terrain pockets.
+    for (x in 18..78) map.setBlocked(x, 46, true)
+    for (x in 18..78) map.setBlocked(x, 50, true)
+    for (y in 20..40) map.setBlocked(28, y, true)
+    for (y in 56..76) map.setBlocked(68, y, true)
+    for (x in 40..56) {
+        for (y in 40..56) {
+            if (x in 46..50 || y in 46..50) continue
+            map.setCost(x, y, 3f)
+        }
+    }
+    for (x in 8..20) for (y in 8..20) map.setCost(x, y, 1.5f)
+    for (x in 74..88) for (y in 74..88) map.setCost(x, y, 1.5f)
     resources.set(faction = 1, minerals = 500, gas = 0)
     resources.set(faction = 2, minerals = 500, gas = 0)
     val depotBuild = data.buildSpec("Depot")
@@ -206,8 +217,8 @@ fun main(args: Array<String>) {
             buildings.place(
                 faction = 1,
                 typeId = depotBuild.typeId,
-                tileX = 24,
-                tileY = 4,
+                tileX = 16,
+                tileY = 12,
                 width = depotBuild.footprintWidth,
                 height = depotBuild.footprintHeight,
                 hp = depotBuild.hp,
@@ -220,6 +231,22 @@ fun main(args: Array<String>) {
         } else {
             null
         }
+    if (depotBuild != null) {
+        buildings.place(
+            faction = 2,
+            typeId = depotBuild.typeId,
+            tileX = 74,
+            tileY = 78,
+            width = depotBuild.footprintWidth,
+            height = depotBuild.footprintHeight,
+            hp = depotBuild.hp,
+            buildTicks = depotBuild.buildTicks,
+            clearance = depotBuild.placementClearance,
+            armor = depotBuild.armor,
+            mineralCost = depotBuild.mineralCost,
+            gasCost = depotBuild.gasCost
+        )
+    }
     if (depotId != null) {
         val startingResearch = data.researchSpec("AdvancedTraining")
         if (startingResearch != null) {
@@ -252,7 +279,7 @@ fun main(args: Array<String>) {
         val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.4f } ?: 0f
         val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.4f } ?: 0f
         val idA = world.spawn(
-            Transform(2f + it * 0.2f + jitterX, 2f + jitterY),
+            Transform(9f + it * 0.6f + jitterX, 10f + jitterY),
             UnitTag(1, "Marine"),
             Health(45, 45),
             WeaponRef("Gauss")
@@ -263,7 +290,7 @@ fun main(args: Array<String>) {
         // Zerglings (team2)
         val idB =
             world.spawn(
-                Transform(10f - it * 0.2f - jitterX, 10f - jitterY),
+                Transform(86f - it * 0.6f - jitterX, 84f - jitterY),
                 UnitTag(2, "Zergling"),
                 Health(35, 35),
                 WeaponRef("Claw")
@@ -273,15 +300,39 @@ fun main(args: Array<String>) {
     }
     val mineralNodeId =
         world.spawn(
-            Transform(4f, 2f),
+            Transform(14f, 10f),
             UnitTag(1, "MineralField"),
             Health(1000, 1000),
             w = null
         )
     world.resourceNodes[mineralNodeId] = ResourceNode(remaining = 250)
+    val gasNodeId =
+        world.spawn(
+            Transform(18f, 16f),
+            UnitTag(1, "GasGeyser"),
+            Health(1000, 1000),
+            w = null
+        )
+    world.resourceNodes[gasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 250, yieldPerTick = 2)
+    val enemyMineralNodeId =
+        world.spawn(
+            Transform(80f, 84f),
+            UnitTag(2, "MineralField"),
+            Health(1000, 1000),
+            w = null
+        )
+    world.resourceNodes[enemyMineralNodeId] = ResourceNode(remaining = 250)
+    val centerGasNodeId =
+        world.spawn(
+            Transform(48f, 48f),
+            UnitTag(0, "GasGeyser"),
+            Health(1000, 1000),
+            w = null
+        )
+    world.resourceNodes[centerGasNodeId] = ResourceNode(kind = ResourceNode.KIND_GAS, remaining = 400, yieldPerTick = 3)
     val workerId =
         world.spawn(
-            Transform(3.6f, 2f),
+            Transform(12.5f, 11f),
             UnitTag(1, "Worker"),
             Health(40, 40),
             w = null

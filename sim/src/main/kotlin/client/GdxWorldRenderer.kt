@@ -348,21 +348,28 @@ internal class GdxWorldRenderer(
         val rightWorld = runtime.camera.screenToWorldX(width.toFloat()).coerceIn(0f, snapshot.mapWidth.toFloat())
         val topWorld = runtime.camera.screenToWorldY(0f).coerceIn(0f, snapshot.mapHeight.toFloat())
         val bottomWorld = runtime.camera.screenToWorldY(height.toFloat()).coerceIn(0f, snapshot.mapHeight.toFloat())
+        val viewportLeft = left + (leftWorld / snapshot.mapWidth) * boundsWidth
+        val viewportTop = top + (topWorld / snapshot.mapHeight) * boundsHeight
+        val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
+        val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
+        shape.color = Color(0.82f, 0.92f, 0.98f, 0.12f)
+        shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
         shape.color = selectionColor
-        shape.rect(
-            left + (leftWorld / snapshot.mapWidth) * boundsWidth,
-            top + (topWorld / snapshot.mapHeight) * boundsHeight,
-            ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth,
-            ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
-        )
+        shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
         shape.color = Color(0.10f, 0.18f, 0.22f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
         shape.color = Color(0.92f, 0.98f, 1f, 0.90f)
         shape.rect(
-            left + (leftWorld / snapshot.mapWidth) * boundsWidth - 1f,
-            top + (topWorld / snapshot.mapHeight) * boundsHeight - 1f,
-            ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth + 2f,
-            ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight + 2f
+            viewportLeft - 1f,
+            viewportTop - 1f,
+            viewportWidth + 2f,
+            viewportHeight + 2f
+        )
+        shape.rect(
+            viewportLeft - 2f,
+            viewportTop - 2f,
+            viewportWidth + 4f,
+            viewportHeight + 4f
         )
     }
 
