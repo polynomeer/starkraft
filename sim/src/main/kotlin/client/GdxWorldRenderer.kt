@@ -18,7 +18,9 @@ internal class GdxWorldRenderer(
     private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
     private val selectionSoftColor = Color(0.44f, 0.80f, 0.92f, 0.28f)
     private val fogColor = Color(0.02f, 0.05f, 0.08f, 0.78f)
+    private val shroudColor = Color(0.01f, 0.02f, 0.04f, 0.96f)
     private val minimapFogColor = Color(0.01f, 0.03f, 0.05f, 0.72f)
+    private val minimapShroudColor = Color(0.01f, 0.02f, 0.03f, 0.92f)
     private val terrainA = Color(0.08f, 0.12f, 0.15f, 1f)
     private val terrainB = Color(0.10f, 0.15f, 0.18f, 1f)
     private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
@@ -280,11 +282,12 @@ internal class GdxWorldRenderer(
         val snapshot = runtime.snapshot ?: return
         val viewedFaction = runtime.session.state.viewedFaction ?: return
         val visibleTiles = runtime.session.state.visionState?.visibleTiles(viewedFaction) ?: return
+        val exploredTiles = runtime.session.state.visionState?.exploredTiles(viewedFaction) ?: emptySet()
         val tileSize = runtime.camera.tileSize
         for (x in 0 until snapshot.mapWidth) {
             for (y in 0 until snapshot.mapHeight) {
                 if ((x to y) in visibleTiles) continue
-                shape.color = fogColor
+                shape.color = if ((x to y) in exploredTiles) fogColor else shroudColor
                 shape.rect(runtime.camera.worldToScreenX(x.toFloat()), runtime.camera.worldToScreenY(y.toFloat()), tileSize, tileSize)
             }
         }
@@ -303,13 +306,14 @@ internal class GdxWorldRenderer(
         shape.rect(left + 4f, top + 4f, boundsWidth - 8f, boundsHeight - 8f)
         val viewedFaction = runtime.session.state.viewedFaction
         val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
+        val exploredTiles = viewedFaction?.let { runtime.session.state.visionState?.exploredTiles(it) }
         val tileWidth = boundsWidth / snapshot.mapWidth
         val tileHeight = boundsHeight / snapshot.mapHeight
         if (visibleTiles != null) {
             for (x in 0 until snapshot.mapWidth) {
                 for (y in 0 until snapshot.mapHeight) {
                     if ((x to y) in visibleTiles) continue
-                    shape.color = minimapFogColor
+                    shape.color = if (exploredTiles != null && (x to y) in exploredTiles) minimapFogColor else minimapShroudColor
                     shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
                 }
             }

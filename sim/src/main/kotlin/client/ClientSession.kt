@@ -143,33 +143,48 @@ internal class ClientSession(
 }
 
 internal data class ClientVisionState(
-    val visibleTilesByFaction: Map<Int, Set<Pair<Int, Int>>> = emptyMap()
+    val visibleTilesByFaction: Map<Int, Set<Pair<Int, Int>>> = emptyMap(),
+    val exploredTilesByFaction: Map<Int, Set<Pair<Int, Int>>> = emptyMap()
 ) {
     fun visibleTiles(faction: Int): Set<Pair<Int, Int>> = visibleTilesByFaction[faction] ?: emptySet()
+    fun exploredTiles(faction: Int): Set<Pair<Int, Int>> = exploredTilesByFaction[faction] ?: emptySet()
 }
 
 internal fun applyVisionChanges(
     current: ClientVisionState?,
     changes: List<ClientVisionChange>
 ): ClientVisionState {
-    val next = LinkedHashMap<Int, LinkedHashSet<Pair<Int, Int>>>()
+    val nextVisible = LinkedHashMap<Int, LinkedHashSet<Pair<Int, Int>>>()
+    val nextExplored = LinkedHashMap<Int, LinkedHashSet<Pair<Int, Int>>>()
     current?.visibleTilesByFaction?.forEach { (faction, tiles) ->
-        next[faction] = LinkedHashSet(tiles)
+        nextVisible[faction] = LinkedHashSet(tiles)
+    }
+    current?.exploredTilesByFaction?.forEach { (faction, tiles) ->
+        nextExplored[faction] = LinkedHashSet(tiles)
     }
     for (change in changes) {
-        val visibleTiles = next.getOrPut(change.faction) { LinkedHashSet() }
+        val visibleTiles = nextVisible.getOrPut(change.faction) { LinkedHashSet() }
+        val exploredTiles = nextExplored.getOrPut(change.faction) { LinkedHashSet() }
         val tile = change.x to change.y
         if (change.visible) {
             visibleTiles.add(tile)
+            exploredTiles.add(tile)
         } else {
             visibleTiles.remove(tile)
         }
     }
-    val normalized = LinkedHashMap<Int, Set<Pair<Int, Int>>>(next.size)
-    for ((faction, tiles) in next) {
-        normalized[faction] = tiles
+    val normalizedVisible = LinkedHashMap<Int, Set<Pair<Int, Int>>>(nextVisible.size)
+    for ((faction, tiles) in nextVisible) {
+        normalizedVisible[faction] = tiles
     }
-    return ClientVisionState(visibleTilesByFaction = normalized)
+    val normalizedExplored = LinkedHashMap<Int, Set<Pair<Int, Int>>>(nextExplored.size)
+    for ((faction, tiles) in nextExplored) {
+        normalizedExplored[faction] = tiles
+    }
+    return ClientVisionState(
+        visibleTilesByFaction = normalizedVisible,
+        exploredTilesByFaction = normalizedExplored
+    )
 }
 
 internal fun deriveClientViewState(
