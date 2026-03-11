@@ -115,10 +115,27 @@ internal class GdxWorldRenderer(
     private fun drawResources(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
         for (node in snapshot.resourceNodes) {
-            shape.color = if (node.kind == "gas") Color(0.24f, 0.77f, 0.57f, 1f) else neutralColor
-            shape.circle(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y), 7f)
-            shape.color = Color(1f, 1f, 1f, 0.12f)
-            shape.circle(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y), 11f)
+            val sx = runtime.camera.worldToScreenX(node.x)
+            val sy = runtime.camera.worldToScreenY(node.y)
+            if (node.kind == "gas") {
+                shape.color = Color(0.10f, 0.18f, 0.16f, 0.92f)
+                shape.circle(sx + 1.5f, sy + 1.5f, 10f)
+                shape.color = Color(0.26f, 0.82f, 0.60f, 0.95f)
+                shape.circle(sx, sy, 9f)
+                shape.color = Color(0.64f, 1.00f, 0.86f, 0.32f)
+                shape.circle(sx - 2f, sy - 2f, 4f)
+                shape.rect(sx - 2.5f, sy - 9f, 5f, 4f)
+            } else {
+                shape.color = Color(0.16f, 0.13f, 0.08f, 0.90f)
+                shape.circle(sx + 1.5f, sy + 1.5f, 9f)
+                shape.color = neutralColor
+                shape.rect(sx - 7f, sy - 5f, 6f, 5f)
+                shape.rect(sx - 1f, sy - 8f, 7f, 6f)
+                shape.rect(sx - 6f, sy + 1f, 8f, 5f)
+                shape.color = Color(1f, 0.95f, 0.72f, 0.18f)
+                shape.rect(sx - 5f, sy - 4f, 3f, 2f)
+                shape.rect(sx, sy - 6f, 3f, 2f)
+            }
         }
     }
 
@@ -145,10 +162,16 @@ internal class GdxWorldRenderer(
                 }
                 shape.color = Color(0f, 0f, 0f, 0.28f)
                 shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 3f, runtime.camera.worldToScreenY(tileY.toFloat()) + 3f, w, h)
-                shape.color = factionColor(entity.faction, viewedFaction)
-                shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()), runtime.camera.worldToScreenY(tileY.toFloat()), w, h)
-                shape.color = Color(1f, 1f, 1f, 0.10f)
-                shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 2f, runtime.camera.worldToScreenY(tileY.toFloat()) + 2f, w - 4f, h - 4f)
+                drawStructureSilhouette(
+                    shape = shape,
+                    entity = entity,
+                    tileX = tileX,
+                    tileY = tileY,
+                    width = w,
+                    height = h,
+                    runtime = runtime,
+                    factionColor = factionColor(entity.faction, viewedFaction)
+                )
                 if (selected) {
                     shape.color = selectionSoftColor
                     shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 5f, runtime.camera.worldToScreenY(tileY.toFloat()) - 5f, w + 10f, h + 10f)
@@ -505,6 +528,34 @@ internal class GdxWorldRenderer(
                 shape.color = Color.WHITE.cpy().apply { a = 0.14f }
                 shape.rect(screenX - 3.5f, screenY - 2.5f, 4.5f, 2.5f)
             }
+        }
+    }
+
+    private fun drawStructureSilhouette(
+        shape: ShapeRenderer,
+        entity: EntitySnapshot,
+        tileX: Int,
+        tileY: Int,
+        width: Float,
+        height: Float,
+        runtime: GdxClientRuntime,
+        factionColor: Color
+    ) {
+        val left = runtime.camera.worldToScreenX(tileX.toFloat())
+        val top = runtime.camera.worldToScreenY(tileY.toFloat())
+        val shell = Color(0.18f, 0.20f, 0.22f, 1f)
+        val roof = Color(0.24f, 0.27f, 0.30f, 1f)
+        shape.color = shell
+        shape.rect(left, top, width, height)
+        shape.color = roof
+        shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
+        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.10f)
+        shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
+        shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
+        shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
+        if (entity.supportsTraining == true || entity.supportsResearch == true) {
+            shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
+            shape.rect(left + width - 10f, top + 5f, 5f, 5f)
         }
     }
 
