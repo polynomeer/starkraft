@@ -334,30 +334,41 @@ internal class GdxWorldRenderer(
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
             if (!isEntityVisible(entity, runtime)) continue
+            val startX = runtime.camera.worldToScreenX(entity.x)
+            val startY = runtime.camera.worldToScreenY(entity.y)
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
                 val goalX = runtime.camera.worldToScreenX(entity.pathGoalX + 0.5f)
                 val goalY = runtime.camera.worldToScreenY(entity.pathGoalY + 0.5f)
+                shape.color = Color(0.96f, 0.90f, 0.45f, 0.18f)
+                shape.rectLine(startX, startY, goalX, goalY, 2.4f)
                 shape.color = Color(0.96f, 0.90f, 0.45f, 0.28f)
                 shape.circle(goalX, goalY, 10f)
                 shape.color = Color(0.96f, 0.90f, 0.45f, 0.92f)
                 shape.circle(goalX, goalY, 4f)
+                drawChevronTrail(shape, startX, startY, goalX, goalY, Color(0.98f, 0.92f, 0.58f, 0.72f))
             }
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
                 val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
+                shape.color = Color(0.37f, 0.90f, 0.52f, 0.16f)
+                shape.rectLine(startX, startY, rallyX, rallyY, 2f)
                 shape.color = Color(0.37f, 0.90f, 0.52f, 0.25f)
                 shape.circle(rallyX, rallyY, 9f)
                 shape.color = Color(0.37f, 0.90f, 0.52f, 0.95f)
                 shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
+                drawChevronTrail(shape, startX, startY, rallyX, rallyY, Color(0.54f, 0.96f, 0.66f, 0.64f))
             }
             if (entity.buildTargetId != null) {
                 entitiesById[entity.buildTargetId]?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
+                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.18f)
+                    shape.rectLine(startX, startY, targetX, targetY, 2.2f)
                     shape.color = Color(0.92f, 0.60f, 0.24f, 0.22f)
                     shape.circle(targetX, targetY, 10f)
                     shape.color = Color(0.92f, 0.60f, 0.24f, 0.92f)
                     shape.circle(targetX, targetY, 3.5f)
+                    drawChevronTrail(shape, startX, startY, targetX, targetY, Color(0.96f, 0.72f, 0.38f, 0.68f))
                 }
             }
         }
@@ -812,6 +823,28 @@ internal class GdxWorldRenderer(
     private fun ambientPulse(periodMillis: Long): Float {
         val phase = (System.currentTimeMillis() % periodMillis).toFloat() / periodMillis.toFloat()
         return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
+    }
+
+    private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
+        val dx = endX - startX
+        val dy = endY - startY
+        val length = kotlin.math.sqrt((dx * dx) + (dy * dy))
+        if (length < 26f) return
+        val nx = dx / length
+        val ny = dy / length
+        val px = -ny
+        val py = nx
+        val chevronSpacing = 18f
+        val chevronSize = 5f
+        val count = (length / chevronSpacing).toInt().coerceAtMost(7)
+        shape.color = color
+        for (i in 1..count) {
+            val t = i / (count + 1f)
+            val cx = startX + (dx * t)
+            val cy = startY + (dy * t)
+            shape.rectLine(cx - (nx * chevronSize) + (px * chevronSize), cy - (ny * chevronSize) + (py * chevronSize), cx, cy, 1.4f)
+            shape.rectLine(cx - (nx * chevronSize) - (px * chevronSize), cy - (ny * chevronSize) - (py * chevronSize), cx, cy, 1.4f)
+        }
     }
 
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
