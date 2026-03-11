@@ -52,6 +52,8 @@ internal class GameScreen(
     private val commandScroll = ScrollPane(buttonTable)
     private val actionBanner = Table()
     private val actionBannerLabel = Label("", assets.bodyLabelStyle)
+    private val attackWarningTable = Table()
+    private val attackWarningLabel = Label("", assets.alertLabelStyle)
     private val minimapFrame = Table()
     private val minimapTitle = Label("Tac Map", assets.titleLabelStyle)
     private val minimapHint = Label("click or drag to move camera", assets.mutedLabelStyle)
@@ -81,6 +83,9 @@ internal class GameScreen(
         applyEdgePan()
         runtime.constrainCamera(Gdx.graphics.width, Gdx.graphics.height)
         refreshHud()
+        if (runtime.consumeAttackAlertSound()) {
+            assets.alertSound.play(0.7f)
+        }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, dragSelection)
         stage.act(delta)
         stage.draw()
@@ -191,6 +196,21 @@ internal class GameScreen(
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
 
+        attackWarningTable.apply {
+            setFillParent(true)
+            top()
+            isVisible = false
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.32f, 0.05f, 0.05f, 0.88f))
+                    pad(8f, 18f, 8f, 18f)
+                    add(attackWarningLabel).center()
+                }
+            ).padTop(18f)
+        }
+        stage.addActor(attackWarningTable)
+
         pauseOverlay.apply {
             setFillParent(true)
             isVisible = false
@@ -284,6 +304,8 @@ internal class GameScreen(
         modeLabel.setText(buildTopModeLine())
         statusBadgeLabel.setText(buildStatusBadgeLine())
         actionBannerLabel.setText(buildActionBannerLine())
+        attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
+        attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.GdxClientRuntime
@@ -100,7 +101,7 @@ class GdxClientRuntimeTest {
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
-        val centered = runtime.centerFromMinimap(screenX = 50f, screenY = 50f, viewWidth = 1280, viewHeight = 720)
+        val centered = runtime.centerFromMinimap(screenX = 50f, screenY = 560f, viewWidth = 1280, viewHeight = 720)
 
         assertTrue(centered)
         assertTrue(runtime.camera.panX != 0f || runtime.camera.panY != 0f)
@@ -189,6 +190,18 @@ class GdxClientRuntimeTest {
         assertTrue(runtime.mainMenuSummaryLines().any { it.contains("scenario: skirmish") })
         runtime.setHoverHint(null)
         assertNull(runtime.currentHudLines().firstOrNull { it.startsWith("hint:") })
+    }
+
+    @Test
+    fun `viewed faction damage raises attack warning and sound`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.lastDamageActivity = ClientDamageActivity(tick = 8, targetIds = intArrayOf(4), totalDamage = 6)
+
+        runtime.tick()
+
+        assertEquals("Warning: under attack", runtime.attackWarningLine())
+        assertTrue(runtime.consumeAttackAlertSound())
+        assertFalse(runtime.consumeAttackAlertSound())
     }
 
     @Test

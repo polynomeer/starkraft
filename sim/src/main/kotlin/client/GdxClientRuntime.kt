@@ -22,6 +22,10 @@ internal class GdxClientRuntime(
     private var initialCameraApplied: Boolean = false
     private var activeScenario: PlayScenario? = null
     private var lastAutoRecoveredView: Int? = Int.MIN_VALUE
+    private var attackWarningMessage: String? = null
+    private var attackWarningUntilMillis: Long = 0L
+    private var lastAttackAlertTick: Int = Int.MIN_VALUE
+    private var pendingAttackAlertSound: Boolean = false
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -56,9 +60,15 @@ internal class GdxClientRuntime(
         if (noticeMessage != null && System.currentTimeMillis() > noticeUntilMillis) {
             noticeMessage = null
         }
+        if (attackWarningMessage != null && System.currentTimeMillis() > attackWarningUntilMillis) {
+            attackWarningMessage = null
+        }
+        maybeRaiseAttackAlert()
     }
 
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
+    fun attackWarningLine(): String? = attackWarningMessage
+    fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
@@ -755,6 +765,22 @@ internal class GdxClientRuntime(
     private fun showNotice(message: String) {
         noticeMessage = message
         noticeUntilMillis = System.currentTimeMillis() + 2500L
+    }
+
+    private fun maybeRaiseAttackAlert() {
+        val damage = session.state.lastDamageActivity ?: return
+        if (damage.tick == lastAttackAlertTick) return
+        val snapshot = session.state.snapshot ?: return
+        val viewedFaction = session.state.viewedFaction ?: return
+        val affected =
+            damage.targetIds.any { targetId ->
+                snapshot.entities.firstOrNull { it.id == targetId }?.faction == viewedFaction
+            }
+        if (!affected) return
+        lastAttackAlertTick = damage.tick
+        attackWarningMessage = "Warning: under attack"
+        attackWarningUntilMillis = System.currentTimeMillis() + 1800L
+        pendingAttackAlertSound = true
     }
 
     private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {

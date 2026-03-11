@@ -78,6 +78,12 @@ internal data class ClientTickActivity(
     val researchFailureReasons: String = "none"
 )
 
+internal data class ClientDamageActivity(
+    val tick: Int,
+    val targetIds: IntArray = intArrayOf(),
+    val totalDamage: Int = 0
+)
+
 internal data class ClientMapState(
     val width: Int,
     val height: Int,
@@ -97,6 +103,7 @@ internal data class ClientStreamState(
     val mapState: ClientMapState? = null,
     val visionChanges: List<ClientVisionChange> = emptyList(),
     val ack: ClientCommandAck? = null,
+    val damageActivity: ClientDamageActivity? = null,
     val constructionActivity: ClientConstructionActivity? = null,
     val productionActivity: ClientProductionActivity? = null,
     val researchActivity: ClientResearchActivity? = null,
@@ -205,6 +212,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
         var latestMapState: ClientMapState? = null
         val visionChanges = ArrayList<ClientVisionChange>()
         var latestAck: ClientCommandAck? = null
+        var latestDamageActivity: ClientDamageActivity? = null
         var latestConstructionActivity: ClientConstructionActivity? = null
         var latestProductionActivity: ClientProductionActivity? = null
         var latestResearchActivity: ClientResearchActivity? = null
@@ -217,17 +225,19 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
             if (update.mapState != null) latestMapState = update.mapState
             if (update.visionChanges.isNotEmpty()) visionChanges += update.visionChanges
             if (update.ack != null) latestAck = update.ack
+            if (update.damageActivity != null) latestDamageActivity = update.damageActivity
             if (update.constructionActivity != null) latestConstructionActivity = update.constructionActivity
             if (update.productionActivity != null) latestProductionActivity = update.productionActivity
             if (update.researchActivity != null) latestResearchActivity = update.researchActivity
             if (update.tickActivity != null) latestTickActivity = update.tickActivity
         }
-        if (latestSnapshot == null && latestMapState == null && visionChanges.isEmpty() && latestAck == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
+        if (latestSnapshot == null && latestMapState == null && visionChanges.isEmpty() && latestAck == null && latestDamageActivity == null && latestConstructionActivity == null && latestProductionActivity == null && latestResearchActivity == null && latestTickActivity == null) return null
         return ClientStreamState(
             snapshot = latestSnapshot,
             mapState = latestMapState,
             visionChanges = visionChanges,
             ack = latestAck,
+            damageActivity = latestDamageActivity,
             constructionActivity = latestConstructionActivity,
             productionActivity = latestProductionActivity,
             researchActivity = latestResearchActivity,
@@ -488,6 +498,24 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                         faction1 = faction1,
                         faction2 = faction2,
                         remainingTicks = remainingTicks
+                    )
+            )
+        }
+        "damage" -> {
+            val events = obj["events"]?.jsonArray ?: return null
+            val targetIds = IntArray(events.size)
+            var totalDamage = 0
+            events.forEachIndexed { index, event ->
+                val eventObj = event.jsonObject
+                targetIds[index] = eventObj["targetId"]?.jsonPrimitive?.content?.toIntOrNull() ?: -1
+                totalDamage += eventObj["damage"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+            }
+            ClientStreamState(
+                damageActivity =
+                    ClientDamageActivity(
+                        tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        targetIds = targetIds,
+                        totalDamage = totalDamage
                     )
             )
         }

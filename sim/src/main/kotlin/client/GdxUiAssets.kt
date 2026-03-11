@@ -7,16 +7,22 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.audio.Sound
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Disposable
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 internal class GdxUiAssets : Disposable {
     val font = BitmapFont()
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
+    val alertSound: Sound = createAlertSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
     val paper = Color(0.95f, 0.94f, 0.89f, 1f)
@@ -62,6 +68,7 @@ internal class GdxUiAssets : Disposable {
         font.dispose()
         batch.dispose()
         shapeRenderer.dispose()
+        alertSound.dispose()
     }
 
     private fun createWhiteTexture(): Texture {
@@ -71,5 +78,52 @@ internal class GdxUiAssets : Disposable {
             it.fill()
         }
         return Texture(pixmap).also { pixmap.dispose() }
+    }
+
+    private fun createAlertSound(): Sound {
+        val bytes = renderAlertWav()
+        val handle = Gdx.files.local("starkraft-alert.wav")
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun renderAlertWav(): ByteArray {
+        val sampleRate = 22050
+        val durationSeconds = 0.18f
+        val sampleCount = (sampleRate * durationSeconds).toInt()
+        val pcm = ByteArrayOutputStream(sampleCount * 2)
+        for (i in 0 until sampleCount) {
+            val t = i / sampleRate.toFloat()
+            val envelope =
+                when {
+                    t < 0.02f -> t / 0.02f
+                    t > durationSeconds - 0.03f -> (durationSeconds - t) / 0.03f
+                    else -> 1f
+                }.coerceIn(0f, 1f)
+            val sample =
+                (
+                    kotlin.math.sin(2.0 * Math.PI * 880.0 * t) * 0.55 +
+                        kotlin.math.sin(2.0 * Math.PI * 1320.0 * t) * 0.20
+                ) * envelope
+            val shortValue = (sample * Short.MAX_VALUE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+            pcm.write(shortValue.toInt() and 0xff)
+            pcm.write((shortValue.toInt() shr 8) and 0xff)
+        }
+        val pcmBytes = pcm.toByteArray()
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray())
+        header.putInt(36 + pcmBytes.size)
+        header.put("WAVE".toByteArray())
+        header.put("fmt ".toByteArray())
+        header.putInt(16)
+        header.putShort(1)
+        header.putShort(1)
+        header.putInt(sampleRate)
+        header.putInt(sampleRate * 2)
+        header.putShort(2)
+        header.putShort(16)
+        header.put("data".toByteArray())
+        header.putInt(pcmBytes.size)
+        return header.array() + pcmBytes
     }
 }
