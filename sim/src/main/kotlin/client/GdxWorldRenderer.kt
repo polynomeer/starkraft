@@ -359,13 +359,23 @@ internal class GdxWorldRenderer(
         val top = bounds.top
         shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
-        shape.color = Color(0.16f, 0.25f, 0.29f, 0.70f)
-        shape.rect(left + 4f, top + 4f, boundsWidth - 8f, boundsHeight - 8f)
         val viewedFaction = runtime.session.state.viewedFaction
         val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
         val exploredTiles = viewedFaction?.let { runtime.session.state.visionState?.exploredTiles(it) }
         val tileWidth = boundsWidth / snapshot.mapWidth
         val tileHeight = boundsHeight / snapshot.mapHeight
+        for (x in 0 until snapshot.mapWidth) {
+            for (y in 0 until snapshot.mapHeight) {
+                shape.color =
+                    when {
+                        x in 40..56 && y in 40..56 -> terrainDust.cpy().lerp(Color.BLACK, 0.15f)
+                        (x + y) % 11 < 3 -> terrainRidge.cpy().lerp(Color.BLACK, 0.10f)
+                        (x / 6 + y / 6) % 2 == 0 -> terrainA.cpy().lerp(Color.BLACK, 0.10f)
+                        else -> terrainB.cpy().lerp(Color.BLACK, 0.10f)
+                    }
+                shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
+            }
+        }
         if (visibleTiles != null) {
             for (x in 0 until snapshot.mapWidth) {
                 for (y in 0 until snapshot.mapHeight) {
@@ -374,6 +384,10 @@ internal class GdxWorldRenderer(
                     shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
                 }
             }
+        }
+        runtime.session.state.mapState?.blockedTiles?.forEach { (x, y) ->
+            shape.color = Color(0.30f, 0.34f, 0.38f, 0.95f)
+            shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
         }
         for (node in snapshot.resourceNodes) {
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
