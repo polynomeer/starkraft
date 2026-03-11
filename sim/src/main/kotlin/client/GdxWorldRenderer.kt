@@ -277,6 +277,13 @@ internal class GdxWorldRenderer(
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
             val size = if (entity.id in runtime.session.state.selectedIds) 5f else 4f
             shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+            if (entity.id in runtime.session.state.selectedIds) {
+                shape.color = Color(0.95f, 0.97f, 1f, if (visible) 0.95f else 0.40f)
+                shape.rect(x - 4.5f, y - 4.5f, 9f, 1f)
+                shape.rect(x - 4.5f, y + 3.5f, 9f, 1f)
+                shape.rect(x - 4.5f, y - 4.5f, 1f, 9f)
+                shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
+            }
         }
     }
 
