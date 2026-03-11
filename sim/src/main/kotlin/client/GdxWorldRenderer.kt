@@ -43,6 +43,7 @@ internal class GdxWorldRenderer(
         drawResources(shape, runtime)
         drawFog(shape, runtime)
         drawEntities(shape, runtime)
+        drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawMiniMap(shape, runtime, width, height)
         drawBuildPreview(shape, runtime)
@@ -331,6 +332,47 @@ internal class GdxWorldRenderer(
                     shape.color = Color(0.92f, 0.60f, 0.24f, 0.92f)
                     shape.circle(targetX, targetY, 3.5f)
                 }
+            }
+        }
+    }
+
+    private fun drawActivityMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        for (entity in snapshot.entities) {
+            if (!isEntityVisible(entity, runtime)) continue
+            val screenX = runtime.camera.worldToScreenX(entity.x)
+            val screenY = runtime.camera.worldToScreenY(entity.y)
+            if (!isOnScreen(screenX, screenY)) continue
+            if (entity.weaponCooldownTicks > 0 && entity.weaponId != null) {
+                shape.color = Color(0.98f, 0.54f, 0.22f, 0.18f)
+                shape.circle(screenX, screenY, 12f)
+                shape.color = Color(0.98f, 0.72f, 0.26f, 0.95f)
+                shape.rect(screenX - 7f, screenY + 9f, (entity.weaponCooldownTicks.coerceAtMost(20) / 20f) * 14f, 2f)
+            }
+            if (entity.activeProductionType != null || entity.productionQueueSize > 0 || entity.activeResearchTech != null || entity.underConstruction) {
+                val markerX = screenX + 10f
+                val markerY = screenY - 11f
+                shape.color = Color(0.08f, 0.09f, 0.11f, 0.90f)
+                shape.rect(markerX, markerY, 18f, 5f)
+                shape.color =
+                    when {
+                        entity.activeResearchTech != null -> Color(0.58f, 0.70f, 1.00f, 0.95f)
+                        entity.activeProductionType != null || entity.productionQueueSize > 0 -> Color(0.96f, 0.74f, 0.28f, 0.95f)
+                        entity.underConstruction -> Color(0.42f, 0.92f, 0.54f, 0.95f)
+                        else -> Color(0.78f, 0.78f, 0.78f, 0.95f)
+                    }
+                val fillRatio =
+                    when {
+                        entity.underConstruction && entity.constructionTotalTicks != null && entity.constructionRemainingTicks != null ->
+                            1f - (entity.constructionRemainingTicks.toFloat() / entity.constructionTotalTicks.coerceAtLeast(1).toFloat())
+                        entity.activeProductionType != null && entity.activeProductionRemainingTicks > 0 ->
+                            1f - (entity.activeProductionRemainingTicks.coerceAtMost(120).toFloat() / 120f)
+                        entity.activeResearchTech != null && entity.activeResearchRemainingTicks > 0 ->
+                            1f - (entity.activeResearchRemainingTicks.coerceAtMost(180).toFloat() / 180f)
+                        entity.productionQueueSize > 0 -> 0.35f
+                        else -> 0.15f
+                    }.coerceIn(0.08f, 1f)
+                shape.rect(markerX + 1f, markerY + 1f, 16f * fillRatio, 3f)
             }
         }
     }
