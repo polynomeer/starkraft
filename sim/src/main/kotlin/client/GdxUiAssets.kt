@@ -17,11 +17,14 @@ import com.badlogic.gdx.utils.Disposable
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.file.Files
+import java.nio.file.Path
 
 internal class GdxUiAssets : Disposable {
     val font = BitmapFont()
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
+    private var alertSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
@@ -69,6 +72,7 @@ internal class GdxUiAssets : Disposable {
         batch.dispose()
         shapeRenderer.dispose()
         alertSound.dispose()
+        alertSoundPath?.let(Files::deleteIfExists)
     }
 
     private fun createWhiteTexture(): Texture {
@@ -82,7 +86,10 @@ internal class GdxUiAssets : Disposable {
 
     private fun createAlertSound(): Sound {
         val bytes = renderAlertWav()
-        val handle = Gdx.files.local("starkraft-alert.wav")
+        val tempPath = Files.createTempFile("starkraft-alert-", ".wav")
+        alertSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
         handle.writeBytes(bytes, false)
         return Gdx.audio.newSound(handle)
     }

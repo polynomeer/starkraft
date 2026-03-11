@@ -26,6 +26,8 @@ internal class GdxClientRuntime(
     private var attackWarningUntilMillis: Long = 0L
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
+    private var recentDamageEntityIds: Set<Int> = emptySet()
+    private var recentDamageUntilMillis: Long = 0L
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -63,12 +65,16 @@ internal class GdxClientRuntime(
         if (attackWarningMessage != null && System.currentTimeMillis() > attackWarningUntilMillis) {
             attackWarningMessage = null
         }
+        if (recentDamageEntityIds.isNotEmpty() && System.currentTimeMillis() > recentDamageUntilMillis) {
+            recentDamageEntityIds = emptySet()
+        }
         maybeRaiseAttackAlert()
     }
 
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
+    fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
@@ -770,6 +776,8 @@ internal class GdxClientRuntime(
     private fun maybeRaiseAttackAlert() {
         val damage = session.state.lastDamageActivity ?: return
         if (damage.tick == lastAttackAlertTick) return
+        recentDamageEntityIds = damage.targetIds.toSet()
+        recentDamageUntilMillis = System.currentTimeMillis() + 650L
         val snapshot = session.state.snapshot ?: return
         val viewedFaction = session.state.viewedFaction ?: return
         val affected =

@@ -200,6 +200,8 @@ class GdxClientRuntimeTest {
         runtime.tick()
 
         assertEquals("Warning: under attack", runtime.attackWarningLine())
+        assertTrue(runtime.isDamageFlashActive(4))
+        assertFalse(runtime.isDamageFlashActive(5))
         assertTrue(runtime.consumeAttackAlertSound())
         assertFalse(runtime.consumeAttackAlertSound())
     }
