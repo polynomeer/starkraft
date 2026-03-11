@@ -547,6 +547,7 @@ internal class GameScreen(
 
     private fun buildSelectionSlot(entity: EntitySnapshot): Table {
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
+        val focused = runtime.session.state.selectedIds.firstOrNull() == entity.id
         val tone =
             when {
                 entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
@@ -561,14 +562,14 @@ internal class GameScreen(
             }
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
-            background = assets.panelDrawable(tone)
+            background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.14f, 0.98f) else tone)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(4f)
+            pad(if (focused) 5f else 4f)
             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
             add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.12f, 0.14f, 1f))
+                    background = assets.panelDrawable(if (focused) Color(0.13f, 0.16f, 0.10f, 1f) else Color(0.10f, 0.12f, 0.14f, 1f))
                     add(
                         Table().apply {
                             background = assets.panelDrawable(hpColor)

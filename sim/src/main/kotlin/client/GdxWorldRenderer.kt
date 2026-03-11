@@ -122,6 +122,11 @@ internal class GdxWorldRenderer(
                 val tileY = floor(entity.y).toInt()
                 val w = footprintWidth * runtime.camera.tileSize
                 val h = footprintHeight * runtime.camera.tileSize
+                if (selected) {
+                    val pulse = selectionPulse()
+                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.12f + (pulse * 0.10f))
+                    shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 8f, runtime.camera.worldToScreenY(tileY.toFloat()) - 8f, w + 16f, h + 16f)
+                }
                 shape.color = Color(0f, 0f, 0f, 0.28f)
                 shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) + 3f, runtime.camera.worldToScreenY(tileY.toFloat()) + 3f, w, h)
                 shape.color = factionColor(entity.faction, viewedFaction)
@@ -135,6 +140,11 @@ internal class GdxWorldRenderer(
                     shape.rect(runtime.camera.worldToScreenX(tileX.toFloat()) - 3f, runtime.camera.worldToScreenY(tileY.toFloat()) - 3f, w + 6f, h + 6f)
                 }
             } else {
+                if (selected) {
+                    val pulse = selectionPulse()
+                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.14f + (pulse * 0.12f))
+                    shape.circle(screenX, screenY, 14f)
+                }
                 shape.color = Color(0f, 0f, 0f, 0.32f)
                 shape.circle(screenX + 1.5f, screenY + 1.5f, if (selected) 9f else 7f)
                 shape.color = factionColor(entity.faction, viewedFaction)
@@ -147,22 +157,23 @@ internal class GdxWorldRenderer(
                     shape.circle(screenX, screenY, 11f)
                 }
             }
-            drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp)
+            drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp, selected)
         }
     }
 
-    private fun drawHealthBar(shape: ShapeRenderer, x: Float, y: Float, hp: Int, maxHp: Int) {
-        val barWidth = 18f
-        val top = y - 14f
-        shape.color = Color(0.1f, 0.1f, 0.1f, 0.92f)
-        shape.rect(x - (barWidth / 2f), top, barWidth, 3f)
+    private fun drawHealthBar(shape: ShapeRenderer, x: Float, y: Float, hp: Int, maxHp: Int, selected: Boolean) {
+        val barWidth = if (selected) 22f else 18f
+        val barHeight = if (selected) 4f else 3f
+        val top = y - if (selected) 16f else 14f
+        shape.color = if (selected) Color(0.04f, 0.04f, 0.04f, 0.98f) else Color(0.1f, 0.1f, 0.1f, 0.92f)
+        shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         shape.color =
             when {
                 hp * 100 >= maxHp * 66 -> Color(0.30f, 0.83f, 0.43f, 1f)
                 hp * 100 >= maxHp * 33 -> Color(0.89f, 0.71f, 0.22f, 1f)
                 else -> Color(0.84f, 0.29f, 0.29f, 1f)
             }
-        shape.rect(x - (barWidth / 2f), top, barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1)), 3f)
+        shape.rect(x - (barWidth / 2f), top, barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1)), barHeight)
     }
 
     private fun drawSelectionOverlays(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -435,6 +446,11 @@ internal class GdxWorldRenderer(
             faction == viewedFaction -> friendlyColor
             else -> enemyColor
         }
+
+    private fun selectionPulse(): Float {
+        val phase = (System.currentTimeMillis() % 900L).toFloat() / 900f
+        return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
+    }
 
     private fun drawWorldFrame(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
