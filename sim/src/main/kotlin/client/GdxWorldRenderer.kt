@@ -534,6 +534,8 @@ internal class GdxWorldRenderer(
                 shape.circle(screenX, screenY, 6.5f)
                 shape.color = teamStripe
                 shape.rect(screenX - 5f, screenY - 2f, 10f, 4f)
+                shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
+                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 5.5f), screenY + directionDy(entity.dir, 5.5f), 1.4f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
                 shape.circle(screenX - 1f, screenY - 1f, 2.2f)
             }
@@ -543,6 +545,8 @@ internal class GdxWorldRenderer(
                 shape.rect(screenX - 6.5f, screenY - 1.8f, 13f, 3.6f)
                 shape.color = teamStripe
                 shape.rect(screenX - 2.5f, screenY - 5.5f, 5f, 11f)
+                shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
+                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 7.5f), screenY + directionDy(entity.dir, 7.5f), 1.8f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
                 shape.rect(screenX - 1.5f, screenY - 4.5f, 3f, 4f)
             }
@@ -551,6 +555,8 @@ internal class GdxWorldRenderer(
                 shape.rect(screenX - 5.5f, screenY - 4.5f, 11f, 9f)
                 shape.color = teamStripe
                 shape.rect(screenX - 4.5f, screenY - 3.5f, 9f, 7f)
+                shape.color = Color(0.85f, 0.92f, 0.98f, 0.58f)
+                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 6f), screenY + directionDy(entity.dir, 6f), 1.5f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.14f }
                 shape.rect(screenX - 3.5f, screenY - 2.5f, 4.5f, 2.5f)
             }
@@ -571,17 +577,42 @@ internal class GdxWorldRenderer(
         val top = runtime.camera.worldToScreenY(tileY.toFloat())
         val shell = Color(0.18f, 0.20f, 0.22f, 1f)
         val roof = Color(0.24f, 0.27f, 0.30f, 1f)
+        val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
+        val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
+        val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
         shape.color = shell
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
-        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.10f)
+        shape.color =
+            when {
+                isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
+                isResourceDepot -> Color(0.92f, 0.78f, 0.36f, 0.95f)
+                else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
+            }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
         shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
-        if (entity.supportsTraining == true || entity.supportsResearch == true) {
+        if (isDepot) {
             shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
+        }
+        if (isResourceDepot) {
+            shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
+            shape.rect(left + width - 13f, top + height - 12f, 8f, 6f)
+            shape.rect(left + 6f, top + height - 12f, 8f, 6f)
+        }
+        if (isGasDepot) {
+            shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
+            shape.circle(left + width * 0.5f, top + height * 0.55f, 6f)
+        }
+        if (entity.supportsResearch == true) {
+            shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
+            shape.rect(left + width - 11f, top + height - 11f, 6f, 6f)
+        }
+        if (entity.supportsTraining == true) {
+            shape.color = Color(0.97f, 0.68f, 0.28f, 0.82f)
+            shape.rect(left + 5f, top + height - 11f, 6f, 6f)
         }
     }
 
@@ -589,6 +620,10 @@ internal class GdxWorldRenderer(
         val phase = (System.currentTimeMillis() % 900L).toFloat() / 900f
         return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
     }
+
+    private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
+
+    private fun directionDy(dir: Float, scale: Float): Float = kotlin.math.sin(dir) * scale
 
     private fun drawWorldFrame(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
