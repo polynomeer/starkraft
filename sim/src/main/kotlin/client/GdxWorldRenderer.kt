@@ -51,6 +51,7 @@ internal class GdxWorldRenderer(
 
         shape.begin(ShapeRenderer.ShapeType.Line)
         drawGrid(shape, runtime)
+        drawTerrainEdges(shape, runtime)
         drawWorldFrame(shape, runtime)
         drawSelectionBrackets(shape, runtime)
         drawSelectionOverlays(shape, runtime)
@@ -101,7 +102,7 @@ internal class GdxWorldRenderer(
 
     private fun drawGrid(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        shape.color = Color(0.18f, 0.23f, 0.28f, 0.8f)
+        shape.color = Color(0.16f, 0.20f, 0.18f, 0.35f)
         for (x in 0..snapshot.mapWidth) {
             val px = runtime.camera.worldToScreenX(x.toFloat())
             shape.line(px, 0f, px, runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat()))
@@ -109,6 +110,31 @@ internal class GdxWorldRenderer(
         for (y in 0..snapshot.mapHeight) {
             val py = runtime.camera.worldToScreenY(y.toFloat())
             shape.line(0f, py, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), py)
+        }
+    }
+
+    private fun drawTerrainEdges(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        val mapState = runtime.session.state.mapState ?: return
+        shape.color = Color(0.38f, 0.44f, 0.48f, 0.55f)
+        mapState.blockedTiles.forEach { (x, y) ->
+            val sx = runtime.camera.worldToScreenX(x.toFloat())
+            val sy = runtime.camera.worldToScreenY(y.toFloat())
+            val tile = runtime.camera.tileSize
+            shape.rect(sx, sy, tile, tile)
+        }
+        shape.color = Color(0.55f, 0.40f, 0.20f, 0.42f)
+        for (x in 40..56) {
+            val topY = runtime.camera.worldToScreenY(40f)
+            val bottomY = runtime.camera.worldToScreenY(57f)
+            val sx = runtime.camera.worldToScreenX(x.toFloat())
+            shape.line(sx, topY, sx, bottomY)
+        }
+        for (y in 40..56) {
+            val leftX = runtime.camera.worldToScreenX(40f)
+            val rightX = runtime.camera.worldToScreenX(57f)
+            val sy = runtime.camera.worldToScreenY(y.toFloat())
+            shape.line(leftX, sy, rightX, sy)
         }
     }
 
