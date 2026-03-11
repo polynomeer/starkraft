@@ -494,6 +494,8 @@ internal class GdxWorldRenderer(
             val size = if (entity.id in runtime.session.state.selectedIds) 5f else 4f
             shape.rect(x - (size / 2f), y - (size / 2f), size, size)
             if (runtime.isDamageFlashActive(entity.id)) {
+                shape.color = Color(1.00f, 0.48f, 0.30f, if (visible) 0.34f else 0.16f)
+                shape.rect(x - 5f, y - 5f, 10f, 10f)
                 shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
                 shape.rect(x - 3f, y - 3f, 6f, 6f)
             }
@@ -524,8 +526,6 @@ internal class GdxWorldRenderer(
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         shape.color = Color(0.82f, 0.92f, 0.98f, 0.12f)
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = selectionColor
-        shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
         shape.color = Color(0.10f, 0.18f, 0.22f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
         shape.color = Color(0.92f, 0.98f, 1f, 0.90f)
@@ -540,6 +540,26 @@ internal class GdxWorldRenderer(
             viewportTop - 2f,
             viewportWidth + 4f,
             viewportHeight + 4f
+        )
+        val corner = 8f
+        shape.color = selectionColor
+        shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
+        shape.line(viewportLeft, viewportTop, viewportLeft, viewportTop + corner)
+        shape.line(viewportLeft + viewportWidth, viewportTop, viewportLeft + viewportWidth - corner, viewportTop)
+        shape.line(viewportLeft + viewportWidth, viewportTop, viewportLeft + viewportWidth, viewportTop + corner)
+        shape.line(viewportLeft, viewportTop + viewportHeight, viewportLeft + corner, viewportTop + viewportHeight)
+        shape.line(viewportLeft, viewportTop + viewportHeight, viewportLeft, viewportTop + viewportHeight - corner)
+        shape.line(
+            viewportLeft + viewportWidth,
+            viewportTop + viewportHeight,
+            viewportLeft + viewportWidth - corner,
+            viewportTop + viewportHeight
+        )
+        shape.line(
+            viewportLeft + viewportWidth,
+            viewportTop + viewportHeight,
+            viewportLeft + viewportWidth,
+            viewportTop + viewportHeight - corner
         )
     }
 
