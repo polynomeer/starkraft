@@ -47,6 +47,7 @@ internal class GdxWorldRenderer(
         shape.begin(ShapeRenderer.ShapeType.Line)
         drawGrid(shape, runtime)
         drawWorldFrame(shape, runtime)
+        drawSelectionBrackets(shape, runtime)
         drawSelectionOverlays(shape, runtime)
         drawMiniMapViewport(shape, runtime, width, height)
         shape.end()
@@ -187,6 +188,44 @@ internal class GdxWorldRenderer(
                     shape.color = Color(0.95f, 0.80f, 0.36f, 1f)
                     shape.line(startX, startY, runtime.camera.worldToScreenX(target.x), runtime.camera.worldToScreenY(target.y))
                 }
+            }
+        }
+    }
+
+    private fun drawSelectionBrackets(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        shape.color = selectionColor
+        for (entity in snapshot.entities) {
+            if (entity.id !in runtime.session.state.selectedIds) continue
+            if (!isEntityVisible(entity, runtime)) continue
+            val screenX = runtime.camera.worldToScreenX(entity.x)
+            val screenY = runtime.camera.worldToScreenY(entity.y)
+            if (!isOnScreen(screenX, screenY)) continue
+            val footprintWidth = entity.footprintWidth
+            val footprintHeight = entity.footprintHeight
+            if (footprintWidth != null && footprintHeight != null) {
+                val tileX = floor(entity.x).toInt()
+                val tileY = floor(entity.y).toInt()
+                val left = runtime.camera.worldToScreenX(tileX.toFloat()) - 6f
+                val top = runtime.camera.worldToScreenY(tileY.toFloat()) - 6f
+                val width = footprintWidth * runtime.camera.tileSize + 12f
+                val height = footprintHeight * runtime.camera.tileSize + 12f
+                val corner = 12f
+                shape.line(left, top, left + corner, top)
+                shape.line(left, top, left, top + corner)
+                shape.line(left + width, top, left + width - corner, top)
+                shape.line(left + width, top, left + width, top + corner)
+                shape.line(left, top + height, left + corner, top + height)
+                shape.line(left, top + height, left, top + height - corner)
+                shape.line(left + width, top + height, left + width - corner, top + height)
+                shape.line(left + width, top + height, left + width, top + height - corner)
+            } else {
+                val radius = 12f
+                shape.circle(screenX, screenY, radius)
+                shape.line(screenX - radius - 3f, screenY, screenX - radius + 2f, screenY)
+                shape.line(screenX + radius - 2f, screenY, screenX + radius + 3f, screenY)
+                shape.line(screenX, screenY - radius - 3f, screenX, screenY - radius + 2f)
+                shape.line(screenX, screenY + radius - 2f, screenX, screenY + radius + 3f)
             }
         }
     }
