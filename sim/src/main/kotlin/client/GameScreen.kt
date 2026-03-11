@@ -37,6 +37,7 @@ internal class GameScreen(
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
+    private val queueStatusLabel = Label("", assets.mutedLabelStyle)
     private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
     private val centerFooterLabel = Label("home center  esc clear  tab debug", assets.mutedLabelStyle)
     private val portraitFrame = Table()
@@ -177,6 +178,7 @@ internal class GameScreen(
                     ).expandX().fillX().top()
                 }
             ).expandX().fillX().padTop(6f).row()
+            add(queueStatusLabel).left().expandX().fillX().padTop(8f).row()
             add(selectionRosterLabel).left().expandX().fillX().padTop(10f).row()
             add(selectionGrid).left().expandX().fillX().padTop(10f).row()
             add(actionBanner).expandX().fillX().padTop(10f).row()
@@ -254,6 +256,7 @@ internal class GameScreen(
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         centerStatusLabel.setWrap(true)
+        queueStatusLabel.setWrap(true)
         selectionRosterLabel.setWrap(true)
         hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
@@ -262,6 +265,7 @@ internal class GameScreen(
         selectionLabel.setWidth(centerWidth)
         selectionMetaLabel.setWidth(centerWidth)
         centerStatusLabel.setWidth(centerWidth)
+        queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
         hudLinesLabel.setWidth(statusWidth)
         footerLabel.setWidth(statusWidth)
@@ -276,6 +280,7 @@ internal class GameScreen(
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
+        queueStatusLabel.setText(buildQueueStatusLine())
         selectionRosterLabel.setText(buildSelectionRosterLine())
         portraitLabel.setText(buildPortraitText())
         healthLabel.setText(buildHealthLine())
@@ -461,6 +466,44 @@ internal class GameScreen(
             else -> "drag select  right click order  middle drag pan"
         }
 
+    private fun buildQueueStatusLine(): String {
+        val snapshot = runtime.snapshot ?: return "Queue unavailable"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "Queue idle"
+        val lead = selected.first()
+        val parts = buildList {
+            if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
+                add(
+                    buildString {
+                        append("production ")
+                        append(lead.activeProductionType ?: "queue")
+                        if (lead.productionQueueSize > 0) append(" x${lead.productionQueueSize}")
+                        if (lead.activeProductionRemainingTicks > 0) append(" ${lead.activeProductionRemainingTicks}t")
+                    }
+                )
+            }
+            if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
+                add(
+                    buildString {
+                        append("research ")
+                        append(lead.activeResearchTech ?: "queue")
+                        if (lead.researchQueueSize > 0) append(" x${lead.researchQueueSize}")
+                        if (lead.activeResearchRemainingTicks > 0) append(" ${lead.activeResearchRemainingTicks}t")
+                    }
+                )
+            }
+            if (lead.underConstruction) {
+                add(
+                    buildString {
+                        append("construction")
+                        lead.constructionRemainingTicks?.let { append(" ${it}t") }
+                    }
+                )
+            }
+        }
+        return if (parts.isEmpty()) "Queue idle" else parts.joinToString("  |  ")
+    }
+
     private fun updateHealthBar() {
         val snapshot = runtime.snapshot
         val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
@@ -522,6 +565,7 @@ internal class GameScreen(
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
             background = assets.panelDrawable(tone)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             pad(4f)
             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
             add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
@@ -536,6 +580,22 @@ internal class GameScreen(
                     add().expandX().fillX()
                 }
             ).width(32f).height(5f).padTop(4f)
+            addListener(
+                object : ClickListener() {
+                    override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                        runtime.session.replaceSelection(intArrayOf(entity.id))
+                        runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
+                    }
+
+                    override fun enter(event: InputEvent?, x: Float, y: Float, pointer: Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
+                        runtime.setHoverHint("Focus ${entity.typeId} #${entity.id}")
+                    }
+
+                    override fun exit(event: InputEvent?, x: Float, y: Float, pointer: Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
+                        runtime.setHoverHint(null)
+                    }
+                }
+            )
         }
     }
 
