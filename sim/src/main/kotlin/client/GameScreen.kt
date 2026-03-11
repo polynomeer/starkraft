@@ -178,7 +178,7 @@ internal class GameScreen(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.86f))
                     pad(6f)
-                    add(wrapHudPanel(minimapFrame, Color(0.10f, 0.17f, 0.22f, 0.94f))).width(240f).height(184f).left().row()
+                    add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left().row()
                     add(wrapHudPanel(statusCard, Color(0.09f, 0.14f, 0.18f, 0.95f))).width(240f).left().padTop(8f)
                 }
             ).left().bottom()
@@ -428,6 +428,19 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(tone)
                     pad(2f)
+                    add(content).expand().fill()
+                }
+            ).expand().fill()
+        }
+
+    private fun wrapMinimapPanel(content: Table): Table =
+        Table().apply {
+            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.72f))
+            pad(4f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.10f, 0.17f, 0.22f, 0.18f))
+                    pad(3f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
