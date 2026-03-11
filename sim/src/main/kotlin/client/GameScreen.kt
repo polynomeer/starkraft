@@ -114,18 +114,12 @@ internal class GameScreen(
             background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.34f))
             pad(10f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapTitle).left().row()
-            add(minimapHint).left().padTop(4f)
         }
 
         statusCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.92f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(statusHeader).left().row()
-            add(factionOverviewLabel).left().top().padTop(6f).row()
-            add(hudLinesLabel).left().top().padTop(8f).row()
-            add(footerLabel).left().top().padTop(10f).row()
         }
 
         commandCard.apply {
@@ -137,7 +131,6 @@ internal class GameScreen(
         buttonTable.defaults().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        commandCard.add(commandHeaderLabel).left().expandX().fillX().row()
         commandCard.add(commandScroll).top().left()
 
         actionBanner.apply {
@@ -150,7 +143,6 @@ internal class GameScreen(
             background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.94f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(centerHeaderLabel).left().expandX().fillX().row()
             add(
                 Table().apply {
                     add(
@@ -162,9 +154,6 @@ internal class GameScreen(
                     ).size(92f, 92f).top().left().padRight(12f)
                     add(
                         Table().apply {
-                            add(selectionLabel).left().expandX().fillX().row()
-                            add(selectionMetaLabel).left().expandX().fillX().padTop(4f).row()
-                            add(healthLabel).left().expandX().fillX().padTop(8f).row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
@@ -175,16 +164,11 @@ internal class GameScreen(
                                     add().expandX().fillX()
                                 }
                             ).width(180f).height(12f).left().padTop(4f)
-                            add(centerStatusLabel).left().expandX().fillX().padTop(8f).row()
                         }
                     ).expandX().fillX().top()
                 }
             ).expandX().fillX().padTop(6f).row()
-            add(queueStatusLabel).left().expandX().fillX().padTop(8f).row()
-            add(selectionRosterLabel).left().expandX().fillX().padTop(10f).row()
             add(selectionGrid).left().expandX().fillX().padTop(10f).row()
-            add(actionBanner).expandX().fillX().padTop(10f).row()
-            add(centerFooterLabel).left().expandX().fillX().padTop(10f)
         }
 
         bottomHud.apply {
@@ -203,7 +187,6 @@ internal class GameScreen(
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
-        root.add(topBar).expandX().fillX().top().pad(10f, 10f, 0f, 10f).row()
         root.add().expand().fill().row()
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
