@@ -38,6 +38,7 @@ internal class GdxWorldRenderer(
         drawResources(shape, runtime)
         drawFog(shape, runtime)
         drawEntities(shape, runtime)
+        drawOrderMarkers(shape, runtime)
         drawMiniMap(shape, runtime, width, height)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
@@ -185,6 +186,41 @@ internal class GdxWorldRenderer(
                 entitiesById[entity.buildTargetId]?.let { target ->
                     shape.color = Color(0.95f, 0.80f, 0.36f, 1f)
                     shape.line(startX, startY, runtime.camera.worldToScreenX(target.x), runtime.camera.worldToScreenY(target.y))
+                }
+            }
+        }
+    }
+
+    private fun drawOrderMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        val entitiesById = snapshot.entities.associateBy { it.id }
+        for (entity in snapshot.entities) {
+            if (entity.id !in runtime.session.state.selectedIds) continue
+            if (!isEntityVisible(entity, runtime)) continue
+            if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
+                val goalX = runtime.camera.worldToScreenX(entity.pathGoalX + 0.5f)
+                val goalY = runtime.camera.worldToScreenY(entity.pathGoalY + 0.5f)
+                shape.color = Color(0.96f, 0.90f, 0.45f, 0.28f)
+                shape.circle(goalX, goalY, 10f)
+                shape.color = Color(0.96f, 0.90f, 0.45f, 0.92f)
+                shape.circle(goalX, goalY, 4f)
+            }
+            if (entity.rallyX != null && entity.rallyY != null) {
+                val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
+                val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
+                shape.color = Color(0.37f, 0.90f, 0.52f, 0.25f)
+                shape.circle(rallyX, rallyY, 9f)
+                shape.color = Color(0.37f, 0.90f, 0.52f, 0.95f)
+                shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
+            }
+            if (entity.buildTargetId != null) {
+                entitiesById[entity.buildTargetId]?.let { target ->
+                    val targetX = runtime.camera.worldToScreenX(target.x)
+                    val targetY = runtime.camera.worldToScreenY(target.y)
+                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.22f)
+                    shape.circle(targetX, targetY, 10f)
+                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.92f)
+                    shape.circle(targetX, targetY, 3.5f)
                 }
             }
         }
