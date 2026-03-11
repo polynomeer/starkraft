@@ -28,19 +28,35 @@ internal class GameScreen(
     private val edgePanSpeed = 14f
     private val topBar = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
+    private val topSelectionLabel = Label("", assets.mutedLabelStyle)
     private val modeLabel = Label("", assets.accentLabelStyle)
     private val statusBadgeLabel = Label("", assets.bodyLabelStyle)
-    private val statusHeader = Label("Selection", assets.titleLabelStyle)
+    private val statusHeader = Label("Battlefield", assets.titleLabelStyle)
+    private val centerHeaderLabel = Label("Selected", assets.titleLabelStyle)
     private val selectionMetaLabel = Label("", assets.mutedLabelStyle)
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
+    private val centerStatusLabel = Label("", assets.bodyLabelStyle)
+    private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
+    private val centerFooterLabel = Label("home center  esc clear  tab debug", assets.mutedLabelStyle)
+    private val portraitFrame = Table()
+    private val portraitLabel = Label("NO\nUNIT", assets.titleLabelStyle)
+    private val healthLabel = Label("", assets.bodyLabelStyle)
+    private val healthBarBack = Table()
+    private val healthBarFill = Table()
+    private val selectionGrid = Table()
     private val commandHeaderLabel = Label("Command Deck", assets.titleLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
     private val actionBanner = Table()
     private val actionBannerLabel = Label("", assets.bodyLabelStyle)
+    private val minimapFrame = Table()
+    private val minimapTitle = Label("Tac Map", assets.titleLabelStyle)
+    private val minimapHint = Label("click or drag to move camera", assets.mutedLabelStyle)
     private val bottomHud = Table()
+    private val leftHudColumn = Table()
     private val statusCard = Table()
+    private val centerCard = Table()
     private val commandCard = Table()
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
@@ -84,30 +100,38 @@ internal class GameScreen(
             }
 
         topBar.apply {
-            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.12f, 0.78f))
+            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.11f, 0.84f))
             pad(8f, 12f, 8f, 12f)
             add(economyLabel).left().expandX().fillX()
+            add(topSelectionLabel).center().padLeft(12f).padRight(12f)
             add(modeLabel).center().padLeft(12f).padRight(12f)
             add(statusBadgeLabel).right()
         }
 
+        minimapFrame.apply {
+            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.34f))
+            pad(10f)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(minimapTitle).left().row()
+            add(minimapHint).left().padTop(4f)
+        }
+
         statusCard.apply {
-            background = assets.panelDrawable(Color(0.05f, 0.10f, 0.14f, 0.86f))
+            background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.92f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(statusHeader).left().row()
-            add(selectionLabel).left().top().padTop(6f).row()
-            add(selectionMetaLabel).left().top().padTop(2f).row()
             add(hudLinesLabel).left().top().padTop(8f).row()
             add(footerLabel).left().top().padTop(10f).row()
         }
 
         commandCard.apply {
-            background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.88f))
+            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.94f))
             pad(10f)
             top()
         }
         buttonTable.top().left()
+        buttonTable.defaults().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
         commandCard.add(commandHeaderLabel).left().expandX().fillX().row()
@@ -119,12 +143,60 @@ internal class GameScreen(
             add(actionBannerLabel).center()
         }
 
+        centerCard.apply {
+            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.94f))
+            pad(12f)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(centerHeaderLabel).left().expandX().fillX().row()
+            add(
+                Table().apply {
+                    add(
+                        portraitFrame.apply {
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.94f))
+                            pad(10f)
+                            add(portraitLabel).center()
+                        }
+                    ).size(92f, 92f).top().left().padRight(12f)
+                    add(
+                        Table().apply {
+                            add(selectionLabel).left().expandX().fillX().row()
+                            add(selectionMetaLabel).left().expandX().fillX().padTop(4f).row()
+                            add(healthLabel).left().expandX().fillX().padTop(8f).row()
+                            add(
+                                healthBarBack.apply {
+                                    background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
+                                    clearChildren()
+                                    add(healthBarFill.apply {
+                                        background = assets.panelDrawable(Color(0.22f, 0.78f, 0.42f, 1f))
+                                    }).expandY().fillY().left()
+                                    add().expandX().fillX()
+                                }
+                            ).width(180f).height(12f).left().padTop(4f)
+                            add(centerStatusLabel).left().expandX().fillX().padTop(8f).row()
+                        }
+                    ).expandX().fillX().top()
+                }
+            ).expandX().fillX().padTop(6f).row()
+            add(selectionRosterLabel).left().expandX().fillX().padTop(10f).row()
+            add(selectionGrid).left().expandX().fillX().padTop(10f).row()
+            add(actionBanner).expandX().fillX().padTop(10f).row()
+            add(centerFooterLabel).left().expandX().fillX().padTop(10f)
+        }
+
         bottomHud.apply {
-            pad(0f, 10f, 10f, 10f)
-            add(statusCard).left().bottom()
+            background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.42f))
+            pad(12f)
+            add(
+                leftHudColumn.apply {
+                    background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.86f))
+                    pad(6f)
+                    add(wrapHudPanel(minimapFrame, Color(0.10f, 0.17f, 0.22f, 0.94f))).width(240f).height(184f).left().row()
+                    add(wrapHudPanel(statusCard, Color(0.09f, 0.14f, 0.18f, 0.95f))).width(240f).left().padTop(8f)
+                }
+            ).left().bottom()
             add().expandX().fillX()
-            add(actionBanner).bottom().padRight(10f)
-            add(commandCard).right().bottom()
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.96f))).width(340f).bottom().padRight(10f)
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
         root.add(topBar).expandX().fillX().top().pad(10f, 10f, 0f, 10f).row()
@@ -168,58 +240,96 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val statusWidth = (width * 0.23f).coerceIn(260f, 340f)
-        val statusHeight = (height * 0.20f).coerceIn(148f, 214f)
-        val commandWidth = (width * 0.34f).coerceIn(360f, 560f)
-        val commandHeight = (height * 0.22f).coerceIn(150f, 210f)
+        val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
+        val minimapHeight = (height * 0.20f).coerceIn(168f, 200f)
+        val statusWidth = minimapWidth
+        val statusHeight = (height * 0.14f).coerceIn(124f, 168f)
+        val centerWidth = (width * 0.24f).coerceIn(300f, 390f)
+        val commandWidth = (width * 0.30f).coerceIn(360f, 520f)
+        val commandHeight = (height * 0.22f).coerceIn(154f, 220f)
         val commandColumns = when {
-            commandWidth >= 500f -> 3
-            commandWidth >= 400f -> 2
-            else -> 1
+            commandWidth >= 360f -> 3
+            else -> 2
         }
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
+        centerStatusLabel.setWrap(true)
+        selectionRosterLabel.setWrap(true)
         hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
-        selectionLabel.setWidth(statusWidth)
-        selectionMetaLabel.setWidth(statusWidth)
+        centerFooterLabel.setWrap(true)
+        minimapTitle.setText("Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
+        selectionLabel.setWidth(centerWidth)
+        selectionMetaLabel.setWidth(centerWidth)
+        centerStatusLabel.setWidth(centerWidth)
+        selectionRosterLabel.setWidth(centerWidth)
         hudLinesLabel.setWidth(statusWidth)
         footerLabel.setWidth(statusWidth)
+        centerFooterLabel.setWidth(centerWidth)
+        minimapHint.setWidth(minimapWidth - 20f)
+        leftHudColumn.setWidth(minimapWidth + 16f)
         statusCard.setSize(statusWidth, statusHeight)
+        minimapFrame.setSize(minimapWidth, minimapHeight)
+        centerCard.setWidth(centerWidth)
         commandCard.setWidth(commandWidth)
         commandScroll.setSize(commandWidth, commandHeight)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
+        centerStatusLabel.setText(buildCenterStatusLine())
+        selectionRosterLabel.setText(buildSelectionRosterLine())
+        portraitLabel.setText(buildPortraitText())
+        healthLabel.setText(buildHealthLine())
+        updateHealthBar()
+        rebuildSelectionGrid()
         hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
-        footerLabel.setText("LMB select  RMB order  drag box select  wheel zoom  F1 help")
-        statusHeader.setText(if (runtime.session.state.selectedIds.isEmpty()) "Field Status" else "Selection")
+        footerLabel.setText("LMB select  RMB order  drag box select")
+        statusHeader.setText("Battlefield")
+        centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         commandHeaderLabel.setText("Command Deck  ${runtime.overlayModeLabel()}")
         economyLabel.setText(buildTopEconomyLine())
+        topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
         statusBadgeLabel.setText(buildStatusBadgeLine())
         actionBannerLabel.setText(buildActionBannerLine())
+        centerFooterLabel.setText(buildCenterFooterLine())
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         actionBanner.isVisible = actionBannerLabel.text.toString().isNotBlank()
+        bottomHud.invalidateHierarchy()
 
         buttonTable.clearChildren()
         buttonTable.defaults().pad(0f, 0f, 6f, 6f)
-        runtime.buttonModels().forEachIndexed { index, button ->
-            val actor = makeButton(
-                button.label,
-                runtime.actionHint(button.actionId),
-                if (button.actionId == "pause" || button.actionId == "help") assets.secondaryButtonStyle() else assets.subtleButtonStyle()
-            ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
-            actor.isDisabled = !runtime.isActionEnabled(button.actionId)
-            actor.isChecked = runtime.isActionActive(button.actionId)
-            buttonTable.add(actor).width((commandWidth / commandColumns) - 12f).left()
-            if ((index + 1) % commandColumns == 0) {
+        val buttons = runtime.buttonModels()
+        val groupedButtons = commandGroups(buttons)
+        groupedButtons.forEachIndexed { groupIndex, group ->
+            if (group.second.isEmpty()) return@forEachIndexed
+            buttonTable.add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(6f).row()
+            group.second.forEachIndexed { index, button ->
+                val actor = makeButton(
+                    commandButtonLabel(button),
+                    runtime.actionHint(button.actionId),
+                    commandButtonStyle(button.actionId)
+                ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
+                actor.isDisabled = !runtime.isActionEnabled(button.actionId)
+                actor.isChecked = runtime.isActionActive(button.actionId)
+                buttonTable.add(
+                    Table().apply {
+                        background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.92f))
+                        pad(4f)
+                        add(actor).width((commandWidth / commandColumns) - 20f).height(34f).left()
+                    }
+                ).width((commandWidth / commandColumns) - 12f).left()
+                if ((index + 1) % commandColumns == 0) {
+                    buttonTable.row()
+                }
+            }
+            if (group.second.size % commandColumns != 0) {
                 buttonTable.row()
             }
-        }
-        if (runtime.buttonModels().size % commandColumns != 0) {
-            buttonTable.row()
+            if (groupIndex != groupedButtons.lastIndex) {
+                buttonTable.add().height(8f).colspan(commandColumns).row()
+            }
         }
         if (runtime.debugVisible && snapshot != null) {
             buttonTable.add(Label("debug: entities=${snapshot.entities.size} resources=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).colspan(commandColumns).left().padTop(6f).row()
@@ -268,6 +378,167 @@ internal class GameScreen(
         }
     }
 
+    private fun buildPortraitText(): String {
+        val snapshot = runtime.snapshot ?: return "NO\nDATA"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) {
+            return runtime.session.state.viewedFaction?.let { "F$it\nVIEW" } ?: "OBS\nVIEW"
+        }
+        val lead = selected.first()
+        return if (selected.size == 1) {
+            "${(lead.typeId ?: "UNIT").take(8).uppercase()}\n${(lead.archetype ?: "ROLE").take(8).uppercase()}"
+        } else {
+            "${selected.size}\nUNITS"
+        }
+    }
+
+    private fun buildHealthLine(): String {
+        val snapshot = runtime.snapshot ?: return "Integrity unavailable"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "Integrity: no active selection"
+        val hp = selected.sumOf { it.hp }
+        val maxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
+        return "Integrity $hp / $maxHp"
+    }
+
+    private fun buildSelectionRosterLine(): String {
+        val snapshot = runtime.snapshot ?: return "No roster data"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) {
+            return "No active unit card"
+        }
+        val counts =
+            selected
+                .groupingBy { it.typeId ?: "Unknown" }
+                .eachCount()
+                .entries
+                .sortedByDescending { it.value }
+                .take(4)
+                .joinToString("   ") { "${it.key}:${it.value}" }
+        return "Roster  $counts"
+    }
+
+    private fun wrapHudPanel(content: Table, tone: Color): Table =
+        Table().apply {
+            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.96f))
+            pad(5f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(tone)
+                    pad(2f)
+                    add(content).expand().fill()
+                }
+            ).expand().fill()
+        }
+
+    private fun buildCenterStatusLine(): String {
+        val snapshot = runtime.snapshot ?: return "Status unavailable"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "No command focus"
+        val lead = selected.first()
+        val statusBits = buildList {
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("order ${it.lowercase()}") }
+            if (lead.orderQueueSize > 0) add("queue ${lead.orderQueueSize}")
+            if (lead.pathRemainingNodes > 0) add("path ${lead.pathRemainingNodes}")
+            lead.activeProductionType?.let { add("prod $it") }
+            if (lead.activeProductionRemainingTicks > 0) add("prod ${lead.activeProductionRemainingTicks}t")
+            lead.activeResearchTech?.let { add("tech $it") }
+            if (lead.activeResearchRemainingTicks > 0) add("tech ${lead.activeResearchRemainingTicks}t")
+            if (lead.underConstruction) add("construct")
+            lead.harvestPhase?.let { add("harvest ${it.lowercase()}") }
+            if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
+                add("cargo ${lead.harvestCargoKind ?: "res"}:${lead.harvestCargoAmount}")
+            }
+        }
+        return if (statusBits.isEmpty()) "Standing by" else statusBits.joinToString("  ·  ")
+    }
+
+    private fun buildCenterFooterLine(): String =
+        when {
+            runtime.buildModeTypeId != null -> "right click place  esc cancel build"
+            runtime.groundMode != null -> "right click confirm order  esc cancel"
+            runtime.session.state.selectedIds.isNotEmpty() -> "home center  esc clear  shift add"
+            else -> "drag select  right click order  middle drag pan"
+        }
+
+    private fun updateHealthBar() {
+        val snapshot = runtime.snapshot
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        val ratio =
+            if (selected.isEmpty()) {
+                0f
+            } else {
+                val hp = selected.sumOf { it.hp }.toFloat()
+                val maxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }.toFloat().coerceAtLeast(1f)
+                (hp / maxHp).coerceIn(0f, 1f)
+            }
+        val barWidth = 180f
+        val fillWidth = (barWidth * ratio).coerceAtLeast(if (ratio > 0f) 4f else 0f)
+        healthBarFill.clearChildren()
+        healthBarBack.clearChildren()
+        healthBarFill.background =
+            assets.panelDrawable(
+                when {
+                    ratio >= 0.66f -> Color(0.22f, 0.78f, 0.42f, 1f)
+                    ratio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
+                    else -> Color(0.84f, 0.30f, 0.25f, 1f)
+                }
+            )
+        healthBarBack.add(healthBarFill).width(fillWidth).expandY().fillY().left()
+        healthBarBack.add().expandX().fillX()
+    }
+
+    private fun rebuildSelectionGrid() {
+        selectionGrid.clearChildren()
+        val snapshot = runtime.snapshot ?: return
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }.take(8)
+        if (selected.isEmpty()) {
+            selectionGrid.add(Label("Selection slots idle", assets.mutedLabelStyle)).left()
+            return
+        }
+        selectionGrid.defaults().pad(0f, 6f, 6f, 0f)
+        selected.forEachIndexed { index, entity ->
+            selectionGrid.add(buildSelectionSlot(entity)).size(52f, 52f)
+            if ((index + 1) % 4 == 0) {
+                selectionGrid.row()
+            }
+        }
+    }
+
+    private fun buildSelectionSlot(entity: EntitySnapshot): Table {
+        val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
+        val tone =
+            when {
+                entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
+                entity.footprintWidth != null -> Color(0.28f, 0.24f, 0.15f, 0.96f)
+                else -> Color(0.16f, 0.25f, 0.18f, 0.96f)
+            }
+        val hpColor =
+            when {
+                hpRatio >= 0.66f -> Color(0.22f, 0.78f, 0.42f, 1f)
+                hpRatio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
+                else -> Color(0.84f, 0.30f, 0.25f, 1f)
+            }
+        val shortName = (entity.typeId ?: "?").take(3).uppercase()
+        return Table().apply {
+            background = assets.panelDrawable(tone)
+            pad(4f)
+            add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
+            add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.10f, 0.12f, 0.14f, 1f))
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(hpColor)
+                        }
+                    ).width(32f * hpRatio.coerceIn(0f, 1f)).height(5f).left()
+                    add().expandX().fillX()
+                }
+            ).width(32f).height(5f).padTop(4f)
+        }
+    }
+
     private fun applyEdgePan() {
         if (runtime.pauseOverlayVisible || runtime.helpOverlayVisible) return
         if (Gdx.input.isTouched) return
@@ -289,13 +560,13 @@ internal class GameScreen(
     private fun buildSelectionMetaLine(): String {
         val snapshot = runtime.snapshot ?: return "No live snapshot"
         if (runtime.session.state.selectedIds.isEmpty()) {
-            return "Viewed faction ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"} · entities ${snapshot.entities.size}"
+            return "Viewed ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"} · entities ${snapshot.entities.size}"
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         val combat = selected.count { it.weaponId != null }
         val workers = selected.count { it.archetype == "worker" }
         val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "selected=${selected.size} combat=$combat workers=$workers structures=$structures"
+        return "count ${selected.size} · combat $combat · workers $workers · structures $structures"
     }
 
     private fun buildTopEconomyLine(): String {
@@ -315,6 +586,18 @@ internal class GameScreen(
         return "Mode ${mode.uppercase()}  View ${viewed.uppercase()}"
     }
 
+    private fun buildTopSelectionLine(): String {
+        val snapshot = runtime.snapshot ?: return "No selection"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "No active control group"
+        val lead = selected.first()
+        return if (selected.size == 1) {
+            "${lead.typeId}  hp ${lead.hp}/${lead.maxHp}"
+        } else {
+            "${selected.size} selected  lead ${lead.typeId}"
+        }
+    }
+
     private fun buildStatusBadgeLine(): String {
         val snapshot = runtime.snapshot ?: return "SYNC"
         if (snapshot.matchEnded) {
@@ -331,8 +614,59 @@ internal class GameScreen(
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId} with right click"
             runtime.groundMode != null -> "Issue ${runtime.overlayModeLabel()} with right click"
             selectionCount > 0 -> "$selectionCount selected · home to center · esc to clear"
-            else -> "Drag to select · right click to command · mouse wheel to zoom"
+            else -> "Drag to select · right click to command"
         }
+    }
+
+    private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
+        when {
+            actionId == "pause" || actionId == "help" || actionId == "debug" -> assets.secondaryButtonStyle()
+            actionId.startsWith("build:") || actionId.startsWith("train:") || actionId.startsWith("research:") -> assets.primaryButtonStyle()
+            actionId == "move" || actionId == "attackMove" || actionId == "patrol" || actionId == "hold" -> assets.primaryButtonStyle()
+            else -> assets.subtleButtonStyle()
+        }
+
+    private fun commandButtonLabel(button: ClientCommandButton): String {
+        val hotkey =
+            when (button.actionId) {
+                "move" -> "M"
+                "attackMove" -> "A"
+                "patrol" -> "P"
+                "hold" -> "H"
+                "clear" -> "Esc"
+                "centerSelection" -> "Home"
+                "viewF1" -> "1"
+                "viewF2" -> "2"
+                "observer" -> "3"
+                "pause" -> "Space"
+                "help" -> "F1"
+                "debug" -> "Tab"
+                "selectViewedFaction" -> "F2"
+                "selectType" -> "F3"
+                "selectRole" -> "F4"
+                "selectAll" -> "F11"
+                "selectIdleWorkers" -> "F12"
+                "build:Depot" -> "B"
+                "build:ResourceDepot" -> "R"
+                "build:GasDepot" -> "G"
+                else -> null
+            }
+        return if (hotkey == null) button.label else "${button.label} [$hotkey]"
+    }
+
+    private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
+        val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
+        val production = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
+        val selection = buttons.filter { it.actionId.startsWith("select") || it.actionId == "centerFaction" }
+        val view = buttons.filter { it.actionId in setOf("viewF1", "viewF2", "observer") }
+        val system = buttons.filter { it.actionId in setOf("pause", "help", "debug") }
+        return listOf(
+            "Orders" to primary,
+            "Production" to production,
+            "Selection" to selection,
+            "View" to view,
+            "System" to system
+        )
     }
 
     private fun makeButton(

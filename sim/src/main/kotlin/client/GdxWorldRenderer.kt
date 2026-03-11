@@ -18,6 +18,7 @@ internal class GdxWorldRenderer(
     private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
     private val selectionSoftColor = Color(0.44f, 0.80f, 0.92f, 0.28f)
     private val fogColor = Color(0.02f, 0.05f, 0.08f, 0.78f)
+    private val minimapFogColor = Color(0.01f, 0.03f, 0.05f, 0.72f)
     private val terrainA = Color(0.08f, 0.12f, 0.15f, 1f)
     private val terrainB = Color(0.10f, 0.15f, 0.18f, 1f)
     private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
@@ -216,12 +217,30 @@ internal class GdxWorldRenderer(
         shape.rect(left + 4f, top + 4f, boundsWidth - 8f, boundsHeight - 8f)
         val viewedFaction = runtime.session.state.viewedFaction
         val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
+        val tileWidth = boundsWidth / snapshot.mapWidth
+        val tileHeight = boundsHeight / snapshot.mapHeight
+        if (visibleTiles != null) {
+            for (x in 0 until snapshot.mapWidth) {
+                for (y in 0 until snapshot.mapHeight) {
+                    if ((x to y) in visibleTiles) continue
+                    shape.color = minimapFogColor
+                    shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
+                }
+            }
+        }
+        for (node in snapshot.resourceNodes) {
+            val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
+            val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
+            shape.color = if (node.kind == "gas") Color(0.28f, 0.88f, 0.64f, 0.95f) else Color(0.90f, 0.81f, 0.42f, 0.95f)
+            shape.rect(nodeX - 1f, nodeY - 1f, 3f, 3f)
+        }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
             val y = top + (entity.y / snapshot.mapHeight) * boundsHeight
             val visible = visibleTiles == null || isEntityVisible(entity, runtime)
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
-            shape.rect(x - 2f, y - 2f, 4f, 4f)
+            val size = if (entity.id in runtime.session.state.selectedIds) 5f else 4f
+            shape.rect(x - (size / 2f), y - (size / 2f), size, size)
         }
     }
 
@@ -243,8 +262,15 @@ internal class GdxWorldRenderer(
             ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth,
             ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         )
-        shape.color = Color(0.86f, 0.94f, 0.98f, 0.55f)
+        shape.color = Color(0.10f, 0.18f, 0.22f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
+        shape.color = Color(0.92f, 0.98f, 1f, 0.90f)
+        shape.rect(
+            left + (leftWorld / snapshot.mapWidth) * boundsWidth - 1f,
+            top + (topWorld / snapshot.mapHeight) * boundsHeight - 1f,
+            ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth + 2f,
+            ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight + 2f
+        )
     }
 
     private fun drawBuildPreview(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -381,10 +407,10 @@ internal data class GdxMiniMapBounds(
 
 internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
     GdxMiniMapBounds(
-        left = 18f,
-        top = 18f,
-        width = minOf(176, screenWidth / 5).toFloat(),
-        height = minOf(176, screenHeight / 5).toFloat()
+        left = 20f,
+        top = screenHeight - minOf(184, screenHeight / 5).toFloat() - 20f,
+        width = minOf(220, screenWidth / 5).toFloat(),
+        height = minOf(184, screenHeight / 5).toFloat()
     )
 
 internal fun gdxMiniMapWorldPosition(
