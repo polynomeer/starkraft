@@ -766,6 +766,7 @@ internal class GameScreen(
         private var startY = 0f
         private var lastX = 0f
         private var lastY = 0f
+        private var rightClickHandled = false
 
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             if (runtime.pauseOverlayVisible) return false
@@ -791,6 +792,7 @@ internal class GameScreen(
                 }
                 Input.Buttons.RIGHT -> {
                     runtime.issueRightClick(screenX.toFloat(), screenY.toFloat(), Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                    rightClickHandled = true
                     return true
                 }
             }
@@ -824,6 +826,13 @@ internal class GameScreen(
             }
             if (button == Input.Buttons.LEFT && minimapDragging) {
                 minimapDragging = false
+                return true
+            }
+            if (button == Input.Buttons.RIGHT) {
+                if (!rightClickHandled) {
+                    runtime.issueRightClick(screenX.toFloat(), screenY.toFloat(), Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                }
+                rightClickHandled = false
                 return true
             }
             if (button != Input.Buttons.LEFT || !dragging) return false
