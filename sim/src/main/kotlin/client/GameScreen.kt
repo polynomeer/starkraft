@@ -34,6 +34,7 @@ internal class GameScreen(
     private val statusHeader = Label("Battlefield", assets.titleLabelStyle)
     private val centerHeaderLabel = Label("Selected", assets.titleLabelStyle)
     private val selectionMetaLabel = Label("", assets.mutedLabelStyle)
+    private val factionOverviewLabel = Label("", assets.mutedLabelStyle)
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
@@ -122,6 +123,7 @@ internal class GameScreen(
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(statusHeader).left().row()
+            add(factionOverviewLabel).left().top().padTop(6f).row()
             add(hudLinesLabel).left().top().padTop(8f).row()
             add(footerLabel).left().top().padTop(10f).row()
         }
@@ -255,6 +257,7 @@ internal class GameScreen(
         }
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
+        factionOverviewLabel.setWrap(true)
         centerStatusLabel.setWrap(true)
         queueStatusLabel.setWrap(true)
         selectionRosterLabel.setWrap(true)
@@ -268,6 +271,7 @@ internal class GameScreen(
         queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
         hudLinesLabel.setWidth(statusWidth)
+        factionOverviewLabel.setWidth(statusWidth)
         footerLabel.setWidth(statusWidth)
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
@@ -282,6 +286,7 @@ internal class GameScreen(
         centerStatusLabel.setText(buildCenterStatusLine())
         queueStatusLabel.setText(buildQueueStatusLine())
         selectionRosterLabel.setText(buildSelectionRosterLine())
+        factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
         healthLabel.setText(buildHealthLine())
         updateHealthBar()
@@ -421,6 +426,15 @@ internal class GameScreen(
                 .take(4)
                 .joinToString("   ") { "${it.key}:${it.value}" }
         return "Roster  $counts"
+    }
+
+    private fun buildFactionOverviewLine(): String {
+        val snapshot = runtime.snapshot ?: return "No battlefield telemetry"
+        if (snapshot.factions.isEmpty()) return "No faction telemetry"
+        return snapshot.factions.joinToString("\n") { faction ->
+            val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
+            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  Vis${faction.visibleTiles}$viewed"
+        }
     }
 
     private fun wrapHudPanel(content: Table, tone: Color): Table =
