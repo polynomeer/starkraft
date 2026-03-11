@@ -143,12 +143,15 @@ internal class GdxWorldRenderer(
 
     private fun drawResources(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
+        val pulse = ambientPulse(1400L)
         for (node in snapshot.resourceNodes) {
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
                 shape.color = Color(0.10f, 0.18f, 0.16f, 0.92f)
                 shape.circle(sx + 1.5f, sy + 1.5f, 10f)
+                shape.color = Color(0.24f, 0.94f, 0.70f, 0.12f + (pulse * 0.10f))
+                shape.circle(sx, sy, 12f + (pulse * 2f))
                 shape.color = Color(0.26f, 0.82f, 0.60f, 0.95f)
                 shape.circle(sx, sy, 9f)
                 shape.color = Color(0.64f, 1.00f, 0.86f, 0.32f)
@@ -161,9 +164,11 @@ internal class GdxWorldRenderer(
                 shape.rect(sx - 7f, sy - 5f, 6f, 5f)
                 shape.rect(sx - 1f, sy - 8f, 7f, 6f)
                 shape.rect(sx - 6f, sy + 1f, 8f, 5f)
-                shape.color = Color(1f, 0.95f, 0.72f, 0.18f)
+                shape.color = Color(1f, 0.95f, 0.72f, 0.12f + (pulse * 0.12f))
                 shape.rect(sx - 5f, sy - 4f, 3f, 2f)
                 shape.rect(sx, sy - 6f, 3f, 2f)
+                shape.color = Color(1f, 0.98f, 0.80f, 0.16f + (pulse * 0.12f))
+                shape.rect(sx - 2f, sy + 2f, 4f, 2f)
             }
         }
     }
@@ -369,6 +374,12 @@ internal class GdxWorldRenderer(
                 shape.circle(screenX, screenY, 12f)
                 shape.color = Color(0.98f, 0.72f, 0.26f, 0.95f)
                 shape.rect(screenX - 7f, screenY + 9f, (entity.weaponCooldownTicks.coerceAtMost(20) / 20f) * 14f, 2f)
+                val muzzleX = screenX + directionDx(entity.dir, 8f)
+                val muzzleY = screenY + directionDy(entity.dir, 8f)
+                shape.color = Color(1.00f, 0.84f, 0.48f, 0.48f)
+                shape.circle(muzzleX, muzzleY, 3.5f)
+                shape.color = Color(1.00f, 0.63f, 0.28f, 0.78f)
+                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 13f), screenY + directionDy(entity.dir, 13f), 1.8f)
             }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0 || entity.activeResearchTech != null || entity.underConstruction) {
                 val markerX = screenX + 10f
@@ -678,6 +689,10 @@ internal class GdxWorldRenderer(
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
         val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
         val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
+        shape.color = Color(0.08f, 0.10f, 0.12f, 0.74f)
+        shape.rect(left - 3f, top - 3f, width + 6f, height + 6f)
+        shape.color = Color(0.14f, 0.18f, 0.20f, 0.64f)
+        shape.rect(left - 1f, top + height - 2f, width + 2f, 5f)
         shape.color = shell
         shape.rect(left, top, width, height)
         shape.color = roof
@@ -694,15 +709,21 @@ internal class GdxWorldRenderer(
         if (isDepot) {
             shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
+            shape.color = Color(0.88f, 0.70f, 0.24f, 0.42f)
+            shape.rect(left + width * 0.25f, top + height - 6f, width * 0.5f, 3f)
         }
         if (isResourceDepot) {
             shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
             shape.rect(left + width - 13f, top + height - 12f, 8f, 6f)
             shape.rect(left + 6f, top + height - 12f, 8f, 6f)
+            shape.color = Color(0.96f, 0.84f, 0.42f, 0.26f)
+            shape.rect(left + width * 0.18f, top + height - 5f, width * 0.64f, 3f)
         }
         if (isGasDepot) {
             shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
             shape.circle(left + width * 0.5f, top + height * 0.55f, 6f)
+            shape.color = Color(0.40f, 0.90f, 0.72f, 0.28f + (ambientPulse(1600L) * 0.12f))
+            shape.circle(left + width * 0.5f, top + height * 0.55f, 9f)
         }
         if (entity.supportsResearch == true) {
             shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
@@ -716,6 +737,11 @@ internal class GdxWorldRenderer(
 
     private fun selectionPulse(): Float {
         val phase = (System.currentTimeMillis() % 900L).toFloat() / 900f
+        return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
+    }
+
+    private fun ambientPulse(periodMillis: Long): Float {
+        val phase = (System.currentTimeMillis() % periodMillis).toFloat() / periodMillis.toFloat()
         return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
     }
 
