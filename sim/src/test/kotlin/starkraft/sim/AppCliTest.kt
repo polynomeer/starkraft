@@ -1,0 +1,22 @@
+package starkraft.sim
+
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+class AppCliTest {
+    @Test
+    fun `bootstrap orders are disabled when noBootstrapOrders flag is present`() {
+        assertFalse(shouldIssueBootstrapOrders(arrayOf("--noBootstrapOrders"), replayPath = null))
+    }
+
+    @Test
+    fun `bootstrap orders stay disabled for replays`() {
+        assertFalse(shouldIssueBootstrapOrders(emptyArray(), replayPath = "/tmp/replay.json"))
+    }
+
+    @Test
+    fun `bootstrap orders remain enabled for normal headless runs`() {
+        assertTrue(shouldIssueBootstrapOrders(emptyArray(), replayPath = null))
+    }
+}

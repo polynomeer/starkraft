@@ -71,6 +71,7 @@ class PlayLauncherTest {
                 "/tmp/client-input.ndjson",
                 "--playControlFile",
                 "/tmp/play-control.txt",
+                "--noBootstrapOrders",
                 "--ticks",
                 "5000"
             ),

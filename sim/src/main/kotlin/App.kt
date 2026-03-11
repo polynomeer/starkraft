@@ -124,6 +124,7 @@ private val CLI_FLAGS_WITH_VALUE =
 private val CLI_TOGGLE_FLAGS =
     setOf(
         "--noSleep",
+        "--noBootstrapOrders",
         "--scriptValidate",
         "--scriptDryRun",
         "--replayValidateOnly",
@@ -528,7 +529,7 @@ fun main(args: Array<String>) {
         emitMapStateRecord(world, map, occ, resolvedSnapshotOutPath, streamSequence)
     }
 
-    if (replayPath == null) {
+    if (shouldIssueBootstrapOrders(args, replayPath)) {
         if (team1.isNotEmpty()) {
             issue(Command.Move(0, team1.toIntArray(), 28f, 28f), world, recorder, data, snapshotOutPath = resolvedSnapshotOutPath, streamSequence = streamSequence)
         }
@@ -1004,6 +1005,9 @@ private fun parseSnapshotEvery(args: Array<String>): Int? {
 private fun hasFlag(args: Array<String>, flag: String): Boolean =
     args.any { it == flag }
 
+internal fun shouldIssueBootstrapOrders(args: Array<String>, replayPath: String?): Boolean =
+    replayPath == null && !hasFlag(args, "--noBootstrapOrders")
+
 private fun isOptionToken(token: String): Boolean {
     if (!token.startsWith("-")) return false
     val key = token.substringBefore("=")
@@ -1332,6 +1336,7 @@ internal fun buildAppUsageText(): String =
         "Core:",
         "  --ticks <n>                 Run for N ticks",
         "  --noSleep                   Disable fixed-tick sleep for fast runs",
+        "  --noBootstrapOrders         Skip default opening move orders",
         "  --seed <n>                  Set deterministic RNG seed",
         "Input:",
         "  (choose exactly one base source: --replay, --script, or --inputJson)",

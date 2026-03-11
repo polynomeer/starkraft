@@ -122,6 +122,7 @@ internal fun buildPlaySimCommand(
         inputPath.toString(),
         "--playControlFile",
         controlPath.toString(),
+        "--noBootstrapOrders",
         "--ticks",
         ticks.toString()
     ) + scenario.simArgs
