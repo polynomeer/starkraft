@@ -21,8 +21,11 @@ internal class GdxWorldRenderer(
     private val shroudColor = Color(0.01f, 0.02f, 0.04f, 0.96f)
     private val minimapFogColor = Color(0.01f, 0.03f, 0.05f, 0.72f)
     private val minimapShroudColor = Color(0.01f, 0.02f, 0.03f, 0.92f)
-    private val terrainA = Color(0.08f, 0.12f, 0.15f, 1f)
-    private val terrainB = Color(0.10f, 0.15f, 0.18f, 1f)
+    private val terrainA = Color(0.09f, 0.13f, 0.10f, 1f)
+    private val terrainB = Color(0.11f, 0.16f, 0.12f, 1f)
+    private val terrainRidge = Color(0.16f, 0.20f, 0.14f, 1f)
+    private val terrainDust = Color(0.19f, 0.17f, 0.12f, 1f)
+    private val terrainMetal = Color(0.16f, 0.19f, 0.22f, 1f)
     private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, dragBox: DragSelectionBox?) {
@@ -60,28 +63,39 @@ internal class GdxWorldRenderer(
     private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState
-        shape.color = terrainA
-        shape.rect(0f, 0f, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat()))
-        val bandSize = runtime.camera.tileSize * 4f
-        var row = 0
-        var bandY = 0f
-        while (bandY < runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())) {
-            shape.color = if (row % 2 == 0) terrainB else terrainA
-            shape.rect(0f, bandY, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), bandSize)
-            bandY += bandSize
-            row++
+        val tileSize = runtime.camera.tileSize
+        for (x in 0 until snapshot.mapWidth) {
+            for (y in 0 until snapshot.mapHeight) {
+                val sx = runtime.camera.worldToScreenX(x.toFloat())
+                val sy = runtime.camera.worldToScreenY(y.toFloat())
+                val base =
+                    when {
+                        x in 40..56 && y in 40..56 -> terrainDust
+                        (x + y) % 11 < 3 -> terrainRidge
+                        (x / 6 + y / 6) % 2 == 0 -> terrainA
+                        else -> terrainB
+                    }
+                shape.color = base
+                shape.rect(sx, sy, tileSize, tileSize)
+                shape.color = base.cpy().lerp(Color.WHITE, 0.05f)
+                shape.rect(sx + 1f, sy + 1f, tileSize - 2f, (tileSize * 0.28f).coerceAtLeast(2f))
+            }
         }
         mapState?.blockedTiles?.forEach { (x, y) ->
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
-            shape.color = Color(0.16f, 0.16f, 0.18f, 1f)
+            shape.color = terrainMetal
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
+            shape.color = Color(0.28f, 0.30f, 0.34f, 0.82f)
+            shape.rect(sx + 2f, sy + 2f, runtime.camera.tileSize - 4f, runtime.camera.tileSize - 4f)
         }
         mapState?.staticOccupancyTiles?.forEach { (x, y) ->
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
-            shape.color = Color(0.29f, 0.21f, 0.16f, 0.78f)
+            shape.color = Color(0.37f, 0.24f, 0.14f, 0.84f)
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
+            shape.color = Color(0.52f, 0.34f, 0.20f, 0.38f)
+            shape.rect(sx + 3f, sy + 3f, runtime.camera.tileSize - 6f, runtime.camera.tileSize - 6f)
         }
     }
 
@@ -147,13 +161,7 @@ internal class GdxWorldRenderer(
                     shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.14f + (pulse * 0.12f))
                     shape.circle(screenX, screenY, 14f)
                 }
-                shape.color = Color(0f, 0f, 0f, 0.32f)
-                shape.circle(screenX + 1.5f, screenY + 1.5f, if (selected) 9f else 7f)
-                shape.color = factionColor(entity.faction, viewedFaction)
-                val radius = if (selected) 8f else 6f
-                shape.circle(screenX, screenY, radius)
-                shape.color = Color(1f, 1f, 1f, if (selected) 0.30f else 0.16f)
-                shape.circle(screenX - 1.5f, screenY - 1.5f, radius * 0.45f)
+                drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
                 if (selected) {
                     shape.color = selectionSoftColor
                     shape.circle(screenX, screenY, 11f)
@@ -457,6 +465,48 @@ internal class GdxWorldRenderer(
             faction == viewedFaction -> friendlyColor
             else -> enemyColor
         }
+
+    private fun drawUnitSilhouette(
+        shape: ShapeRenderer,
+        entity: EntitySnapshot,
+        screenX: Float,
+        screenY: Float,
+        factionColor: Color,
+        selected: Boolean
+    ) {
+        val body = Color(0.17f, 0.19f, 0.22f, 1f)
+        val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
+        val shadowRadius = if (selected) 9f else 7f
+        shape.color = Color(0f, 0f, 0f, 0.34f)
+        shape.circle(screenX + 1.5f, screenY + 1.5f, shadowRadius)
+        when {
+            entity.archetype == "worker" -> {
+                shape.color = body
+                shape.circle(screenX, screenY, 6.5f)
+                shape.color = teamStripe
+                shape.rect(screenX - 5f, screenY - 2f, 10f, 4f)
+                shape.color = Color.WHITE.cpy().apply { a = 0.18f }
+                shape.circle(screenX - 1f, screenY - 1f, 2.2f)
+            }
+            entity.weaponId != null -> {
+                shape.color = body
+                shape.rect(screenX - 3.5f, screenY - 6.5f, 7f, 13f)
+                shape.rect(screenX - 6.5f, screenY - 1.8f, 13f, 3.6f)
+                shape.color = teamStripe
+                shape.rect(screenX - 2.5f, screenY - 5.5f, 5f, 11f)
+                shape.color = Color.WHITE.cpy().apply { a = 0.18f }
+                shape.rect(screenX - 1.5f, screenY - 4.5f, 3f, 4f)
+            }
+            else -> {
+                shape.color = body
+                shape.rect(screenX - 5.5f, screenY - 4.5f, 11f, 9f)
+                shape.color = teamStripe
+                shape.rect(screenX - 4.5f, screenY - 3.5f, 9f, 7f)
+                shape.color = Color.WHITE.cpy().apply { a = 0.14f }
+                shape.rect(screenX - 3.5f, screenY - 2.5f, 4.5f, 2.5f)
+            }
+        }
+    }
 
     private fun selectionPulse(): Float {
         val phase = (System.currentTimeMillis() % 900L).toFloat() / 900f
