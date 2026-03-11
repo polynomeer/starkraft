@@ -139,6 +139,16 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `zoom is ignored when zoom lock is enabled`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        val before = runtime.camera
+
+        runtime.zoomAt(screenX = 320f, screenY = 240f, factor = 1.1f)
+
+        assertEquals(before, runtime.camera)
+    }
+
+    @Test
     fun `view auto-recovers to a faction with vision`(@TempDir tempDir: Path) {
         val runtime =
             runtime(

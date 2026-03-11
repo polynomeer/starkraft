@@ -39,6 +39,7 @@ internal class GdxClientRuntime(
         } else {
             PlayScenario.SKIRMISH
         }
+    var zoomLocked: Boolean = true
     var debugVisible: Boolean = false
     var pauseOverlayVisible: Boolean = false
     var helpOverlayVisible: Boolean = false
@@ -202,6 +203,7 @@ internal class GdxClientRuntime(
     }
 
     fun zoomAt(screenX: Float, screenY: Float, factor: Float) {
+        if (zoomLocked) return
         camera = zoomCameraAt(camera, screenX, screenY, factor)
         initialCameraApplied = true
     }
