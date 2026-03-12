@@ -50,6 +50,7 @@ internal class GameScreen(
     private val selectionPager = Table()
     private val selectionPageLabel = Label("", assets.mutedLabelStyle)
     private val controlGroupsLabel = Label("", assets.mutedLabelStyle)
+    private val controlGroupButtons = Table()
     private val commandHeaderLabel = Label("Command Deck", assets.titleLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
@@ -136,18 +137,23 @@ internal class GameScreen(
             background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.92f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(statusHeader).left().row()
+            add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
+            add(hudLinesLabel).left().expandX().fillX().padTop(8f)
         }
 
         commandCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
             pad(12f)
             top()
+            add(commandHeaderLabel).left().expandX().fillX().row()
+            add(actionBanner).left().expandX().fillX().padTop(6f).row()
         }
         buttonTable.top().left()
         buttonTable.defaults().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        commandCard.add(commandScroll).top().left()
+        commandCard.add(commandScroll).top().left().padTop(8f)
 
         actionBanner.apply {
             background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.82f))
@@ -159,6 +165,14 @@ internal class GameScreen(
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(
+                Table().apply {
+                    add(centerHeaderLabel).left()
+                    add().expandX().fillX()
+                    add(healthLabel).right()
+                }
+            ).expandX().fillX().row()
+            add(selectionMetaLabel).left().expandX().fillX().padTop(4f).row()
             add(
                 Table().apply {
                     add(
@@ -190,10 +204,14 @@ internal class GameScreen(
                     clearChildren()
                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(34f).height(26f).padRight(6f)
                     add(selectionPageLabel).expandX().left()
+                    add(controlGroupButtons).right().padRight(6f)
                     add(controlGroupsLabel).right().padRight(6f)
                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(34f).height(26f)
                 }
             ).expandX().fillX().padTop(8f)
+            add(queueStatusLabel).left().expandX().fillX().padTop(6f).row()
+            add(selectionRosterLabel).left().expandX().fillX().padTop(4f).row()
+            add(centerStatusLabel).left().expandX().fillX().padTop(4f).row()
         }
 
         bottomHud.apply {
@@ -707,6 +725,7 @@ internal class GameScreen(
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
         selectionPageLabel.setText(if (selectedCount == 0) "page 0/0" else "page ${selectionPage + 1}/$pageCount")
         controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "groups empty")
+        rebuildControlGroupButtons()
     }
 
     private fun shiftSelectionPage(delta: Int) {
@@ -717,6 +736,18 @@ internal class GameScreen(
         selectionPage = (selectionPage + delta).coerceIn(0, pageCount - 1)
         rebuildSelectionGrid()
         updateSelectionPager(snapshot)
+    }
+
+    private fun rebuildControlGroupButtons() {
+        controlGroupButtons.clearChildren()
+        controlGroupButtons.defaults().padRight(4f)
+        runtime.controlGroupSizes().forEach { (group, count) ->
+            controlGroupButtons.add(
+                makeButton("$group:$count", style = assets.subtleButtonStyle()) {
+                    runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = Gdx.graphics.height)
+                }
+            ).height(22f)
+        }
     }
 
     private fun updateScreenFade(delta: Float) {
