@@ -300,10 +300,11 @@ internal class GameScreen(
         val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
         val minimapHeight = (height * 0.20f).coerceIn(168f, 200f)
         val statusWidth = minimapWidth
-        val statusHeight = (height * 0.14f).coerceIn(124f, 168f)
-        val centerWidth = (width * 0.24f).coerceIn(300f, 390f)
-        val commandWidth = (width * 0.30f).coerceIn(360f, 520f)
-        val commandHeight = (height * 0.22f).coerceIn(154f, 220f)
+        val statusHeight = (height * 0.125f).coerceIn(112f, 152f)
+        val centerWidth = (width * 0.22f).coerceIn(288f, 370f)
+        val commandWidth = (width * 0.28f).coerceIn(340f, 500f)
+        val commandHeight = (height * 0.205f).coerceIn(148f, 204f)
+        val commandButtonHeight = if (width >= 1440) 34f else 32f
         val commandColumns = when {
             commandWidth >= 360f -> 3
             else -> 2
@@ -334,6 +335,7 @@ internal class GameScreen(
         centerCard.setWidth(centerWidth)
         commandCard.setWidth(commandWidth)
         commandScroll.setSize(commandWidth, commandHeight)
+        buttonTable.defaults().pad(0f, 0f, 5f, 5f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
@@ -366,7 +368,6 @@ internal class GameScreen(
         bottomHud.invalidateHierarchy()
 
         buttonTable.clearChildren()
-        buttonTable.defaults().pad(0f, 0f, 6f, 6f)
         val buttons = runtime.buttonModels()
         val groupedButtons = commandGroups(buttons)
         groupedButtons.forEachIndexed { groupIndex, group ->
@@ -395,8 +396,8 @@ internal class GameScreen(
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(cardTone)
-                                pad(3f)
-                                add(actor).width((commandWidth / commandColumns) - 26f).height(36f).left()
+                                pad(2f)
+                                add(actor).width((commandWidth / commandColumns) - 24f).height(commandButtonHeight).left()
                             }
                         ).expand().fill()
                     }
