@@ -254,13 +254,13 @@ internal class GameScreen(
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
             ).width(14f).height(74f).bottom().padRight(0f).padBottom(16f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(272f).expandX().fillX().bottom().padRight(2f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(266f).expandX().fillX().bottom().padRight(2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
             ).width(12f).height(74f).bottom().padRight(0f).padBottom(18f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(292f).right().bottom()
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(286f).right().bottom()
         }
 
         root.add().expand().fill().row()
@@ -328,13 +328,13 @@ internal class GameScreen(
         val height = Gdx.graphics.height
         val minimapWidth = (width * 0.14f).coerceIn(188f, 220f)
         val minimapHeight = (height * 0.136f).coerceIn(118f, 138f)
-        val centerWidth = (width * 0.17f).coerceIn(210f, 258f)
-        val commandWidth = (width * 0.18f).coerceIn(240f, 286f)
+        val centerWidth = (width * 0.166f).coerceIn(204f, 252f)
+        val commandWidth = (width * 0.176f).coerceIn(234f, 280f)
         val commandHeight = (height * 0.089f).coerceIn(74f, 92f)
         val commandButtonHeight = if (width >= 1440) 24f else 22f
         val commandColumns = 3
-        val commandCellWidth = (commandWidth / commandColumns) - 2f
-        val commandActorWidth = commandCellWidth - 22f
+        val commandCellWidth = (commandWidth / commandColumns) - 1f
+        val commandActorWidth = commandCellWidth - 21f
         val centerHeight = (height * 0.139f).coerceIn(116f, 140f)
         val commandShellHeight = (commandHeight + 22f).coerceIn(96f, 118f)
         val minimapShellHeight = minimapHeight + 14f
