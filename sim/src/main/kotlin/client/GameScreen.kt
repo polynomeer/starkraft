@@ -223,21 +223,21 @@ internal class GameScreen(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
                     pad(4f)
-                    add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left()
+                    add(wrapMinimapPanel(minimapFrame)).width(224f).height(164f).left()
                 }
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(18f).height(152f).bottom().padRight(0f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(340f).expandX().fillX().bottom().padRight(3f)
+            ).width(14f).height(146f).bottom().padRight(0f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(16f).height(148f).bottom().padRight(0f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
+            ).width(12f).height(142f).bottom().padRight(0f)
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(356f).right().bottom()
         }
 
         root.add().expand().fill().row()
@@ -303,15 +303,15 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val minimapWidth = (width * 0.145f).coerceIn(196f, 228f)
+        val minimapWidth = (width * 0.14f).coerceIn(188f, 220f)
         val minimapHeight = (height * 0.145f).coerceIn(124f, 148f)
-        val centerWidth = (width * 0.19f).coerceIn(236f, 296f)
-        val commandWidth = (width * 0.225f).coerceIn(300f, 348f)
-        val commandHeight = (height * 0.11f).coerceIn(92f, 120f)
-        val commandButtonHeight = if (width >= 1440) 28f else 26f
+        val centerWidth = (width * 0.18f).coerceIn(224f, 280f)
+        val commandWidth = (width * 0.205f).coerceIn(272f, 324f)
+        val commandHeight = (height * 0.102f).coerceIn(86f, 112f)
+        val commandButtonHeight = if (width >= 1440) 26f else 24f
         val commandColumns = 3
         val centerHeight = (height * 0.155f).coerceIn(132f, 164f)
-        val commandShellHeight = (commandHeight + 34f).coerceIn(128f, 156f)
+        val commandShellHeight = (commandHeight + 30f).coerceIn(120f, 146f)
         val minimapShellHeight = minimapHeight + 16f
         val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
         selectionLabel.setWrap(true)
@@ -341,7 +341,7 @@ internal class GameScreen(
         commandCard.setSize(commandWidth, commandShellHeight)
         commandScroll.setSize(commandWidth, commandHeight)
         bottomHud.setHeight(hudShellHeight)
-        buttonTable.defaults().pad(0f, 0f, 5f, 5f)
+        buttonTable.defaults().pad(0f, 0f, 4f, 4f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
@@ -385,8 +385,8 @@ internal class GameScreen(
             buttonTable.add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
-                    pad(3f)
-                    add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(5f).row()
+                    pad(2f)
+                    add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(3f).row()
                     group.second.forEachIndexed { index, button ->
                         val actor = makeButton(
                             commandButtonLabel(button),
@@ -411,11 +411,11 @@ internal class GameScreen(
                                     Table().apply {
                                         background = assets.panelDrawable(cardTone)
                                         pad(2f)
-                                        add(actor).width((commandWidth / commandColumns) - 22f).height(commandButtonHeight).left()
+                                        add(actor).width((commandWidth / commandColumns) - 16f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
-                        ).width((commandWidth / commandColumns) - 10f).left()
+                        ).width((commandWidth / commandColumns) - 6f).left()
                         if ((index + 1) % commandColumns == 0) {
                             row()
                         }
@@ -426,7 +426,7 @@ internal class GameScreen(
                 }
             ).colspan(commandColumns).left().fillX().expandX().row()
             if (groupIndex != groupedButtons.lastIndex) {
-                buttonTable.add().height(8f).colspan(commandColumns).row()
+                buttonTable.add().height(4f).colspan(commandColumns).row()
             }
         }
         if (runtime.debugVisible && snapshot != null) {
@@ -889,6 +889,24 @@ internal class GameScreen(
         }
 
     private fun commandButtonLabel(button: ClientCommandButton): String {
+        val baseLabel =
+            when (button.actionId) {
+                "attackMove" -> "Attack"
+                "centerSelection" -> "Center"
+                "viewF1" -> "F1"
+                "viewF2" -> "F2"
+                "observer" -> "Obs"
+                "pause" -> "Pause"
+                "help" -> "Help"
+                "debug" -> "Debug"
+                "build:Depot" -> "Depot"
+                "build:ResourceDepot" -> "Expand"
+                "build:GasDepot" -> "Gas"
+                "cancelBuild" -> "Stop Build"
+                "cancelTrain" -> "Stop Train"
+                "cancelResearch" -> "Stop Tech"
+                else -> button.label
+            }
         val hotkey =
             when (button.actionId) {
                 "move" -> "M"
@@ -913,7 +931,7 @@ internal class GameScreen(
                 "build:GasDepot" -> "G"
                 else -> null
             }
-        return if (hotkey == null) button.label else "${button.label} [$hotkey]"
+        return if (hotkey == null) baseLabel else "$baseLabel [$hotkey]"
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
