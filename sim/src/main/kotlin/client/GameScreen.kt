@@ -221,16 +221,16 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.54f))
-            pad(8f, 10f, 6f, 10f)
+            pad(6f, 8f, 4f, 8f)
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.92f))
-                    pad(6f)
+                    pad(5f)
                     add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left()
                 }
             ).left().bottom()
             add().expandX().fillX()
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.96f))).width(340f).bottom().padRight(8f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.96f))).width(340f).bottom().padRight(6f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
@@ -298,12 +298,11 @@ internal class GameScreen(
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
         val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
-        val minimapHeight = (height * 0.20f).coerceIn(168f, 200f)
+        val minimapHeight = (height * 0.18f).coerceIn(156f, 188f)
         val statusWidth = minimapWidth
-        val statusHeight = (height * 0.125f).coerceIn(112f, 152f)
         val centerWidth = (width * 0.22f).coerceIn(288f, 370f)
         val commandWidth = (width * 0.28f).coerceIn(340f, 500f)
-        val commandHeight = (height * 0.205f).coerceIn(148f, 204f)
+        val commandHeight = (height * 0.19f).coerceIn(140f, 190f)
         val commandButtonHeight = if (width >= 1440) 34f else 32f
         val commandColumns = when {
             commandWidth >= 360f -> 3
@@ -330,7 +329,6 @@ internal class GameScreen(
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
         leftHudColumn.setWidth(minimapWidth + 16f)
-        statusCard.setSize(statusWidth, statusHeight)
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setWidth(centerWidth)
         commandCard.setWidth(commandWidth)
@@ -799,7 +797,7 @@ internal class GameScreen(
     }
 
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
-        val reservedHudHeight = (screenHeight * 0.29f).coerceIn(214f, 250f)
+        val reservedHudHeight = (screenHeight * 0.24f).coerceIn(178f, 214f)
         return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
     }
 
