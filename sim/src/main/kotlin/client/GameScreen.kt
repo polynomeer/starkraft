@@ -203,7 +203,7 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.98f))
+                            background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.98f))
                             pad(6f)
                             add(portraitLabel).center()
                         }
@@ -436,7 +436,7 @@ internal class GameScreen(
                                 button.actionId == "move" || button.actionId == "patrol" || button.actionId == "hold" ->
                                     Color(0.07f, 0.24f, 0.28f, 0.98f)
                                 button.actionId == "attackMove" ->
-                                    Color(0.28f, 0.16f, 0.10f, 0.98f)
+                                    Color(0.36f, 0.14f, 0.10f, 0.98f)
                                 else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
                             }
                         val frameTone =
@@ -625,6 +625,11 @@ internal class GameScreen(
                                     background = assets.panelDrawable(Color(0.09f, 0.14f, 0.17f, 0.95f))
                                 }
                             ).width(12f).height(4f).left().padBottom(2f).row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
+                                }
+                            ).width(8f).height(18f).left().padBottom(3f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
