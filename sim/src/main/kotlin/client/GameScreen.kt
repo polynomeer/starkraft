@@ -174,7 +174,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(8f)
+            pad(7f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -188,11 +188,11 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.98f))
-                            pad(7f)
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
+                            pad(6f)
                             add(portraitLabel).center()
                         }
-                    ).size(68f, 68f).top().left().padRight(8f)
+                    ).size(74f, 74f).top().left().padRight(10f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().row()
@@ -205,8 +205,8 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(156f).height(10f).left().padTop(4f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(6f).row()
+                            ).width(150f).height(10f).left().padTop(4f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(5f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
@@ -237,13 +237,13 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(18f).height(138f).bottom().padRight(0f).padBottom(6f)
+            ).width(22f).height(122f).bottom().padRight(0f).padBottom(18f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(14f).height(134f).bottom().padRight(0f).padBottom(8f)
+            ).width(18f).height(118f).bottom().padRight(0f).padBottom(20f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(356f).right().bottom()
         }
 
@@ -702,31 +702,31 @@ internal class GameScreen(
             }
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
-            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(3f)
+            pad(2f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.14f, 0.98f) else tone)
-                    pad(if (focused) 5f else 4f)
+                    background = assets.panelDrawable(if (focused) Color(0.26f, 0.36f, 0.12f, 0.98f) else tone)
+                    pad(if (focused) 4f else 3f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.10f else 0.04f))
+                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.12f else 0.05f))
                         }
-                    ).size(24f, 10f).center().padBottom(1f).row()
+                    ).size(20f, 8f).center().padBottom(1f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(1f).row()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(if (focused) Color(0.13f, 0.16f, 0.10f, 1f) else Color(0.10f, 0.12f, 0.14f, 1f))
+                            background = assets.panelDrawable(if (focused) Color(0.12f, 0.16f, 0.08f, 1f) else Color(0.09f, 0.11f, 0.13f, 1f))
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(hpColor)
                                 }
-                            ).width(24f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
+                            ).width(20f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(24f).height(4f).padTop(3f)
+                    ).width(20f).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
