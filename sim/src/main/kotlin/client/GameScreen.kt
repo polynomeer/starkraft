@@ -253,13 +253,13 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(22f).height(122f).bottom().padRight(0f).padBottom(18f)
+            ).width(24f).height(108f).bottom().padRight(0f).padBottom(28f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(312f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(18f).height(118f).bottom().padRight(0f).padBottom(20f)
+            ).width(20f).height(104f).bottom().padRight(0f).padBottom(30f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(344f).right().bottom()
         }
 
