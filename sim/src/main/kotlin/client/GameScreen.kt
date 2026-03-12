@@ -431,10 +431,14 @@ internal class GameScreen(
                             }
                         val cardTone =
                             when {
-                                button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
-                                    Color(0.28f, 0.22f, 0.08f, 0.98f)
-                                button.actionId == "move" || button.actionId == "patrol" || button.actionId == "hold" ->
+                                button.actionId.startsWith("build") ->
+                                    Color(0.30f, 0.24f, 0.08f, 0.98f)
+                                button.actionId.startsWith("train") || button.actionId.startsWith("research") ->
+                                    Color(0.22f, 0.20f, 0.10f, 0.98f)
+                                button.actionId == "move" || button.actionId == "hold" ->
                                     Color(0.07f, 0.24f, 0.28f, 0.98f)
+                                button.actionId == "patrol" ->
+                                    Color(0.10f, 0.20f, 0.30f, 0.98f)
                                 button.actionId == "attackMove" ->
                                     Color(0.36f, 0.14f, 0.10f, 0.98f)
                                 else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
@@ -648,6 +652,11 @@ internal class GameScreen(
                                             background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.95f))
                                         }
                                     ).width(28f).height(3f).right().padTop(2f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.95f))
+                                        }
+                                    ).width(10f).height(10f).right().padTop(3f)
                                 }
                             ).right().padTop(2f)
                         }
