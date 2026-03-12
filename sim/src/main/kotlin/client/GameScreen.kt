@@ -541,9 +541,9 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Waiting for battlefield state"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "View $faction · ${snapshot.entities.size} live"
+            "$faction · ${snapshot.entities.size} live"
         } else {
-            "Lead ${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
+            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
         }
     }
 
@@ -612,11 +612,11 @@ internal class GameScreen(
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.82f))
-            pad(2f, 2f, 5f, 2f)
+            pad(1f, 1f, 4f, 1f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.21f, 0.27f, 0.28f))
-                    pad(3f, 3f, 5f, 3f)
+                    pad(2f, 2f, 4f, 2f)
                     add(
                         Table().apply {
                             add(
@@ -962,7 +962,7 @@ internal class GameScreen(
     private fun buildSelectionMetaLine(): String {
         val snapshot = runtime.snapshot ?: return "No live snapshot"
         if (runtime.session.state.selectedIds.isEmpty()) {
-            return "View ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size} live"
+            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         val combat = selected.count { it.weaponId != null }
@@ -994,9 +994,9 @@ internal class GameScreen(
         if (selected.isEmpty()) return "No active control group"
         val lead = selected.first()
         return if (selected.size == 1) {
-            "${lead.typeId}  hp ${lead.hp}/${lead.maxHp}"
+            "${lead.typeId} ${lead.hp}/${lead.maxHp}"
         } else {
-            "${selected.size} selected  lead ${lead.typeId}"
+            "${selected.size} sel ${lead.typeId}"
         }
     }
 
@@ -1042,9 +1042,9 @@ internal class GameScreen(
                 "build:Depot" -> "Depot"
                 "build:ResourceDepot" -> "Expand"
                 "build:GasDepot" -> "Gas"
-                "cancelBuild" -> "Stop Build"
-                "cancelTrain" -> "Stop Train"
-                "cancelResearch" -> "Stop Tech"
+                "cancelBuild" -> "Stop B"
+                "cancelTrain" -> "Stop T"
+                "cancelResearch" -> "Stop R"
                 "patrol" -> "Patrol"
                 "move" -> "Move"
                 "hold" -> "Hold"
