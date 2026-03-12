@@ -224,8 +224,8 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.07f, 0.76f))
-            pad(2f, 4f, 1f, 4f)
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
+            pad(1f, 3f, 0f, 3f)
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.94f))
@@ -235,15 +235,15 @@ internal class GameScreen(
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
+                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(14f).height(146f).bottom().padRight(0f)
+            ).width(18f).height(138f).bottom().padRight(0f).padBottom(6f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
+                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
-            ).width(12f).height(142f).bottom().padRight(0f)
+            ).width(14f).height(134f).bottom().padRight(0f).padBottom(8f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(356f).right().bottom()
         }
 
@@ -390,7 +390,7 @@ internal class GameScreen(
             if (group.second.isEmpty()) return@forEachIndexed
             buttonTable.add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
+                    background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
                     pad(2f)
                     add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(3f).row()
                     group.second.forEachIndexed { index, button ->
@@ -404,19 +404,19 @@ internal class GameScreen(
                         val cardTone =
                             when {
                                 button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
-                                    Color(0.18f, 0.16f, 0.08f, 0.94f)
+                                    Color(0.28f, 0.22f, 0.08f, 0.98f)
                                 button.actionId == "move" || button.actionId == "attackMove" || button.actionId == "patrol" || button.actionId == "hold" ->
-                                    Color(0.08f, 0.16f, 0.18f, 0.94f)
-                                else -> Color(0.09f, 0.11f, 0.14f, 0.94f)
+                                    Color(0.07f, 0.24f, 0.28f, 0.98f)
+                                else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
                             }
                         add(
                             Table().apply {
-                                background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
-                                pad(2f)
+                                background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
+                                pad(1f)
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(cardTone)
-                                        pad(2f)
+                                        pad(2f, 2f, 3f, 2f)
                                         add(actor).width((commandWidth / commandColumns) - 16f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
@@ -533,12 +533,12 @@ internal class GameScreen(
 
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.96f))
-            pad(3f)
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.92f))
+            pad(2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(tone)
-                    pad(1f)
+                    pad(1f, 1f, 2f, 1f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
@@ -546,12 +546,12 @@ internal class GameScreen(
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.72f))
-            pad(3f)
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.82f))
+            pad(2f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.17f, 0.22f, 0.18f))
-                    pad(2f)
+                    background = assets.panelDrawable(Color(0.12f, 0.19f, 0.25f, 0.24f))
+                    pad(2f, 2f, 3f, 2f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
