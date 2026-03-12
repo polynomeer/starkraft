@@ -367,7 +367,7 @@ internal class GameScreen(
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
         commandScroll.setSize(commandWidth, commandHeight)
         bottomHud.setHeight(hudShellHeight)
-        buttonTable.defaults().pad(0f, 0f, 3f, 3f)
+        buttonTable.defaults().pad(0f, 0f, 2f, 2f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
@@ -576,7 +576,7 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "No roster data"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) {
-            return "No active unit card"
+            return "No card"
         }
         val counts =
             selected
@@ -586,7 +586,7 @@ internal class GameScreen(
                 .sortedByDescending { it.value }
                 .take(4)
                 .joinToString("   ") { "${it.key}:${it.value}" }
-        return "Roster  $counts"
+        return "Ros $counts"
     }
 
     private fun buildFactionOverviewLine(): String {
@@ -635,7 +635,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                 }
-                            ).width(5f).height(10f).left().padBottom(1f).row()
+                            ).width(4f).height(8f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
