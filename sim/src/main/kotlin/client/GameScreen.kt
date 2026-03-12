@@ -191,7 +191,13 @@ internal class GameScreen(
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(4f).row()
-            add(selectionLabel).left().expandX().fillX().padTop(3f).row()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.92f))
+                    pad(4f, 7f, 3f, 7f)
+                    add(selectionLabel).left().expandX().fillX()
+                }
+            ).left().expandX().fillX().padTop(3f).row()
             add(
                 Table().apply {
                     add(
@@ -529,7 +535,7 @@ internal class GameScreen(
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
             "Viewing $faction · ${snapshot.entities.size} live entities"
         } else {
-            "${runtime.session.state.selectedIds.size} entities selected"
+            "Lead ${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} selected"
         }
     }
 
@@ -1013,7 +1019,7 @@ internal class GameScreen(
                 "build:GasDepot" -> "G"
                 else -> null
             }
-        return if (hotkey == null) baseLabel else "$baseLabel [$hotkey]"
+        return if (hotkey == null) baseLabel else "$baseLabel <$hotkey>"
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
