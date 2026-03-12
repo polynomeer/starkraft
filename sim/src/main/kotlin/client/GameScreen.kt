@@ -193,7 +193,7 @@ internal class GameScreen(
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(4f).row()
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.92f))
+                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
                     pad(4f, 7f, 3f, 7f)
                     add(selectionLabel).left().expandX().fillX()
                 }
@@ -202,7 +202,7 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
+                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.98f))
                             pad(6f)
                             add(portraitLabel).center()
                         }
@@ -1028,7 +1028,7 @@ internal class GameScreen(
                 "build:GasDepot" -> "G"
                 else -> null
             }
-        return if (hotkey == null) baseLabel else "$baseLabel <$hotkey>"
+        return if (hotkey == null) baseLabel else "$baseLabel $hotkey"
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
