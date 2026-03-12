@@ -382,6 +382,7 @@ internal class GdxWorldRenderer(
             val screenY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(screenX, screenY)) continue
             if (entity.weaponCooldownTicks > 0 && entity.weaponId != null) {
+                val hostile = nearestHostile(snapshot, entity)
                 shape.color = Color(0.98f, 0.54f, 0.22f, 0.18f)
                 shape.circle(screenX, screenY, 12f)
                 shape.color = Color(0.98f, 0.72f, 0.26f, 0.95f)
@@ -392,6 +393,14 @@ internal class GdxWorldRenderer(
                 shape.circle(muzzleX, muzzleY, 3.5f)
                 shape.color = Color(1.00f, 0.63f, 0.28f, 0.78f)
                 shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 13f), screenY + directionDy(entity.dir, 13f), 1.8f)
+                hostile?.let { target ->
+                    val targetX = runtime.camera.worldToScreenX(target.x)
+                    val targetY = runtime.camera.worldToScreenY(target.y)
+                    shape.color = Color(1.00f, 0.72f, 0.36f, 0.44f)
+                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.1f)
+                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.24f)
+                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.2f)
+                }
             }
             if (entity.pathRemainingNodes > 0) {
                 val trailX = screenX - directionDx(entity.dir, 7f)
@@ -441,6 +450,27 @@ internal class GdxWorldRenderer(
                 shape.rect(markerX + 1f, markerY + 1f, 16f * fillRatio, 3f)
             }
             if (runtime.isDamageFlashActive(entity.id)) {
+                nearestHostile(snapshot, entity)?.let { attacker ->
+                    val attackDir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
+                    val hitX = screenX - directionDx(attackDir, 10f)
+                    val hitY = screenY - directionDy(attackDir, 10f)
+                    shape.color = Color(1.00f, 0.74f, 0.44f, 0.82f)
+                    shape.rectLine(hitX, hitY, screenX, screenY, 2.2f)
+                    shape.rectLine(
+                        hitX + directionDy(attackDir, 4f),
+                        hitY - directionDx(attackDir, 4f),
+                        hitX,
+                        hitY,
+                        1.8f
+                    )
+                    shape.rectLine(
+                        hitX - directionDy(attackDir, 4f),
+                        hitY + directionDx(attackDir, 4f),
+                        hitX,
+                        hitY,
+                        1.8f
+                    )
+                }
                 shape.color = impactSparkColor
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
                     val tileX = floor(entity.x).toInt()
@@ -898,6 +928,21 @@ internal class GdxWorldRenderer(
             shape.rectLine(cx - (nx * chevronSize) - (px * chevronSize), cy - (ny * chevronSize) - (py * chevronSize), cx, cy, 1.4f)
         }
     }
+
+    private fun nearestHostile(snapshot: ClientSnapshot, entity: EntitySnapshot): EntitySnapshot? =
+        snapshot.entities
+            .asSequence()
+            .filter { it.faction > 0 && it.faction != entity.faction }
+            .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
+
+    private fun distanceSq(ax: Float, ay: Float, bx: Float, by: Float): Float {
+        val dx = ax - bx
+        val dy = ay - by
+        return (dx * dx) + (dy * dy)
+    }
+
+    private fun directionTo(fromX: Float, fromY: Float, toX: Float, toY: Float): Float =
+        kotlin.math.atan2((toY - fromY), (toX - fromX))
 
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
 
