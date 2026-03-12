@@ -231,15 +231,15 @@ internal class GameScreen(
             ).left().bottom().padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.98f))
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(18f).height(158f).bottom().padRight(4f)
+            ).width(26f).height(176f).bottom().padRight(0f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(340f).expandX().fillX().bottom().padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.98f))
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(20f).height(140f).bottom().padRight(4f)
+            ).width(24f).height(166f).bottom().padRight(0f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
@@ -309,7 +309,7 @@ internal class GameScreen(
         val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
         val minimapHeight = (height * 0.18f).coerceIn(156f, 188f)
         val centerWidth = (width * 0.22f).coerceIn(288f, 370f)
-        val commandWidth = (width * 0.27f).coerceIn(372f, 444f)
+        val commandWidth = (width * 0.265f).coerceIn(372f, 432f)
         val commandHeight = (height * 0.18f).coerceIn(142f, 190f)
         val commandButtonHeight = if (width >= 1440) 35f else 33f
         val commandColumns = 3
