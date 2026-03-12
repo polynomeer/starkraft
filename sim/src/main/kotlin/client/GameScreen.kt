@@ -167,7 +167,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(12f)
+            pad(10f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -183,10 +183,10 @@ internal class GameScreen(
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.98f))
-                            pad(10f)
+                            pad(8f)
                             add(portraitLabel).center()
                         }
-                    ).size(92f, 92f).top().left().padRight(12f)
+                    ).size(76f, 76f).top().left().padRight(10f)
                     add(
                         Table().apply {
                             add(
@@ -202,8 +202,8 @@ internal class GameScreen(
                         }
                     ).expandX().fillX().top()
                 }
-            ).expandX().fillX().padTop(6f).row()
-            add(selectionGrid).left().expandX().fillX().padTop(10f).row()
+            ).expandX().fillX().padTop(4f).row()
+            add(selectionGrid).left().expandX().fillX().padTop(8f).row()
             add(
                 selectionPager.apply {
                     clearChildren()
@@ -213,10 +213,8 @@ internal class GameScreen(
                     add(controlGroupsLabel).right().padRight(6f)
                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(34f).height(26f)
                 }
-            ).expandX().fillX().padTop(8f)
-            add(queueStatusLabel).left().expandX().fillX().padTop(6f).row()
+            ).expandX().fillX().padTop(6f)
             add(selectionRosterLabel).left().expandX().fillX().padTop(4f).row()
-            add(centerStatusLabel).left().expandX().fillX().padTop(4f).row()
         }
 
         bottomHud.apply {
@@ -306,17 +304,17 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
-        val minimapHeight = (height * 0.18f).coerceIn(156f, 188f)
-        val centerWidth = (width * 0.22f).coerceIn(288f, 370f)
-        val commandWidth = (width * 0.265f).coerceIn(372f, 432f)
-        val commandHeight = (height * 0.18f).coerceIn(142f, 190f)
-        val commandButtonHeight = if (width >= 1440) 35f else 33f
+        val minimapWidth = (width * 0.145f).coerceIn(196f, 230f)
+        val minimapHeight = (height * 0.15f).coerceIn(128f, 152f)
+        val centerWidth = (width * 0.20f).coerceIn(252f, 320f)
+        val commandWidth = (width * 0.235f).coerceIn(316f, 372f)
+        val commandHeight = (height * 0.12f).coerceIn(100f, 132f)
+        val commandButtonHeight = if (width >= 1440) 30f else 28f
         val commandColumns = 3
-        val centerHeight = (height * 0.23f).coerceIn(198f, 238f)
-        val commandShellHeight = (commandHeight + 78f).coerceIn(208f, 252f)
-        val minimapShellHeight = minimapHeight + 18f
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 18f, commandShellHeight + 18f) + 8f
+        val centerHeight = (height * 0.18f).coerceIn(148f, 182f)
+        val commandShellHeight = (commandHeight + 48f).coerceIn(150f, 182f)
+        val minimapShellHeight = minimapHeight + 16f
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 14f, commandShellHeight + 14f) + 4f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -359,7 +357,7 @@ internal class GameScreen(
         footerLabel.setText("LMB select  RMB order  drag box select")
         statusHeader.setText("Battlefield")
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
-        commandHeaderLabel.setText("Command Deck  ${runtime.overlayModeLabel()}")
+        commandHeaderLabel.setText("Command  ${runtime.overlayModeLabel()}")
         economyLabel.setText(buildTopEconomyLine())
         topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
@@ -384,7 +382,7 @@ internal class GameScreen(
             buttonTable.add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
-                    pad(4f)
+                    pad(3f)
                     add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(5f).row()
                     group.second.forEachIndexed { index, button ->
                         val actor = makeButton(
@@ -410,11 +408,11 @@ internal class GameScreen(
                                     Table().apply {
                                         background = assets.panelDrawable(cardTone)
                                         pad(2f)
-                                        add(actor).width((commandWidth / commandColumns) - 30f).height(commandButtonHeight).left()
+                                        add(actor).width((commandWidth / commandColumns) - 22f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
-                        ).width((commandWidth / commandColumns) - 16f).left()
+                        ).width((commandWidth / commandColumns) - 10f).left()
                         if ((index + 1) % commandColumns == 0) {
                             row()
                         }
@@ -814,7 +812,7 @@ internal class GameScreen(
     }
 
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
-        val reservedHudHeight = (screenHeight * 0.24f).coerceIn(178f, 214f)
+        val reservedHudHeight = (screenHeight * 0.18f).coerceIn(136f, 168f)
         return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
     }
 
@@ -918,16 +916,12 @@ internal class GameScreen(
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
         val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
         val production = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
-        val selection = buttons.filter { it.actionId.startsWith("select") || it.actionId == "centerFaction" }
-        val view = buttons.filter { it.actionId in setOf("viewF1", "viewF2", "observer") }
-        val system = buttons.filter { it.actionId in setOf("pause", "help", "debug") }
-        return listOf(
-            "Orders" to primary,
-            "Production" to production,
-            "Selection" to selection,
-            "View" to view,
-            "System" to system
-        )
+        val utility =
+            buttons.filter {
+                it.actionId in setOf("viewF1", "viewF2", "observer", "pause", "help") ||
+                    (runtime.debugVisible && it.actionId == "debug")
+            }
+        return listOf("Orders" to primary, "Production" to production, "Utility" to utility)
     }
 
     private fun makeButton(
