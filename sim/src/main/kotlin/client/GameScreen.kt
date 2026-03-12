@@ -207,7 +207,7 @@ internal class GameScreen(
                             pad(6f)
                             add(portraitLabel).center()
                         }
-                    ).size(74f, 74f).top().left().padRight(10f)
+                    ).size(80f, 80f).top().left().padRight(10f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().padTop(1f).row()
