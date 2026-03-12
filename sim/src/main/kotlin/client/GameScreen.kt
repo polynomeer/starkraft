@@ -224,24 +224,24 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.84f))
+            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.07f, 0.76f))
             pad(2f, 4f, 1f, 4f)
             add(
                 leftHudColumn.apply {
-                    background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
-                    pad(4f)
+                    background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.94f))
+                    pad(3f)
                     add(wrapMinimapPanel(minimapFrame)).width(224f).height(164f).left()
                 }
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
+                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
                 }
             ).width(14f).height(146f).bottom().padRight(0f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
+                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
                 }
             ).width(12f).height(142f).bottom().padRight(0f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(356f).right().bottom()
@@ -321,6 +321,7 @@ internal class GameScreen(
         val commandShellHeight = (commandHeight + 28f).coerceIn(116f, 142f)
         val minimapShellHeight = minimapHeight + 16f
         val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
+        val unifiedPanelHeight = hudShellHeight - 8f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -342,10 +343,10 @@ internal class GameScreen(
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
         leftHudColumn.setWidth(minimapWidth + 16f)
-        leftHudColumn.setSize(minimapWidth + 16f, minimapShellHeight)
+        leftHudColumn.setSize(minimapWidth + 16f, unifiedPanelHeight)
         minimapFrame.setSize(minimapWidth, minimapHeight)
-        centerCard.setSize(centerWidth, centerHeight)
-        commandCard.setSize(commandWidth, commandShellHeight)
+        centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
+        commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
         commandScroll.setSize(commandWidth, commandHeight)
         bottomHud.setHeight(hudShellHeight)
         buttonTable.defaults().pad(0f, 0f, 4f, 4f)
