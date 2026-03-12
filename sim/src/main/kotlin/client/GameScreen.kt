@@ -662,6 +662,11 @@ internal class GameScreen(
                                             background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.95f))
                                         }
                                     ).width(24f).height(4f).right().padTop(2f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
+                                        }
+                                    ).width(6f).height(14f).right().padTop(3f)
                                 }
                             ).right().padTop(2f)
                         }
@@ -952,13 +957,13 @@ internal class GameScreen(
     private fun buildSelectionMetaLine(): String {
         val snapshot = runtime.snapshot ?: return "No live snapshot"
         if (runtime.session.state.selectedIds.isEmpty()) {
-            return "Viewed ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"} · entities ${snapshot.entities.size}"
+            return "View ${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size} live"
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         val combat = selected.count { it.weaponId != null }
         val workers = selected.count { it.archetype == "worker" }
         val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "count ${selected.size} · combat $combat · workers $workers · structures $structures"
+        return "${selected.size} sel · c$combat · w$workers · s$structures"
     }
 
     private fun buildTopEconomyLine(): String {
@@ -1035,6 +1040,9 @@ internal class GameScreen(
                 "cancelBuild" -> "Stop Build"
                 "cancelTrain" -> "Stop Train"
                 "cancelResearch" -> "Stop Tech"
+                "patrol" -> "Patrol"
+                "move" -> "Move"
+                "hold" -> "Hold"
                 else -> button.label
             }
         val hotkey =
