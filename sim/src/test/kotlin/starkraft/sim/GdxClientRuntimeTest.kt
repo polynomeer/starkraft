@@ -12,6 +12,7 @@ import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.ClientDamageActivity
+import starkraft.sim.client.CompletionFlashKind
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.GdxClientRuntime
@@ -269,6 +270,7 @@ class GdxClientRuntimeTest {
 
         assertTrue(runtime.noticeLine()?.contains("complete") == true)
         assertTrue(runtime.isCompletionFlashActive(4))
+        assertEquals(CompletionFlashKind.CONSTRUCTION, runtime.completionFlashKind(4))
         assertTrue(runtime.consumeCompletionAlertSound())
         assertFalse(runtime.consumeCompletionAlertSound())
     }

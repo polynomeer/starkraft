@@ -32,6 +32,7 @@ internal class GdxClientRuntime(
     private var recentGroundPing: GroundPing? = null
     private var recentGroundPingUntilMillis: Long = 0L
     private var recentCompletionEntityIds: Set<Int> = emptySet()
+    private var recentCompletionKindsByEntityId: Map<Int, CompletionFlashKind> = emptyMap()
     private var recentCompletionUntilMillis: Long = 0L
     private var lastSnapshotTick: Int? = null
     private var previousEntitiesById: Map<Int, EntitySnapshot> = emptyMap()
@@ -80,6 +81,7 @@ internal class GdxClientRuntime(
         }
         if (recentCompletionEntityIds.isNotEmpty() && System.currentTimeMillis() > recentCompletionUntilMillis) {
             recentCompletionEntityIds = emptySet()
+            recentCompletionKindsByEntityId = emptyMap()
         }
         maybeRaiseCompletionNotice()
         maybeRaiseAttackAlert()
@@ -92,6 +94,7 @@ internal class GdxClientRuntime(
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
+    fun completionFlashKind(entityId: Int): CompletionFlashKind? = recentCompletionKindsByEntityId[entityId]?.takeIf { isCompletionFlashActive(entityId) }
     fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
 
     fun overlayModeLabel(): String =
@@ -820,7 +823,7 @@ internal class GdxClientRuntime(
     private fun maybeRaiseCompletionNotice() {
         val snapshot = session.state.snapshot ?: return
         if (lastSnapshotTick == snapshot.tick) return
-        val completed = ArrayList<EntitySnapshot>()
+        val completed = LinkedHashMap<EntitySnapshot, CompletionFlashKind>()
         for (entity in snapshot.entities) {
             val previous = previousEntitiesById[entity.id] ?: continue
             val constructionComplete = previous.underConstruction && !entity.underConstruction
@@ -832,19 +835,22 @@ internal class GdxClientRuntime(
                 previous.activeResearchTech != null &&
                     entity.activeResearchTech == null &&
                     entity.researchQueueSize <= previous.researchQueueSize
-            if (constructionComplete || productionComplete || researchComplete) {
-                completed += entity
+            when {
+                constructionComplete -> completed[entity] = CompletionFlashKind.CONSTRUCTION
+                researchComplete -> completed[entity] = CompletionFlashKind.RESEARCH
+                productionComplete -> completed[entity] = CompletionFlashKind.PRODUCTION
             }
         }
         if (completed.isNotEmpty()) {
-            recentCompletionEntityIds = completed.map { it.id }.toSet()
+            recentCompletionEntityIds = completed.keys.map { it.id }.toSet()
+            recentCompletionKindsByEntityId = completed.entries.associate { it.key.id to it.value }
             recentCompletionUntilMillis = System.currentTimeMillis() + 1200L
             pendingCompletionAlertSound = true
-            val lead = completed.first()
+            val lead = completed.keys.first()
             val label =
                 when {
-                    previousEntitiesById[lead.id]?.underConstruction == true && !lead.underConstruction -> "${lead.typeId} complete"
-                    previousEntitiesById[lead.id]?.activeResearchTech != null && lead.activeResearchTech == null -> "${lead.typeId} research complete"
+                    completed[lead] == CompletionFlashKind.CONSTRUCTION -> "${lead.typeId} complete"
+                    completed[lead] == CompletionFlashKind.RESEARCH -> "${lead.typeId} research complete"
                     else -> "${lead.typeId} ready"
                 }
             showNotice(label)
@@ -874,6 +880,12 @@ internal class GdxClientRuntime(
         lastGroupRecallAtNanos = now
         showNotice("group $group recalled (${ids.size})")
     }
+}
+
+internal enum class CompletionFlashKind {
+    CONSTRUCTION,
+    PRODUCTION,
+    RESEARCH
 }
 
 internal data class GroundPing(

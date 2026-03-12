@@ -23,8 +23,12 @@ internal class GdxWorldRenderer(
     private val minimapShroudColor = Color(0.01f, 0.02f, 0.03f, 0.92f)
     private val impactFlashColor = Color(1.00f, 0.46f, 0.28f, 0.34f)
     private val impactSparkColor = Color(1.00f, 0.86f, 0.54f, 0.92f)
-    private val completionFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
-    private val completionSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
+    private val completionBuildFlashColor = Color(0.58f, 0.96f, 0.72f, 0.26f)
+    private val completionBuildSparkColor = Color(0.74f, 1.00f, 0.82f, 0.92f)
+    private val completionProductionFlashColor = Color(1.00f, 0.84f, 0.42f, 0.26f)
+    private val completionProductionSparkColor = Color(1.00f, 0.92f, 0.62f, 0.92f)
+    private val completionResearchFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
+    private val completionResearchSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
     private val terrainA = Color(0.09f, 0.13f, 0.10f, 1f)
     private val terrainB = Color(0.11f, 0.16f, 0.12f, 1f)
     private val terrainRidge = Color(0.16f, 0.20f, 0.14f, 1f)
@@ -203,7 +207,7 @@ internal class GdxWorldRenderer(
                     shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor
+                    shape.color = completionFlashColor(runtime, entity.id)
                     shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
                 }
                 if (selected) {
@@ -240,7 +244,7 @@ internal class GdxWorldRenderer(
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor
+                    shape.color = completionFlashColor(runtime, entity.id)
                     shape.circle(screenX, screenY, if (selected) 17f else 14f)
                 }
                 if (selected) {
@@ -498,7 +502,7 @@ internal class GdxWorldRenderer(
                 }
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
-                shape.color = completionSparkColor
+                shape.color = completionSparkColor(runtime, entity.id)
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
                     val tileX = floor(entity.x).toInt()
                     val tileY = floor(entity.y).toInt()
@@ -589,7 +593,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 3f, y - 3f, 6f, 6f)
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
-                shape.color = completionSparkColor.cpy().apply { a = if (visible) 0.90f else 0.40f }
+                shape.color = completionSparkColor(runtime, entity.id).cpy().apply { a = if (visible) 0.90f else 0.40f }
                 shape.rect(x - 4f, y - 4f, 8f, 8f)
             }
             if (entity.pathRemainingNodes > 0) {
@@ -1010,6 +1014,20 @@ internal class GdxWorldRenderer(
 
     private fun directionTo(fromX: Float, fromY: Float, toX: Float, toY: Float): Float =
         kotlin.math.atan2((toY - fromY), (toX - fromX))
+
+    private fun completionFlashColor(runtime: GdxClientRuntime, entityId: Int): Color =
+        when (runtime.completionFlashKind(entityId)) {
+            CompletionFlashKind.CONSTRUCTION -> completionBuildFlashColor
+            CompletionFlashKind.PRODUCTION -> completionProductionFlashColor
+            CompletionFlashKind.RESEARCH, null -> completionResearchFlashColor
+        }
+
+    private fun completionSparkColor(runtime: GdxClientRuntime, entityId: Int): Color =
+        when (runtime.completionFlashKind(entityId)) {
+            CompletionFlashKind.CONSTRUCTION -> completionBuildSparkColor
+            CompletionFlashKind.PRODUCTION -> completionProductionSparkColor
+            CompletionFlashKind.RESEARCH, null -> completionResearchSparkColor
+        }
 
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
 
