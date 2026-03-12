@@ -25,7 +25,9 @@ internal class GdxUiAssets : Disposable {
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
     private var alertSoundPath: Path? = null
+    private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
+    val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
     val paper = Color(0.95f, 0.94f, 0.89f, 1f)
@@ -72,7 +74,9 @@ internal class GdxUiAssets : Disposable {
         batch.dispose()
         shapeRenderer.dispose()
         alertSound.dispose()
+        completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
+        completeSoundPath?.let(Files::deleteIfExists)
     }
 
     private fun createWhiteTexture(): Texture {
@@ -85,7 +89,7 @@ internal class GdxUiAssets : Disposable {
     }
 
     private fun createAlertSound(): Sound {
-        val bytes = renderAlertWav()
+        val bytes = renderToneWav(primaryHz = 880.0, secondaryHz = 1320.0, durationSeconds = 0.18f, primaryMix = 0.55, secondaryMix = 0.20)
         val tempPath = Files.createTempFile("starkraft-alert-", ".wav")
         alertSoundPath = tempPath
         tempPath.toFile().deleteOnExit()
@@ -94,9 +98,18 @@ internal class GdxUiAssets : Disposable {
         return Gdx.audio.newSound(handle)
     }
 
-    private fun renderAlertWav(): ByteArray {
+    private fun createCompleteSound(): Sound {
+        val bytes = renderToneWav(primaryHz = 660.0, secondaryHz = 990.0, durationSeconds = 0.22f, primaryMix = 0.42, secondaryMix = 0.18)
+        val tempPath = Files.createTempFile("starkraft-complete-", ".wav")
+        completeSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun renderToneWav(primaryHz: Double, secondaryHz: Double, durationSeconds: Float, primaryMix: Double, secondaryMix: Double): ByteArray {
         val sampleRate = 22050
-        val durationSeconds = 0.18f
         val sampleCount = (sampleRate * durationSeconds).toInt()
         val pcm = ByteArrayOutputStream(sampleCount * 2)
         for (i in 0 until sampleCount) {
@@ -109,8 +122,8 @@ internal class GdxUiAssets : Disposable {
                 }.coerceIn(0f, 1f)
             val sample =
                 (
-                    kotlin.math.sin(2.0 * Math.PI * 880.0 * t) * 0.55 +
-                        kotlin.math.sin(2.0 * Math.PI * 1320.0 * t) * 0.20
+                    kotlin.math.sin(2.0 * Math.PI * primaryHz * t) * primaryMix +
+                        kotlin.math.sin(2.0 * Math.PI * secondaryHz * t) * secondaryMix
                 ) * envelope
             val shortValue = (sample * Short.MAX_VALUE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
             pcm.write(shortValue.toInt() and 0xff)

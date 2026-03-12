@@ -26,6 +26,7 @@ internal class GdxClientRuntime(
     private var attackWarningUntilMillis: Long = 0L
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
+    private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
     private var recentDamageUntilMillis: Long = 0L
     private var recentGroundPing: GroundPing? = null
@@ -87,9 +88,11 @@ internal class GdxClientRuntime(
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
+    fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
+    fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
@@ -836,6 +839,7 @@ internal class GdxClientRuntime(
         if (completed.isNotEmpty()) {
             recentCompletionEntityIds = completed.map { it.id }.toSet()
             recentCompletionUntilMillis = System.currentTimeMillis() + 1200L
+            pendingCompletionAlertSound = true
             val lead = completed.first()
             val label =
                 when {

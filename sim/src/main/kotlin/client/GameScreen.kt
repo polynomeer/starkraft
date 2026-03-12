@@ -93,6 +93,9 @@ internal class GameScreen(
         if (runtime.consumeAttackAlertSound()) {
             assets.alertSound.play(0.7f)
         }
+        if (runtime.consumeCompletionAlertSound()) {
+            assets.completeSound.play(0.55f)
+        }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, dragSelection)
         updateScreenFade(delta)
         stage.act(delta)

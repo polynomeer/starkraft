@@ -269,6 +269,8 @@ class GdxClientRuntimeTest {
 
         assertTrue(runtime.noticeLine()?.contains("complete") == true)
         assertTrue(runtime.isCompletionFlashActive(4))
+        assertTrue(runtime.consumeCompletionAlertSound())
+        assertFalse(runtime.consumeCompletionAlertSound())
     }
 
     @Test
