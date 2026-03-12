@@ -220,7 +220,7 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.76f))
+            background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.84f))
             pad(4f, 6f, 2f, 6f)
             add(
                 leftHudColumn.apply {
@@ -231,15 +231,15 @@ internal class GameScreen(
             ).left().bottom().padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.98f))
                 }
-            ).width(14f).height(142f).bottom().padRight(4f)
+            ).width(18f).height(158f).bottom().padRight(4f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(340f).expandX().fillX().bottom().padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.98f))
                 }
-            ).width(16f).height(122f).bottom().padRight(4f)
+            ).width(20f).height(140f).bottom().padRight(4f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
