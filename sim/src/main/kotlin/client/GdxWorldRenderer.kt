@@ -393,6 +393,28 @@ internal class GdxWorldRenderer(
                 shape.color = Color(1.00f, 0.63f, 0.28f, 0.78f)
                 shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 13f), screenY + directionDy(entity.dir, 13f), 1.8f)
             }
+            if (entity.pathRemainingNodes > 0) {
+                val trailX = screenX - directionDx(entity.dir, 7f)
+                val trailY = screenY - directionDy(entity.dir, 7f)
+                shape.color = Color(0.74f, 0.90f, 1.00f, 0.14f)
+                shape.circle(trailX, trailY, 4.5f)
+                shape.color = Color(0.68f, 0.86f, 0.96f, 0.34f)
+                shape.rectLine(trailX, trailY, screenX, screenY, 1.4f)
+            }
+            if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
+                shape.color =
+                    when (entity.harvestCargoKind) {
+                        "gas" -> Color(0.50f, 0.96f, 0.78f, 0.74f)
+                        else -> Color(0.98f, 0.84f, 0.42f, 0.74f)
+                    }
+                shape.circle(screenX + 6f, screenY - 6f, 3f)
+                shape.color =
+                    when (entity.harvestCargoKind) {
+                        "gas" -> Color(0.60f, 1.00f, 0.86f, 0.26f)
+                        else -> Color(1.00f, 0.92f, 0.62f, 0.26f)
+                    }
+                shape.circle(screenX + 6f, screenY - 6f, 6f)
+            }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0 || entity.activeResearchTech != null || entity.underConstruction) {
                 val markerX = screenX + 10f
                 val markerY = screenY - 11f
