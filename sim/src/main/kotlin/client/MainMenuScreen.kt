@@ -26,6 +26,8 @@ internal class MainMenuScreen(
     private val controlsLabel = Label("", assets.mutedLabelStyle)
     private val statusLabel = Label("ready", assets.bodyLabelStyle)
     private val enterMatchButton = makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }
+    private val screenFade = Table()
+    private var screenFadeAlpha = 1f
 
     init {
         val root =
@@ -78,6 +80,14 @@ internal class MainMenuScreen(
         root.add(hero).expand().fill().left().top().padRight(16f)
         root.add(controlsPanel).width(380f).right().top()
         stage.addActor(root)
+
+        screenFade.apply {
+            setFillParent(true)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            background = assets.panelDrawable(Color(0f, 0f, 0f, 1f))
+            color.a = screenFadeAlpha
+        }
+        stage.addActor(screenFade)
         refresh()
     }
 
@@ -88,6 +98,7 @@ internal class MainMenuScreen(
     override fun render(delta: Float) {
         runtime.tick()
         refresh()
+        updateScreenFade(delta)
         ScreenUtils.clear(0.03f, 0.05f, 0.07f, 1f)
         stage.act(delta)
         stage.draw()
@@ -125,6 +136,16 @@ internal class MainMenuScreen(
                 "Enter Match"
             }
         )
+    }
+
+    private fun updateScreenFade(delta: Float) {
+        if (screenFadeAlpha <= 0f) {
+            screenFade.isVisible = false
+            return
+        }
+        screenFadeAlpha = (screenFadeAlpha - (delta * 1.8f)).coerceAtLeast(0f)
+        screenFade.isVisible = screenFadeAlpha > 0f
+        screenFade.color.a = screenFadeAlpha
     }
 
     private fun makeButton(

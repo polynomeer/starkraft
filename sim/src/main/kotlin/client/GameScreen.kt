@@ -67,11 +67,13 @@ internal class GameScreen(
     private val commandCard = Table()
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
+    private val screenFade = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
     private val footerLabel = Label("", assets.mutedLabelStyle)
     private var dragSelection: DragSelectionBox? = null
     private var selectionPage = 0
     private var lastSelectionSignature = ""
+    private var screenFadeAlpha = 1f
 
     init {
         buildHud()
@@ -92,6 +94,7 @@ internal class GameScreen(
             assets.alertSound.play(0.7f)
         }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, dragSelection)
+        updateScreenFade(delta)
         stage.act(delta)
         stage.draw()
     }
@@ -255,6 +258,14 @@ internal class GameScreen(
             add(helpLabel).left().top()
         }
         stage.addActor(helpOverlay)
+
+        screenFade.apply {
+            setFillParent(true)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            background = assets.panelDrawable(Color(0f, 0f, 0f, 1f))
+            color.a = screenFadeAlpha
+        }
+        stage.addActor(screenFade)
     }
 
     private fun refreshHud() {
@@ -703,6 +714,16 @@ internal class GameScreen(
         selectionPage = (selectionPage + delta).coerceIn(0, pageCount - 1)
         rebuildSelectionGrid()
         updateSelectionPager(snapshot)
+    }
+
+    private fun updateScreenFade(delta: Float) {
+        if (screenFadeAlpha <= 0f) {
+            screenFade.isVisible = false
+            return
+        }
+        screenFadeAlpha = (screenFadeAlpha - (delta * 1.8f)).coerceAtLeast(0f)
+        screenFade.isVisible = screenFadeAlpha > 0f
+        screenFade.color.a = screenFadeAlpha
     }
 
     private fun applyEdgePan() {
