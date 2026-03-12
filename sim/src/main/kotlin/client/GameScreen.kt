@@ -308,12 +308,15 @@ internal class GameScreen(
         val height = Gdx.graphics.height
         val minimapWidth = (width * 0.16f).coerceIn(220f, 260f)
         val minimapHeight = (height * 0.18f).coerceIn(156f, 188f)
-        val statusWidth = minimapWidth
         val centerWidth = (width * 0.22f).coerceIn(288f, 370f)
         val commandWidth = (width * 0.27f).coerceIn(372f, 444f)
         val commandHeight = (height * 0.18f).coerceIn(142f, 190f)
         val commandButtonHeight = if (width >= 1440) 35f else 33f
         val commandColumns = 3
+        val centerHeight = (height * 0.23f).coerceIn(198f, 238f)
+        val commandShellHeight = (commandHeight + 78f).coerceIn(208f, 252f)
+        val minimapShellHeight = minimapHeight + 18f
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 18f, commandShellHeight + 18f) + 8f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -329,16 +332,18 @@ internal class GameScreen(
         centerStatusLabel.setWidth(centerWidth)
         queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
-        hudLinesLabel.setWidth(statusWidth)
-        factionOverviewLabel.setWidth(statusWidth)
-        footerLabel.setWidth(statusWidth)
+        hudLinesLabel.setWidth(minimapWidth)
+        factionOverviewLabel.setWidth(minimapWidth)
+        footerLabel.setWidth(minimapWidth)
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
         leftHudColumn.setWidth(minimapWidth + 16f)
+        leftHudColumn.setSize(minimapWidth + 16f, minimapShellHeight)
         minimapFrame.setSize(minimapWidth, minimapHeight)
-        centerCard.setWidth(centerWidth)
-        commandCard.setWidth(commandWidth)
+        centerCard.setSize(centerWidth, centerHeight)
+        commandCard.setSize(commandWidth, commandShellHeight)
         commandScroll.setSize(commandWidth, commandHeight)
+        bottomHud.setHeight(hudShellHeight)
         buttonTable.defaults().pad(0f, 0f, 5f, 5f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
