@@ -30,6 +30,10 @@ internal class GdxClientRuntime(
     private var recentDamageUntilMillis: Long = 0L
     private var recentGroundPing: GroundPing? = null
     private var recentGroundPingUntilMillis: Long = 0L
+    private var recentCompletionEntityIds: Set<Int> = emptySet()
+    private var recentCompletionUntilMillis: Long = 0L
+    private var lastSnapshotTick: Int? = null
+    private var previousEntitiesById: Map<Int, EntitySnapshot> = emptyMap()
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -73,6 +77,10 @@ internal class GdxClientRuntime(
         if (recentGroundPing != null && System.currentTimeMillis() > recentGroundPingUntilMillis) {
             recentGroundPing = null
         }
+        if (recentCompletionEntityIds.isNotEmpty() && System.currentTimeMillis() > recentCompletionUntilMillis) {
+            recentCompletionEntityIds = emptySet()
+        }
+        maybeRaiseCompletionNotice()
         maybeRaiseAttackAlert()
     }
 
@@ -81,6 +89,7 @@ internal class GdxClientRuntime(
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
+    fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
@@ -803,6 +812,41 @@ internal class GdxClientRuntime(
         attackWarningMessage = "Warning: under attack"
         attackWarningUntilMillis = System.currentTimeMillis() + 1800L
         pendingAttackAlertSound = true
+    }
+
+    private fun maybeRaiseCompletionNotice() {
+        val snapshot = session.state.snapshot ?: return
+        if (lastSnapshotTick == snapshot.tick) return
+        val completed = ArrayList<EntitySnapshot>()
+        for (entity in snapshot.entities) {
+            val previous = previousEntitiesById[entity.id] ?: continue
+            val constructionComplete = previous.underConstruction && !entity.underConstruction
+            val productionComplete =
+                previous.activeProductionType != null &&
+                    entity.activeProductionType == null &&
+                    entity.productionQueueSize <= previous.productionQueueSize
+            val researchComplete =
+                previous.activeResearchTech != null &&
+                    entity.activeResearchTech == null &&
+                    entity.researchQueueSize <= previous.researchQueueSize
+            if (constructionComplete || productionComplete || researchComplete) {
+                completed += entity
+            }
+        }
+        if (completed.isNotEmpty()) {
+            recentCompletionEntityIds = completed.map { it.id }.toSet()
+            recentCompletionUntilMillis = System.currentTimeMillis() + 1200L
+            val lead = completed.first()
+            val label =
+                when {
+                    previousEntitiesById[lead.id]?.underConstruction == true && !lead.underConstruction -> "${lead.typeId} complete"
+                    previousEntitiesById[lead.id]?.activeResearchTech != null && lead.activeResearchTech == null -> "${lead.typeId} research complete"
+                    else -> "${lead.typeId} ready"
+                }
+            showNotice(label)
+        }
+        previousEntitiesById = snapshot.entities.associateBy { it.id }
+        lastSnapshotTick = snapshot.tick
     }
 
     private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {

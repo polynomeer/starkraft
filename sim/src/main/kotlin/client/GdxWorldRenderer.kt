@@ -23,6 +23,8 @@ internal class GdxWorldRenderer(
     private val minimapShroudColor = Color(0.01f, 0.02f, 0.03f, 0.92f)
     private val impactFlashColor = Color(1.00f, 0.46f, 0.28f, 0.34f)
     private val impactSparkColor = Color(1.00f, 0.86f, 0.54f, 0.92f)
+    private val completionFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
+    private val completionSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
     private val terrainA = Color(0.09f, 0.13f, 0.10f, 1f)
     private val terrainB = Color(0.11f, 0.16f, 0.12f, 1f)
     private val terrainRidge = Color(0.16f, 0.20f, 0.14f, 1f)
@@ -200,6 +202,10 @@ internal class GdxWorldRenderer(
                     shape.color = impactFlashColor
                     shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
                 }
+                if (runtime.isCompletionFlashActive(entity.id)) {
+                    shape.color = completionFlashColor
+                    shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
+                }
                 if (selected) {
                     val pulse = selectionPulse()
                     shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.12f + (pulse * 0.10f))
@@ -232,6 +238,10 @@ internal class GdxWorldRenderer(
                     shape.color = impactSparkColor
                     shape.rect(screenX - 1.5f, screenY - 9f, 3f, 18f)
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
+                }
+                if (runtime.isCompletionFlashActive(entity.id)) {
+                    shape.color = completionFlashColor
+                    shape.circle(screenX, screenY, if (selected) 17f else 14f)
                 }
                 if (selected) {
                     val pulse = selectionPulse()
@@ -487,6 +497,21 @@ internal class GdxWorldRenderer(
                     shape.circle(screenX, screenY, 5f)
                 }
             }
+            if (runtime.isCompletionFlashActive(entity.id)) {
+                shape.color = completionSparkColor
+                if (entity.footprintWidth != null && entity.footprintHeight != null) {
+                    val tileX = floor(entity.x).toInt()
+                    val tileY = floor(entity.y).toInt()
+                    val left = runtime.camera.worldToScreenX(tileX.toFloat())
+                    val top = runtime.camera.worldToScreenY(tileY.toFloat())
+                    val width = entity.footprintWidth * runtime.camera.tileSize
+                    val height = entity.footprintHeight * runtime.camera.tileSize
+                    shape.rect(left - 3f, top - 3f, width + 6f, 2f)
+                    shape.rect(left - 3f, top + height + 1f, width + 6f, 2f)
+                } else {
+                    shape.circle(screenX, screenY, 6f)
+                }
+            }
         }
     }
 
@@ -562,6 +587,10 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 5f, 10f, 10f)
                 shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
                 shape.rect(x - 3f, y - 3f, 6f, 6f)
+            }
+            if (runtime.isCompletionFlashActive(entity.id)) {
+                shape.color = completionSparkColor.cpy().apply { a = if (visible) 0.90f else 0.40f }
+                shape.rect(x - 4f, y - 4f, 8f, 8f)
             }
             if (entity.pathRemainingNodes > 0) {
                 shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)

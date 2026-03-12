@@ -218,6 +218,60 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `completed construction raises notice and flash`(@TempDir tempDir: Path) {
+        val before =
+            ClientSnapshot(
+                tick = 7,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8)),
+                entities =
+                    listOf(
+                        EntitySnapshot(
+                            id = 4,
+                            faction = 1,
+                            typeId = "Depot",
+                            archetype = "structure",
+                            x = 5f,
+                            y = 6f,
+                            dir = 0f,
+                            hp = 80,
+                            maxHp = 100,
+                            armor = 0,
+                            underConstruction = true,
+                            constructionRemainingTicks = 12,
+                            constructionTotalTicks = 40,
+                            footprintWidth = 3,
+                            footprintHeight = 3
+                        )
+                    ),
+                resourceNodes = emptyList()
+            )
+        val runtime = runtime(tempDir, snapshot = before)
+
+        runtime.tick()
+        runtime.session.state.snapshot =
+            before.copy(
+                tick = 8,
+                entities =
+                    listOf(
+                        before.entities.first().copy(
+                            hp = 100,
+                            underConstruction = false,
+                            constructionRemainingTicks = 0
+                        )
+                    )
+            )
+
+        runtime.tick()
+
+        assertTrue(runtime.noticeLine()?.contains("complete") == true)
+        assertTrue(runtime.isCompletionFlashActive(4))
+    }
+
+    @Test
     fun `button deck keeps advanced filters behind debug mode`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.add(4)
