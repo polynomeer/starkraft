@@ -86,11 +86,12 @@ internal class GameScreen(
     }
 
     override fun render(delta: Float) {
+        val worldViewportHeight = computeWorldViewportHeight(Gdx.graphics.height)
         runtime.tick()
-        runtime.ensurePlayableView(Gdx.graphics.width, Gdx.graphics.height)
-        runtime.ensureInitialCamera(Gdx.graphics.width, Gdx.graphics.height)
-        applyEdgePan()
-        runtime.constrainCamera(Gdx.graphics.width, Gdx.graphics.height)
+        runtime.ensurePlayableView(Gdx.graphics.width, worldViewportHeight)
+        runtime.ensureInitialCamera(Gdx.graphics.width, worldViewportHeight)
+        applyEdgePan(worldViewportHeight.toFloat())
+        runtime.constrainCamera(Gdx.graphics.width, worldViewportHeight)
         refreshHud()
         if (runtime.consumeAttackAlertSound()) {
             assets.alertSound.play(0.7f)
@@ -220,17 +221,16 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.54f))
-            pad(14f)
+            pad(8f, 10f, 6f, 10f)
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.92f))
-                    pad(8f)
-                    add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left().row()
-                    add(wrapHudPanel(statusCard, Color(0.09f, 0.14f, 0.18f, 0.95f))).width(240f).left().padTop(8f)
+                    pad(6f)
+                    add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left()
                 }
             ).left().bottom()
             add().expandX().fillX()
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.96f))).width(340f).bottom().padRight(10f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.96f))).width(340f).bottom().padRight(8f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
@@ -378,7 +378,7 @@ internal class GameScreen(
                     commandButtonLabel(button),
                     runtime.actionHint(button.actionId),
                     commandButtonStyle(button.actionId)
-                ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
+                ) { runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
                 actor.isDisabled = !runtime.isActionEnabled(button.actionId)
                 actor.isChecked = runtime.isActionActive(button.actionId)
                 val cardTone =
@@ -702,7 +702,7 @@ internal class GameScreen(
                         if (tapCount >= 2) {
                             runtime.session.replaceSelection(intArrayOf(entity.id))
                             focusedSelectionId = entity.id
-                            runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
+                            runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
                         } else {
                             focusedSelectionId = entity.id
                         }
@@ -761,7 +761,7 @@ internal class GameScreen(
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
                 makeButton("$group:$count", style = assets.subtleButtonStyle()) {
-                    runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = Gdx.graphics.height)
+                    runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
                 }
             ).height(22f)
         }
@@ -780,7 +780,7 @@ internal class GameScreen(
     private fun resolveFocusedEntity(snapshot: ClientSnapshot, selected: List<EntitySnapshot>): EntitySnapshot? =
         focusedSelectionId?.let { focusId -> selected.firstOrNull { it.id == focusId } }
 
-    private fun applyEdgePan() {
+    private fun applyEdgePan(worldViewportHeight: Float) {
         if (runtime.pauseOverlayVisible || runtime.helpOverlayVisible) return
         if (Gdx.input.isTouched) return
         var deltaX = 0f
@@ -788,7 +788,7 @@ internal class GameScreen(
         val mouseX = Gdx.input.x.toFloat()
         val mouseY = Gdx.input.y.toFloat()
         val width = Gdx.graphics.width.toFloat()
-        val height = Gdx.graphics.height.toFloat()
+        val height = worldViewportHeight
         if (mouseX <= edgePanMargin) deltaX += edgePanSpeed
         if (mouseX >= width - edgePanMargin) deltaX -= edgePanSpeed
         if (mouseY <= edgePanMargin) deltaY += edgePanSpeed
@@ -796,6 +796,11 @@ internal class GameScreen(
         if (deltaX != 0f || deltaY != 0f) {
             runtime.panBy(deltaX, deltaY)
         }
+    }
+
+    private fun computeWorldViewportHeight(screenHeight: Int): Int {
+        val reservedHudHeight = (screenHeight * 0.29f).coerceIn(214f, 250f)
+        return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
     }
 
     private fun buildSelectionMetaLine(): String {
@@ -1066,40 +1071,40 @@ internal class GameScreen(
                 Input.Keys.NUM_1 -> runtime.setViewFaction(1)
                 Input.Keys.NUM_2 -> runtime.setViewFaction(2)
                 Input.Keys.NUM_3 -> runtime.setViewFaction(null)
-                Input.Keys.M -> runtime.executeAction("move", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.A -> runtime.executeAction("attackMove", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.P -> runtime.executeAction("patrol", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.H -> runtime.executeAction("hold", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.B -> runtime.executeAction("build:Depot", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.R -> runtime.executeAction("build:ResourceDepot", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.G -> runtime.executeAction("build:GasDepot", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.U -> runtime.catalog.trainOptions.getOrNull(0)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, Gdx.graphics.height) }
-                Input.Keys.I -> runtime.catalog.trainOptions.getOrNull(1)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, Gdx.graphics.height) }
-                Input.Keys.O -> runtime.catalog.trainOptions.getOrNull(2)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, Gdx.graphics.height) }
-                Input.Keys.L -> runtime.catalog.researchOptions.firstOrNull()?.let { runtime.executeAction("research:${it.typeId}", Gdx.graphics.width, Gdx.graphics.height) }
-                Input.Keys.X -> runtime.executeAction("cancelBuild", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.T -> runtime.executeAction("cancelTrain", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.Y -> runtime.executeAction("cancelResearch", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.F2 -> runtime.executeAction("selectViewedFaction", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.F3 -> runtime.executeAction("selectType", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.F4 -> runtime.executeAction("selectRole", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.F11 -> runtime.executeAction("selectAll", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.F12 -> runtime.executeAction("selectIdleWorkers", Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.M -> runtime.executeAction("move", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.A -> runtime.executeAction("attackMove", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.P -> runtime.executeAction("patrol", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.H -> runtime.executeAction("hold", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.B -> runtime.executeAction("build:Depot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.R -> runtime.executeAction("build:ResourceDepot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.G -> runtime.executeAction("build:GasDepot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.U -> runtime.catalog.trainOptions.getOrNull(0)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                Input.Keys.I -> runtime.catalog.trainOptions.getOrNull(1)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                Input.Keys.O -> runtime.catalog.trainOptions.getOrNull(2)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                Input.Keys.L -> runtime.catalog.researchOptions.firstOrNull()?.let { runtime.executeAction("research:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                Input.Keys.X -> runtime.executeAction("cancelBuild", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.T -> runtime.executeAction("cancelTrain", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.Y -> runtime.executeAction("cancelResearch", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F2 -> runtime.executeAction("selectViewedFaction", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F3 -> runtime.executeAction("selectType", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F4 -> runtime.executeAction("selectRole", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F11 -> runtime.executeAction("selectAll", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F12 -> runtime.executeAction("selectIdleWorkers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
                 Input.Keys.F5 -> runtime.restartMatch()
                 Input.Keys.F6 -> runtime.cycleScenarioAndRestart(-1)
                 Input.Keys.F7 -> runtime.cycleScenarioAndRestart(1)
-                Input.Keys.F -> runtime.executeAction("selectDamaged", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.V -> runtime.executeAction("selectCombat", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.N -> runtime.executeAction("selectProducers", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.Z -> runtime.executeAction("selectTrainers", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.C -> runtime.executeAction("selectResearchers", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.J -> runtime.executeAction("selectConstruction", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.K -> runtime.executeAction("selectHarvesters", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.Q -> runtime.executeAction("selectReturning", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.E -> runtime.executeAction("selectCargo", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.D -> runtime.executeAction("selectDropoffs", Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
-                Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, Gdx.graphics.height)
+                Input.Keys.F -> runtime.executeAction("selectDamaged", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.V -> runtime.executeAction("selectCombat", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.N -> runtime.executeAction("selectProducers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.Z -> runtime.executeAction("selectTrainers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.C -> runtime.executeAction("selectResearchers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.J -> runtime.executeAction("selectConstruction", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.K -> runtime.executeAction("selectHarvesters", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.Q -> runtime.executeAction("selectReturning", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.E -> runtime.executeAction("selectCargo", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.D -> runtime.executeAction("selectDropoffs", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
                 Input.Keys.LEFT_BRACKET -> runtime.adjustSpeed(-1)
                 Input.Keys.RIGHT_BRACKET -> runtime.adjustSpeed(1)
                 Input.Keys.NUM_4 -> handleGroupKey(4)
@@ -1115,7 +1120,7 @@ internal class GameScreen(
         private fun handleGroupKey(group: Int) {
             val assign = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
             val add = Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)
-            runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = Gdx.graphics.height)
+            runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
         }
     }
 }
