@@ -181,7 +181,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(3f)
+            pad(2f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -189,12 +189,12 @@ internal class GameScreen(
                     add().expandX().fillX()
                     add(healthLabel).right()
                 }
-            ).expandX().fillX().row()
+            ).expandX().fillX().padBottom(1f).row()
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(2f).row()
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
-                    pad(2f, 5f, 1f, 5f)
+                    pad(1f, 4f, 1f, 4f)
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(2f).row()
@@ -413,7 +413,7 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
-                            pad(2f, 5f, 1f, 5f)
+                            pad(1f, 4f, 1f, 4f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
                             ).colspan(commandColumns).left().padBottom(1f).row()
@@ -643,37 +643,37 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(30f).height(3f).right().row()
+                                    ).width(26f).height(2f).right().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
                                         }
-                                    ).width(12f).height(2f).right().padTop(1f)
+                                    ).width(10f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.95f))
                                         }
-                                    ).width(18f).height(2f).right().padTop(1f)
+                                    ).width(14f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.95f))
                                         }
-                                    ).width(6f).height(6f).right().padTop(1f)
+                                    ).width(5f).height(5f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.95f))
                                         }
-                                    ).width(14f).height(2f).right().padTop(1f)
+                                    ).width(12f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                         }
-                                    ).width(4f).height(8f).right().padTop(1f)
+                                    ).width(4f).height(6f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(10f).height(2f).right().padTop(1f)
+                                    ).width(8f).height(2f).right().padTop(1f)
                                 }
                             ).right().padTop(1f)
                         }
