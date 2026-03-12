@@ -152,7 +152,14 @@ internal class GameScreen(
             top()
             add(
                 Table().apply {
-                    add(commandHeaderLabel).left().expandX().fillX()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.96f))
+                            pad(6f, 10f, 4f, 10f)
+                            add(commandHeaderLabel).left()
+                        }
+                    ).left().padRight(6f)
+                    add().expandX().fillX()
                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(24f).height(20f).padRight(4f)
                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(24f).height(20f)
                 }
@@ -239,13 +246,13 @@ internal class GameScreen(
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
             ).width(22f).height(122f).bottom().padRight(0f).padBottom(18f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(312f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
                 }
             ).width(18f).height(118f).bottom().padRight(0f).padBottom(20f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(356f).right().bottom()
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(344f).right().bottom()
         }
 
         root.add().expand().fill().row()
@@ -393,7 +400,13 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
                     pad(2f)
-                    add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(3f).row()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.12f, 0.20f, 0.25f, 0.96f))
+                            pad(5f, 8f, 3f, 8f)
+                            add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
+                        }
+                    ).colspan(commandColumns).left().padBottom(3f).row()
                     group.second.forEachIndexed { index, button ->
                         val actor = makeButton(
                             commandButtonLabel(button),
