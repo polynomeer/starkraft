@@ -410,7 +410,7 @@ internal class GameScreen(
                     pad(2f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.12f, 0.20f, 0.25f, 0.96f))
+                            background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
                             pad(5f, 8f, 3f, 8f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
@@ -611,7 +611,7 @@ internal class GameScreen(
             pad(2f, 2f, 5f, 2f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.12f, 0.19f, 0.25f, 0.24f))
+                    background = assets.panelDrawable(Color(0.14f, 0.21f, 0.27f, 0.28f))
                     pad(3f, 3f, 5f, 3f)
                     add(
                         Table().apply {
