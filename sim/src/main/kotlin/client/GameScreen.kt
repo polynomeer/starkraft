@@ -155,7 +155,7 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.96f))
-                            pad(6f, 10f, 4f, 10f)
+                            pad(4f, 8f, 3f, 8f)
                             add(commandHeaderLabel).left()
                         }
                     ).left().padRight(6f)
@@ -194,7 +194,7 @@ internal class GameScreen(
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
-                    pad(4f, 7f, 3f, 7f)
+                    pad(3f, 6f, 2f, 6f)
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(3f).row()
@@ -210,7 +210,7 @@ internal class GameScreen(
                     ).size(74f, 74f).top().left().padRight(8f)
                     add(
                         Table().apply {
-                            add(selectionMetaLabel).left().expandX().fillX().padTop(1f).row()
+                            add(selectionMetaLabel).left().expandX().fillX().row()
                             add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(2f).row()
                             add(
                                 healthBarBack.apply {
@@ -411,7 +411,7 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
-                            pad(5f, 8f, 3f, 8f)
+                            pad(4f, 7f, 2f, 7f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
                             ).colspan(commandColumns).left().padBottom(2f).row()
@@ -685,9 +685,9 @@ internal class GameScreen(
         val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
         productionPage = productionPage.coerceIn(0, pageCount - 1)
         return if (productionGroup.size > 6) {
-            "Command ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
+            "Cmd ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
         } else {
-            "Command ${runtime.overlayModeLabel()}"
+            "Cmd ${runtime.overlayModeLabel()}"
         }
     }
 
@@ -796,7 +796,7 @@ internal class GameScreen(
         val pageStart = selectionPage * pageSize
         val selected = selectedEntities.drop(pageStart).take(pageSize)
         if (selected.isEmpty()) {
-            selectionGrid.add(Label("Selection slots idle", assets.mutedLabelStyle)).left()
+            selectionGrid.add(Label("No slots", assets.mutedLabelStyle)).left()
             return
         }
         selectionGrid.defaults().pad(0f, 3f, 3f, 0f)
@@ -896,8 +896,8 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        selectionPageLabel.setText(if (selectedCount == 0) "page 0/0" else "page ${selectionPage + 1}/$pageCount")
-        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "groups empty")
+        selectionPageLabel.setText(if (selectedCount == 0) "0/0" else "${selectionPage + 1}/$pageCount")
+        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "empty")
         rebuildControlGroupButtons()
     }
 
