@@ -204,14 +204,14 @@ internal class GameScreen(
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.98f))
-                            pad(5f)
+                            pad(4f)
                             add(portraitLabel).center()
                         }
-                    ).size(70f, 70f).top().left().padRight(7f)
+                    ).size(66f, 66f).top().left().padRight(6f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(1f).row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
@@ -221,8 +221,8 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(136f).height(8f).left().padTop(2f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(3f).row()
+                            ).width(128f).height(8f).left().padTop(1f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(2f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
@@ -612,11 +612,11 @@ internal class GameScreen(
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.82f))
-            pad(1f, 1f, 4f, 1f)
+            pad(1f, 1f, 3f, 1f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.21f, 0.27f, 0.28f))
-                    pad(2f, 2f, 4f, 2f)
+                    pad(1f, 1f, 3f, 1f)
                     add(
                         Table().apply {
                             add(
