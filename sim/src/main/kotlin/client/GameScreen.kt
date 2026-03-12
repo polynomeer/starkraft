@@ -148,7 +148,7 @@ internal class GameScreen(
 
         commandCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(5f)
+            pad(4f)
             top()
             add(
                 Table().apply {
@@ -158,10 +158,10 @@ internal class GameScreen(
                             pad(4f, 8f, 3f, 8f)
                             add(commandHeaderLabel).left()
                         }
-                    ).left().padRight(6f)
+                    ).left().padRight(4f)
                     add().expandX().fillX()
-                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(24f).height(20f).padRight(4f)
-                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(24f).height(20f)
+                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(22f).height(18f).padRight(3f)
+                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(22f).height(18f)
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
@@ -171,7 +171,7 @@ internal class GameScreen(
         buttonTable.defaults().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        commandCard.add(commandScroll).top().left().padTop(8f)
+        commandCard.add(commandScroll).top().left().padTop(6f)
 
         actionBanner.apply {
             background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
@@ -181,7 +181,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(5f)
+            pad(4f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -207,7 +207,7 @@ internal class GameScreen(
                             pad(5f)
                             add(portraitLabel).center()
                         }
-                    ).size(74f, 74f).top().left().padRight(8f)
+                    ).size(70f, 70f).top().left().padRight(7f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().row()
@@ -221,18 +221,18 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(144f).height(9f).left().padTop(2f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(4f).row()
+                            ).width(136f).height(8f).left().padTop(2f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(3f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
-                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(24f).height(22f).padRight(4f)
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(22f).height(20f).padRight(3f)
                                     add(selectionPageLabel).expandX().left()
-                                    add(controlGroupButtons).right().padRight(4f)
-                                    add(controlGroupsLabel).right().padRight(4f)
-                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(24f).height(22f)
+                                    add(controlGroupButtons).right().padRight(3f)
+                                    add(controlGroupsLabel).right().padRight(3f)
+                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(22f).height(20f)
                                 }
-                            ).expandX().fillX().padTop(2f)
+                            ).expandX().fillX().padTop(1f)
                         }
                     ).expandX().fillX().top()
                 }
@@ -245,22 +245,22 @@ internal class GameScreen(
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.95f))
-                    pad(3f, 3f, 5f, 3f)
-                    add(wrapMinimapPanel(minimapFrame)).width(212f).height(152f).left()
+                    pad(3f, 3f, 4f, 3f)
+                    add(wrapMinimapPanel(minimapFrame)).width(206f).height(146f).left()
                 }
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(20f).height(96f).bottom().padRight(0f).padBottom(24f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
+            ).width(18f).height(88f).bottom().padRight(0f).padBottom(22f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(286f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(18f).height(92f).bottom().padRight(0f).padBottom(26f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(322f).right().bottom()
+            ).width(16f).height(86f).bottom().padRight(0f).padBottom(24f)
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(308f).right().bottom()
         }
 
         root.add().expand().fill().row()
@@ -330,13 +330,13 @@ internal class GameScreen(
         val minimapHeight = (height * 0.136f).coerceIn(118f, 138f)
         val centerWidth = (width * 0.175f).coerceIn(216f, 268f)
         val commandWidth = (width * 0.186f).coerceIn(248f, 294f)
-        val commandHeight = (height * 0.094f).coerceIn(80f, 100f)
-        val commandButtonHeight = if (width >= 1440) 26f else 24f
+        val commandHeight = (height * 0.089f).coerceIn(74f, 92f)
+        val commandButtonHeight = if (width >= 1440) 24f else 22f
         val commandColumns = 3
-        val centerHeight = (height * 0.145f).coerceIn(122f, 148f)
-        val commandShellHeight = (commandHeight + 24f).coerceIn(104f, 126f)
+        val centerHeight = (height * 0.139f).coerceIn(116f, 140f)
+        val commandShellHeight = (commandHeight + 22f).coerceIn(96f, 118f)
         val minimapShellHeight = minimapHeight + 14f
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 10f, commandShellHeight + 10f)
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 8f, commandShellHeight + 8f)
         val unifiedPanelHeight = hudShellHeight - 6f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
@@ -799,9 +799,9 @@ internal class GameScreen(
             selectionGrid.add(Label("No slots", assets.mutedLabelStyle)).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 3f, 3f, 0f)
+        selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(40f, 40f)
+            selectionGrid.add(buildSelectionSlot(entity)).size(36f, 36f)
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
@@ -913,13 +913,13 @@ internal class GameScreen(
 
     private fun rebuildControlGroupButtons() {
         controlGroupButtons.clearChildren()
-        controlGroupButtons.defaults().padRight(4f)
+        controlGroupButtons.defaults().padRight(3f)
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
                 makeButton("$group:$count", style = assets.subtleButtonStyle()) {
                     runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
                 }
-            ).height(22f)
+            ).height(20f)
         }
     }
 
