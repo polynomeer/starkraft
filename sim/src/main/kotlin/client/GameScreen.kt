@@ -541,9 +541,9 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Waiting for battlefield state"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "Viewing $faction · ${snapshot.entities.size} live entities"
+            "View $faction · ${snapshot.entities.size} live"
         } else {
-            "Lead ${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} selected"
+            "Lead ${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
         }
     }
 
