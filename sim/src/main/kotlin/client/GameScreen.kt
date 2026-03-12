@@ -74,6 +74,7 @@ internal class GameScreen(
     private var dragSelection: DragSelectionBox? = null
     private var selectionPage = 0
     private var lastSelectionSignature = ""
+    private var focusedSelectionId: Int? = null
     private var screenFadeAlpha = 1f
 
     init {
@@ -464,11 +465,11 @@ internal class GameScreen(
         if (selected.isEmpty()) {
             return runtime.session.state.viewedFaction?.let { "F$it\nVIEW" } ?: "OBS\nVIEW"
         }
-        val lead = selected.first()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return if (selected.size == 1) {
             "${(lead.typeId ?: "UNIT").take(8).uppercase()}\n${(lead.archetype ?: "ROLE").take(8).uppercase()}"
         } else {
-            "${selected.size}\nUNITS"
+            "${selected.size}\n${(lead.typeId ?: "UNIT").take(7).uppercase()}"
         }
     }
 
@@ -537,7 +538,7 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Status unavailable"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) return "No command focus"
-        val lead = selected.first()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val statusBits = buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("order ${it.lowercase()}") }
             if (lead.orderQueueSize > 0) add("queue ${lead.orderQueueSize}")
@@ -567,7 +568,7 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Queue unavailable"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) return "Queue idle"
-        val lead = selected.first()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val parts = buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
@@ -652,7 +653,7 @@ internal class GameScreen(
 
     private fun buildSelectionSlot(entity: EntitySnapshot): Table {
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
-        val focused = runtime.session.state.selectedIds.firstOrNull() == entity.id
+        val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
         val tone =
             when {
                 entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
@@ -697,8 +698,13 @@ internal class GameScreen(
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                        runtime.session.replaceSelection(intArrayOf(entity.id))
-                        runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
+                        if (tapCount >= 2) {
+                            runtime.session.replaceSelection(intArrayOf(entity.id))
+                            focusedSelectionId = entity.id
+                            runtime.centerOnSelection(Gdx.graphics.width, Gdx.graphics.height)
+                        } else {
+                            focusedSelectionId = entity.id
+                        }
                     }
 
                     override fun enter(event: InputEvent?, x: Float, y: Float, pointer: Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
@@ -717,7 +723,14 @@ internal class GameScreen(
         val signature = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }?.joinToString(",") { it.id.toString() }.orEmpty()
         if (signature != lastSelectionSignature) {
             selectionPage = 0
+            val selectedIds = runtime.session.state.selectedIds
+            if (focusedSelectionId != null && focusedSelectionId !in selectedIds) {
+                focusedSelectionId = null
+            }
             lastSelectionSignature = signature
+        }
+        if (focusedSelectionId == null) {
+            focusedSelectionId = runtime.session.state.selectedIds.firstOrNull()
         }
     }
 
@@ -762,6 +775,9 @@ internal class GameScreen(
         screenFade.isVisible = screenFadeAlpha > 0f
         screenFade.color.a = screenFadeAlpha
     }
+
+    private fun resolveFocusedEntity(snapshot: ClientSnapshot, selected: List<EntitySnapshot>): EntitySnapshot? =
+        focusedSelectionId?.let { focusId -> selected.firstOrNull { it.id == focusId } }
 
     private fun applyEdgePan() {
         if (runtime.pauseOverlayVisible || runtime.helpOverlayVisible) return
