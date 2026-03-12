@@ -489,7 +489,7 @@ internal class GameScreen(
                 }
             ).colspan(commandColumns).left().fillX().expandX().row()
             if (groupIndex != groupedButtons.lastIndex) {
-                buttonTable.add().height(4f).colspan(commandColumns).row()
+                buttonTable.add().height(2f).colspan(commandColumns).row()
             }
         }
         if (runtime.debugVisible && snapshot != null) {
@@ -787,18 +787,18 @@ internal class GameScreen(
             pad(2f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(if (focused) Color(0.26f, 0.36f, 0.12f, 0.98f) else tone)
+                    background = assets.panelDrawable(if (focused) Color(0.34f, 0.42f, 0.10f, 0.98f) else tone)
                     pad(if (focused) 4f else 3f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.12f else 0.05f))
+                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.18f else 0.05f))
                         }
                     ).size(20f, 8f).center().padBottom(1f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(1f).row()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(if (focused) Color(0.12f, 0.16f, 0.08f, 1f) else Color(0.09f, 0.11f, 0.13f, 1f))
+                            background = assets.panelDrawable(if (focused) Color(0.16f, 0.20f, 0.08f, 1f) else Color(0.09f, 0.11f, 0.13f, 1f))
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(hpColor)
