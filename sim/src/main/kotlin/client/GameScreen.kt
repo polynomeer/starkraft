@@ -47,6 +47,9 @@ internal class GameScreen(
     private val healthBarBack = Table()
     private val healthBarFill = Table()
     private val selectionGrid = Table()
+    private val selectionPager = Table()
+    private val selectionPageLabel = Label("", assets.mutedLabelStyle)
+    private val controlGroupsLabel = Label("", assets.mutedLabelStyle)
     private val commandHeaderLabel = Label("Command Deck", assets.titleLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
@@ -67,6 +70,8 @@ internal class GameScreen(
     private val helpLabel = Label("", assets.mutedLabelStyle)
     private val footerLabel = Label("", assets.mutedLabelStyle)
     private var dragSelection: DragSelectionBox? = null
+    private var selectionPage = 0
+    private var lastSelectionSignature = ""
 
     init {
         buildHud()
@@ -174,6 +179,15 @@ internal class GameScreen(
                 }
             ).expandX().fillX().padTop(6f).row()
             add(selectionGrid).left().expandX().fillX().padTop(10f).row()
+            add(
+                selectionPager.apply {
+                    clearChildren()
+                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(34f).height(26f).padRight(6f)
+                    add(selectionPageLabel).expandX().left()
+                    add(controlGroupsLabel).right().padRight(6f)
+                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(34f).height(26f)
+                }
+            ).expandX().fillX().padTop(8f)
         }
 
         bottomHud.apply {
@@ -307,6 +321,8 @@ internal class GameScreen(
         attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
+        syncSelectionPage(snapshot)
+        updateSelectionPager(snapshot)
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
@@ -580,7 +596,12 @@ internal class GameScreen(
     private fun rebuildSelectionGrid() {
         selectionGrid.clearChildren()
         val snapshot = runtime.snapshot ?: return
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }.take(8)
+        val selectedEntities = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        val pageSize = 8
+        val pageCount = ((selectedEntities.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+        selectionPage = selectionPage.coerceIn(0, pageCount - 1)
+        val pageStart = selectionPage * pageSize
+        val selected = selectedEntities.drop(pageStart).take(pageSize)
         if (selected.isEmpty()) {
             selectionGrid.add(Label("Selection slots idle", assets.mutedLabelStyle)).left()
             return
@@ -655,6 +676,33 @@ internal class GameScreen(
                 }
             )
         }
+    }
+
+    private fun syncSelectionPage(snapshot: ClientSnapshot?) {
+        val signature = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }?.joinToString(",") { it.id.toString() }.orEmpty()
+        if (signature != lastSelectionSignature) {
+            selectionPage = 0
+            lastSelectionSignature = signature
+        }
+    }
+
+    private fun updateSelectionPager(snapshot: ClientSnapshot?) {
+        val selectedCount = snapshot?.entities?.count { it.id in runtime.session.state.selectedIds } ?: 0
+        val pageSize = 8
+        val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
+        selectionPage = selectionPage.coerceIn(0, pageCount - 1)
+        selectionPageLabel.setText(if (selectedCount == 0) "page 0/0" else "page ${selectionPage + 1}/$pageCount")
+        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "groups empty")
+    }
+
+    private fun shiftSelectionPage(delta: Int) {
+        val snapshot = runtime.snapshot ?: return
+        val selectedCount = snapshot.entities.count { it.id in runtime.session.state.selectedIds }
+        val pageSize = 8
+        val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
+        selectionPage = (selectionPage + delta).coerceIn(0, pageCount - 1)
+        rebuildSelectionGrid()
+        updateSelectionPager(snapshot)
     }
 
     private fun applyEdgePan() {
