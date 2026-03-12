@@ -128,8 +128,8 @@ internal class GameScreen(
         }
 
         commandCard.apply {
-            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.94f))
-            pad(10f)
+            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
+            pad(12f)
             top()
         }
         buttonTable.top().left()
@@ -145,7 +145,7 @@ internal class GameScreen(
         }
 
         centerCard.apply {
-            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.94f))
+            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
@@ -177,12 +177,12 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.42f))
-            pad(12f)
+            background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.54f))
+            pad(14f)
             add(
                 leftHudColumn.apply {
-                    background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.86f))
-                    pad(6f)
+                    background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.92f))
+                    pad(8f)
                     add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left().row()
                     add(wrapHudPanel(statusCard, Color(0.09f, 0.14f, 0.18f, 0.95f))).width(240f).left().padTop(8f)
                 }
@@ -328,11 +328,25 @@ internal class GameScreen(
                 ) { runtime.executeAction(button.actionId, Gdx.graphics.width, Gdx.graphics.height) }
                 actor.isDisabled = !runtime.isActionEnabled(button.actionId)
                 actor.isChecked = runtime.isActionActive(button.actionId)
+                val cardTone =
+                    when {
+                        button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
+                            Color(0.18f, 0.16f, 0.08f, 0.94f)
+                        button.actionId == "move" || button.actionId == "attackMove" || button.actionId == "patrol" || button.actionId == "hold" ->
+                            Color(0.08f, 0.16f, 0.18f, 0.94f)
+                        else -> Color(0.09f, 0.11f, 0.14f, 0.94f)
+                    }
                 buttonTable.add(
                     Table().apply {
-                        background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.92f))
-                        pad(4f)
-                        add(actor).width((commandWidth / commandColumns) - 20f).height(34f).left()
+                        background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
+                        pad(3f)
+                        add(
+                            Table().apply {
+                                background = assets.panelDrawable(cardTone)
+                                pad(3f)
+                                add(actor).width((commandWidth / commandColumns) - 26f).height(36f).left()
+                            }
+                        ).expand().fill()
                     }
                 ).width((commandWidth / commandColumns) - 12f).left()
                 if ((index + 1) % commandColumns == 0) {
@@ -597,22 +611,33 @@ internal class GameScreen(
             }
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
-            background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.14f, 0.98f) else tone)
+            background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(if (focused) 5f else 4f)
-            add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
-            add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
+            pad(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(if (focused) Color(0.13f, 0.16f, 0.10f, 1f) else Color(0.10f, 0.12f, 0.14f, 1f))
+                    background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.14f, 0.98f) else tone)
+                    pad(if (focused) 5f else 4f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(hpColor)
+                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.10f else 0.04f))
                         }
-                    ).width(32f * hpRatio.coerceIn(0f, 1f)).height(5f).left()
-                    add().expandX().fillX()
+                    ).size(32f, 16f).center().padBottom(2f).row()
+                    add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
+                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(if (focused) Color(0.13f, 0.16f, 0.10f, 1f) else Color(0.10f, 0.12f, 0.14f, 1f))
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(hpColor)
+                                }
+                            ).width(32f * hpRatio.coerceIn(0f, 1f)).height(5f).left()
+                            add().expandX().fillX()
+                        }
+                    ).width(32f).height(5f).padTop(4f)
                 }
-            ).width(32f).height(5f).padTop(4f)
+            ).expand().fill()
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
