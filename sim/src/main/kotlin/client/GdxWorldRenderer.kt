@@ -81,12 +81,11 @@ internal class GdxWorldRenderer(
     }
 
     private fun beginWorldScissor(width: Int, height: Int, worldViewportHeight: Int) {
-        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST)
-        Gdx.gl.glScissor(0, 0, width, worldViewportHeight.coerceAtLeast(1))
+        return
     }
 
     private fun endWorldScissor() {
-        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST)
+        return
     }
 
     private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
