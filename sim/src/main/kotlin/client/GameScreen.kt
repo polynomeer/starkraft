@@ -194,7 +194,7 @@ internal class GameScreen(
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
-                    pad(3f, 6f, 2f, 6f)
+                    pad(2f, 5f, 1f, 5f)
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(3f).row()
@@ -207,7 +207,7 @@ internal class GameScreen(
                             pad(4f)
                             add(portraitLabel).center()
                         }
-                    ).size(66f, 66f).top().left().padRight(6f)
+                    ).size(64f, 64f).top().left().padRight(5f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().row()
@@ -221,18 +221,18 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(128f).height(8f).left().padTop(1f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(2f).row()
+                            ).width(122f).height(7f).left().padTop(1f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(1f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
-                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(22f).height(20f).padRight(3f)
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(20f).height(18f).padRight(2f)
                                     add(selectionPageLabel).expandX().left()
-                                    add(controlGroupButtons).right().padRight(3f)
-                                    add(controlGroupsLabel).right().padRight(3f)
-                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(22f).height(20f)
+                                    add(controlGroupButtons).right().padRight(2f)
+                                    add(controlGroupsLabel).right().padRight(2f)
+                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(20f).height(18f)
                                 }
-                            ).expandX().fillX().padTop(1f)
+                            ).expandX().fillX()
                         }
                     ).expandX().fillX().top()
                 }
@@ -799,9 +799,9 @@ internal class GameScreen(
             selectionGrid.add(Label("No slots", assets.mutedLabelStyle)).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
+        selectionGrid.defaults().pad(0f, 1f, 1f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(36f, 36f)
+            selectionGrid.add(buildSelectionSlot(entity)).size(34f, 34f)
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
@@ -827,18 +827,18 @@ internal class GameScreen(
         return Table().apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(1f)
+            pad(0f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(if (focused) Color(0.34f, 0.42f, 0.10f, 0.98f) else tone)
-                    pad(if (focused) 3f else 2f)
+                    pad(if (focused) 2f else 1f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.18f else 0.05f))
                         }
-                    ).size(18f, 7f).center().padBottom(1f).row()
+                    ).size(16f, 6f).center().padBottom(1f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
-                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(1f).row()
+                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(if (focused) Color(0.16f, 0.20f, 0.08f, 1f) else Color(0.09f, 0.11f, 0.13f, 1f))
@@ -849,7 +849,7 @@ internal class GameScreen(
                             ).width(20f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(18f).height(4f).padTop(2f)
+                    ).width(16f).height(3f).padTop(1f)
                 }
             ).expand().fill()
             addListener(
@@ -913,13 +913,13 @@ internal class GameScreen(
 
     private fun rebuildControlGroupButtons() {
         controlGroupButtons.clearChildren()
-        controlGroupButtons.defaults().padRight(3f)
+        controlGroupButtons.defaults().padRight(2f)
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
                 makeButton("$group:$count", style = assets.subtleButtonStyle()) {
                     runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
                 }
-            ).height(20f)
+            ).height(18f)
         }
     }
 
@@ -1032,7 +1032,7 @@ internal class GameScreen(
         val baseLabel =
             when (button.actionId) {
                 "attackMove" -> "Attack"
-                "centerSelection" -> "Center"
+                "centerSelection" -> "Ctr"
                 "viewF1" -> "F1"
                 "viewF2" -> "F2"
                 "observer" -> "Obs"
@@ -1040,12 +1040,12 @@ internal class GameScreen(
                 "help" -> "Help"
                 "debug" -> "Debug"
                 "build:Depot" -> "Depot"
-                "build:ResourceDepot" -> "Expand"
+                "build:ResourceDepot" -> "Exp"
                 "build:GasDepot" -> "Gas"
                 "cancelBuild" -> "Stop B"
                 "cancelTrain" -> "Stop T"
                 "cancelResearch" -> "Stop R"
-                "patrol" -> "Patrol"
+                "patrol" -> "Pat"
                 "move" -> "Move"
                 "hold" -> "Hold"
                 else -> button.label
