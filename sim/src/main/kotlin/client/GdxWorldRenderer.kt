@@ -1,6 +1,7 @@
 package starkraft.sim.client
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -36,7 +37,7 @@ internal class GdxWorldRenderer(
     private val terrainMetal = Color(0.16f, 0.19f, 0.22f, 1f)
     private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
 
-    fun render(runtime: GdxClientRuntime, width: Int, height: Int, dragBox: DragSelectionBox?) {
+    fun render(runtime: GdxClientRuntime, width: Int, height: Int, worldViewportHeight: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
         val shape = assets.shapeRenderer
         screenCamera.setToOrtho(true, width.toFloat(), height.toFloat())
@@ -44,8 +45,9 @@ internal class GdxWorldRenderer(
         shape.projectionMatrix = screenCamera.combined
 
         Gdx.gl.glClearColor(0.05f, 0.08f, 0.11f, 1f)
-        Gdx.gl.glClear(com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT)
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
+        beginWorldScissor(width, height, worldViewportHeight)
         shape.begin(ShapeRenderer.ShapeType.Filled)
         drawTerrain(shape, runtime)
         drawResources(shape, runtime)
@@ -54,7 +56,6 @@ internal class GdxWorldRenderer(
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
-        drawMiniMap(shape, runtime, width, height)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
         shape.end()
@@ -65,10 +66,28 @@ internal class GdxWorldRenderer(
         drawWorldFrame(shape, runtime)
         drawSelectionBrackets(shape, runtime)
         drawSelectionOverlays(shape, runtime)
+        shape.end()
+        endWorldScissor()
+
+        shape.begin(ShapeRenderer.ShapeType.Filled)
+        drawMiniMap(shape, runtime, width, height)
+        shape.end()
+
+        shape.begin(ShapeRenderer.ShapeType.Line)
         drawMiniMapViewport(shape, runtime, width, height)
         shape.end()
 
         drawLabels(runtime, width, height)
+    }
+
+    private fun beginWorldScissor(width: Int, height: Int, worldViewportHeight: Int) {
+        val bottomInset = (height - worldViewportHeight).coerceAtLeast(0)
+        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST)
+        Gdx.gl.glScissor(0, bottomInset, width, worldViewportHeight.coerceAtLeast(1))
+    }
+
+    private fun endWorldScissor() {
+        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST)
     }
 
     private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
