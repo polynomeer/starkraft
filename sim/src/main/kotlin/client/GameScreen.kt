@@ -147,11 +147,11 @@ internal class GameScreen(
 
         commandCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(12f)
+            pad(8f)
             top()
             add(commandHeaderLabel).left().expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
-            add(actionBanner).left().expandX().fillX().padTop(6f).row()
+            add(actionBanner).left().expandX().fillX().padTop(4f).row()
         }
         buttonTable.top().left()
         buttonTable.defaults().left()
@@ -161,7 +161,7 @@ internal class GameScreen(
 
         actionBanner.apply {
             background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
-            pad(6f, 12f, 6f, 12f)
+            pad(4f, 8f, 4f, 8f)
             add(actionBannerLabel).center()
         }
 
@@ -219,25 +219,25 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.84f))
-            pad(4f, 6f, 2f, 6f)
+            pad(3f, 5f, 1f, 5f)
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
                     pad(4f)
                     add(wrapMinimapPanel(minimapFrame)).width(240f).height(184f).left()
                 }
-            ).left().bottom().padRight(4f)
+            ).left().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(26f).height(176f).bottom().padRight(0f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(340f).expandX().fillX().bottom().padRight(4f)
+            ).width(18f).height(152f).bottom().padRight(0f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(340f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.98f))
                 }
-            ).width(24f).height(166f).bottom().padRight(0f)
+            ).width(16f).height(148f).bottom().padRight(0f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(430f).right().bottom()
         }
 
@@ -312,9 +312,9 @@ internal class GameScreen(
         val commandButtonHeight = if (width >= 1440) 30f else 28f
         val commandColumns = 3
         val centerHeight = (height * 0.18f).coerceIn(148f, 182f)
-        val commandShellHeight = (commandHeight + 48f).coerceIn(150f, 182f)
+        val commandShellHeight = (commandHeight + 38f).coerceIn(138f, 170f)
         val minimapShellHeight = minimapHeight + 16f
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 14f, commandShellHeight + 14f) + 4f
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -362,7 +362,8 @@ internal class GameScreen(
         topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
         statusBadgeLabel.setText(buildStatusBadgeLine())
-        actionBannerLabel.setText(buildActionBannerLine())
+        val actionBannerText = buildActionBannerLine()
+        actionBannerLabel.setText(actionBannerText)
         attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
@@ -371,7 +372,10 @@ internal class GameScreen(
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
-        actionBanner.isVisible = actionBannerLabel.text.toString().isNotBlank()
+        val showActionBanner = actionBannerText.isNotBlank()
+        actionBanner.isVisible = showActionBanner
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f)) else null
+        actionBanner.pad(if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f, if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f)
         bottomHud.invalidateHierarchy()
 
         buttonTable.clearChildren()
@@ -872,8 +876,8 @@ internal class GameScreen(
         return when {
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId} with right click"
             runtime.groundMode != null -> "Issue ${runtime.overlayModeLabel()} with right click"
-            selectionCount > 0 -> "$selectionCount selected · home to center · esc to clear"
-            else -> "Drag to select · right click to command"
+            selectionCount > 0 -> ""
+            else -> ""
         }
     }
 
