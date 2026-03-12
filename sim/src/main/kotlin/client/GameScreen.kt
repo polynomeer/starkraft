@@ -119,7 +119,7 @@ internal class GameScreen(
             }
 
         topBar.apply {
-            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.11f, 0.84f))
+            background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.90f))
             pad(8f, 12f, 8f, 12f)
             add(economyLabel).left().expandX().fillX()
             add(topSelectionLabel).center().padLeft(12f).padRight(12f)
@@ -138,6 +138,7 @@ internal class GameScreen(
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(statusHeader).left().row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
             add(hudLinesLabel).left().expandX().fillX().padTop(8f)
         }
@@ -147,6 +148,7 @@ internal class GameScreen(
             pad(12f)
             top()
             add(commandHeaderLabel).left().expandX().fillX().row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(actionBanner).left().expandX().fillX().padTop(6f).row()
         }
         buttonTable.top().left()
@@ -156,7 +158,7 @@ internal class GameScreen(
         commandCard.add(commandScroll).top().left().padTop(8f)
 
         actionBanner.apply {
-            background = assets.panelDrawable(Color(0.08f, 0.13f, 0.16f, 0.82f))
+            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
             pad(6f, 12f, 6f, 12f)
             add(actionBannerLabel).center()
         }
@@ -172,6 +174,7 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(selectionMetaLabel).left().expandX().fillX().padTop(4f).row()
             add(
                 Table().apply {
