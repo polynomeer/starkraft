@@ -190,15 +190,15 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(4f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(3f).row()
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
                     pad(2f, 5f, 1f, 5f)
                     add(selectionLabel).left().expandX().fillX()
                 }
-            ).left().expandX().fillX().padTop(3f).row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.09f, 0.15f, 0.19f, 0.90f)) }).height(1f).expandX().fillX().padTop(2f).row()
+            ).left().expandX().fillX().padTop(2f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.09f, 0.15f, 0.19f, 0.90f)) }).height(1f).expandX().fillX().padTop(1f).row()
             add(
                 Table().apply {
                     add(
@@ -407,14 +407,14 @@ internal class GameScreen(
             buttonTable.add(
                 Table().apply {
                             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
-                    pad(1f)
+                    pad(0f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
-                            pad(3f, 6f, 2f, 6f)
+                            pad(2f, 5f, 1f, 5f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
-                            ).colspan(commandColumns).left().padBottom(2f).row()
+                            ).colspan(commandColumns).left().padBottom(1f).row()
                     group.second.forEachIndexed { index, button ->
                         val actor = makeButton(
                             commandButtonLabel(button),
@@ -452,11 +452,11 @@ internal class GameScreen(
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
-                                pad(1f)
+                                pad(0f)
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(frameTone)
-                                        pad(1f, 1f, 1f, 1f)
+                                        pad(0f)
                                         add(
                                             Table().apply {
                                                 background =
@@ -481,8 +481,8 @@ internal class GameScreen(
                                                     }
                                                 ).size(10f, 10f)
                                             }
-                                        ).size(11f, 11f).left().padRight(2f)
-                                        add(actor).width((commandWidth / commandColumns) - 26f).height(commandButtonHeight).left()
+                                        ).size(10f, 10f).left().padRight(2f)
+                                        add(actor).width((commandWidth / commandColumns) - 24f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
@@ -497,7 +497,7 @@ internal class GameScreen(
                 }
             ).colspan(commandColumns).left().fillX().expandX().row()
             if (groupIndex != groupedButtons.lastIndex) {
-                buttonTable.add().height(1f).colspan(commandColumns).row()
+                buttonTable.add().height(0f).colspan(commandColumns).row()
             }
         }
         if (runtime.debugVisible && snapshot != null) {
@@ -623,17 +623,17 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.26f, 0.34f, 0.38f, 0.95f))
                                 }
-                            ).size(22f, 7f).left().padBottom(3f).row()
+                            ).size(18f, 5f).left().padBottom(2f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.09f, 0.14f, 0.17f, 0.95f))
                                 }
-                            ).width(12f).height(4f).left().padBottom(2f).row()
+                            ).width(10f).height(3f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                 }
-                            ).width(8f).height(18f).left().padBottom(3f).row()
+                            ).width(6f).height(12f).left().padBottom(2f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
@@ -641,39 +641,39 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(46f).height(5f).right().row()
+                                    ).width(38f).height(4f).right().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
                                         }
-                                    ).width(18f).height(4f).right().padTop(2f)
+                                    ).width(14f).height(3f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.95f))
                                         }
-                                    ).width(28f).height(3f).right().padTop(2f)
+                                    ).width(22f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.95f))
                                         }
-                                    ).width(10f).height(10f).right().padTop(3f)
+                                    ).width(8f).height(8f).right().padTop(2f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.95f))
                                         }
-                                    ).width(24f).height(4f).right().padTop(2f)
+                                    ).width(18f).height(3f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                         }
-                                    ).width(6f).height(14f).right().padTop(3f)
+                                    ).width(5f).height(10f).right().padTop(2f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(16f).height(3f).right().padTop(2f)
+                                    ).width(12f).height(2f).right().padTop(1f)
                                 }
-                            ).right().padTop(2f)
+                            ).right().padTop(1f)
                         }
                     ).expand().fill()
                 }
