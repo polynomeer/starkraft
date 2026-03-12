@@ -182,7 +182,7 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.94f))
+                            background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.98f))
                             pad(10f)
                             add(portraitLabel).center()
                         }
@@ -376,43 +376,49 @@ internal class GameScreen(
         val groupedButtons = commandGroups(buttons)
         groupedButtons.forEachIndexed { groupIndex, group ->
             if (group.second.isEmpty()) return@forEachIndexed
-            buttonTable.add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(6f).row()
-            group.second.forEachIndexed { index, button ->
-                val actor = makeButton(
-                    commandButtonLabel(button),
-                    runtime.actionHint(button.actionId),
-                    commandButtonStyle(button.actionId)
-                ) { runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
-                actor.isDisabled = !runtime.isActionEnabled(button.actionId)
-                actor.isChecked = runtime.isActionActive(button.actionId)
-                val cardTone =
-                    when {
-                        button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
-                            Color(0.18f, 0.16f, 0.08f, 0.94f)
-                        button.actionId == "move" || button.actionId == "attackMove" || button.actionId == "patrol" || button.actionId == "hold" ->
-                            Color(0.08f, 0.16f, 0.18f, 0.94f)
-                        else -> Color(0.09f, 0.11f, 0.14f, 0.94f)
-                    }
-                buttonTable.add(
-                    Table().apply {
-                        background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
-                        pad(3f)
+            buttonTable.add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
+                    pad(4f)
+                    add(Label(group.first.uppercase(), assets.accentLabelStyle)).colspan(commandColumns).left().padBottom(5f).row()
+                    group.second.forEachIndexed { index, button ->
+                        val actor = makeButton(
+                            commandButtonLabel(button),
+                            runtime.actionHint(button.actionId),
+                            commandButtonStyle(button.actionId)
+                        ) { runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                        actor.isDisabled = !runtime.isActionEnabled(button.actionId)
+                        actor.isChecked = runtime.isActionActive(button.actionId)
+                        val cardTone =
+                            when {
+                                button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
+                                    Color(0.18f, 0.16f, 0.08f, 0.94f)
+                                button.actionId == "move" || button.actionId == "attackMove" || button.actionId == "patrol" || button.actionId == "hold" ->
+                                    Color(0.08f, 0.16f, 0.18f, 0.94f)
+                                else -> Color(0.09f, 0.11f, 0.14f, 0.94f)
+                            }
                         add(
                             Table().apply {
-                                background = assets.panelDrawable(cardTone)
+                                background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.98f))
                                 pad(2f)
-                                add(actor).width((commandWidth / commandColumns) - 24f).height(commandButtonHeight).left()
+                                add(
+                                    Table().apply {
+                                        background = assets.panelDrawable(cardTone)
+                                        pad(2f)
+                                        add(actor).width((commandWidth / commandColumns) - 30f).height(commandButtonHeight).left()
+                                    }
+                                ).expand().fill()
                             }
-                        ).expand().fill()
+                        ).width((commandWidth / commandColumns) - 16f).left()
+                        if ((index + 1) % commandColumns == 0) {
+                            row()
+                        }
                     }
-                ).width((commandWidth / commandColumns) - 12f).left()
-                if ((index + 1) % commandColumns == 0) {
-                    buttonTable.row()
+                    if (group.second.size % commandColumns != 0) {
+                        row()
+                    }
                 }
-            }
-            if (group.second.size % commandColumns != 0) {
-                buttonTable.row()
-            }
+            ).colspan(commandColumns).left().fillX().expandX().row()
             if (groupIndex != groupedButtons.lastIndex) {
                 buttonTable.add().height(8f).colspan(commandColumns).row()
             }
