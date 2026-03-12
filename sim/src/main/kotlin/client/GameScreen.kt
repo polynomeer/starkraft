@@ -236,7 +236,7 @@ internal class GameScreen(
             pad(1f, 3f, 0f, 3f)
             add(
                 leftHudColumn.apply {
-                    background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.94f))
+                    background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.95f))
                     pad(3f)
                     add(wrapMinimapPanel(minimapFrame)).width(224f).height(164f).left()
                 }
@@ -415,6 +415,12 @@ internal class GameScreen(
                         ) { runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
                         actor.isDisabled = !runtime.isActionEnabled(button.actionId)
                         actor.isChecked = runtime.isActionActive(button.actionId)
+                        actor.color =
+                            when {
+                                actor.isDisabled -> Color(0.66f, 0.70f, 0.74f, 0.55f)
+                                actor.isChecked -> Color(1.00f, 0.98f, 0.82f, 1f)
+                                else -> Color.WHITE
+                            }
                         val cardTone =
                             when {
                                 button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
@@ -423,21 +429,41 @@ internal class GameScreen(
                                     Color(0.07f, 0.24f, 0.28f, 0.98f)
                                 else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
                             }
+                        val frameTone =
+                            when {
+                                actor.isDisabled -> Color(0.05f, 0.06f, 0.08f, 0.94f)
+                                actor.isChecked -> Color(0.30f, 0.34f, 0.16f, 0.98f)
+                                else -> cardTone
+                            }
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
                                 pad(1f)
                                 add(
                                     Table().apply {
-                                        background = assets.panelDrawable(cardTone)
+                                        background = assets.panelDrawable(frameTone)
                                         pad(2f, 2f, 3f, 2f)
                                         add(
                                             Table().apply {
-                                                background = assets.panelDrawable(Color(0.05f, 0.09f, 0.12f, 0.95f))
+                                                background =
+                                                    assets.panelDrawable(
+                                                        when {
+                                                            actor.isDisabled -> Color(0.04f, 0.05f, 0.07f, 0.94f)
+                                                            actor.isChecked -> Color(0.34f, 0.40f, 0.16f, 0.98f)
+                                                            else -> Color(0.05f, 0.09f, 0.12f, 0.95f)
+                                                        }
+                                                    )
                                                 pad(1f)
                                                 add(
                                                     Table().apply {
-                                                        background = assets.panelDrawable(Color(1f, 1f, 1f, 0.10f))
+                                                        background =
+                                                            assets.panelDrawable(
+                                                                when {
+                                                                    actor.isDisabled -> Color(1f, 1f, 1f, 0.04f)
+                                                                    actor.isChecked -> Color(1f, 0.96f, 0.62f, 0.18f)
+                                                                    else -> Color(1f, 1f, 1f, 0.10f)
+                                                                }
+                                                            )
                                                     }
                                                 ).size(10f, 10f)
                                             }
@@ -581,13 +607,13 @@ internal class GameScreen(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
+                                    background = assets.panelDrawable(Color(0.26f, 0.34f, 0.38f, 0.95f))
                                 }
                             ).size(18f, 6f).left().padBottom(2f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
+                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.13f, 0.95f))
                                 }
                             ).width(42f).height(5f).right().padTop(2f)
                         }
