@@ -73,6 +73,7 @@ internal class GameScreen(
     private val footerLabel = Label("", assets.mutedLabelStyle)
     private var dragSelection: DragSelectionBox? = null
     private var selectionPage = 0
+    private var productionPage = 0
     private var lastSelectionSignature = ""
     private var focusedSelectionId: Int? = null
     private var screenFadeAlpha = 1f
@@ -147,9 +148,15 @@ internal class GameScreen(
 
         commandCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(8f)
+            pad(6f)
             top()
-            add(commandHeaderLabel).left().expandX().fillX().row()
+            add(
+                Table().apply {
+                    add(commandHeaderLabel).left().expandX().fillX()
+                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(24f).height(20f).padRight(4f)
+                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(24f).height(20f)
+                }
+            ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(actionBanner).left().expandX().fillX().padTop(4f).row()
         }
@@ -218,7 +225,7 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.84f))
-            pad(3f, 5f, 1f, 5f)
+            pad(2f, 4f, 1f, 4f)
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.98f))
@@ -306,12 +313,12 @@ internal class GameScreen(
         val minimapWidth = (width * 0.14f).coerceIn(188f, 220f)
         val minimapHeight = (height * 0.145f).coerceIn(124f, 148f)
         val centerWidth = (width * 0.18f).coerceIn(224f, 280f)
-        val commandWidth = (width * 0.205f).coerceIn(272f, 324f)
+        val commandWidth = (width * 0.195f).coerceIn(260f, 308f)
         val commandHeight = (height * 0.102f).coerceIn(86f, 112f)
         val commandButtonHeight = if (width >= 1440) 26f else 24f
         val commandColumns = 3
         val centerHeight = (height * 0.155f).coerceIn(132f, 164f)
-        val commandShellHeight = (commandHeight + 30f).coerceIn(120f, 146f)
+        val commandShellHeight = (commandHeight + 28f).coerceIn(116f, 142f)
         val minimapShellHeight = minimapHeight + 16f
         val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
         selectionLabel.setWrap(true)
@@ -356,7 +363,8 @@ internal class GameScreen(
         footerLabel.setText("LMB select  RMB order  drag box select")
         statusHeader.setText("Battlefield")
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
-        commandHeaderLabel.setText("Command  ${runtime.overlayModeLabel()}")
+        val groupedButtons = commandGroups(runtime.buttonModels())
+        commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
         economyLabel.setText(buildTopEconomyLine())
         topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
@@ -376,10 +384,7 @@ internal class GameScreen(
         actionBanner.background = if (showActionBanner) assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f)) else null
         actionBanner.pad(if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f, if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f)
         bottomHud.invalidateHierarchy()
-
         buttonTable.clearChildren()
-        val buttons = runtime.buttonModels()
-        val groupedButtons = commandGroups(buttons)
         groupedButtons.forEachIndexed { groupIndex, group ->
             if (group.second.isEmpty()) return@forEachIndexed
             buttonTable.add(
@@ -528,11 +533,11 @@ internal class GameScreen(
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.96f))
-            pad(5f)
+            pad(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(tone)
-                    pad(2f)
+                    pad(1f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
@@ -541,15 +546,26 @@ internal class GameScreen(
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.02f, 0.04f, 0.06f, 0.72f))
-            pad(4f)
+            pad(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.17f, 0.22f, 0.18f))
-                    pad(3f)
+                    pad(2f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
         }
+
+    private fun buildCommandHeader(groups: List<Pair<String, List<ClientCommandButton>>>): String {
+        val productionGroup = groups.firstOrNull { it.first == "Production" }?.second.orEmpty()
+        val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
+        productionPage = productionPage.coerceIn(0, pageCount - 1)
+        return if (productionGroup.size > 6) {
+            "Command ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
+        } else {
+            "Command ${runtime.overlayModeLabel()}"
+        }
+    }
 
     private fun buildCenterStatusLine(): String {
         val snapshot = runtime.snapshot ?: return "Status unavailable"
@@ -936,13 +952,29 @@ internal class GameScreen(
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
         val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
-        val production = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
+        val allProduction = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
+        val productionPageSize = 6
+        val productionPageCount = ((allProduction.size + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
+        productionPage = productionPage.coerceIn(0, productionPageCount - 1)
+        val production = allProduction.drop(productionPage * productionPageSize).take(productionPageSize)
         val utility =
             buttons.filter {
                 it.actionId in setOf("viewF1", "viewF2", "observer", "pause", "help") ||
                     (runtime.debugVisible && it.actionId == "debug")
-            }
+        }
         return listOf("Orders" to primary, "Production" to production, "Utility" to utility)
+    }
+
+    private fun shiftProductionPage(direction: Int) {
+        val productionButtons =
+            runtime.buttonModels().count {
+                it.actionId.startsWith("build:") ||
+                    it.actionId.startsWith("train:") ||
+                    it.actionId.startsWith("research:") ||
+                    it.actionId.startsWith("cancel")
+            }
+        val pageCount = ((productionButtons + 5) / 6).coerceAtLeast(1)
+        productionPage = (productionPage + direction).coerceIn(0, pageCount - 1)
     }
 
     private fun makeButton(
