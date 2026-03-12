@@ -712,42 +712,49 @@ internal class GdxWorldRenderer(
         factionColor: Color,
         selected: Boolean
     ) {
+        val bobY = unitBob(entity.id, if (selected) 0.9f else 0.6f)
+        val x = screenX
+        val y = screenY + bobY
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
         val shadowRadius = if (selected) 9f else 7f
         shape.color = Color(0f, 0f, 0f, 0.34f)
-        shape.circle(screenX + 1.5f, screenY + 1.5f, shadowRadius)
+        shape.circle(x + 1.5f, screenY + 1.5f, shadowRadius)
         when {
             entity.archetype == "worker" -> {
                 shape.color = body
-                shape.circle(screenX, screenY, 6.5f)
+                shape.circle(x, y, 6.5f)
                 shape.color = teamStripe
-                shape.rect(screenX - 5f, screenY - 2f, 10f, 4f)
+                shape.rect(x - 5f, y - 2f, 10f, 4f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
-                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 5.5f), screenY + directionDy(entity.dir, 5.5f), 1.4f)
+                shape.rectLine(x, y, x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f), 1.4f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
-                shape.circle(screenX - 1f, screenY - 1f, 2.2f)
+                shape.circle(x - 1f, y - 1f, 2.2f)
             }
             entity.weaponId != null -> {
                 shape.color = body
-                shape.rect(screenX - 3.5f, screenY - 6.5f, 7f, 13f)
-                shape.rect(screenX - 6.5f, screenY - 1.8f, 13f, 3.6f)
+                shape.rect(x - 3.5f, y - 6.5f, 7f, 13f)
+                shape.rect(x - 6.5f, y - 1.8f, 13f, 3.6f)
                 shape.color = teamStripe
-                shape.rect(screenX - 2.5f, screenY - 5.5f, 5f, 11f)
+                shape.rect(x - 2.5f, y - 5.5f, 5f, 11f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
-                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 7.5f), screenY + directionDy(entity.dir, 7.5f), 1.8f)
+                shape.rectLine(x, y, x + directionDx(entity.dir, 7.5f), y + directionDy(entity.dir, 7.5f), 1.8f)
+                if (entity.weaponCooldownTicks > 0) {
+                    shape.color = Color(1.00f, 0.68f, 0.32f, 0.40f)
+                    shape.rectLine(x - directionDx(entity.dir, 4f), y - directionDy(entity.dir, 4f), x, y, 2.4f)
+                }
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
-                shape.rect(screenX - 1.5f, screenY - 4.5f, 3f, 4f)
+                shape.rect(x - 1.5f, y - 4.5f, 3f, 4f)
             }
             else -> {
                 shape.color = body
-                shape.rect(screenX - 5.5f, screenY - 4.5f, 11f, 9f)
+                shape.rect(x - 5.5f, y - 4.5f, 11f, 9f)
                 shape.color = teamStripe
-                shape.rect(screenX - 4.5f, screenY - 3.5f, 9f, 7f)
+                shape.rect(x - 4.5f, y - 3.5f, 9f, 7f)
                 shape.color = Color(0.85f, 0.92f, 0.98f, 0.58f)
-                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, 6f), screenY + directionDy(entity.dir, 6f), 1.5f)
+                shape.rectLine(x, y, x + directionDx(entity.dir, 6f), y + directionDy(entity.dir, 6f), 1.5f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.14f }
-                shape.rect(screenX - 3.5f, screenY - 2.5f, 4.5f, 2.5f)
+                shape.rect(x - 3.5f, y - 2.5f, 4.5f, 2.5f)
             }
         }
     }
@@ -813,6 +820,24 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.97f, 0.68f, 0.28f, 0.82f)
             shape.rect(left + 5f, top + height - 11f, 6f, 6f)
         }
+        if (entity.underConstruction) {
+            shape.color = Color(0.78f, 0.64f, 0.30f, 0.35f)
+            shape.rect(left + 2f, top + 2f, width - 4f, height - 4f)
+            val stripeCount = (width / 8f).toInt().coerceAtLeast(2)
+            shape.color = Color(0.92f, 0.76f, 0.40f, 0.55f)
+            for (i in 0..stripeCount) {
+                val stripeX = left + 4f + (i * ((width - 8f) / stripeCount))
+                shape.rect(stripeX, top + 4f, 2f, height - 8f)
+            }
+        }
+        if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
+            shape.color = Color(0.98f, 0.76f, 0.34f, 0.18f + (ambientPulse(1100L) * 0.10f))
+            shape.rect(left + width - 14f, top + 6f, 8f, height - 12f)
+        }
+        if (entity.activeResearchTech != null) {
+            shape.color = Color(0.62f, 0.76f, 1.00f, 0.18f + (ambientPulse(1200L) * 0.10f))
+            shape.rect(left + 6f, top + 6f, 8f, height - 12f)
+        }
     }
 
     private fun selectionPulse(): Float {
@@ -823,6 +848,11 @@ internal class GdxWorldRenderer(
     private fun ambientPulse(periodMillis: Long): Float {
         val phase = (System.currentTimeMillis() % periodMillis).toFloat() / periodMillis.toFloat()
         return if (phase <= 0.5f) phase * 2f else (1f - phase) * 2f
+    }
+
+    private fun unitBob(entityId: Int, amplitude: Float): Float {
+        val phase = ((System.currentTimeMillis() % 1400L).toFloat() / 1400f) + ((entityId % 11) * 0.07f)
+        return kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * amplitude
     }
 
     private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
