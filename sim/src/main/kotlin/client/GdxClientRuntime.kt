@@ -337,12 +337,7 @@ internal class GdxClientRuntime(
     fun ensureInitialCamera(viewWidth: Int, viewHeight: Int) {
         if (initialCameraApplied) return
         val snapshot = session.state.snapshot ?: return
-        val focus =
-            session.state.viewedFaction?.let { faction ->
-                computeSelectionCentroid(snapshot, collectFactionSelectionIds(snapshot, faction))
-            }
-                ?: computeSelectionCentroid(snapshot, snapshot.entities.map { it.id }.toIntArray())
-                ?: (snapshot.mapWidth / 2f to snapshot.mapHeight / 2f)
+        val focus = snapshot.mapWidth / 2f to snapshot.mapHeight / 2f
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
         initialCameraApplied = true
     }
