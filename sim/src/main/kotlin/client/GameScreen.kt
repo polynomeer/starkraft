@@ -184,6 +184,7 @@ internal class GameScreen(
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(4f).row()
+            add(selectionLabel).left().expandX().fillX().padTop(3f).row()
             add(
                 Table().apply {
                     add(
@@ -195,7 +196,7 @@ internal class GameScreen(
                     ).size(74f, 74f).top().left().padRight(10f)
                     add(
                         Table().apply {
-                            add(selectionMetaLabel).left().expandX().fillX().row()
+                            add(selectionMetaLabel).left().expandX().fillX().padTop(1f).row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
@@ -220,7 +221,7 @@ internal class GameScreen(
                         }
                     ).expandX().fillX().top()
                 }
-            ).expandX().fillX().padTop(4f).row()
+            ).expandX().fillX().padTop(3f).row()
         }
 
         bottomHud.apply {
@@ -417,7 +418,18 @@ internal class GameScreen(
                                     Table().apply {
                                         background = assets.panelDrawable(cardTone)
                                         pad(2f, 2f, 3f, 2f)
-                                        add(actor).width((commandWidth / commandColumns) - 16f).height(commandButtonHeight).left()
+                                        add(
+                                            Table().apply {
+                                                background = assets.panelDrawable(Color(0.05f, 0.09f, 0.12f, 0.95f))
+                                                pad(1f)
+                                                add(
+                                                    Table().apply {
+                                                        background = assets.panelDrawable(Color(1f, 1f, 1f, 0.10f))
+                                                    }
+                                                ).size(10f, 10f)
+                                            }
+                                        ).size(14f, 14f).left().padRight(3f)
+                                        add(actor).width((commandWidth / commandColumns) - 33f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
@@ -552,7 +564,21 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.12f, 0.19f, 0.25f, 0.24f))
                     pad(2f, 2f, 3f, 2f)
-                    add(content).expand().fill()
+                    add(
+                        Table().apply {
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
+                                }
+                            ).size(18f, 6f).left().padBottom(2f).row()
+                            add(content).expand().fill().row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
+                                }
+                            ).width(42f).height(5f).right().padTop(2f)
+                        }
+                    ).expand().fill()
                 }
             ).expand().fill()
         }
