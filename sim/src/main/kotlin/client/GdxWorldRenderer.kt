@@ -539,18 +539,7 @@ internal class GdxWorldRenderer(
     }
 
     private fun drawFog(shape: ShapeRenderer, runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
-        val viewedFaction = runtime.session.state.viewedFaction ?: return
-        val visibleTiles = runtime.session.state.visionState?.visibleTiles(viewedFaction) ?: return
-        val exploredTiles = runtime.session.state.visionState?.exploredTiles(viewedFaction) ?: emptySet()
-        val tileSize = runtime.camera.tileSize
-        for (x in 0 until snapshot.mapWidth) {
-            for (y in 0 until snapshot.mapHeight) {
-                if ((x to y) in visibleTiles) continue
-                shape.color = if ((x to y) in exploredTiles) fogColor else shroudColor
-                shape.rect(runtime.camera.worldToScreenX(x.toFloat()), runtime.camera.worldToScreenY(y.toFloat()), tileSize, tileSize)
-            }
-        }
+        return
     }
 
     private fun drawMiniMap(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
