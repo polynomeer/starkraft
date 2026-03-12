@@ -244,7 +244,7 @@ internal class GameScreen(
             pad(0f, 2f, 0f, 2f)
             add(
                 leftHudColumn.apply {
-                    background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.95f))
+                    background = null
                     pad(2f, 2f, 3f, 2f)
                     add(wrapMinimapPanel(minimapFrame)).width(214f).height(146f).left()
                 }
@@ -361,7 +361,7 @@ internal class GameScreen(
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
         leftHudColumn.setWidth(minimapWidth + 12f)
-        leftHudColumn.setSize(minimapWidth + 12f, unifiedPanelHeight)
+        leftHudColumn.setSize(minimapWidth + 12f, minimapHeight + 6f)
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
