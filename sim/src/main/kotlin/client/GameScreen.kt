@@ -148,7 +148,7 @@ internal class GameScreen(
 
         commandCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(6f)
+            pad(5f)
             top()
             add(
                 Table().apply {
@@ -181,7 +181,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(7f)
+            pad(6f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -243,7 +243,7 @@ internal class GameScreen(
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.95f))
-                    pad(3f)
+                    pad(4f, 4f, 6f, 4f)
                     add(wrapMinimapPanel(minimapFrame)).width(224f).height(164f).left()
                 }
             ).left().bottom().padRight(3f)
@@ -591,11 +591,11 @@ internal class GameScreen(
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.92f))
-            pad(2f)
+            pad(2f, 2f, 3f, 2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(tone)
-                    pad(1f, 1f, 2f, 1f)
+                    pad(1f, 1f, 3f, 1f)
                     add(content).expand().fill()
                 }
             ).expand().fill()
@@ -604,24 +604,33 @@ internal class GameScreen(
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.82f))
-            pad(2f)
+            pad(2f, 2f, 5f, 2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.12f, 0.19f, 0.25f, 0.24f))
-                    pad(2f, 2f, 3f, 2f)
+                    pad(3f, 3f, 5f, 3f)
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.26f, 0.34f, 0.38f, 0.95f))
                                 }
-                            ).size(18f, 6f).left().padBottom(2f).row()
+                            ).size(22f, 7f).left().padBottom(3f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.13f, 0.95f))
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
+                                        }
+                                    ).width(46f).height(5f).right().row()
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
+                                        }
+                                    ).width(18f).height(4f).right().padTop(2f)
                                 }
-                            ).width(42f).height(5f).right().padTop(2f)
+                            ).right().padTop(2f)
                         }
                     ).expand().fill()
                 }
