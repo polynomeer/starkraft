@@ -221,7 +221,7 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(150f).height(10f).left().padTop(4f).row()
+                            ).width(150f).height(10f).left().padTop(3f).row()
                             add(selectionGrid).left().expandX().fillX().padTop(5f).row()
                             add(
                                 selectionPager.apply {
@@ -232,7 +232,7 @@ internal class GameScreen(
                                     add(controlGroupsLabel).right().padRight(6f)
                                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(28f).height(24f)
                                 }
-                            ).expandX().fillX().padTop(4f)
+                            ).expandX().fillX().padTop(3f)
                         }
                     ).expandX().fillX().top()
                 }
