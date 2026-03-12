@@ -407,11 +407,11 @@ internal class GameScreen(
             buttonTable.add(
                 Table().apply {
                             background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
-                    pad(2f)
+                    pad(1f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
-                            pad(4f, 7f, 2f, 7f)
+                            pad(3f, 6f, 2f, 6f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
                             ).colspan(commandColumns).left().padBottom(2f).row()
@@ -456,7 +456,7 @@ internal class GameScreen(
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(frameTone)
-                                        pad(2f, 2f, 2f, 2f)
+                                        pad(1f, 1f, 1f, 1f)
                                         add(
                                             Table().apply {
                                                 background =
@@ -481,8 +481,8 @@ internal class GameScreen(
                                                     }
                                                 ).size(10f, 10f)
                                             }
-                                        ).size(12f, 12f).left().padRight(3f)
-                                        add(actor).width((commandWidth / commandColumns) - 30f).height(commandButtonHeight).left()
+                                        ).size(11f, 11f).left().padRight(2f)
+                                        add(actor).width((commandWidth / commandColumns) - 26f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
@@ -543,7 +543,7 @@ internal class GameScreen(
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
             "$faction · ${snapshot.entities.size} live"
         } else {
-            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
+            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
         }
     }
 
@@ -996,7 +996,7 @@ internal class GameScreen(
         return if (selected.size == 1) {
             "${lead.typeId} ${lead.hp}/${lead.maxHp}"
         } else {
-            "${selected.size} sel ${lead.typeId}"
+            "${selected.size} ${lead.typeId}"
         }
     }
 
