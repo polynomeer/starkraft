@@ -181,7 +181,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(4f)
+            pad(3f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -190,7 +190,7 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(3f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(2f).row()
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
@@ -207,7 +207,7 @@ internal class GameScreen(
                             pad(4f)
                             add(portraitLabel).center()
                         }
-                    ).size(64f, 64f).top().left().padRight(5f)
+                    ).size(62f, 62f).top().left().padRight(4f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().row()
@@ -625,17 +625,17 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.26f, 0.34f, 0.38f, 0.95f))
                                 }
-                            ).size(18f, 5f).left().padBottom(2f).row()
+                            ).size(16f, 4f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.09f, 0.14f, 0.17f, 0.95f))
                                 }
-                            ).width(10f).height(3f).left().padBottom(1f).row()
+                            ).width(8f).height(2f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                 }
-                            ).width(6f).height(12f).left().padBottom(2f).row()
+                            ).width(5f).height(10f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
@@ -643,37 +643,37 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(38f).height(4f).right().row()
+                                    ).width(30f).height(3f).right().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
                                         }
-                                    ).width(14f).height(3f).right().padTop(1f)
+                                    ).width(12f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.95f))
                                         }
-                                    ).width(22f).height(2f).right().padTop(1f)
+                                    ).width(18f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.95f))
                                         }
-                                    ).width(8f).height(8f).right().padTop(2f)
+                                    ).width(6f).height(6f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.95f))
                                         }
-                                    ).width(18f).height(3f).right().padTop(1f)
+                                    ).width(14f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                         }
-                                    ).width(5f).height(10f).right().padTop(2f)
+                                    ).width(4f).height(8f).right().padTop(1f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
                                         }
-                                    ).width(12f).height(2f).right().padTop(1f)
+                                    ).width(10f).height(2f).right().padTop(1f)
                                 }
                             ).right().padTop(1f)
                         }
@@ -1058,14 +1058,14 @@ internal class GameScreen(
                 "attackMove" -> "A"
                 "patrol" -> "P"
                 "hold" -> "H"
-                "clear" -> "Esc"
-                "centerSelection" -> "Home"
+                "clear" -> "E"
+                "centerSelection" -> "Hm"
                 "viewF1" -> "1"
                 "viewF2" -> "2"
                 "observer" -> "3"
-                "pause" -> "Space"
+                "pause" -> "Sp"
                 "help" -> "F1"
-                "debug" -> "Tab"
+                "debug" -> "Tb"
                 "selectViewedFaction" -> "F2"
                 "selectType" -> "F3"
                 "selectRole" -> "F4"
