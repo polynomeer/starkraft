@@ -236,7 +236,7 @@ internal class GameScreen(
                         }
                     ).expandX().fillX().top()
                 }
-            ).expandX().fillX().padTop(3f).row()
+            ).expandX().fillX().padTop(2f).row()
         }
 
         bottomHud.apply {
@@ -253,13 +253,13 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(16f).height(82f).bottom().padRight(0f).padBottom(20f)
+            ).width(14f).height(74f).bottom().padRight(0f).padBottom(16f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(272f).expandX().fillX().bottom().padRight(2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(14f).height(82f).bottom().padRight(0f).padBottom(22f)
+            ).width(12f).height(74f).bottom().padRight(0f).padBottom(18f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(292f).right().bottom()
         }
 
@@ -564,12 +564,12 @@ internal class GameScreen(
     }
 
     private fun buildHealthLine(): String {
-        val snapshot = runtime.snapshot ?: return "Integrity unavailable"
+        val snapshot = runtime.snapshot ?: return "HP -"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "Integrity: no active selection"
+        if (selected.isEmpty()) return "HP -"
         val hp = selected.sumOf { it.hp }
         val maxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
-        return "Integrity $hp / $maxHp"
+        return "HP $hp/$maxHp"
     }
 
     private fun buildSelectionRosterLine(): String {
@@ -1038,9 +1038,9 @@ internal class GameScreen(
                 "viewF1" -> "F1"
                 "viewF2" -> "F2"
                 "observer" -> "Obs"
-                "pause" -> "Pause"
-                "help" -> "Help"
-                "debug" -> "Debug"
+                "pause" -> "Pse"
+                "help" -> "Hlp"
+                "debug" -> "Dbg"
                 "build:Depot" -> "Depot"
                 "build:ResourceDepot" -> "Exp"
                 "build:GasDepot" -> "Gas"
