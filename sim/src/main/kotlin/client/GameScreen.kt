@@ -181,7 +181,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(6f)
+            pad(5f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -204,10 +204,10 @@ internal class GameScreen(
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.98f))
-                            pad(6f)
+                            pad(5f)
                             add(portraitLabel).center()
                         }
-                    ).size(80f, 80f).top().left().padRight(10f)
+                    ).size(74f, 74f).top().left().padRight(8f)
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().padTop(1f).row()
@@ -245,22 +245,22 @@ internal class GameScreen(
             add(
                 leftHudColumn.apply {
                     background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.95f))
-                    pad(4f, 4f, 6f, 4f)
-                    add(wrapMinimapPanel(minimapFrame)).width(224f).height(164f).left()
+                    pad(3f, 3f, 5f, 3f)
+                    add(wrapMinimapPanel(minimapFrame)).width(212f).height(152f).left()
                 }
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(24f).height(108f).bottom().padRight(0f).padBottom(28f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(312f).expandX().fillX().bottom().padRight(3f)
+            ).width(20f).height(96f).bottom().padRight(0f).padBottom(24f)
+            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(296f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(20f).height(104f).bottom().padRight(0f).padBottom(30f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(344f).right().bottom()
+            ).width(18f).height(92f).bottom().padRight(0f).padBottom(26f)
+            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(322f).right().bottom()
         }
 
         root.add().expand().fill().row()
@@ -326,18 +326,18 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val minimapWidth = (width * 0.14f).coerceIn(188f, 220f)
-        val minimapHeight = (height * 0.145f).coerceIn(124f, 148f)
-        val centerWidth = (width * 0.18f).coerceIn(224f, 280f)
-        val commandWidth = (width * 0.195f).coerceIn(260f, 308f)
-        val commandHeight = (height * 0.102f).coerceIn(86f, 112f)
+        val minimapWidth = (width * 0.135f).coerceIn(182f, 212f)
+        val minimapHeight = (height * 0.136f).coerceIn(118f, 138f)
+        val centerWidth = (width * 0.175f).coerceIn(216f, 268f)
+        val commandWidth = (width * 0.186f).coerceIn(248f, 294f)
+        val commandHeight = (height * 0.094f).coerceIn(80f, 100f)
         val commandButtonHeight = if (width >= 1440) 26f else 24f
         val commandColumns = 3
-        val centerHeight = (height * 0.155f).coerceIn(132f, 164f)
-        val commandShellHeight = (commandHeight + 28f).coerceIn(116f, 142f)
-        val minimapShellHeight = minimapHeight + 16f
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
-        val unifiedPanelHeight = hudShellHeight - 8f
+        val centerHeight = (height * 0.145f).coerceIn(122f, 148f)
+        val commandShellHeight = (commandHeight + 24f).coerceIn(104f, 126f)
+        val minimapShellHeight = minimapHeight + 14f
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 10f, commandShellHeight + 10f)
+        val unifiedPanelHeight = hudShellHeight - 6f
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -358,8 +358,8 @@ internal class GameScreen(
         footerLabel.setWidth(minimapWidth)
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
-        leftHudColumn.setWidth(minimapWidth + 16f)
-        leftHudColumn.setSize(minimapWidth + 16f, unifiedPanelHeight)
+        leftHudColumn.setWidth(minimapWidth + 14f)
+        leftHudColumn.setSize(minimapWidth + 14f, unifiedPanelHeight)
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
@@ -667,6 +667,11 @@ internal class GameScreen(
                                             background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
                                         }
                                     ).width(6f).height(14f).right().padTop(3f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
+                                        }
+                                    ).width(16f).height(3f).right().padTop(2f)
                                 }
                             ).right().padTop(2f)
                         }
@@ -950,7 +955,7 @@ internal class GameScreen(
     }
 
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
-        val reservedHudHeight = (screenHeight * 0.18f).coerceIn(136f, 168f)
+        val reservedHudHeight = (screenHeight * 0.155f).coerceIn(118f, 144f)
         return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
     }
 
