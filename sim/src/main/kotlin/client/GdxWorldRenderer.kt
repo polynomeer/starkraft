@@ -563,6 +563,26 @@ internal class GdxWorldRenderer(
                 shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
                 shape.rect(x - 3f, y - 3f, 6f, 6f)
             }
+            if (entity.pathRemainingNodes > 0) {
+                shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)
+                shape.rect(x - 1f, y + 3.5f, 2f, 3f)
+            }
+            if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
+                shape.color = Color(0.98f, 0.76f, 0.34f, if (visible) 0.78f else 0.34f)
+                shape.rect(x + 3.5f, y - 1f, 3f, 2f)
+            }
+            if (entity.activeResearchTech != null) {
+                shape.color = Color(0.62f, 0.76f, 1.00f, if (visible) 0.78f else 0.34f)
+                shape.rect(x - 6.5f, y - 1f, 3f, 2f)
+            }
+            if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
+                shape.color =
+                    when (entity.harvestCargoKind) {
+                        "gas" -> Color(0.56f, 0.98f, 0.82f, if (visible) 0.82f else 0.36f)
+                        else -> Color(0.98f, 0.86f, 0.48f, if (visible) 0.82f else 0.36f)
+                    }
+                shape.rect(x - 1.5f, y - 6f, 3f, 3f)
+            }
             if (entity.id in runtime.session.state.selectedIds) {
                 shape.color = Color(0.95f, 0.97f, 1f, if (visible) 0.95f else 0.40f)
                 shape.rect(x - 4.5f, y - 4.5f, 9f, 1f)
@@ -571,6 +591,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
             }
         }
+        drawMiniMapStatusLegend(shape, left, top, boundsWidth)
         runtime.currentGroundPing()?.let { ping ->
             val x = left + (ping.worldX / snapshot.mapWidth) * boundsWidth
             val y = top + (ping.worldY / snapshot.mapHeight) * boundsHeight
@@ -583,6 +604,23 @@ internal class GdxWorldRenderer(
                 }
             shape.circle(x, y, 5f)
         }
+    }
+
+    private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {
+        val legendTop = top + 6f
+        val startX = left + width - 54f
+        shape.color = Color(0.04f, 0.07f, 0.10f, 0.68f)
+        shape.rect(startX - 6f, legendTop - 4f, 58f, 14f)
+        shape.color = Color(0.64f, 0.88f, 0.98f, 0.82f)
+        shape.rect(startX, legendTop, 4f, 4f)
+        shape.color = Color(0.98f, 0.76f, 0.34f, 0.82f)
+        shape.rect(startX + 12f, legendTop, 4f, 4f)
+        shape.color = Color(0.62f, 0.76f, 1.00f, 0.82f)
+        shape.rect(startX + 24f, legendTop, 4f, 4f)
+        shape.color = Color(0.98f, 0.48f, 0.30f, 0.82f)
+        shape.rect(startX + 36f, legendTop, 4f, 4f)
+        shape.color = Color(0.98f, 0.86f, 0.48f, 0.82f)
+        shape.rect(startX + 48f, legendTop, 4f, 4f)
     }
 
     private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
