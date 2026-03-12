@@ -81,9 +81,8 @@ internal class GdxWorldRenderer(
     }
 
     private fun beginWorldScissor(width: Int, height: Int, worldViewportHeight: Int) {
-        val bottomInset = (height - worldViewportHeight).coerceAtLeast(0)
         Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST)
-        Gdx.gl.glScissor(0, bottomInset, width, worldViewportHeight.coerceAtLeast(1))
+        Gdx.gl.glScissor(0, 0, width, worldViewportHeight.coerceAtLeast(1))
     }
 
     private fun endWorldScissor() {
