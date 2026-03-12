@@ -240,7 +240,7 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.74f))
             pad(1f, 3f, 0f, 3f)
             add(
                 leftHudColumn.apply {
@@ -251,13 +251,13 @@ internal class GameScreen(
             ).left().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
+                    background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
             ).width(24f).height(108f).bottom().padRight(0f).padBottom(28f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(312f).expandX().fillX().bottom().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.94f))
+                    background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
             ).width(20f).height(104f).bottom().padRight(0f).padBottom(30f)
             add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(344f).right().bottom()
@@ -456,7 +456,7 @@ internal class GameScreen(
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(frameTone)
-                                        pad(2f, 2f, 3f, 2f)
+                                        pad(2f, 3f, 3f, 3f)
                                         add(
                                             Table().apply {
                                                 background =
@@ -481,8 +481,8 @@ internal class GameScreen(
                                                     }
                                                 ).size(10f, 10f)
                                             }
-                                        ).size(14f, 14f).left().padRight(3f)
-                                        add(actor).width((commandWidth / commandColumns) - 31f).height(commandButtonHeight).left()
+                                        ).size(14f, 14f).left().padRight(4f)
+                                        add(actor).width((commandWidth / commandColumns) - 33f).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
                             }
