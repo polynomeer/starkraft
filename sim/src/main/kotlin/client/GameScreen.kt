@@ -167,7 +167,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
-            pad(10f)
+            pad(8f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -176,19 +176,19 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
-            add(selectionMetaLabel).left().expandX().fillX().padTop(4f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(4f).row()
             add(
                 Table().apply {
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.11f, 0.18f, 0.22f, 0.98f))
-                            pad(8f)
+                            pad(7f)
                             add(portraitLabel).center()
                         }
-                    ).size(76f, 76f).top().left().padRight(10f)
+                    ).size(68f, 68f).top().left().padRight(8f)
                     add(
                         Table().apply {
+                            add(selectionMetaLabel).left().expandX().fillX().row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
@@ -198,23 +198,22 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(180f).height(12f).left().padTop(4f)
+                            ).width(156f).height(10f).left().padTop(4f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(6f).row()
+                            add(
+                                selectionPager.apply {
+                                    clearChildren()
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(28f).height(24f).padRight(6f)
+                                    add(selectionPageLabel).expandX().left()
+                                    add(controlGroupButtons).right().padRight(6f)
+                                    add(controlGroupsLabel).right().padRight(6f)
+                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(28f).height(24f)
+                                }
+                            ).expandX().fillX().padTop(4f)
                         }
                     ).expandX().fillX().top()
                 }
             ).expandX().fillX().padTop(4f).row()
-            add(selectionGrid).left().expandX().fillX().padTop(8f).row()
-            add(
-                selectionPager.apply {
-                    clearChildren()
-                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(34f).height(26f).padRight(6f)
-                    add(selectionPageLabel).expandX().left()
-                    add(controlGroupButtons).right().padRight(6f)
-                    add(controlGroupsLabel).right().padRight(6f)
-                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(34f).height(26f)
-                }
-            ).expandX().fillX().padTop(6f)
-            add(selectionRosterLabel).left().expandX().fillX().padTop(4f).row()
         }
 
         bottomHud.apply {
@@ -304,15 +303,15 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val minimapWidth = (width * 0.145f).coerceIn(196f, 230f)
-        val minimapHeight = (height * 0.15f).coerceIn(128f, 152f)
-        val centerWidth = (width * 0.20f).coerceIn(252f, 320f)
-        val commandWidth = (width * 0.235f).coerceIn(316f, 372f)
-        val commandHeight = (height * 0.12f).coerceIn(100f, 132f)
-        val commandButtonHeight = if (width >= 1440) 30f else 28f
+        val minimapWidth = (width * 0.145f).coerceIn(196f, 228f)
+        val minimapHeight = (height * 0.145f).coerceIn(124f, 148f)
+        val centerWidth = (width * 0.19f).coerceIn(236f, 296f)
+        val commandWidth = (width * 0.225f).coerceIn(300f, 348f)
+        val commandHeight = (height * 0.11f).coerceIn(92f, 120f)
+        val commandButtonHeight = if (width >= 1440) 28f else 26f
         val commandColumns = 3
-        val centerHeight = (height * 0.18f).coerceIn(148f, 182f)
-        val commandShellHeight = (commandHeight + 38f).coerceIn(138f, 170f)
+        val centerHeight = (height * 0.155f).coerceIn(132f, 164f)
+        val commandShellHeight = (commandHeight + 34f).coerceIn(128f, 156f)
         val minimapShellHeight = minimapHeight + 16f
         val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 12f, commandShellHeight + 12f) + 2f
         selectionLabel.setWrap(true)
@@ -660,9 +659,9 @@ internal class GameScreen(
             selectionGrid.add(Label("Selection slots idle", assets.mutedLabelStyle)).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 6f, 6f, 0f)
+        selectionGrid.defaults().pad(0f, 4f, 4f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(52f, 52f)
+            selectionGrid.add(buildSelectionSlot(entity)).size(44f, 44f)
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
@@ -697,9 +696,9 @@ internal class GameScreen(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.10f else 0.04f))
                         }
-                    ).size(32f, 16f).center().padBottom(2f).row()
+                    ).size(24f, 10f).center().padBottom(1f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
-                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(2f).row()
+                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().padTop(1f).row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(if (focused) Color(0.13f, 0.16f, 0.10f, 1f) else Color(0.10f, 0.12f, 0.14f, 1f))
@@ -707,10 +706,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(hpColor)
                                 }
-                            ).width(32f * hpRatio.coerceIn(0f, 1f)).height(5f).left()
+                            ).width(24f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(32f).height(5f).padTop(4f)
+                    ).width(24f).height(4f).padTop(3f)
                 }
             ).expand().fill()
             addListener(
