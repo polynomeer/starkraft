@@ -211,6 +211,7 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             add(selectionMetaLabel).left().expandX().fillX().padTop(1f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(2f).row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
@@ -432,8 +433,10 @@ internal class GameScreen(
                             when {
                                 button.actionId.startsWith("build") || button.actionId == "train" || button.actionId == "research" ->
                                     Color(0.28f, 0.22f, 0.08f, 0.98f)
-                                button.actionId == "move" || button.actionId == "attackMove" || button.actionId == "patrol" || button.actionId == "hold" ->
+                                button.actionId == "move" || button.actionId == "patrol" || button.actionId == "hold" ->
                                     Color(0.07f, 0.24f, 0.28f, 0.98f)
+                                button.actionId == "attackMove" ->
+                                    Color(0.28f, 0.16f, 0.10f, 0.98f)
                                 else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
                             }
                         val frameTone =
