@@ -739,18 +739,29 @@ internal class GdxWorldRenderer(
                 }
             shape.circle(x, y, 5f)
             when (ping.kind) {
-                GroundPingKind.MOVE -> shape.rect(x - 1f, y - 6f, 2f, 12f)
+                GroundPingKind.MOVE -> {
+                    shape.rect(x - 1f, y - 6f, 2f, 12f)
+                    shape.rect(x - 6f, y - 1f, 12f, 2f)
+                    shape.circle(x, y, 2f)
+                }
                 GroundPingKind.ATTACK -> {
                     shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
                     shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
+                    shape.rect(x - 1f, y - 7f, 2f, 14f)
+                    shape.rect(x - 7f, y - 1f, 14f, 2f)
                 }
                 GroundPingKind.BUILD -> {
                     shape.rect(x - 5f, y - 1f, 10f, 2f)
                     shape.rect(x - 1f, y - 5f, 2f, 10f)
+                    shape.rect(x - 5f, y - 5f, 2f, 2f)
+                    shape.rect(x + 3f, y - 5f, 2f, 2f)
+                    shape.rect(x - 5f, y + 3f, 2f, 2f)
+                    shape.rect(x + 3f, y + 3f, 2f, 2f)
                 }
                 GroundPingKind.INVALID -> {
                     shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
                     shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
+                    shape.rect(x - 1f, y - 6f, 2f, 12f)
                 }
             }
         }
@@ -851,36 +862,57 @@ internal class GdxWorldRenderer(
         val pulse = ambientPulse(900L)
         when (ping.kind) {
             GroundPingKind.MOVE -> {
-                shape.color = Color(0.34f, 0.92f, 0.54f, 0.22f + (pulse * 0.10f))
-                shape.circle(x, y, 16f + (pulse * 8f))
-                shape.color = Color(0.58f, 0.98f, 0.70f, 0.90f)
+                shape.color = Color(0.22f, 0.88f, 0.48f, 0.12f + (pulse * 0.08f))
+                shape.circle(x, y, 20f + (pulse * 10f))
+                shape.color = Color(0.34f, 0.98f, 0.58f, 0.18f + (pulse * 0.12f))
+                shape.circle(x, y, 12f + (pulse * 6f))
+                shape.color = Color(0.74f, 1.00f, 0.82f, 0.96f)
                 shape.rect(x - 2f, y - 10f, 4f, 20f)
                 shape.rect(x - 10f, y - 2f, 20f, 4f)
                 shape.rectLine(x - 8f, y - 8f, x + 8f, y + 8f, 1.4f)
+                shape.rectLine(x - 8f, y + 8f, x + 8f, y - 8f, 1.2f)
+                shape.color = Color(0.78f, 1.00f, 0.88f, 0.68f)
+                shape.circle(x, y, 3.5f)
             }
             GroundPingKind.ATTACK -> {
-                shape.color = Color(0.98f, 0.42f, 0.24f, 0.22f + (pulse * 0.10f))
-                shape.circle(x, y, 18f + (pulse * 10f))
-                shape.color = Color(1.00f, 0.76f, 0.46f, 0.96f)
+                shape.color = Color(0.96f, 0.34f, 0.22f, 0.12f + (pulse * 0.08f))
+                shape.circle(x, y, 22f + (pulse * 10f))
+                shape.color = Color(1.00f, 0.50f, 0.30f, 0.20f + (pulse * 0.10f))
+                shape.circle(x, y, 14f + (pulse * 6f))
+                shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
                 shape.rectLine(x - 10f, y - 10f, x + 10f, y + 10f, 2.2f)
                 shape.rectLine(x - 10f, y + 10f, x + 10f, y - 10f, 2.2f)
-                shape.circle(x, y, 5f)
+                shape.rect(x - 1f, y - 13f, 2f, 26f)
+                shape.rect(x - 13f, y - 1f, 26f, 2f)
+                shape.color = Color(1.00f, 0.92f, 0.72f, 0.78f)
+                shape.circle(x, y, 4.5f)
             }
             GroundPingKind.BUILD -> {
-                shape.color = Color(0.48f, 0.78f, 1.00f, 0.22f + (pulse * 0.10f))
-                shape.rect(x - 14f - (pulse * 2f), y - 14f - (pulse * 2f), 28f + (pulse * 4f), 28f + (pulse * 4f))
-                shape.color = Color(0.72f, 0.90f, 1.00f, 0.90f)
+                val outer = 16f + (pulse * 4f)
+                shape.color = Color(0.42f, 0.76f, 1.00f, 0.14f + (pulse * 0.08f))
+                shape.rect(x - outer, y - outer, outer * 2f, outer * 2f)
+                shape.color = Color(0.58f, 0.86f, 1.00f, 0.22f + (pulse * 0.08f))
+                shape.rect(x - 10f, y - 10f, 20f, 20f)
+                shape.color = Color(0.84f, 0.96f, 1.00f, 0.94f)
                 shape.rect(x - 8f, y - 8f, 16f, 16f)
                 shape.rect(x - 1f, y - 12f, 2f, 24f)
                 shape.rect(x - 12f, y - 1f, 24f, 2f)
+                shape.rect(x - 12f, y - 12f, 4f, 4f)
+                shape.rect(x + 8f, y - 12f, 4f, 4f)
+                shape.rect(x - 12f, y + 8f, 4f, 4f)
+                shape.rect(x + 8f, y + 8f, 4f, 4f)
             }
             GroundPingKind.INVALID -> {
-                shape.color = Color(0.96f, 0.28f, 0.28f, 0.18f + (pulse * 0.08f))
-                shape.circle(x, y, 18f + (pulse * 8f))
-                shape.color = Color(1.00f, 0.70f, 0.70f, 0.92f)
+                shape.color = Color(0.92f, 0.18f, 0.18f, 0.12f + (pulse * 0.08f))
+                shape.circle(x, y, 20f + (pulse * 8f))
+                shape.color = Color(0.96f, 0.26f, 0.26f, 0.18f + (pulse * 0.08f))
+                shape.circle(x, y, 12f + (pulse * 4f))
+                shape.color = Color(1.00f, 0.76f, 0.76f, 0.96f)
                 shape.rectLine(x - 9f, y - 9f, x + 9f, y + 9f, 2f)
                 shape.rectLine(x - 9f, y + 9f, x + 9f, y - 9f, 2f)
-                shape.circle(x, y, 4f)
+                shape.rect(x - 10f, y - 1f, 20f, 2f)
+                shape.rect(x - 1f, y - 10f, 2f, 20f)
+                shape.circle(x, y, 3.5f)
             }
         }
     }
