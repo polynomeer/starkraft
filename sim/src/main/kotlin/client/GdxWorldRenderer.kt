@@ -245,8 +245,9 @@ internal class GdxWorldRenderer(
         val viewedFaction = runtime.session.state.viewedFaction
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
-            val screenX = runtime.camera.worldToScreenX(entity.x)
-            val screenY = runtime.camera.worldToScreenY(entity.y)
+            val recoil = damageRecoilOffset(runtime, snapshot, entity)
+            val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first
+            val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second
             if (!isOnScreen(screenX, screenY)) continue
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
@@ -1061,6 +1062,9 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.22f, 0.20f, 0.18f, alpha * 0.86f)
                 shape.rect(x - 14f, y + 10f, 5f, 4f)
                 shape.rect(x + 8f, y + 6f, 4f, 5f)
+                shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
+                shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
+                shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
             } else {
                 val debris =
                     when {
@@ -1367,6 +1371,14 @@ internal class GdxWorldRenderer(
     private fun unitBob(entityId: Int, amplitude: Float): Float {
         val phase = ((System.currentTimeMillis() % 1400L).toFloat() / 1400f) + ((entityId % 11) * 0.07f)
         return kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * amplitude
+    }
+
+    private fun damageRecoilOffset(runtime: GdxClientRuntime, snapshot: ClientSnapshot, entity: EntitySnapshot): Pair<Float, Float> {
+        if (!runtime.isDamageFlashActive(entity.id)) return 0f to 0f
+        val attacker = nearestHostile(snapshot, entity) ?: return 0f to 0f
+        val dir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
+        val scale = if (entity.footprintWidth != null && entity.footprintHeight != null) 1.6f else 2.8f
+        return directionDx(dir, scale) to directionDy(dir, scale)
     }
 
     private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
