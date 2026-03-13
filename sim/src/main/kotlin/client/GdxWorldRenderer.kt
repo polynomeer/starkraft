@@ -1204,11 +1204,13 @@ internal class GdxWorldRenderer(
         selected: Boolean
     ) {
         val moving = entity.pathRemainingNodes > 0
+        val attackReady = if (entity.weaponCooldownTicks in 1..8) 1f - (entity.weaponCooldownTicks / 8f) else 0f
         val bobY = unitBob(entity.id, if (moving) 1.5f else if (selected) 0.9f else 0.6f)
         val stride = moveStride(entity.id, if (moving) 1f else 0f)
         val sway = moveStride(entity.id + 17, if (moving) 0.8f else 0f)
         val lead = if (moving) (moveStride(entity.id + 31, 0.55f) + 0.55f).coerceAtLeast(0f) else 0f
         val settle = unitBob(entity.id + 23, if (moving) 0.45f else 0.2f)
+        val aimBias = attackReady * 1.8f
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, lead * 0.9f)
         val y = screenY + bobY + directionDy(entity.dir, lead * 0.5f)
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
@@ -1257,50 +1259,75 @@ internal class GdxWorldRenderer(
             typeName.contains("Zergling", ignoreCase = true) -> {
                 val lunge = stride * 1.8f
                 val clawSpread = sway * 1.5f
+                val attackLunge = lunge + aimBias
                 shape.color = body
-                shape.rect(x - 6.5f + directionDx(entity.dir, lunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
+                shape.rect(x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
                 shape.color = teamStripe
-                shape.rect(x - 5.2f + directionDx(entity.dir, lunge * 0.5f), y - 2.2f, 10.4f, 4.4f)
+                shape.rect(x - 5.2f + directionDx(entity.dir, attackLunge * 0.5f), y - 2.2f, 10.4f, 4.4f)
                 shape.color = trim
-                shape.rectLine(x - 5f, y + 2.2f + (lunge * 0.15f), x + 5f, y + 2.2f - (lunge * 0.15f), 1.1f)
-                shape.rectLine(x - 4.5f - clawSpread, y - 2.4f + lunge, x - 6.8f - clawSpread, y + 3.8f - lunge, 1f)
-                shape.rectLine(x + 4.5f + clawSpread, y - 2.4f - lunge, x + 6.8f + clawSpread, y + 3.8f + lunge, 1f)
+                shape.rectLine(x - 5f, y + 2.2f + (attackLunge * 0.15f), x + 5f, y + 2.2f - (attackLunge * 0.15f), 1.1f)
+                shape.rectLine(x - 4.5f - clawSpread, y - 2.4f + attackLunge, x - 6.8f - clawSpread, y + 3.8f - attackLunge, 1f)
+                shape.rectLine(x + 4.5f + clawSpread, y - 2.4f - attackLunge, x + 6.8f + clawSpread, y + 3.8f + attackLunge, 1f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
-                shape.rectLine(x, y, x + directionDx(entity.dir, 9.2f) + clawSpread, y + directionDy(entity.dir, 9.2f), 1.6f)
+                shape.rectLine(
+                    x,
+                    y,
+                    x + directionDx(entity.dir, 9.2f + (aimBias * 0.9f)) + clawSpread,
+                    y + directionDy(entity.dir, 9.2f + (aimBias * 0.9f)),
+                    1.6f
+                )
             }
             typeName.contains("Marine", ignoreCase = true) -> {
                 val march = stride * 0.8f
                 val torsoLean = sway * 0.55f
+                val aimLean = torsoLean + (aimBias * 0.45f)
                 shape.color = body
-                shape.rect(x - 3.8f + torsoLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
+                shape.rect(x - 3.8f + aimLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
                 shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
                 shape.color = teamStripe
-                shape.rect(x - 2.6f + torsoLean, y - 5.8f, 5.2f, 11.6f)
+                shape.rect(x - 2.6f + aimLean, y - 5.8f, 5.2f, 11.6f)
                 shape.color = trim
-                shape.rect(x - 1.5f + torsoLean, y - 6.8f, 3f, 2.8f)
+                shape.rect(x - 1.5f + aimLean, y - 6.8f, 3f, 2.8f)
                 shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(
-                    x + torsoLean,
+                    x + aimLean,
                     y,
-                    x + directionDx(entity.dir, 9.4f) + torsoLean,
-                    y + directionDy(entity.dir, 9.4f),
+                    x + directionDx(entity.dir, 9.8f + (aimBias * 0.7f)) + aimLean,
+                    y + directionDy(entity.dir, 9.8f + (aimBias * 0.7f)),
                     1.9f
                 )
+                if (attackReady > 0f) {
+                    shape.color = Color(1.00f, 0.78f, 0.34f, 0.20f + (attackReady * 0.22f))
+                    shape.rectLine(
+                        x + directionDx(entity.dir, 4.2f),
+                        y + directionDy(entity.dir, 4.2f),
+                        x + directionDx(entity.dir, 8.8f),
+                        y + directionDy(entity.dir, 8.8f),
+                        2.3f
+                    )
+                }
             }
             entity.weaponId != null -> {
                 val brace = sway * 0.35f
+                val aimBrace = brace + (aimBias * 0.35f)
                 shape.color = body
-                shape.rect(x - 3.5f + brace, y - 6.5f + settle * 0.15f, 7f, 13f)
+                shape.rect(x - 3.5f + aimBrace, y - 6.5f + settle * 0.15f, 7f, 13f)
                 shape.rect(x - 6.5f, y - 1.8f + stride * 0.35f, 13f, 3.6f)
                 shape.color = teamStripe
-                shape.rect(x - 2.5f + brace, y - 5.5f, 5f, 11f)
+                shape.rect(x - 2.5f + aimBrace, y - 5.5f, 5f, 11f)
                 shape.color = trim
-                shape.rect(x - 1.4f + brace, y - 6.5f, 2.8f, 2.8f)
+                shape.rect(x - 1.4f + aimBrace, y - 6.5f, 2.8f, 2.8f)
                 shape.rect(x - 6.5f, y - 0.8f, 2.4f, 1.6f)
                 shape.rect(x + 4.1f, y - 0.8f, 2.4f, 1.6f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
-                shape.rectLine(x + brace, y, x + directionDx(entity.dir, 7.5f) + brace, y + directionDy(entity.dir, 7.5f), 1.8f)
+                shape.rectLine(
+                    x + aimBrace,
+                    y,
+                    x + directionDx(entity.dir, 7.8f + (aimBias * 0.6f)) + aimBrace,
+                    y + directionDy(entity.dir, 7.8f + (aimBias * 0.6f)),
+                    1.8f
+                )
                 if (entity.weaponCooldownTicks > 0) {
                     shape.color = Color(1.00f, 0.68f, 0.32f, 0.40f)
                     shape.rectLine(x - directionDx(entity.dir, 4f), y - directionDy(entity.dir, 4f), x, y, 2.4f)
