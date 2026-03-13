@@ -311,23 +311,37 @@ internal class GdxWorldRenderer(
                 }
                 drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
             }
-            drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp, selected)
+            drawHealthBar(shape, runtime, entity, screenX, screenY, selected)
         }
     }
 
-    private fun drawHealthBar(shape: ShapeRenderer, x: Float, y: Float, hp: Int, maxHp: Int, selected: Boolean) {
+    private fun drawHealthBar(shape: ShapeRenderer, runtime: GdxClientRuntime, entity: EntitySnapshot, x: Float, y: Float, selected: Boolean) {
+        val hp = entity.hp
+        val maxHp = entity.maxHp
+        val damaged = runtime.isDamageFlashActive(entity.id)
         val barWidth = if (selected) 22f else 18f
         val barHeight = if (selected) 4f else 3f
         val top = y - if (selected) 16f else 14f
-        shape.color = if (selected) Color(0.04f, 0.04f, 0.04f, 0.98f) else Color(0.1f, 0.1f, 0.1f, 0.92f)
-        shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         shape.color =
+            when {
+                damaged -> Color(0.18f, 0.08f, 0.08f, 0.98f)
+                selected -> Color(0.04f, 0.04f, 0.04f, 0.98f)
+                else -> Color(0.1f, 0.1f, 0.1f, 0.92f)
+            }
+        shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
+        val fillColor =
             when {
                 hp * 100 >= maxHp * 66 -> Color(0.30f, 0.83f, 0.43f, 1f)
                 hp * 100 >= maxHp * 33 -> Color(0.89f, 0.71f, 0.22f, 1f)
                 else -> Color(0.84f, 0.29f, 0.29f, 1f)
             }
-        shape.rect(x - (barWidth / 2f), top, barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1)), barHeight)
+        shape.color = if (damaged) fillColor.cpy().lerp(Color.WHITE, 0.24f) else fillColor
+        val fillWidth = barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1))
+        shape.rect(x - (barWidth / 2f), top, fillWidth, barHeight)
+        if (damaged) {
+            shape.color = Color(1.00f, 0.88f, 0.76f, 0.72f)
+            shape.rect(x - (barWidth / 2f), top - 1f, fillWidth.coerceAtLeast(3f), 1f)
+        }
     }
 
     private fun drawSelectionOverlays(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -391,6 +405,11 @@ internal class GdxWorldRenderer(
                 shape.line(left, top + height, left, top + height - corner)
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
+                if (runtime.isDamageFlashActive(entity.id)) {
+                    shape.color = Color(0.92f, 1.00f, 0.78f, 0.76f)
+                    shape.rect(left - 2f, top + (height * 0.5f), width + 4f, 1.5f)
+                    shape.rect(left + (width * 0.5f), top - 2f, 1.5f, height + 4f)
+                }
                 shape.color = Color(0.84f, 1.00f, 0.76f, 0.52f + (pulse * 0.16f))
                 shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
                 shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
@@ -410,6 +429,11 @@ internal class GdxWorldRenderer(
                 shape.line(screenX + 7f, screenY - 7f, screenX + 3.5f, screenY - 3.5f)
                 shape.line(screenX - 7f, screenY + 7f, screenX - 3.5f, screenY + 3.5f)
                 shape.line(screenX + 7f, screenY + 7f, screenX + 3.5f, screenY + 3.5f)
+                if (runtime.isDamageFlashActive(entity.id)) {
+                    shape.color = Color(0.92f, 1.00f, 0.78f, 0.82f)
+                    shape.rect(screenX - radius - 2f, screenY - 0.75f, (radius * 2f) + 4f, 1.5f)
+                    shape.rect(screenX - 0.75f, screenY - radius - 2f, 1.5f, (radius * 2f) + 4f)
+                }
                 shape.color = Color(0.84f, 1.00f, 0.76f, 0.46f + (pulse * 0.18f))
                 shape.rect(screenX - 4.5f, screenY + radius + 2.5f, 9f, 1.5f)
             }
