@@ -416,17 +416,7 @@ internal class GdxWorldRenderer(
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
-                val goalX = runtime.camera.worldToScreenX(entity.pathGoalX + 0.5f)
-                val goalY = runtime.camera.worldToScreenY(entity.pathGoalY + 0.5f)
-                shape.color = Color(0.96f, 0.90f, 0.45f, 0.18f)
-                shape.rectLine(startX, startY, goalX, goalY, 2.4f)
-                shape.color = Color(0.96f, 0.90f, 0.45f, 0.28f)
-                shape.circle(goalX, goalY, 12f)
-                shape.color = Color(0.96f, 0.90f, 0.45f, 0.92f)
-                shape.circle(goalX, goalY, 4f)
-                shape.rect(goalX - 1f, goalY - 11f, 2f, 22f)
-                shape.rect(goalX - 11f, goalY - 1f, 22f, 2f)
-                drawChevronTrail(shape, startX, startY, goalX, goalY, Color(0.98f, 0.92f, 0.58f, 0.72f))
+                // Move-path arrows are intentionally suppressed; the click ripple carries the order feedback.
             }
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
@@ -885,17 +875,16 @@ internal class GdxWorldRenderer(
         val pulse = ambientPulse(900L)
         when (ping.kind) {
             GroundPingKind.MOVE -> {
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 18f + (pulse * 8f))
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.12f))
-                shape.circle(x, y, 10f + (pulse * 5f))
-                shape.color = Color(0.74f, 1.00f, 0.82f, 0.96f)
-                shape.rect(x - 2f, y - 10f, 4f, 20f)
-                shape.rect(x - 10f, y - 2f, 20f, 4f)
-                shape.rectLine(x - 8f, y - 8f, x + 8f, y + 8f, 1.4f)
-                shape.rectLine(x - 8f, y + 8f, x + 8f, y - 8f, 1.2f)
-                shape.color = Color(0.78f, 1.00f, 0.88f, 0.68f)
-                shape.circle(x, y, 3.5f)
+                val outer = 14f + (pulse * 12f)
+                val inner = 6f + (pulse * 6f)
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.06f))
+                shape.circle(x, y, outer)
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.08f))
+                shape.circle(x, y, inner)
+                shape.color = Color(0.74f, 1.00f, 0.82f, 0.82f)
+                shape.circle(x, y, 2.5f + (pulse * 1.2f))
+                shape.color = Color(0.78f, 1.00f, 0.86f, 0.22f + (pulse * 0.10f))
+                shape.circle(x, y, 22f + (pulse * 10f))
             }
             GroundPingKind.ATTACK -> {
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
