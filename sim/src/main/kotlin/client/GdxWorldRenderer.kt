@@ -556,6 +556,11 @@ internal class GdxWorldRenderer(
         val boundsHeight = bounds.height
         val left = bounds.left
         val top = bounds.top
+        shape.color = Color(0.10f, 0.18f, 0.22f, 0.92f)
+        shape.rect(left - 2f, top - 2f, boundsWidth + 4f, 2f)
+        shape.rect(left - 2f, top + boundsHeight, boundsWidth + 4f, 2f)
+        shape.rect(left - 2f, top, 2f, boundsHeight)
+        shape.rect(left + boundsWidth, top, 2f, boundsHeight)
         shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
         val viewedFaction = runtime.session.state.viewedFaction
@@ -794,12 +799,22 @@ internal class GdxWorldRenderer(
         batch.projectionMatrix = textCamera.combined
         batch.begin()
         for (node in snapshot.resourceNodes) {
-            assets.font.color = Color.WHITE
+            val labelX = runtime.camera.worldToScreenX(node.x) - 8f
+            val labelY = height - runtime.camera.worldToScreenY(node.y) - 10f
+            if (!isOnScreen(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y))) continue
+            assets.font.color = Color(0f, 0f, 0f, 0.72f)
             assets.font.draw(
                 batch,
                 node.remaining.toString(),
-                runtime.camera.worldToScreenX(node.x) - 8f,
-                height - runtime.camera.worldToScreenY(node.y) - 10f
+                labelX + 1f,
+                labelY + 1f
+            )
+            assets.font.color = if (node.kind == "gas") Color(0.72f, 0.98f, 0.84f, 1f) else Color(1f, 0.92f, 0.70f, 1f)
+            assets.font.draw(
+                batch,
+                node.remaining.toString(),
+                labelX,
+                labelY
             )
         }
         runtime.buildModeTypeId?.let { typeId ->
@@ -817,12 +832,21 @@ internal class GdxWorldRenderer(
             if (entity.id !in runtime.session.state.selectedIds) continue
             if (!isEntityVisible(entity, runtime)) continue
             val status = buildEntityStatusLabel(entity) ?: continue
+            val labelX = runtime.camera.worldToScreenX(entity.x) + 10f
+            val labelY = height - runtime.camera.worldToScreenY(entity.y) + 14f
+            assets.font.color = Color(0f, 0f, 0f, 0.72f)
+            assets.font.draw(
+                batch,
+                status,
+                labelX + 1f,
+                labelY + 1f
+            )
             assets.font.color = Color(0.94f, 0.96f, 0.98f, 1f)
             assets.font.draw(
                 batch,
                 status,
-                runtime.camera.worldToScreenX(entity.x) + 10f,
-                height - runtime.camera.worldToScreenY(entity.y) + 14f
+                labelX,
+                labelY
             )
         }
         if (snapshot.matchEnded) {
