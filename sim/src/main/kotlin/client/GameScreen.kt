@@ -492,6 +492,8 @@ internal class GameScreen(
         footerLabel.setWrap(true)
         centerFooterLabel.setWrap(true)
         minimapTitle.setText("Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
+        minimapTitle.color = currentMinimapTitleTone()
+        minimapHint.color = currentMinimapHintTone()
         selectionLabel.setWidth(centerWidth)
         selectionMetaLabel.setWidth(centerWidth)
         centerStatusLabel.setWidth(centerWidth)
@@ -531,6 +533,7 @@ internal class GameScreen(
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
         commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
+        commandHeaderLabel.color = currentCommandHeaderTone(groupedButtons)
         economyLabel.setText(buildTopEconomyLine())
         topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
@@ -1411,6 +1414,28 @@ internal class GameScreen(
             runtime.noticeLine() != null -> Color(1.00f, 0.90f, 0.62f, 0.98f)
             runtime.playControlState.paused -> Color(0.82f, 0.88f, 0.96f, 0.96f)
             else -> Color(0.62f, 0.96f, 0.80f, 0.96f)
+        }
+
+    private fun currentMinimapTitleTone(): Color =
+        when {
+            runtime.attackWarningLine() != null -> Color(1.00f, 0.78f, 0.64f, 0.98f)
+            runtime.session.state.viewedFaction == null -> Color(0.82f, 0.90f, 0.98f, 0.96f)
+            else -> Color(0.72f, 0.96f, 0.84f, 0.96f)
+        }
+
+    private fun currentMinimapHintTone(): Color =
+        when {
+            runtime.groundMode != null -> Color(0.74f, 0.96f, 0.84f, 0.94f)
+            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.94f)
+            else -> Color(0.66f, 0.74f, 0.80f, 0.90f)
+        }
+
+    private fun currentCommandHeaderTone(groups: List<Pair<String, List<ClientCommandButton>>>): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.96f)
+            runtime.groundMode != null -> Color(0.74f, 0.96f, 0.84f, 0.96f)
+            groups.any { it.first == "Production" && it.second.isNotEmpty() } -> Color(0.88f, 0.92f, 0.98f, 0.96f)
+            else -> Color(0.78f, 0.86f, 0.92f, 0.94f)
         }
 
     private fun commandGroupHeaderTone(group: String): Color =
