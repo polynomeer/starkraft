@@ -27,6 +27,9 @@ import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.net.InputJson
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class ClientSessionTest {
     private val json = Json { encodeDefaults = true }
@@ -183,6 +186,45 @@ class ClientSessionTest {
         assertArrayEquals(intArrayOf(4, 9), record.units)
         assertEquals(10f, record.x)
         assertEquals(12f, record.y)
+    }
+
+    @Test
+    fun `shared file sink keeps ndjson records intact under concurrent appends`(@TempDir tempDir: Path) {
+        val inputPath = tempDir.resolve("client-input.ndjson")
+        val sink = FileClientInputSink(inputPath)
+        val pool = Executors.newFixedThreadPool(2)
+        val start = CountDownLatch(1)
+        val done = CountDownLatch(2)
+
+        repeat(2) { worker ->
+            pool.submit {
+                start.await(1, TimeUnit.SECONDS)
+                repeat(50) { index ->
+                    sink.append(
+                        InputJson.InputCommandRecord(
+                            tick = (worker * 100) + index,
+                            commandType = "move",
+                            requestId = "w$worker-$index",
+                            units = intArrayOf(4),
+                            x = index.toFloat(),
+                            y = worker.toFloat()
+                        )
+                    )
+                }
+                done.countDown()
+            }
+        }
+
+        start.countDown()
+        assertTrue(done.await(2, TimeUnit.SECONDS))
+        pool.shutdownNow()
+
+        val lines = Files.readAllLines(inputPath)
+        assertEquals(100, lines.size)
+        lines.forEach { line ->
+            val record = json.decodeFromString(InputJson.InputCommandRecord.serializer(), line)
+            assertEquals("move", record.commandType)
+        }
     }
 
     @Test

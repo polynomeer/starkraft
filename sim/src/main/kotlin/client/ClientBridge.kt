@@ -252,6 +252,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
 
 internal class NdjsonClientInputSink(private val path: Path) {
     private val json = Json { encodeDefaults = true }
+    private val writeLock = Any()
 
     init {
         val parent = path.parent
@@ -268,11 +269,14 @@ internal class NdjsonClientInputSink(private val path: Path) {
     }
 
     private fun appendLine(line: String) {
-        Files.writeString(
-            path,
-            line + "\n",
-            StandardOpenOption.APPEND
-        )
+        synchronized(writeLock) {
+            Files.writeString(
+                path,
+                line + "\n",
+                StandardOpenOption.APPEND,
+                StandardOpenOption.WRITE
+            )
+        }
     }
 }
 
