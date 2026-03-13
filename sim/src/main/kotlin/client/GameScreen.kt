@@ -122,8 +122,8 @@ internal class GameScreen(
             }
 
         topBar.apply {
-            background = assets.panelDrawable(Color(0.03f, 0.07f, 0.10f, 0.90f))
-            pad(8f, 12f, 8f, 12f)
+            background = null
+            pad(4f, 8f, 4f, 8f)
             add(economyLabel).left().expandX().fillX()
             add(topSelectionLabel).center().padLeft(12f).padRight(12f)
             add(modeLabel).center().padLeft(12f).padRight(12f)
@@ -241,21 +241,15 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = null
-            pad(0f, 2f, 0f, 2f)
-            add(
-                Table().apply {
-                    background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
-                }
-            ).width(14f).height(74f).bottom().padRight(0f).padBottom(16f).padLeft(216f)
-            add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(266f).expandX().fillX().bottom().padRight(2f)
-            add(
-                Table().apply {
-                    background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
-                }
-            ).width(12f).height(74f).bottom().padRight(0f).padBottom(18f)
-            add(wrapHudPanel(commandCard, Color(0.08f, 0.13f, 0.18f, 0.96f))).width(286f).right().bottom()
+            pad(0f, 20f, 10f, 20f)
+            add().width(208f).bottom()
+            add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
+            add().expandX().fillX()
+            add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(286f).right().bottom()
         }
 
+        root.top()
+        root.add(wrapTopStrip(topBar)).expandX().fillX().pad(12f, 20f, 0f, 20f).row()
         root.add().expand().fill().row()
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
@@ -264,7 +258,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapFrame).padLeft(20f).padBottom(20f)
+            add(minimapFrame).padLeft(20f).padBottom(12f)
         }
         stage.addActor(leftHudColumn)
 
@@ -330,18 +324,18 @@ internal class GameScreen(
         val minimapBounds = gdxMiniMapBounds(width, height)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
-        val centerWidth = (width * 0.166f).coerceIn(204f, 252f)
-        val commandWidth = (width * 0.176f).coerceIn(234f, 280f)
-        val commandHeight = (height * 0.089f).coerceIn(74f, 92f)
+        val centerWidth = (width * 0.188f).coerceIn(228f, 292f)
+        val commandWidth = (width * 0.192f).coerceIn(252f, 310f)
+        val commandHeight = (height * 0.096f).coerceIn(82f, 106f)
         val commandButtonHeight = if (width >= 1440) 24f else 22f
         val commandColumns = 3
-        val commandCellWidth = (commandWidth / commandColumns) - 1f
-        val commandActorWidth = commandCellWidth - 21f
-        val centerHeight = (height * 0.139f).coerceIn(116f, 140f)
-        val commandShellHeight = (commandHeight + 22f).coerceIn(96f, 118f)
-        val minimapShellHeight = minimapHeight + 14f
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight + 8f, commandShellHeight + 8f)
-        val unifiedPanelHeight = hudShellHeight - 6f
+        val commandCellWidth = (commandWidth / commandColumns) - 2f
+        val commandActorWidth = commandCellWidth - 18f
+        val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
+        val commandShellHeight = (commandHeight + 28f).coerceIn(108f, 134f)
+        val minimapShellHeight = minimapHeight
+        val hudShellHeight = maxOf(minimapShellHeight, centerHeight, commandShellHeight)
+        val unifiedPanelHeight = hudShellHeight
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -365,9 +359,9 @@ internal class GameScreen(
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
-        commandScroll.setSize(commandWidth, commandHeight)
+        commandScroll.setSize(commandWidth - 8f, commandHeight)
         bottomHud.setHeight(hudShellHeight)
-        buttonTable.defaults().pad(0f, 0f, 2f, 2f)
+        buttonTable.defaults().pad(0f, 0f, 4f, 4f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
@@ -408,15 +402,15 @@ internal class GameScreen(
             if (group.second.isEmpty()) return@forEachIndexed
             buttonTable.add(
                 Table().apply {
-                            background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
-                    pad(0f)
+                    background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
+                    pad(4f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.96f))
-                            pad(1f, 4f, 1f, 4f)
+                            background = assets.panelDrawable(Color(0.12f, 0.22f, 0.27f, 0.82f))
+                            pad(2f, 6f, 2f, 6f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
-                            ).colspan(commandColumns).left().padBottom(1f).row()
+                    ).colspan(commandColumns).left().padBottom(4f).row()
                     group.second.forEachIndexed { index, button ->
                         val actor = makeButton(
                             commandButtonLabel(button),
@@ -454,11 +448,11 @@ internal class GameScreen(
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
-                                pad(0f)
+                                pad(1f)
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(frameTone)
-                                        pad(0f)
+                                        pad(1f)
                                         add(
                                             Table().apply {
                                                 background =
@@ -483,7 +477,7 @@ internal class GameScreen(
                                                     }
                                                 ).size(10f, 10f)
                                             }
-                                        ).size(10f, 10f).left().padRight(2f)
+                                                ).size(10f, 10f).left().padRight(4f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
@@ -601,14 +595,28 @@ internal class GameScreen(
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = null
-            pad(1f, 1f, 2f, 1f)
+            add(Table().apply { background = assets.panelDrawable(tone) }).height(2f).expandX().fillX().row()
             add(
                 Table().apply {
-                    background = assets.panelDrawable(tone.cpy().apply { a = 0f })
-                    pad(1f, 1f, 2f, 1f)
-                    add(content).expand().fill()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f)) }).width(2f).expandY().fillY()
+                    add(
+                        Table().apply {
+                            background = null
+                            pad(4f, 6f, 6f, 6f)
+                            add(content).expand().fill()
+                        }
+                    ).expand().fill()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f)) }).width(2f).expandY().fillY()
                 }
-            ).expand().fill()
+            ).expand().fill().row()
+            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f)) }).height(2f).expandX().fillX()
+        }
+
+    private fun wrapTopStrip(content: Table): Table =
+        Table().apply {
+            background = null
+            add(content).expandX().fillX().row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.78f)) }).height(1f).expandX().fillX().padTop(3f)
         }
 
     private fun wrapMinimapPanel(content: Table): Table =
@@ -957,7 +965,7 @@ internal class GameScreen(
     }
 
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
-        val reservedHudHeight = (screenHeight * 0.155f).coerceIn(118f, 144f)
+        val reservedHudHeight = (screenHeight * 0.128f).coerceIn(96f, 120f)
         return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
     }
 

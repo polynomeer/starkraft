@@ -96,17 +96,26 @@ internal class GdxWorldRenderer(
             for (y in 0 until snapshot.mapHeight) {
                 val sx = runtime.camera.worldToScreenX(x.toFloat())
                 val sy = runtime.camera.worldToScreenY(y.toFloat())
+                val macroPatch = ((x / 10) + (y / 8)) % 3
+                val ridgeBand = ((x * 3) + (y * 2)) % 17
                 val base =
                     when {
                         x in 40..56 && y in 40..56 -> terrainDust
-                        (x + y) % 11 < 3 -> terrainRidge
-                        (x / 6 + y / 6) % 2 == 0 -> terrainA
+                        ridgeBand < 3 -> terrainRidge
+                        macroPatch == 0 -> terrainA
+                        macroPatch == 1 -> terrainB
                         else -> terrainB
                     }
                 shape.color = base
                 shape.rect(sx, sy, tileSize, tileSize)
-                shape.color = base.cpy().lerp(Color.WHITE, 0.05f)
-                shape.rect(sx + 1f, sy + 1f, tileSize - 2f, (tileSize * 0.28f).coerceAtLeast(2f))
+                shape.color = base.cpy().lerp(Color.WHITE, 0.08f)
+                shape.rect(sx + 1f, sy + 1f, tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
+                shape.color = base.cpy().lerp(Color.BLACK, 0.18f)
+                shape.rect(sx + 1f, sy + (tileSize * 0.68f), tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
+                if ((x + y) % 5 == 0) {
+                    shape.color = base.cpy().lerp(Color.WHITE, 0.14f).apply { a = 0.18f }
+                    shape.rect(sx + 2f, sy + 2f, 2f, 2f)
+                }
             }
         }
         mapState?.blockedTiles?.forEach { (x, y) ->
@@ -846,6 +855,7 @@ internal class GdxWorldRenderer(
         val y = screenY + bobY
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
+        val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
         val shadowRadius = if (selected) 9f else 7f
         shape.color = Color(0f, 0f, 0f, 0.34f)
         shape.circle(x + 1.5f, screenY + 1.5f, shadowRadius)
@@ -855,6 +865,8 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, 6.5f)
                 shape.color = teamStripe
                 shape.rect(x - 5f, y - 2f, 10f, 4f)
+                shape.color = trim
+                shape.circle(x, y, 2.8f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f), 1.4f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
@@ -866,6 +878,8 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 6.5f, y - 1.8f, 13f, 3.6f)
                 shape.color = teamStripe
                 shape.rect(x - 2.5f, y - 5.5f, 5f, 11f)
+                shape.color = trim
+                shape.rect(x - 1.4f, y - 6.5f, 2.8f, 2.8f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 7.5f), y + directionDy(entity.dir, 7.5f), 1.8f)
                 if (entity.weaponCooldownTicks > 0) {
@@ -880,6 +894,8 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5.5f, y - 4.5f, 11f, 9f)
                 shape.color = teamStripe
                 shape.rect(x - 4.5f, y - 3.5f, 9f, 7f)
+                shape.color = trim
+                shape.rect(x - 2.5f, y - 4.5f, 5f, 2.4f)
                 shape.color = Color(0.85f, 0.92f, 0.98f, 0.58f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 6f), y + directionDy(entity.dir, 6f), 1.5f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.14f }
@@ -913,6 +929,8 @@ internal class GdxWorldRenderer(
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
+        shape.color = Color(0.82f, 0.88f, 0.94f, 0.08f)
+        shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
         shape.color =
             when {
                 isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
@@ -920,6 +938,8 @@ internal class GdxWorldRenderer(
                 else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
             }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
+        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
+        shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
         shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
         if (isDepot) {
