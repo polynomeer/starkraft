@@ -359,6 +359,10 @@ internal class GdxWorldRenderer(
                 shape.line(left + width, top + height, left + width, top + height - corner)
             } else {
                 val radius = 12f
+                val pulse = selectionPulse()
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.18f + (pulse * 0.12f))
+                shape.circle(screenX, screenY, radius + 4f)
+                shape.color = selectionColor
                 shape.circle(screenX, screenY, radius)
                 shape.line(screenX - radius - 3f, screenY, screenX - radius + 2f, screenY)
                 shape.line(screenX + radius - 2f, screenY, screenX + radius + 3f, screenY)
@@ -382,9 +386,11 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.96f, 0.90f, 0.45f, 0.18f)
                 shape.rectLine(startX, startY, goalX, goalY, 2.4f)
                 shape.color = Color(0.96f, 0.90f, 0.45f, 0.28f)
-                shape.circle(goalX, goalY, 10f)
+                shape.circle(goalX, goalY, 12f)
                 shape.color = Color(0.96f, 0.90f, 0.45f, 0.92f)
                 shape.circle(goalX, goalY, 4f)
+                shape.rect(goalX - 1f, goalY - 11f, 2f, 22f)
+                shape.rect(goalX - 11f, goalY - 1f, 22f, 2f)
                 drawChevronTrail(shape, startX, startY, goalX, goalY, Color(0.98f, 0.92f, 0.58f, 0.72f))
             }
             if (entity.rallyX != null && entity.rallyY != null) {
@@ -393,9 +399,11 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.37f, 0.90f, 0.52f, 0.16f)
                 shape.rectLine(startX, startY, rallyX, rallyY, 2f)
                 shape.color = Color(0.37f, 0.90f, 0.52f, 0.25f)
-                shape.circle(rallyX, rallyY, 9f)
+                shape.circle(rallyX, rallyY, 11f)
                 shape.color = Color(0.37f, 0.90f, 0.52f, 0.95f)
                 shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
+                shape.rect(rallyX - 9f, rallyY - 1f, 18f, 2f)
+                shape.rect(rallyX - 1f, rallyY - 9f, 2f, 18f)
                 drawChevronTrail(shape, startX, startY, rallyX, rallyY, Color(0.54f, 0.96f, 0.66f, 0.64f))
             }
             if (entity.buildTargetId != null) {
@@ -408,6 +416,8 @@ internal class GdxWorldRenderer(
                     shape.circle(targetX, targetY, 10f)
                     shape.color = Color(0.92f, 0.60f, 0.24f, 0.92f)
                     shape.circle(targetX, targetY, 3.5f)
+                    shape.rect(targetX - 8f, targetY - 8f, 16f, 2f)
+                    shape.rect(targetX - 8f, targetY + 6f, 16f, 2f)
                     drawChevronTrail(shape, startX, startY, targetX, targetY, Color(0.96f, 0.72f, 0.38f, 0.68f))
                 }
             }
