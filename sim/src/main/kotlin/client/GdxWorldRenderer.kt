@@ -239,10 +239,14 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0f, 0f, 0f, 0.12f)
                 shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
                 if (runtime.isDamageFlashActive(entity.id)) {
+                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, 0.18f)
+                    shape.rect(left - 10f, top - 10f, w + 20f, h + 20f)
                     shape.color = impactFlashColor
                     shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
+                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = 0.14f }
+                    shape.rect(left - 11f, top - 11f, w + 22f, h + 22f)
                     shape.color = completionFlashColor(runtime, entity.id)
                     shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
                 }
@@ -268,11 +272,15 @@ internal class GdxWorldRenderer(
                     shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
                     shape.color = selectionColor
                     shape.rect(left - 3f, top - 3f, w + 6f, h + 6f)
+                    shape.color = Color(0.98f, 0.96f, 0.72f, 0.34f)
+                    shape.rect(left + (w * 0.18f), top - 5f, w * 0.64f, 2f)
                 }
             } else {
                 shape.color = Color(0f, 0f, 0f, 0.20f)
                 shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
                 if (runtime.isDamageFlashActive(entity.id)) {
+                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, 0.12f)
+                    shape.circle(screenX, screenY, if (selected) 18f else 15f)
                     shape.color = impactFlashColor
                     shape.circle(screenX, screenY, if (selected) 15.5f else 13f)
                     shape.color = impactSparkColor
@@ -280,6 +288,8 @@ internal class GdxWorldRenderer(
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
+                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = 0.14f }
+                    shape.circle(screenX, screenY, if (selected) 19f else 16f)
                     shape.color = completionFlashColor(runtime, entity.id)
                     shape.circle(screenX, screenY, if (selected) 17f else 14f)
                 }
@@ -292,6 +302,8 @@ internal class GdxWorldRenderer(
                 if (selected) {
                     shape.color = selectionSoftColor
                     shape.circle(screenX, screenY, 11f)
+                    shape.color = Color(0.98f, 0.96f, 0.72f, 0.54f)
+                    shape.rect(screenX - 5f, screenY + 11f, 10f, 2f)
                 }
             }
             drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp, selected)
@@ -359,6 +371,13 @@ internal class GdxWorldRenderer(
                 val width = footprintWidth * runtime.camera.tileSize + 12f
                 val height = footprintHeight * runtime.camera.tileSize + 12f
                 val corner = 12f
+                val pulse = selectionPulse()
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.08f + (pulse * 0.08f))
+                shape.rect(left - 4f, top - 4f, width + 8f, height + 8f)
+                shape.color = Color(0.98f, 0.96f, 0.72f, 0.34f + (pulse * 0.12f))
+                shape.rect(left + (width * 0.18f), top - 5f, width * 0.64f, 2f)
+                shape.rect(left + (width * 0.18f), top + height + 3f, width * 0.64f, 2f)
+                shape.color = selectionColor
                 shape.line(left, top, left + corner, top)
                 shape.line(left, top, left, top + corner)
                 shape.line(left + width, top, left + width - corner, top)
@@ -378,6 +397,8 @@ internal class GdxWorldRenderer(
                 shape.line(screenX + radius - 2f, screenY, screenX + radius + 3f, screenY)
                 shape.line(screenX, screenY - radius - 3f, screenX, screenY - radius + 2f)
                 shape.line(screenX, screenY + radius - 2f, screenX, screenY + radius + 3f)
+                shape.color = Color(0.98f, 0.96f, 0.72f, 0.44f + (pulse * 0.16f))
+                shape.rect(screenX - 5f, screenY + radius + 3f, 10f, 2f)
             }
         }
     }
