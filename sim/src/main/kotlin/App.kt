@@ -337,6 +337,32 @@ fun main(args: Array<String>) {
         world.visions[id] = Vision(6f)
         team2.add(id)
     }
+    repeat(4) {
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val id =
+            world.spawn(
+                Transform(44f + (it % 2) * 1.8f + jitterX, 58f + (it / 2) * 1.3f + jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
+        world.visions[id] = Vision(6f)
+        team2.add(id)
+    }
+    repeat(4) {
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val id =
+            world.spawn(
+                Transform(62f + (it % 2) * 1.7f + jitterX, 33f + (it / 2) * 1.4f + jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
+        world.visions[id] = Vision(6f)
+        team2.add(id)
+    }
     val mineralNodeId =
         world.spawn(
             Transform(14f, 10f),
