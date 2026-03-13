@@ -170,7 +170,12 @@ internal class GameScreen(
             add(
                 Table().apply {
                     pad(2f, 2f, 0f, 2f)
-                    add(commandHintLabel).left().expandX().fillX()
+                    add(
+                        Table().apply {
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
+                            add(commandHintLabel).left().expandX().fillX()
+                        }
+                    ).expandX().fillX()
                 }
             ).expandX().fillX().padTop(3f).row()
             add(actionBanner).left().expandX().fillX().padTop(3f).row()
@@ -468,7 +473,7 @@ internal class GameScreen(
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
-        actionBanner.background = if (showActionBanner) assets.panelDrawable(Color(0.08f, 0.14f, 0.18f, 0.62f)) else null
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone()) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
         bottomHud.invalidateHierarchy()
         buttonTable.clearChildren()
@@ -1167,6 +1172,14 @@ internal class GameScreen(
                 runtime.session.state.selectedIds.isNotEmpty() -> "Command palette ready"
                 else -> "Select units to unlock orders"
             }
+
+    private fun currentActionBannerTone(): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.16f, 0.24f, 0.30f, 0.76f)
+            runtime.groundMode != null -> Color(0.14f, 0.22f, 0.18f, 0.76f)
+            runtime.noticeLine() != null -> Color(0.18f, 0.16f, 0.10f, 0.76f)
+            else -> Color(0.08f, 0.14f, 0.18f, 0.62f)
+        }
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
         when {

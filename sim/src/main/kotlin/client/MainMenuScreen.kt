@@ -55,7 +55,12 @@ internal class MainMenuScreen(
                     Table().apply {
                         background = assets.panelDrawable(Color(0.08f, 0.13f, 0.18f, 0.68f))
                         pad(8f, 10f, 8f, 10f)
-                        add(statusLabel).left()
+                        add(
+                            Table().apply {
+                                background = assets.panelDrawable(Color(0.56f, 0.88f, 0.96f, 0.82f))
+                            }
+                        ).width(3f).expandY().fillY().padRight(6f)
+                        add(statusLabel).left().expandX().fillX()
                     }
                 ).width(520f).left().padTop(8f).row()
             }
@@ -155,6 +160,7 @@ internal class MainMenuScreen(
                 "Live scenario ready. Enter match to attach to the current play session."
             }
         )
+        statusLabel.color = if (runtime.scenarioRestartRequired()) assets.alert else assets.ink
         enterMatchButton.setText(
             if (runtime.scenarioRestartRequired()) {
                 "Restart And Enter Match"

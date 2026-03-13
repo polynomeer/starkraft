@@ -679,9 +679,20 @@ internal class GdxWorldRenderer(
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
                 shape.color = completionSparkColor(runtime, entity.id).cpy().apply { a = if (visible) 0.90f else 0.40f }
-                shape.rect(x - 4f, y - 4f, 8f, 8f)
-                shape.rect(x - 6f, y - 1f, 12f, 2f)
-                shape.rect(x - 1f, y - 6f, 2f, 12f)
+                when (runtime.completionFlashKind(entity.id)) {
+                    CompletionFlashKind.CONSTRUCTION -> {
+                        shape.rect(x - 5f, y - 1f, 10f, 2f)
+                        shape.rect(x - 1f, y - 5f, 2f, 10f)
+                    }
+                    CompletionFlashKind.PRODUCTION -> {
+                        shape.rect(x - 5f, y - 3f, 10f, 6f)
+                    }
+                    CompletionFlashKind.RESEARCH, null -> {
+                        shape.rect(x - 4f, y - 4f, 8f, 8f)
+                        shape.rect(x - 6f, y - 1f, 12f, 2f)
+                        shape.rect(x - 1f, y - 6f, 2f, 12f)
+                    }
+                }
             }
             if (entity.pathRemainingNodes > 0) {
                 shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)
