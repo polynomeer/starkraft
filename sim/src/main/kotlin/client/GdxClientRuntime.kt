@@ -39,7 +39,7 @@ internal class GdxClientRuntime(
     private var pendingAttackAlertSound: Boolean = false
     private var pendingAttackCommandSound: Boolean = false
     private var pendingCombatSoundKind: CombatSoundKind? = null
-    private var pendingDeathSound: Boolean = false
+    private var pendingDeathSoundKind: DeathSoundKind? = null
     private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
     private var recentDamageKindsByEntityId: Map<Int, CombatSoundKind> = emptyMap()
@@ -130,7 +130,7 @@ internal class GdxClientRuntime(
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
     fun consumeCombatSoundKind(): CombatSoundKind? = pendingCombatSoundKind.also { pendingCombatSoundKind = null }
-    fun consumeDeathSound(): Boolean = pendingDeathSound.also { pendingDeathSound = false }
+    fun consumeDeathSoundKind(): DeathSoundKind? = pendingDeathSoundKind.also { pendingDeathSoundKind = null }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun damageImpactKind(entityId: Int): CombatSoundKind? = recentDamageKindsByEntityId[entityId]?.takeIf { isDamageFlashActive(entityId) }
@@ -921,12 +921,7 @@ internal class GdxClientRuntime(
             val damageKinds = LinkedHashMap<Int, CombatSoundKind>(damage.targetIds.size)
             damage.attackerIds.forEachIndexed { index, attackerId ->
                 val targetId = damage.targetIds.getOrNull(index) ?: return@forEachIndexed
-                val kind =
-                    if (snapshot != null && snapshot.entities.firstOrNull { it.id == attackerId }?.let(::isMeleeAttacker) == true) {
-                        CombatSoundKind.MELEE
-                    } else {
-                        CombatSoundKind.RANGED
-                    }
+                val kind = snapshot?.entities?.firstOrNull { it.id == attackerId }?.let(::combatSoundKindForAttacker) ?: CombatSoundKind.RANGED
                 damageKinds[targetId] = kind
             }
             recentDamageKindsByEntityId = damageKinds
@@ -991,7 +986,7 @@ internal class GdxClientRuntime(
         val liveIds = snapshot.entities.asSequence().map { it.id }.toHashSet()
         val vanished = previousEntitiesById.values.filter { it.id !in liveIds && it.faction > 0 }
         if (vanished.isEmpty()) return
-        var deathSound = false
+        var deathSoundKind: DeathSoundKind? = null
         val viewedFaction = session.state.viewedFaction
         for (entity in vanished) {
             recentDeathBursts +=
@@ -1014,7 +1009,12 @@ internal class GdxClientRuntime(
                     typeId = entity.typeId,
                     expiresAtMillis = now + DEATH_REMAINS_DURATION_MS
                 )
-            deathSound = true
+            deathSoundKind =
+                when {
+                    entity.footprintWidth != null && entity.footprintHeight != null -> DeathSoundKind.STRUCTURE
+                    deathSoundKind == null -> DeathSoundKind.UNIT
+                    else -> deathSoundKind
+                }
         }
         if (viewedFaction != null) {
             val friendlyLosses = vanished.filter { it.faction == viewedFaction }
@@ -1033,8 +1033,8 @@ internal class GdxClientRuntime(
                 pendingAttackAlertSound = true
             }
         }
-        if (deathSound) {
-            pendingDeathSound = true
+        if (deathSoundKind != null) {
+            pendingDeathSoundKind = deathSoundKind
         }
     }
 
@@ -1054,6 +1054,14 @@ internal class GdxClientRuntime(
     private fun isMeleeAttacker(entity: EntitySnapshot): Boolean =
         entity.weaponId?.contains("Claw", ignoreCase = true) == true ||
             entity.typeId.contains("Zergling", ignoreCase = true)
+
+    private fun combatSoundKindForAttacker(entity: EntitySnapshot): CombatSoundKind =
+        when {
+            entity.typeId.contains("Marine", ignoreCase = true) -> CombatSoundKind.MARINE_RANGED
+            entity.typeId.contains("Zergling", ignoreCase = true) -> CombatSoundKind.ZERGLING_MELEE
+            isMeleeAttacker(entity) -> CombatSoundKind.MELEE
+            else -> CombatSoundKind.RANGED
+        }
 
     private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {
         val snapshot = session.state.snapshot ?: return
@@ -1118,8 +1126,15 @@ internal data class DeathRemains(
 )
 
 internal enum class CombatSoundKind {
+    MARINE_RANGED,
+    ZERGLING_MELEE,
     RANGED,
     MELEE
+}
+
+internal enum class DeathSoundKind {
+    UNIT,
+    STRUCTURE
 }
 
 internal enum class NoticeKind {

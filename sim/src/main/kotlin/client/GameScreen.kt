@@ -108,12 +108,16 @@ internal class GameScreen(
             assets.attackSound.play(0.55f)
         }
         when (runtime.consumeCombatSoundKind()) {
+            CombatSoundKind.MARINE_RANGED -> assets.marineCombatSound.play(0.46f)
+            CombatSoundKind.ZERGLING_MELEE -> assets.zerglingCombatSound.play(0.46f)
             CombatSoundKind.MELEE -> assets.meleeCombatSound.play(0.44f)
             CombatSoundKind.RANGED -> assets.rangedCombatSound.play(0.42f)
             null -> Unit
         }
-        if (runtime.consumeDeathSound()) {
-            assets.deathSound.play(0.56f)
+        when (runtime.consumeDeathSoundKind()) {
+            DeathSoundKind.UNIT -> assets.deathSound.play(0.56f)
+            DeathSoundKind.STRUCTURE -> assets.structureDeathSound.play(0.60f)
+            null -> Unit
         }
         if (runtime.consumeCompletionAlertSound()) {
             assets.completeSound.play(0.55f)

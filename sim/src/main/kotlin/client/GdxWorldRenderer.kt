@@ -1570,13 +1570,17 @@ internal class GdxWorldRenderer(
 
     private fun impactFlashForEntity(runtime: GdxClientRuntime, entityId: Int): Color =
         when (runtime.damageImpactKind(entityId)) {
-            CombatSoundKind.MELEE -> meleeImpactFlashColor
+            CombatSoundKind.MELEE,
+            CombatSoundKind.ZERGLING_MELEE -> meleeImpactFlashColor
+            CombatSoundKind.MARINE_RANGED,
             CombatSoundKind.RANGED, null -> impactFlashColor
         }
 
     private fun impactSparkForEntity(runtime: GdxClientRuntime, entityId: Int): Color =
         when (runtime.damageImpactKind(entityId)) {
-            CombatSoundKind.MELEE -> meleeImpactSparkColor
+            CombatSoundKind.MELEE,
+            CombatSoundKind.ZERGLING_MELEE -> meleeImpactSparkColor
+            CombatSoundKind.MARINE_RANGED,
             CombatSoundKind.RANGED, null -> impactSparkColor
         }
 

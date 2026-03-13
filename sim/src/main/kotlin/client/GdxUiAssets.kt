@@ -28,13 +28,19 @@ internal class GdxUiAssets : Disposable {
     private var attackSoundPath: Path? = null
     private var rangedCombatSoundPath: Path? = null
     private var meleeCombatSoundPath: Path? = null
+    private var marineCombatSoundPath: Path? = null
+    private var zerglingCombatSoundPath: Path? = null
     private var deathSoundPath: Path? = null
+    private var structureDeathSoundPath: Path? = null
     private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
     val attackSound: Sound = createAttackSound()
     val rangedCombatSound: Sound = createRangedCombatSound()
     val meleeCombatSound: Sound = createMeleeCombatSound()
+    val marineCombatSound: Sound = createMarineCombatSound()
+    val zerglingCombatSound: Sound = createZerglingCombatSound()
     val deathSound: Sound = createDeathSound()
+    val structureDeathSound: Sound = createStructureDeathSound()
     val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
@@ -85,13 +91,19 @@ internal class GdxUiAssets : Disposable {
         attackSound.dispose()
         rangedCombatSound.dispose()
         meleeCombatSound.dispose()
+        marineCombatSound.dispose()
+        zerglingCombatSound.dispose()
         deathSound.dispose()
+        structureDeathSound.dispose()
         completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
         attackSoundPath?.let(Files::deleteIfExists)
         rangedCombatSoundPath?.let(Files::deleteIfExists)
         meleeCombatSoundPath?.let(Files::deleteIfExists)
+        marineCombatSoundPath?.let(Files::deleteIfExists)
+        zerglingCombatSoundPath?.let(Files::deleteIfExists)
         deathSoundPath?.let(Files::deleteIfExists)
+        structureDeathSoundPath?.let(Files::deleteIfExists)
         completeSoundPath?.let(Files::deleteIfExists)
     }
 
@@ -170,6 +182,42 @@ internal class GdxUiAssets : Disposable {
         return Gdx.audio.newSound(handle)
     }
 
+    private fun createMarineCombatSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 880.0,
+                endHz = 260.0,
+                accentHz = 1820.0,
+                durationSeconds = 0.08f,
+                sweepMix = 0.30,
+                accentMix = 0.30
+            )
+        val tempPath = Files.createTempFile("starkraft-combat-marine-", ".wav")
+        marineCombatSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createZerglingCombatSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 1180.0,
+                endHz = 140.0,
+                accentHz = 740.0,
+                durationSeconds = 0.09f,
+                sweepMix = 0.34,
+                accentMix = 0.18
+            )
+        val tempPath = Files.createTempFile("starkraft-combat-zergling-", ".wav")
+        zerglingCombatSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
     private fun createDeathSound(): Sound {
         val bytes =
             renderSweepWav(
@@ -182,6 +230,24 @@ internal class GdxUiAssets : Disposable {
             )
         val tempPath = Files.createTempFile("starkraft-death-", ".wav")
         deathSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createStructureDeathSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 180.0,
+                endHz = 48.0,
+                accentHz = 92.0,
+                durationSeconds = 0.34f,
+                sweepMix = 0.54,
+                accentMix = 0.18
+            )
+        val tempPath = Files.createTempFile("starkraft-death-structure-", ".wav")
+        structureDeathSoundPath = tempPath
         tempPath.toFile().deleteOnExit()
         val handle = Gdx.files.absolute(tempPath.toString())
         handle.writeBytes(bytes, false)

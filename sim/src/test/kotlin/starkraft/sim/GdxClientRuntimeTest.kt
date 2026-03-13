@@ -16,6 +16,7 @@ import starkraft.sim.client.CombatSoundKind
 import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.CompletionFlashKind
+import starkraft.sim.client.DeathSoundKind
 import starkraft.sim.client.NoticeKind
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -237,6 +238,16 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `marine attacker selects marine combat sound`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.lastDamageActivity = ClientDamageActivity(tick = 8, attackerIds = intArrayOf(4), targetIds = intArrayOf(9), totalDamage = 6)
+
+        runtime.tick()
+
+        assertEquals(CombatSoundKind.MARINE_RANGED, runtime.consumeCombatSoundKind())
+    }
+
+    @Test
     fun `melee attacker selects melee combat sound`(@TempDir tempDir: Path) {
         val runtime =
             runtime(
@@ -261,7 +272,7 @@ class GdxClientRuntimeTest {
 
         runtime.tick()
 
-        assertEquals(CombatSoundKind.MELEE, runtime.consumeCombatSoundKind())
+        assertEquals(CombatSoundKind.ZERGLING_MELEE, runtime.consumeCombatSoundKind())
     }
 
     @Test
@@ -295,8 +306,8 @@ class GdxClientRuntimeTest {
         assertEquals(1, runtime.activeDeathBursts().size)
         assertEquals(1, runtime.activeDeathRemains().size)
         assertTrue(runtime.noticeLine()?.contains("zergling down") == true)
-        assertTrue(runtime.consumeDeathSound())
-        assertFalse(runtime.consumeDeathSound())
+        assertEquals(DeathSoundKind.UNIT, runtime.consumeDeathSoundKind())
+        assertNull(runtime.consumeDeathSoundKind())
     }
 
     @Test
@@ -331,6 +342,7 @@ class GdxClientRuntimeTest {
         assertTrue(runtime.isStructureLossWarning())
         assertEquals(NoticeKind.LOSS, runtime.noticeKind())
         assertTrue(runtime.noticeLine()?.contains("depot lost") == true)
+        assertEquals(DeathSoundKind.STRUCTURE, runtime.consumeDeathSoundKind())
     }
 
     @Test
