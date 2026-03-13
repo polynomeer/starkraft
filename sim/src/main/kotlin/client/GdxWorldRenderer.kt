@@ -480,14 +480,24 @@ internal class GdxWorldRenderer(
                 hostile?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
-                    shape.color = Color(1.00f, 0.72f, 0.36f, 0.44f)
-                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.1f)
-                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.24f)
-                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.2f)
-                    shape.color = Color(1.00f, 0.78f, 0.44f, 0.26f)
-                    shape.circle(targetX, targetY, 8f)
-                    val midX = muzzleX + ((targetX - muzzleX) * 0.45f)
-                    val midY = muzzleY + ((targetY - muzzleY) * 0.45f)
+                    val nearX = muzzleX + ((targetX - muzzleX) * 0.22f)
+                    val nearY = muzzleY + ((targetY - muzzleY) * 0.22f)
+                    val midX = muzzleX + ((targetX - muzzleX) * 0.48f)
+                    val midY = muzzleY + ((targetY - muzzleY) * 0.48f)
+                    val farX = muzzleX + ((targetX - muzzleX) * 0.78f)
+                    val farY = muzzleY + ((targetY - muzzleY) * 0.78f)
+                    shape.color = Color(1.00f, 0.72f, 0.36f, 0.26f)
+                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.6f)
+                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.62f)
+                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.4f)
+                    shape.color = Color(1.00f, 0.92f, 0.76f, 0.72f)
+                    shape.circle(nearX, nearY, 1.6f)
+                    shape.circle(midX, midY, 2.2f)
+                    shape.circle(farX, farY, 1.8f)
+                    shape.color = Color(1.00f, 0.78f, 0.44f, 0.18f)
+                    shape.circle(targetX, targetY, 9f)
+                    shape.color = Color(1.00f, 0.92f, 0.72f, 0.74f)
+                    shape.circle(targetX, targetY, 4.2f)
                     shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
                     shape.circle(midX, midY, 2.2f)
                 }
@@ -958,6 +968,8 @@ internal class GdxWorldRenderer(
             val labelY = height - runtime.camera.worldToScreenY(node.y) - 10f
             if (!isOnScreen(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y))) continue
             assets.font.color = Color(0f, 0f, 0f, 0.72f)
+            val widthHint = (node.remaining.toString().length * 7f) + 6f
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 3f, y = labelY - 11f, color = Color(0.04f, 0.07f, 0.09f, 0.56f))
             assets.font.draw(
                 batch,
                 node.remaining.toString(),
@@ -989,6 +1001,8 @@ internal class GdxWorldRenderer(
             val status = buildEntityStatusLabel(entity) ?: continue
             val labelX = runtime.camera.worldToScreenX(entity.x) + 10f
             val labelY = height - runtime.camera.worldToScreenY(entity.y) + 14f
+            val widthHint = (status.length * 7f) + 8f
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 4f, y = labelY - 11f, color = Color(0.04f, 0.07f, 0.09f, 0.60f))
             assets.font.color = Color(0f, 0f, 0f, 0.72f)
             assets.font.draw(
                 batch,
@@ -1292,6 +1306,23 @@ internal class GdxWorldRenderer(
         val bottom = runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())
         shape.color = mapFrameColor
         shape.rect(left, top, right - left, bottom - top)
+    }
+
+    private fun shapeRendererForLabels(
+        batch: com.badlogic.gdx.graphics.g2d.SpriteBatch,
+        width: Float,
+        x: Float,
+        y: Float,
+        color: Color
+    ) {
+        batch.end()
+        val shape = assets.shapeRenderer
+        shape.projectionMatrix = textCamera.combined
+        shape.begin(ShapeRenderer.ShapeType.Filled)
+        shape.color = color
+        shape.rect(x, y, width, 12f)
+        shape.end()
+        batch.begin()
     }
 
     private fun isOnScreen(screenX: Float, screenY: Float): Boolean =
