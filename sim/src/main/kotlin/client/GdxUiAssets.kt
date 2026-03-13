@@ -25,8 +25,10 @@ internal class GdxUiAssets : Disposable {
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
     private var alertSoundPath: Path? = null
+    private var attackSoundPath: Path? = null
     private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
+    val attackSound: Sound = createAttackSound()
     val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
@@ -74,8 +76,10 @@ internal class GdxUiAssets : Disposable {
         batch.dispose()
         shapeRenderer.dispose()
         alertSound.dispose()
+        attackSound.dispose()
         completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
+        attackSoundPath?.let(Files::deleteIfExists)
         completeSoundPath?.let(Files::deleteIfExists)
     }
 
@@ -102,6 +106,16 @@ internal class GdxUiAssets : Disposable {
         val bytes = renderToneWav(primaryHz = 660.0, secondaryHz = 990.0, durationSeconds = 0.22f, primaryMix = 0.42, secondaryMix = 0.18)
         val tempPath = Files.createTempFile("starkraft-complete-", ".wav")
         completeSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createAttackSound(): Sound {
+        val bytes = renderToneWav(primaryHz = 220.0, secondaryHz = 440.0, durationSeconds = 0.10f, primaryMix = 0.58, secondaryMix = 0.22)
+        val tempPath = Files.createTempFile("starkraft-attack-", ".wav")
+        attackSoundPath = tempPath
         tempPath.toFile().deleteOnExit()
         val handle = Gdx.files.absolute(tempPath.toString())
         handle.writeBytes(bytes, false)

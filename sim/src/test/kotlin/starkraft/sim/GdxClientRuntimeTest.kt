@@ -242,6 +242,39 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `attack mode left click issues attack and sound`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 7,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 6f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Gauss"),
+                                EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "infantry", x = 8f, y = 6f, dir = 0f, hp = 35, maxHp = 35, armor = 0, weaponId = "Claws")
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+        runtime.session.state.selectedIds.add(4)
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE
+
+        runtime.issueLeftClick(screenX = 160f, screenY = 120f, additiveSelection = false)
+
+        assertEquals(linkedSetOf(4), runtime.session.state.selectedIds)
+        assertEquals(GroundPingKind.ATTACK, runtime.currentGroundPing()?.kind)
+        assertNull(runtime.groundMode)
+        assertTrue(runtime.consumeAttackCommandSound())
+        assertFalse(runtime.consumeAttackCommandSound())
+    }
+
+    @Test
     fun `completed construction raises notice and flash`(@TempDir tempDir: Path) {
         val before =
             ClientSnapshot(

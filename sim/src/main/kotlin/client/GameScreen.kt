@@ -104,6 +104,9 @@ internal class GameScreen(
         if (runtime.consumeAttackAlertSound()) {
             assets.alertSound.play(0.7f)
         }
+        if (runtime.consumeAttackCommandSound()) {
+            assets.attackSound.play(0.55f)
+        }
         if (runtime.consumeCompletionAlertSound()) {
             assets.completeSound.play(0.55f)
         }
@@ -1284,6 +1287,7 @@ internal class GameScreen(
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  RMB confirm"
+            runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "${runtime.overlayModeLabel().uppercase()}  LMB/RMB confirm"
             runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()}  RMB confirm"
             selectionCount > 0 -> ""
             else -> ""

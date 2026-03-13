@@ -35,6 +35,7 @@ internal class GdxClientRuntime(
     private var attackWarningUntilMillis: Long = 0L
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
+    private var pendingAttackCommandSound: Boolean = false
     private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
     private var recentDamageUntilMillis: Long = 0L
@@ -102,6 +103,7 @@ internal class GdxClientRuntime(
     fun hoverHintLine(): String? = hoverHint
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
+    fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
@@ -131,6 +133,34 @@ internal class GdxClientRuntime(
 
     fun issueLeftClick(screenX: Float, screenY: Float, additiveSelection: Boolean) {
         val snapshot = session.state.snapshot ?: return
+        if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && session.state.selectedIds.isNotEmpty()) {
+            val worldX = camera.screenToWorldX(screenX)
+            val worldY = camera.screenToWorldY(screenY)
+            val intent =
+                buildClientIntent(
+                    snapshot = snapshot,
+                    selectedIds = session.state.selectedIds,
+                    viewedFaction = session.state.viewedFaction,
+                    worldX = worldX,
+                    worldY = worldY,
+                    leftClick = false,
+                    rightClick = true,
+                    attackMoveModifier = false,
+                    forcedGroundCommandType = groundMode?.commandType,
+                    additiveSelection = false,
+                    requestIds = requestIds
+                ) ?: return
+            if (intent is ClientIntent.Command) {
+                session.append(intent)
+                recentGroundPing = GroundPing(worldX, worldY, if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") GroundPingKind.ATTACK else GroundPingKind.MOVE)
+                recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+                if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
+                    pendingAttackCommandSound = true
+                }
+                groundMode = null
+            }
+            return
+        }
         val intent =
             buildClientIntent(
                 snapshot = snapshot,
@@ -197,6 +227,9 @@ internal class GdxClientRuntime(
             session.append(intent)
             recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+            if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
+                pendingAttackCommandSound = true
+            }
             groundMode = null
         }
     }
