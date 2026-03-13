@@ -1367,9 +1367,9 @@ internal class GameScreen(
 
     private fun currentQueueHeaderTone(): Color =
         when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(1.00f, 0.86f, 0.46f, 0.96f)
-            "RESEARCH" -> Color(0.74f, 0.86f, 1.00f, 0.96f)
-            "CONSTRUCT" -> Color(0.70f, 0.98f, 0.78f, 0.96f)
+            "PRODUCTION" -> Color(1.00f, 0.92f, 0.62f, 0.96f)
+            "RESEARCH" -> Color(0.78f, 0.96f, 1.00f, 0.96f)
+            "CONSTRUCT" -> Color(0.74f, 1.00f, 0.82f, 0.96f)
             else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
         }
 
@@ -1395,25 +1395,25 @@ internal class GameScreen(
 
     private fun currentQueueStatusTone(): Color =
         when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(1.00f, 0.92f, 0.68f, 0.94f)
-            "RESEARCH" -> Color(0.84f, 0.92f, 1.00f, 0.94f)
-            "CONSTRUCT" -> Color(0.82f, 1.00f, 0.88f, 0.94f)
+            "PRODUCTION" -> Color(1.00f, 0.94f, 0.72f, 0.94f)
+            "RESEARCH" -> Color(0.86f, 0.96f, 1.00f, 0.94f)
+            "CONSTRUCT" -> Color(0.84f, 1.00f, 0.90f, 0.94f)
             else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
         }
 
     private fun currentQueueCardTone(): Color =
         when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(0.14f, 0.12f, 0.08f, 0.74f)
-            "RESEARCH" -> Color(0.10f, 0.12f, 0.18f, 0.74f)
-            "CONSTRUCT" -> Color(0.10f, 0.15f, 0.12f, 0.74f)
+            "PRODUCTION" -> Color(0.18f, 0.14f, 0.08f, 0.74f)
+            "RESEARCH" -> Color(0.10f, 0.14f, 0.20f, 0.74f)
+            "CONSTRUCT" -> Color(0.10f, 0.17f, 0.12f, 0.74f)
             else -> Color(0.08f, 0.12f, 0.16f, 0.62f)
         }
 
     private fun currentQueueHeaderBackgroundTone(): Color =
         when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(0.36f, 0.28f, 0.10f, 0.84f)
-            "RESEARCH" -> Color(0.18f, 0.26f, 0.40f, 0.84f)
-            "CONSTRUCT" -> Color(0.18f, 0.30f, 0.20f, 0.84f)
+            "PRODUCTION" -> Color(0.40f, 0.30f, 0.10f, 0.84f)
+            "RESEARCH" -> Color(0.20f, 0.30f, 0.42f, 0.84f)
+            "CONSTRUCT" -> Color(0.20f, 0.34f, 0.22f, 0.84f)
             else -> Color(0.18f, 0.28f, 0.34f, 0.82f)
         }
 

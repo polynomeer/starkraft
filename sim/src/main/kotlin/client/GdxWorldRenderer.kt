@@ -26,6 +26,14 @@ internal class GdxWorldRenderer(
             GroundPingKind.BUILD -> Color(0.64f, 0.84f, 1.00f, 0.96f)
             GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.96f)
         }
+
+    private fun activityTone(entity: EntitySnapshot): Color =
+        when {
+            entity.activeResearchTech != null -> completionResearchSparkColor
+            entity.activeProductionType != null || entity.productionQueueSize > 0 -> completionProductionSparkColor
+            entity.underConstruction -> completionBuildSparkColor
+            else -> Color(0.80f, 0.80f, 0.80f, 0.92f)
+        }
     private val fogColor = Color(0.07f, 0.12f, 0.14f, 0.18f)
     private val shroudColor = Color(0.05f, 0.09f, 0.11f, 0.32f)
     private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
@@ -539,13 +547,7 @@ internal class GdxWorldRenderer(
                 val markerY = screenY - 11f
                 shape.color = Color(0.08f, 0.09f, 0.11f, 0.90f)
                 shape.rect(markerX, markerY, 18f, 5f)
-                shape.color =
-                    when {
-                        entity.activeResearchTech != null -> Color(0.58f, 0.70f, 1.00f, 0.95f)
-                        entity.activeProductionType != null || entity.productionQueueSize > 0 -> Color(0.96f, 0.74f, 0.28f, 0.95f)
-                        entity.underConstruction -> Color(0.42f, 0.92f, 0.54f, 0.95f)
-                        else -> Color(0.78f, 0.78f, 0.78f, 0.95f)
-                    }
+                shape.color = activityTone(entity).cpy().apply { a = 0.95f }
                 val fillRatio =
                     when {
                         entity.underConstruction && entity.constructionTotalTicks != null && entity.constructionRemainingTicks != null ->
@@ -560,15 +562,15 @@ internal class GdxWorldRenderer(
                 shape.rect(markerX + 1f, markerY + 1f, 16f * fillRatio, 3f)
                 when {
                     entity.activeResearchTech != null -> {
-                        shape.color = Color(0.74f, 0.84f, 1.00f, 0.74f)
+                        shape.color = completionResearchFlashColor.cpy().apply { a = 0.82f }
                         shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
                     }
                     entity.activeProductionType != null || entity.productionQueueSize > 0 -> {
-                        shape.color = Color(1.00f, 0.84f, 0.44f, 0.74f)
+                        shape.color = completionProductionFlashColor.cpy().apply { a = 0.82f }
                         shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
                     }
                     entity.underConstruction -> {
-                        shape.color = Color(0.62f, 0.98f, 0.72f, 0.74f)
+                        shape.color = completionBuildFlashColor.cpy().apply { a = 0.82f }
                         shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
                     }
                 }
@@ -739,12 +741,12 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 3.5f, y + 3.5f, 2f, 2f)
             }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
-                shape.color = Color(0.98f, 0.76f, 0.34f, if (visible) 0.78f else 0.34f)
+                shape.color = completionProductionSparkColor.cpy().apply { a = if (visible) 0.82f else 0.34f }
                 shape.rect(x + 3.5f, y - 1f, 3f, 2f)
                 shape.rect(x + 7f, y - 1f, 2f, 2f)
             }
             if (entity.activeResearchTech != null) {
-                shape.color = Color(0.62f, 0.76f, 1.00f, if (visible) 0.78f else 0.34f)
+                shape.color = completionResearchSparkColor.cpy().apply { a = if (visible) 0.82f else 0.34f }
                 shape.rect(x - 6.5f, y - 1f, 3f, 2f)
                 shape.rect(x - 9.5f, y - 1f, 2f, 2f)
             }
