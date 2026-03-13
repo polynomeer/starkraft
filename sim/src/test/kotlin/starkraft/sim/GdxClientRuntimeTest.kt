@@ -292,6 +292,7 @@ class GdxClientRuntimeTest {
         runtime.tick()
 
         assertEquals(1, runtime.activeDeathBursts().size)
+        assertEquals(1, runtime.activeDeathRemains().size)
         assertTrue(runtime.consumeDeathSound())
         assertFalse(runtime.consumeDeathSound())
     }

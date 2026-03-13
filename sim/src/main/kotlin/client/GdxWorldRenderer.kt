@@ -44,6 +44,8 @@ internal class GdxWorldRenderer(
     private val minimapShroudColor = Color(0.04f, 0.08f, 0.10f, 0.26f)
     private val impactFlashColor = Color(1.00f, 0.46f, 0.28f, 0.34f)
     private val impactSparkColor = Color(1.00f, 0.86f, 0.54f, 0.92f)
+    private val meleeImpactFlashColor = Color(0.84f, 1.00f, 0.66f, 0.30f)
+    private val meleeImpactSparkColor = Color(0.92f, 1.00f, 0.78f, 0.94f)
     private val completionBuildFlashColor = Color(0.58f, 0.96f, 0.72f, 0.26f)
     private val completionBuildSparkColor = Color(0.74f, 1.00f, 0.82f, 0.92f)
     private val completionProductionFlashColor = Color(1.00f, 0.84f, 0.42f, 0.26f)
@@ -76,6 +78,7 @@ internal class GdxWorldRenderer(
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
+        drawDeathRemains(shape, runtime)
         drawDeathBursts(shape, runtime)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
@@ -260,9 +263,10 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0f, 0f, 0f, 0.12f)
                 shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, damageFlashAlpha(selected))
+                    val flashColor = impactFlashForEntity(runtime, entity.id)
+                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
                     shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
-                    shape.color = impactFlashColor
+                    shape.color = flashColor
                     shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
@@ -287,11 +291,13 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0f, 0f, 0f, 0.20f)
                 shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, damageFlashAlpha(selected))
+                    val flashColor = impactFlashForEntity(runtime, entity.id)
+                    val sparkColor = impactSparkForEntity(runtime, entity.id)
+                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
                     shape.circle(screenX, screenY, if (selected) 16f else 14f)
-                    shape.color = impactFlashColor
+                    shape.color = flashColor
                     shape.circle(screenX, screenY, if (selected) 13.5f else 12f)
-                    shape.color = impactSparkColor
+                    shape.color = sparkColor
                     shape.rect(screenX - 1.5f, screenY - 9f, 3f, 18f)
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
@@ -596,7 +602,7 @@ internal class GdxWorldRenderer(
                     shape.circle(hitX, hitY, 4f)
                     shape.rectLine(hitX, hitY, screenX - directionDx(attackDir, 2f), screenY - directionDy(attackDir, 2f), 1.2f)
                 }
-                shape.color = impactSparkColor
+                shape.color = impactSparkForEntity(runtime, entity.id)
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
                     val tileX = floor(entity.x).toInt()
                     val tileY = floor(entity.y).toInt()
@@ -1026,6 +1032,40 @@ internal class GdxWorldRenderer(
         }
     }
 
+    private fun drawDeathRemains(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val remains = runtime.activeDeathRemains()
+        if (remains.isEmpty()) return
+        val now = System.currentTimeMillis()
+        for (remain in remains) {
+            val x = runtime.camera.worldToScreenX(remain.x)
+            val y = runtime.camera.worldToScreenY(remain.y)
+            if (!isOnScreen(x, y)) continue
+            val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
+            val alpha = 0.08f + (progress * 0.22f)
+            if (remain.isStructure) {
+                shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
+                shape.rect(x - 12f, y - 12f, 24f, 24f)
+                shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
+                shape.rect(x - 8f, y - 9f, 7f, 5f)
+                shape.rect(x + 1f, y - 6f, 8f, 6f)
+                shape.rect(x - 3f, y + 2f, 9f, 4f)
+            } else {
+                val debris =
+                    when {
+                        remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.34f, 0.24f, 0.20f, alpha)
+                        else -> Color(0.28f, 0.30f, 0.30f, alpha)
+                    }
+                shape.color = debris
+                shape.rect(x - 6f, y - 2f, 5f, 3f)
+                shape.rect(x + 1f, y - 4f, 4f, 3f)
+                shape.rect(x - 1f, y + 1f, 3f, 2f)
+            }
+            shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.7f)
+            shape.circle(x + 3f, y + 6f, 7f + ((1f - progress) * 5f))
+            shape.circle(x - 5f, y + 3f, 5f + ((1f - progress) * 3f))
+        }
+    }
+
     private fun drawLabels(runtime: GdxClientRuntime, width: Int, height: Int) {
         val snapshot = runtime.snapshot ?: return
         val batch = assets.batch
@@ -1366,6 +1406,18 @@ internal class GdxWorldRenderer(
             CompletionFlashKind.CONSTRUCTION -> completionBuildSparkColor
             CompletionFlashKind.PRODUCTION -> completionProductionSparkColor
             CompletionFlashKind.RESEARCH, null -> completionResearchSparkColor
+        }
+
+    private fun impactFlashForEntity(runtime: GdxClientRuntime, entityId: Int): Color =
+        when (runtime.damageImpactKind(entityId)) {
+            CombatSoundKind.MELEE -> meleeImpactFlashColor
+            CombatSoundKind.RANGED, null -> impactFlashColor
+        }
+
+    private fun impactSparkForEntity(runtime: GdxClientRuntime, entityId: Int): Color =
+        when (runtime.damageImpactKind(entityId)) {
+            CombatSoundKind.MELEE -> meleeImpactSparkColor
+            CombatSoundKind.RANGED, null -> impactSparkColor
         }
 
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale

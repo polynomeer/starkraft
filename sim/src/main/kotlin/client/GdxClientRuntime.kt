@@ -20,6 +20,7 @@ internal class GdxClientRuntime(
         const val GROUND_PING_DURATION_MS = 720L
         const val COMPLETION_FLASH_DURATION_MS = 1700L
         const val DEATH_BURST_DURATION_MS = 980L
+        const val DEATH_REMAINS_DURATION_MS = 2600L
     }
 
     private val requestIds = ClientCommandIds("gdx")
@@ -41,6 +42,7 @@ internal class GdxClientRuntime(
     private var pendingDeathSound: Boolean = false
     private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
+    private var recentDamageKindsByEntityId: Map<Int, CombatSoundKind> = emptyMap()
     private var recentDamageUntilMillis: Long = 0L
     private var recentGroundPing: GroundPing? = null
     private var recentGroundPingUntilMillis: Long = 0L
@@ -48,6 +50,7 @@ internal class GdxClientRuntime(
     private var recentCompletionKindsByEntityId: Map<Int, CompletionFlashKind> = emptyMap()
     private var recentCompletionUntilMillis: Long = 0L
     private val recentDeathBursts = ArrayList<DeathBurst>()
+    private val recentDeathRemains = ArrayList<DeathRemains>()
     private var lastSnapshotTick: Int? = null
     private var previousEntitiesById: Map<Int, EntitySnapshot> = emptyMap()
     private var cameraTarget: CameraView? = null
@@ -90,6 +93,7 @@ internal class GdxClientRuntime(
         }
         if (recentDamageEntityIds.isNotEmpty() && System.currentTimeMillis() > recentDamageUntilMillis) {
             recentDamageEntityIds = emptySet()
+            recentDamageKindsByEntityId = emptyMap()
         }
         if (recentGroundPing != null && System.currentTimeMillis() > recentGroundPingUntilMillis) {
             recentGroundPing = null
@@ -101,6 +105,10 @@ internal class GdxClientRuntime(
         if (recentDeathBursts.isNotEmpty()) {
             val now = System.currentTimeMillis()
             recentDeathBursts.removeAll { now > it.expiresAtMillis }
+        }
+        if (recentDeathRemains.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            recentDeathRemains.removeAll { now > it.expiresAtMillis }
         }
         maybeRaiseCompletionNotice()
         maybeRaiseAttackAlert()
@@ -116,10 +124,12 @@ internal class GdxClientRuntime(
     fun consumeDeathSound(): Boolean = pendingDeathSound.also { pendingDeathSound = false }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
+    fun damageImpactKind(entityId: Int): CombatSoundKind? = recentDamageKindsByEntityId[entityId]?.takeIf { isDamageFlashActive(entityId) }
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
     fun completionFlashKind(entityId: Int): CompletionFlashKind? = recentCompletionKindsByEntityId[entityId]?.takeIf { isCompletionFlashActive(entityId) }
     fun activeDeathBursts(): List<DeathBurst> = recentDeathBursts.filter { System.currentTimeMillis() <= it.expiresAtMillis }
+    fun activeDeathRemains(): List<DeathRemains> = recentDeathRemains.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
 
     fun overlayModeLabel(): String =
@@ -899,12 +909,19 @@ internal class GdxClientRuntime(
         recentDamageUntilMillis = System.currentTimeMillis() + DAMAGE_FLASH_DURATION_MS
         if (damage.targetIds.isNotEmpty()) {
             val snapshot = session.state.snapshot
-            pendingCombatSoundKind =
-                if (snapshot != null && damage.attackerIds.any { attackerId -> snapshot.entities.firstOrNull { it.id == attackerId }?.let(::isMeleeAttacker) == true }) {
-                    CombatSoundKind.MELEE
-                } else {
-                    CombatSoundKind.RANGED
-                }
+            val damageKinds = LinkedHashMap<Int, CombatSoundKind>(damage.targetIds.size)
+            damage.attackerIds.forEachIndexed { index, attackerId ->
+                val targetId = damage.targetIds.getOrNull(index) ?: return@forEachIndexed
+                val kind =
+                    if (snapshot != null && snapshot.entities.firstOrNull { it.id == attackerId }?.let(::isMeleeAttacker) == true) {
+                        CombatSoundKind.MELEE
+                    } else {
+                        CombatSoundKind.RANGED
+                    }
+                damageKinds[targetId] = kind
+            }
+            recentDamageKindsByEntityId = damageKinds
+            pendingCombatSoundKind = damageKinds.values.firstOrNull() ?: CombatSoundKind.RANGED
         }
         val snapshot = session.state.snapshot ?: return
         val viewedFaction = session.state.viewedFaction ?: return
@@ -977,6 +994,16 @@ internal class GdxClientRuntime(
                     typeId = entity.typeId,
                     expiresAtMillis = now + DEATH_BURST_DURATION_MS
                 )
+            recentDeathRemains +=
+                DeathRemains(
+                    entityId = entity.id,
+                    x = entity.x,
+                    y = entity.y,
+                    isStructure = entity.footprintWidth != null && entity.footprintHeight != null,
+                    faction = entity.faction,
+                    typeId = entity.typeId,
+                    expiresAtMillis = now + DEATH_REMAINS_DURATION_MS
+                )
             deathSound = true
         }
         if (deathSound) {
@@ -1031,6 +1058,16 @@ internal enum class GroundPingKind {
 }
 
 internal data class DeathBurst(
+    val entityId: Int,
+    val x: Float,
+    val y: Float,
+    val isStructure: Boolean,
+    val faction: Int,
+    val typeId: String,
+    val expiresAtMillis: Long
+)
+
+internal data class DeathRemains(
     val entityId: Int,
     val x: Float,
     val y: Float,
