@@ -211,13 +211,30 @@ internal class GameScreen(
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.98f))
-                            pad(4f)
-                            add(portraitLabel).center()
+                            pad(3f)
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.34f, 0.40f, 0.16f, 0.92f))
+                                }
+                            ).height(2f).expandX().fillX().row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.96f))
+                                    pad(5f, 4f, 3f, 4f)
+                                    add(portraitLabel).center()
+                                }
+                            ).expand().fill().padTop(3f)
                         }
                     ).size(62f, 62f).top().left().padRight(4f)
                     add(
                         Table().apply {
-                            add(selectionMetaLabel).left().expandX().fillX().row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    pad(1f, 5f, 1f, 5f)
+                                    add(selectionMetaLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().row()
                             add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(1f).row()
                             add(
                                 healthBarBack.apply {
@@ -229,8 +246,27 @@ internal class GameScreen(
                                     add().expandX().fillX()
                                 }
                             ).width(122f).height(7f).left().padTop(1f).row()
-                            add(centerStatusLabel).left().expandX().fillX().padTop(2f).row()
-                            add(queueStatusLabel).left().expandX().fillX().padTop(1f).row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.52f))
+                                    pad(2f, 4f, 2f, 4f)
+                                    add(centerStatusLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().padTop(2f).row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.06f, 0.09f, 0.12f, 0.44f))
+                                    pad(2f, 4f, 2f, 4f)
+                                    add(queueStatusLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().padTop(1f).row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    pad(1f, 5f, 1f, 5f)
+                                    add(Label("ROSTER", assets.mutedLabelStyle)).left()
+                                }
+                            ).left().expandX().fillX().padTop(2f).row()
                             add(selectionGrid).left().expandX().fillX().padTop(2f).row()
                             add(
                                 selectionPager.apply {

@@ -112,6 +112,10 @@ internal class GdxWorldRenderer(
                 shape.rect(sx + 1f, sy + 1f, tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
                 shape.color = base.cpy().lerp(Color.BLACK, 0.18f)
                 shape.rect(sx + 1f, sy + (tileSize * 0.68f), tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
+                if ((x / 3 + y / 2) % 4 == 0) {
+                    shape.color = base.cpy().lerp(Color.BLACK, 0.24f).apply { a = 0.18f }
+                    shape.rect(sx + (tileSize * 0.58f), sy + 2f, 2f, tileSize - 4f)
+                }
                 if ((x + y) % 5 == 0) {
                     shape.color = base.cpy().lerp(Color.WHITE, 0.14f).apply { a = 0.18f }
                     shape.rect(sx + 2f, sy + 2f, 2f, 2f)
@@ -970,6 +974,8 @@ internal class GdxWorldRenderer(
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
         shape.color = Color(0.82f, 0.88f, 0.94f, 0.08f)
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
+        shape.color = Color(0f, 0f, 0f, 0.16f)
+        shape.rect(left + 5f, top + height * 0.48f, width - 10f, 2f)
         shape.color =
             when {
                 isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
@@ -979,6 +985,8 @@ internal class GdxWorldRenderer(
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
         shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
         shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
+        shape.color = Color(0.82f, 0.88f, 0.92f, 0.10f)
+        shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
         shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
         if (isDepot) {
