@@ -1008,17 +1008,38 @@ internal class GdxClientRuntime(
             deathSound = true
         }
         if (viewedFaction != null) {
-            val friendlyLosses = vanished.count { it.faction == viewedFaction }
-            val enemyLosses = vanished.count { it.faction != viewedFaction }
+            val friendlyLosses = vanished.filter { it.faction == viewedFaction }
+            val enemyLosses = vanished.filter { it.faction != viewedFaction }
             when {
-                friendlyLosses > 0 && enemyLosses > 0 -> showNotice("trade ${enemyLosses}/${friendlyLosses}")
-                friendlyLosses > 0 -> showNotice(if (friendlyLosses == 1) "unit lost" else "$friendlyLosses lost")
-                enemyLosses > 0 -> showNotice(if (enemyLosses == 1) "enemy down" else "$enemyLosses enemies down")
+                friendlyLosses.isNotEmpty() && enemyLosses.isNotEmpty() ->
+                    showNotice("trade ${summarizeDeaths(enemyLosses)}/${summarizeDeaths(friendlyLosses)}")
+                friendlyLosses.isNotEmpty() ->
+                    showNotice("${summarizeDeaths(friendlyLosses)} lost")
+                enemyLosses.isNotEmpty() ->
+                    showNotice("${summarizeDeaths(enemyLosses)} down")
+            }
+            if (friendlyLosses.any { it.footprintWidth != null && it.footprintHeight != null }) {
+                attackWarningMessage = "Warning: structure lost"
+                attackWarningUntilMillis = System.currentTimeMillis() + ATTACK_WARNING_DURATION_MS
+                pendingAttackAlertSound = true
             }
         }
         if (deathSound) {
             pendingDeathSound = true
         }
+    }
+
+    private fun summarizeDeaths(entities: List<EntitySnapshot>): String {
+        if (entities.isEmpty()) return "0"
+        if (entities.size == 1) {
+            val entity = entities.first()
+            return when {
+                entity.footprintWidth != null && entity.footprintHeight != null -> entity.typeId.lowercase()
+                else -> entity.typeId.lowercase()
+            }
+        }
+        val firstType = entities.first().typeId
+        return if (entities.all { it.typeId == firstType }) "${entities.size} ${firstType.lowercase()}s" else "${entities.size} units"
     }
 
     private fun isMeleeAttacker(entity: EntitySnapshot): Boolean =

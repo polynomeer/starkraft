@@ -293,9 +293,41 @@ class GdxClientRuntimeTest {
 
         assertEquals(1, runtime.activeDeathBursts().size)
         assertEquals(1, runtime.activeDeathRemains().size)
-        assertTrue(runtime.noticeLine()?.contains("enemy down") == true)
+        assertTrue(runtime.noticeLine()?.contains("zergling down") == true)
         assertTrue(runtime.consumeDeathSound())
         assertFalse(runtime.consumeDeathSound())
+    }
+
+    @Test
+    fun `friendly structure loss raises structure warning`(@TempDir tempDir: Path) {
+        val before =
+            ClientSnapshot(
+                tick = 7,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities =
+                    listOf(
+                        EntitySnapshot(id = 4, faction = 1, typeId = "Depot", archetype = "structure", x = 5f, y = 6f, dir = 0f, hp = 100, maxHp = 100, armor = 0, footprintWidth = 3, footprintHeight = 3),
+                        EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "infantry", x = 8f, y = 6f, dir = 0f, hp = 35, maxHp = 35, armor = 0, weaponId = "Claw")
+                    ),
+                resourceNodes = emptyList()
+            )
+        val runtime = runtime(tempDir, snapshot = before)
+
+        runtime.tick()
+        runtime.session.state.snapshot =
+            before.copy(
+                tick = 8,
+                entities = listOf(before.entities.last())
+            )
+
+        runtime.tick()
+
+        assertEquals("Warning: structure lost", runtime.attackWarningLine())
+        assertTrue(runtime.noticeLine()?.contains("depot lost") == true)
     }
 
     @Test
