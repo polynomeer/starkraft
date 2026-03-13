@@ -242,12 +242,11 @@ internal class GameScreen(
         bottomHud.apply {
             background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.78f))
             pad(0f, 2f, 0f, 2f)
-            add(wrapMinimapPanel(minimapFrame)).width(214f).height(146f).left().bottom().padRight(2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.96f))
                 }
-            ).width(14f).height(74f).bottom().padRight(0f).padBottom(16f)
+            ).width(14f).height(74f).bottom().padRight(0f).padBottom(16f).padLeft(216f)
             add(wrapHudPanel(centerCard, Color(0.09f, 0.14f, 0.19f, 0.98f))).width(266f).expandX().fillX().bottom().padRight(2f)
             add(
                 Table().apply {
@@ -260,6 +259,14 @@ internal class GameScreen(
         root.add().expand().fill().row()
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
+
+        leftHudColumn.apply {
+            setFillParent(true)
+            bottom().left()
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(wrapMinimapPanel(minimapFrame)).width(214f).height(146f).padLeft(2f).padBottom(2f)
+        }
+        stage.addActor(leftHudColumn)
 
         attackWarningTable.apply {
             setFillParent(true)
