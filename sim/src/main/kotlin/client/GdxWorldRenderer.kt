@@ -944,8 +944,32 @@ internal class GdxWorldRenderer(
         if (dragBox == null || !dragBox.isVisible) return
         val minX = minOf(dragBox.startX, dragBox.currentX)
         val minY = minOf(dragBox.startY, dragBox.currentY)
-        shape.color = Color(0.96f, 0.89f, 0.45f, 0.18f)
-        shape.rect(minX, minY, abs(dragBox.currentX - dragBox.startX), abs(dragBox.currentY - dragBox.startY))
+        val width = abs(dragBox.currentX - dragBox.startX)
+        val height = abs(dragBox.currentY - dragBox.startY)
+        val right = minX + width
+        val bottom = minY + height
+        val corner = minOf(14f, width * 0.28f, height * 0.28f)
+        val pulse = ambientPulse(1200L)
+
+        shape.color = Color(0.52f, 0.98f, 0.54f, 0.14f + (pulse * 0.06f))
+        shape.line(minX, minY, right, minY)
+        shape.line(minX, bottom, right, bottom)
+        shape.line(minX, minY, minX, bottom)
+        shape.line(right, minY, right, bottom)
+
+        shape.color = Color(0.70f, 1.00f, 0.70f, 0.94f)
+        shape.line(minX, minY, minX + corner, minY)
+        shape.line(minX, minY, minX, minY + corner)
+        shape.line(right, minY, right - corner, minY)
+        shape.line(right, minY, right, minY + corner)
+        shape.line(minX, bottom, minX + corner, bottom)
+        shape.line(minX, bottom, minX, bottom - corner)
+        shape.line(right, bottom, right - corner, bottom)
+        shape.line(right, bottom, right, bottom - corner)
+
+        shape.color = Color(0.84f, 1.00f, 0.76f, 0.42f + (pulse * 0.12f))
+        shape.rect(minX + (width * 0.22f), minY - 1f, width * 0.56f, 1.5f)
+        shape.rect(minX + (width * 0.22f), bottom - 0.5f, width * 0.56f, 1.5f)
     }
 
     private fun drawLabels(runtime: GdxClientRuntime, width: Int, height: Int) {
