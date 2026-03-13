@@ -789,6 +789,7 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.58f, 0.98f, 0.70f, 0.90f)
                 shape.rect(x - 2f, y - 10f, 4f, 20f)
                 shape.rect(x - 10f, y - 2f, 20f, 4f)
+                shape.rectLine(x - 8f, y - 8f, x + 8f, y + 8f, 1.4f)
             }
             GroundPingKind.ATTACK -> {
                 shape.color = Color(0.98f, 0.42f, 0.24f, 0.22f + (pulse * 0.10f))
@@ -796,12 +797,15 @@ internal class GdxWorldRenderer(
                 shape.color = Color(1.00f, 0.76f, 0.46f, 0.96f)
                 shape.rectLine(x - 10f, y - 10f, x + 10f, y + 10f, 2.2f)
                 shape.rectLine(x - 10f, y + 10f, x + 10f, y - 10f, 2.2f)
+                shape.circle(x, y, 5f)
             }
             GroundPingKind.BUILD -> {
                 shape.color = Color(0.48f, 0.78f, 1.00f, 0.22f + (pulse * 0.10f))
                 shape.rect(x - 14f - (pulse * 2f), y - 14f - (pulse * 2f), 28f + (pulse * 4f), 28f + (pulse * 4f))
                 shape.color = Color(0.72f, 0.90f, 1.00f, 0.90f)
                 shape.rect(x - 8f, y - 8f, 16f, 16f)
+                shape.rect(x - 1f, y - 12f, 2f, 24f)
+                shape.rect(x - 12f, y - 1f, 24f, 2f)
             }
             GroundPingKind.INVALID -> {
                 shape.color = Color(0.96f, 0.28f, 0.28f, 0.18f + (pulse * 0.08f))
@@ -809,6 +813,7 @@ internal class GdxWorldRenderer(
                 shape.color = Color(1.00f, 0.70f, 0.70f, 0.92f)
                 shape.rectLine(x - 9f, y - 9f, x + 9f, y + 9f, 2f)
                 shape.rectLine(x - 9f, y + 9f, x + 9f, y - 9f, 2f)
+                shape.circle(x, y, 4f)
             }
         }
     }
@@ -921,6 +926,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 2f, 10f, 4f)
                 shape.color = trim
                 shape.circle(x, y, 2.8f)
+                shape.rectLine(x - 4f, y + 4f, x + 4f, y + 4f, 1.2f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f), 1.4f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
@@ -934,6 +940,8 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 2.5f, y - 5.5f, 5f, 11f)
                 shape.color = trim
                 shape.rect(x - 1.4f, y - 6.5f, 2.8f, 2.8f)
+                shape.rect(x - 6.5f, y - 0.8f, 2.4f, 1.6f)
+                shape.rect(x + 4.1f, y - 0.8f, 2.4f, 1.6f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 7.5f), y + directionDy(entity.dir, 7.5f), 1.8f)
                 if (entity.weaponCooldownTicks > 0) {
@@ -950,6 +958,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 4.5f, y - 3.5f, 9f, 7f)
                 shape.color = trim
                 shape.rect(x - 2.5f, y - 4.5f, 5f, 2.4f)
+                shape.rect(x - 5.5f, y + 2.2f, 11f, 1.6f)
                 shape.color = Color(0.85f, 0.92f, 0.98f, 0.58f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 6f), y + directionDy(entity.dir, 6f), 1.5f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.14f }
@@ -1005,6 +1014,8 @@ internal class GdxWorldRenderer(
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
             shape.color = Color(0.88f, 0.70f, 0.24f, 0.42f)
             shape.rect(left + width * 0.25f, top + height - 6f, width * 0.5f, 3f)
+            shape.color = Color(0.84f, 0.74f, 0.36f, 0.24f)
+            shape.rect(left + width * 0.18f, top + height * 0.30f, width * 0.18f, height * 0.26f)
         }
         if (isResourceDepot) {
             shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
@@ -1012,12 +1023,16 @@ internal class GdxWorldRenderer(
             shape.rect(left + 6f, top + height - 12f, 8f, 6f)
             shape.color = Color(0.96f, 0.84f, 0.42f, 0.26f)
             shape.rect(left + width * 0.18f, top + height - 5f, width * 0.64f, 3f)
+            shape.color = Color(1.00f, 0.90f, 0.56f, 0.24f)
+            shape.rect(left + width * 0.38f, top + height * 0.24f, width * 0.24f, height * 0.22f)
         }
         if (isGasDepot) {
             shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
             shape.circle(left + width * 0.5f, top + height * 0.55f, 6f)
             shape.color = Color(0.40f, 0.90f, 0.72f, 0.28f + (ambientPulse(1600L) * 0.12f))
             shape.circle(left + width * 0.5f, top + height * 0.55f, 9f)
+            shape.color = Color(0.64f, 1.00f, 0.86f, 0.22f)
+            shape.rect(left + width * 0.42f, top + height * 0.18f, width * 0.16f, height * 0.16f)
         }
         if (entity.supportsResearch == true) {
             shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)

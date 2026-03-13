@@ -255,8 +255,15 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.06f, 0.09f, 0.12f, 0.44f))
+                                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.62f))
                                     pad(2f, 4f, 2f, 4f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.18f, 0.28f, 0.34f, 0.82f))
+                                            pad(1f, 4f, 1f, 4f)
+                                            add(Label("QUEUE", assets.mutedLabelStyle)).left()
+                                        }
+                                    ).left().padRight(4f)
                                     add(queueStatusLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
