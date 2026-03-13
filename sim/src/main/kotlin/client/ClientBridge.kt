@@ -218,7 +218,7 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
         var latestResearchActivity: ClientResearchActivity? = null
         var latestTickActivity: ClientTickActivity? = null
         while (true) {
-            val line = file.readLine() ?: break
+            val line = readCompleteLine() ?: break
             if (line.isBlank()) continue
             val update = parseClientStreamLine(line) ?: continue
             if (update.snapshot != null) latestSnapshot = update.snapshot
@@ -247,6 +247,22 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
 
     override fun close() {
         file.close()
+    }
+
+    private fun readCompleteLine(): String? {
+        val start = file.filePointer
+        val builder = StringBuilder()
+        while (true) {
+            val next = file.read()
+            if (next == -1) {
+                file.seek(start)
+                return null
+            }
+            if (next == '\n'.code) {
+                return builder.toString().trimEnd('\r')
+            }
+            builder.append(next.toChar())
+        }
     }
 }
 

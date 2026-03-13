@@ -23,6 +23,7 @@ import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.ClientViewState
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FileClientInputSink
+import starkraft.sim.client.FileClientStreamSubscription
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.net.InputJson
 import java.nio.file.Files
@@ -63,6 +64,33 @@ class ClientSessionTest {
             assertEquals("cli-1", session.state.lastAck?.requestId)
 
             assertFalse(session.poll())
+        }
+    }
+
+    @Test
+    fun `file stream ignores trailing partial ndjson until newline arrives`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        val snapshot =
+            ClientSnapshot(
+                tick = 12,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                entities = listOf(EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 4f, y = 4f, dir = 0f, hp = 45, maxHp = 45, armor = 0)),
+                resourceNodes = emptyList()
+            )
+        val line = "{\"recordType\":\"snapshot\",\"snapshot\":${json.encodeToString(ClientSnapshot.serializer(), snapshot)}}"
+        Files.writeString(snapshotPath, line.dropLast(8))
+
+        FileClientStreamSubscription(snapshotPath).use { subscription ->
+            assertEquals(null, subscription.poll())
+
+            Files.writeString(snapshotPath, line.takeLast(8) + "\n", java.nio.file.StandardOpenOption.APPEND)
+
+            val update = subscription.poll()
+            assertEquals(12, update?.snapshot?.tick)
         }
     }
 
