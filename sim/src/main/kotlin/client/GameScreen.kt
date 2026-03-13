@@ -951,8 +951,8 @@ internal class GameScreen(
 
     private fun buildCenterFooterLine(): String =
         when {
-            runtime.buildModeTypeId != null -> "RMB place  Esc cancel"
-            runtime.groundMode != null -> "RMB confirm  Esc cancel"
+            runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
+            runtime.groundMode != null -> "LMB/RMB confirm  Esc cancel"
             runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
             else -> "Drag select  RMB order  MMB pan"
         }
@@ -1286,9 +1286,8 @@ internal class GameScreen(
         runtime.noticeLine()?.removePrefix("notice: ")?.let { return it }
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
-            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  RMB confirm"
-            runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "${runtime.overlayModeLabel().uppercase()}  LMB/RMB confirm"
-            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()}  RMB confirm"
+            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  LMB/RMB confirm"
+            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()}  LMB/RMB confirm"
             selectionCount > 0 -> ""
             else -> ""
         }

@@ -13,6 +13,7 @@ import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.ClientDamageActivity
+import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.CompletionFlashKind
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
@@ -272,6 +273,31 @@ class GdxClientRuntimeTest {
         assertNull(runtime.groundMode)
         assertTrue(runtime.consumeAttackCommandSound())
         assertFalse(runtime.consumeAttackCommandSound())
+    }
+
+    @Test
+    fun `move mode left click issues move ping and clears mode`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+
+        runtime.issueLeftClick(screenX = 220f, screenY = 180f, additiveSelection = false)
+
+        assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
+        assertNull(runtime.groundMode)
+    }
+
+    @Test
+    fun `build mode left click places building and clears mode`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.state.mapState = ClientMapState(width = 32, height = 32)
+        runtime.buildModeTypeId = "Depot"
+
+        runtime.issueLeftClick(screenX = 400f, screenY = 400f, additiveSelection = false)
+
+        assertEquals(GroundPingKind.BUILD, runtime.currentGroundPing()?.kind)
+        assertNull(runtime.buildModeTypeId)
     }
 
     @Test

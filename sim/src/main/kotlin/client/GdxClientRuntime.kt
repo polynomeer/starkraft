@@ -133,7 +133,11 @@ internal class GdxClientRuntime(
 
     fun issueLeftClick(screenX: Float, screenY: Float, additiveSelection: Boolean) {
         val snapshot = session.state.snapshot ?: return
-        if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && session.state.selectedIds.isNotEmpty()) {
+        if ((buildModeTypeId != null || groundMode != null) && session.state.selectedIds.isNotEmpty()) {
+            if (buildModeTypeId != null) {
+                placeBuildingAt(screenX, screenY)
+                return
+            }
             val worldX = camera.screenToWorldX(screenX)
             val worldY = camera.screenToWorldY(screenY)
             val intent =
