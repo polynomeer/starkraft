@@ -3,6 +3,7 @@ package starkraft.sim.client
 import starkraft.sim.net.InputJson
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.math.abs
 import kotlin.math.floor
 
 internal class GdxClientRuntime(
@@ -36,6 +37,7 @@ internal class GdxClientRuntime(
     private var recentCompletionUntilMillis: Long = 0L
     private var lastSnapshotTick: Int? = null
     private var previousEntitiesById: Map<Int, EntitySnapshot> = emptyMap()
+    private var cameraTarget: CameraView? = null
 
     val catalog: ClientCatalog = defaultClientCatalog()
     var camera: CameraView = CameraView()
@@ -85,6 +87,7 @@ internal class GdxClientRuntime(
         }
         maybeRaiseCompletionNotice()
         maybeRaiseAttackAlert()
+        updateCameraGlide()
     }
 
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
@@ -235,7 +238,7 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return
         val ids = session.state.selectedIds.toIntArray()
         val focus = computeSelectionCentroid(snapshot, ids) ?: return
-        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        queueCameraCenter(viewWidth, viewHeight, focus.first, focus.second)
         initialCameraApplied = true
     }
 
@@ -244,7 +247,7 @@ internal class GdxClientRuntime(
         val faction = session.state.viewedFaction ?: return
         val ids = collectFactionSelectionIds(snapshot, faction)
         val focus = computeSelectionCentroid(snapshot, ids) ?: return
-        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        queueCameraCenter(viewWidth, viewHeight, focus.first, focus.second)
         initialCameraApplied = true
     }
 
@@ -256,6 +259,7 @@ internal class GdxClientRuntime(
 
     fun panBy(deltaX: Float, deltaY: Float) {
         camera = camera.copy(panX = camera.panX + deltaX, panY = camera.panY + deltaY)
+        cameraTarget = null
         initialCameraApplied = true
     }
 
@@ -320,6 +324,7 @@ internal class GdxClientRuntime(
 
     fun resetCamera() {
         camera = CameraView()
+        cameraTarget = null
         initialCameraApplied = false
     }
 
@@ -330,7 +335,7 @@ internal class GdxClientRuntime(
     fun centerFromMinimap(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int): Boolean {
         val snapshot = session.state.snapshot ?: return false
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
-        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
+        queueCameraCenter(viewWidth, viewHeight, world.first, world.second)
         initialCameraApplied = true
         return true
     }
@@ -340,6 +345,7 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return
         val focus = snapshot.mapWidth / 2f to snapshot.mapHeight / 2f
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+        cameraTarget = null
         initialCameraApplied = true
     }
 
@@ -362,6 +368,21 @@ internal class GdxClientRuntime(
                 camera.panY.coerceIn(minPanY, 0f)
             }
         camera = camera.copy(panX = clampedPanX, panY = clampedPanY)
+        cameraTarget =
+            cameraTarget?.copy(
+                panX =
+                    if (worldWidthPx <= viewWidth) {
+                        (viewWidth - worldWidthPx) / 2f
+                    } else {
+                        cameraTarget?.panX?.coerceIn(minPanX, 0f) ?: clampedPanX
+                    },
+                panY =
+                    if (worldHeightPx <= viewHeight) {
+                        (viewHeight - worldHeightPx) / 2f
+                    } else {
+                        cameraTarget?.panY?.coerceIn(minPanY, 0f) ?: clampedPanY
+                    }
+            )
     }
 
     fun ensurePlayableView(viewWidth: Int, viewHeight: Int) {
@@ -798,6 +819,23 @@ internal class GdxClientRuntime(
         noticeUntilMillis = System.currentTimeMillis() + 2500L
     }
 
+    private fun queueCameraCenter(viewWidth: Int, viewHeight: Int, worldX: Float, worldY: Float) {
+        cameraTarget = centerCameraOnWorld(camera, viewWidth, viewHeight, worldX, worldY)
+    }
+
+    private fun updateCameraGlide() {
+        val target = cameraTarget ?: return
+        val nextPanX = glideValue(camera.panX, target.panX)
+        val nextPanY = glideValue(camera.panY, target.panY)
+        camera = camera.copy(panX = nextPanX, panY = nextPanY)
+        if (abs(nextPanX - target.panX) < 0.5f && abs(nextPanY - target.panY) < 0.5f) {
+            camera = target
+            cameraTarget = null
+        }
+    }
+
+    private fun glideValue(current: Float, target: Float): Float = current + ((target - current) * 0.24f)
+
     private fun maybeRaiseAttackAlert() {
         val damage = session.state.lastDamageActivity ?: return
         if (damage.tick == lastAttackAlertTick) return
@@ -869,7 +907,7 @@ internal class GdxClientRuntime(
         if (focusOnRecall) {
             val focus = computeSelectionCentroid(snapshot, ids)
             if (focus != null) {
-                camera = centerCameraOnWorld(camera, viewWidth, viewHeight, focus.first, focus.second)
+                queueCameraCenter(viewWidth, viewHeight, focus.first, focus.second)
             }
         }
         lastGroupRecall = group

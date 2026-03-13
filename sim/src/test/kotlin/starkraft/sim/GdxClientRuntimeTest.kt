@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ import starkraft.sim.client.PlayControlState
 import starkraft.sim.client.PlayScenario
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.math.abs
 
 class GdxClientRuntimeTest {
     private val json = Json { encodeDefaults = true }
@@ -104,6 +106,7 @@ class GdxClientRuntimeTest {
         val runtime = runtime(tempDir)
 
         val centered = runtime.centerFromMinimap(screenX = 50f, screenY = 560f, viewWidth = 1280, viewHeight = 720)
+        repeat(20) { runtime.tick() }
 
         assertTrue(centered)
         assertTrue(runtime.camera.panX != 0f || runtime.camera.panY != 0f)
@@ -126,8 +129,28 @@ class GdxClientRuntimeTest {
 
         runtime.ensureInitialCamera(viewWidth = 1280, viewHeight = 720)
 
-        assertEquals(510f, runtime.camera.panX)
-        assertEquals(230f, runtime.camera.panY)
+        assertEquals(320f, runtime.camera.panX)
+        assertEquals(40f, runtime.camera.panY)
+    }
+
+    @Test
+    fun `centering the camera glides toward the target view`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.centerOnViewedFaction(viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(0f, runtime.camera.panX)
+        assertEquals(0f, runtime.camera.panY)
+
+        runtime.tick()
+
+        assertNotEquals(0f, runtime.camera.panX)
+        assertNotEquals(0f, runtime.camera.panY)
+
+        repeat(24) { runtime.tick() }
+
+        assertTrue(abs(runtime.camera.panX - 510f) < 1f)
+        assertTrue(abs(runtime.camera.panY - 230f) < 1f)
     }
 
     @Test
