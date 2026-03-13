@@ -80,6 +80,7 @@ internal data class ClientTickActivity(
 
 internal data class ClientDamageActivity(
     val tick: Int,
+    val attackerIds: IntArray = intArrayOf(),
     val targetIds: IntArray = intArrayOf(),
     val totalDamage: Int = 0,
     val killedTargetIds: IntArray = intArrayOf()
@@ -524,11 +525,13 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
         }
         "damage" -> {
             val events = obj["events"]?.jsonArray ?: return null
+            val attackerIds = IntArray(events.size)
             val targetIds = IntArray(events.size)
             val killedIds = ArrayList<Int>(events.size)
             var totalDamage = 0
             events.forEachIndexed { index, event ->
                 val eventObj = event.jsonObject
+                attackerIds[index] = eventObj["attackerId"]?.jsonPrimitive?.content?.toIntOrNull() ?: -1
                 targetIds[index] = eventObj["targetId"]?.jsonPrimitive?.content?.toIntOrNull() ?: -1
                 totalDamage += eventObj["damage"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
                 if (eventObj["killed"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true) {
@@ -539,6 +542,7 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
                 damageActivity =
                     ClientDamageActivity(
                         tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
+                        attackerIds = attackerIds,
                         targetIds = targetIds,
                         totalDamage = totalDamage,
                         killedTargetIds = killedIds.toIntArray()

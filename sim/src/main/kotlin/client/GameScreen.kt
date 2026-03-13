@@ -107,8 +107,10 @@ internal class GameScreen(
         if (runtime.consumeAttackCommandSound()) {
             assets.attackSound.play(0.55f)
         }
-        if (runtime.consumeCombatSound()) {
-            assets.combatSound.play(0.42f)
+        when (runtime.consumeCombatSoundKind()) {
+            CombatSoundKind.MELEE -> assets.meleeCombatSound.play(0.44f)
+            CombatSoundKind.RANGED -> assets.rangedCombatSound.play(0.42f)
+            null -> Unit
         }
         if (runtime.consumeDeathSound()) {
             assets.deathSound.play(0.56f)

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir
 import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
+import starkraft.sim.client.CombatSoundKind
 import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.CompletionFlashKind
@@ -221,7 +222,7 @@ class GdxClientRuntimeTest {
     @Test
     fun `viewed faction damage raises attack warning and sound`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
-        runtime.session.state.lastDamageActivity = ClientDamageActivity(tick = 8, targetIds = intArrayOf(4), totalDamage = 6)
+        runtime.session.state.lastDamageActivity = ClientDamageActivity(tick = 8, attackerIds = intArrayOf(9), targetIds = intArrayOf(4), totalDamage = 6)
 
         runtime.tick()
 
@@ -229,9 +230,37 @@ class GdxClientRuntimeTest {
         assertTrue(runtime.isDamageFlashActive(4))
         assertFalse(runtime.isDamageFlashActive(5))
         assertTrue(runtime.consumeAttackAlertSound())
-        assertTrue(runtime.consumeCombatSound())
-        assertFalse(runtime.consumeCombatSound())
+        assertEquals(CombatSoundKind.RANGED, runtime.consumeCombatSoundKind())
+        assertNull(runtime.consumeCombatSoundKind())
         assertFalse(runtime.consumeAttackAlertSound())
+    }
+
+    @Test
+    fun `melee attacker selects melee combat sound`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 7,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 6f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Gauss"),
+                                EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "infantry", x = 8f, y = 6f, dir = 0f, hp = 35, maxHp = 35, armor = 0, weaponId = "Claw")
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+        runtime.session.state.lastDamageActivity = ClientDamageActivity(tick = 8, attackerIds = intArrayOf(9), targetIds = intArrayOf(4), totalDamage = 6)
+
+        runtime.tick()
+
+        assertEquals(CombatSoundKind.MELEE, runtime.consumeCombatSoundKind())
     }
 
     @Test

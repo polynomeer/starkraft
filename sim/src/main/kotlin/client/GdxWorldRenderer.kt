@@ -997,6 +997,9 @@ internal class GdxWorldRenderer(
             shape.circle(x, y, core)
             shape.color = Color(1.00f, 0.92f, 0.72f, 0.62f * fade)
             shape.circle(x, y, core * 0.42f)
+            shape.color = Color(0.22f, 0.24f, 0.22f, 0.20f * fade)
+            shape.circle(x + (progress * 6f), y - (progress * 10f), outer * 0.82f)
+            shape.circle(x - (progress * 8f), y - (progress * 6f), outer * 0.64f)
             val shard = if (burst.isStructure) 18f else 12f
             shape.color = Color(1.00f, 0.76f, 0.44f, 0.50f * fade)
             shape.rectLine(x - shard, y, x - (shard * 0.35f), y, 2.2f)
@@ -1007,6 +1010,19 @@ internal class GdxWorldRenderer(
             shape.rectLine(x + (shard * 0.72f), y - (shard * 0.72f), x + (shard * 0.22f), y - (shard * 0.22f), 1.6f)
             shape.rectLine(x - (shard * 0.72f), y + (shard * 0.72f), x - (shard * 0.22f), y + (shard * 0.22f), 1.6f)
             shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
+            val debrisColor =
+                when {
+                    burst.typeId.contains("Zergling", ignoreCase = true) -> Color(0.74f, 0.46f, 0.34f, 0.44f * fade)
+                    burst.isStructure -> Color(0.52f, 0.50f, 0.44f, 0.42f * fade)
+                    else -> Color(0.68f, 0.66f, 0.60f, 0.44f * fade)
+                }
+            shape.color = debrisColor
+            shape.rect(x - (shard * 0.46f), y + (shard * 0.16f), 5f, 3f)
+            shape.rect(x + (shard * 0.22f), y - (shard * 0.34f), 4f, 3f)
+            if (burst.isStructure) {
+                shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
+                shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
+            }
         }
     }
 

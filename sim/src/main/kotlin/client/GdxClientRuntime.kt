@@ -37,7 +37,7 @@ internal class GdxClientRuntime(
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
     private var pendingAttackCommandSound: Boolean = false
-    private var pendingCombatSound: Boolean = false
+    private var pendingCombatSoundKind: CombatSoundKind? = null
     private var pendingDeathSound: Boolean = false
     private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
@@ -112,7 +112,7 @@ internal class GdxClientRuntime(
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
-    fun consumeCombatSound(): Boolean = pendingCombatSound.also { pendingCombatSound = false }
+    fun consumeCombatSoundKind(): CombatSoundKind? = pendingCombatSoundKind.also { pendingCombatSoundKind = null }
     fun consumeDeathSound(): Boolean = pendingDeathSound.also { pendingDeathSound = false }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
@@ -898,7 +898,13 @@ internal class GdxClientRuntime(
         recentDamageEntityIds = damage.targetIds.toSet()
         recentDamageUntilMillis = System.currentTimeMillis() + DAMAGE_FLASH_DURATION_MS
         if (damage.targetIds.isNotEmpty()) {
-            pendingCombatSound = true
+            val snapshot = session.state.snapshot
+            pendingCombatSoundKind =
+                if (snapshot != null && damage.attackerIds.any { attackerId -> snapshot.entities.firstOrNull { it.id == attackerId }?.let(::isMeleeAttacker) == true }) {
+                    CombatSoundKind.MELEE
+                } else {
+                    CombatSoundKind.RANGED
+                }
         }
         val snapshot = session.state.snapshot ?: return
         val viewedFaction = session.state.viewedFaction ?: return
@@ -968,6 +974,7 @@ internal class GdxClientRuntime(
                     y = entity.y,
                     isStructure = entity.footprintWidth != null && entity.footprintHeight != null,
                     faction = entity.faction,
+                    typeId = entity.typeId,
                     expiresAtMillis = now + DEATH_BURST_DURATION_MS
                 )
             deathSound = true
@@ -976,6 +983,10 @@ internal class GdxClientRuntime(
             pendingDeathSound = true
         }
     }
+
+    private fun isMeleeAttacker(entity: EntitySnapshot): Boolean =
+        entity.weaponId?.contains("Claw", ignoreCase = true) == true ||
+            entity.typeId.contains("Zergling", ignoreCase = true)
 
     private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {
         val snapshot = session.state.snapshot ?: return
@@ -1025,5 +1036,11 @@ internal data class DeathBurst(
     val y: Float,
     val isStructure: Boolean,
     val faction: Int,
+    val typeId: String,
     val expiresAtMillis: Long
 )
+
+internal enum class CombatSoundKind {
+    RANGED,
+    MELEE
+}
