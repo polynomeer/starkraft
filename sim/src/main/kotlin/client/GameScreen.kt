@@ -444,6 +444,9 @@ internal class GameScreen(
         centerStatusLabel.setText(buildCenterStatusLine())
         queueStatusLabel.setText(buildQueueStatusLine())
         queueHeaderLabel.setText(buildQueueHeaderLine())
+        centerStatusLabel.color = currentCenterStatusTone()
+        queueHeaderLabel.color = currentQueueHeaderTone()
+        queueStatusLabel.color = currentQueueStatusTone()
         selectionRosterLabel.setText(buildSelectionRosterLine())
         factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
@@ -460,6 +463,7 @@ internal class GameScreen(
         topSelectionLabel.setText(buildTopSelectionLine())
         modeLabel.setText(buildTopModeLine())
         statusBadgeLabel.setText(buildStatusBadgeLine())
+        statusBadgeLabel.color = currentStatusBadgeTone()
         val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
         commandHintLabel.setText(buildCommandHintLine())
@@ -1179,6 +1183,37 @@ internal class GameScreen(
             runtime.groundMode != null -> Color(0.14f, 0.22f, 0.18f, 0.76f)
             runtime.noticeLine() != null -> Color(0.18f, 0.16f, 0.10f, 0.76f)
             else -> Color(0.08f, 0.14f, 0.18f, 0.62f)
+        }
+
+    private fun currentCenterStatusTone(): Color =
+        when {
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.60f, 0.70f, 0.76f, 0.92f)
+            buildCenterStatusLine() == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
+            else -> Color(0.90f, 0.94f, 0.98f, 0.94f)
+        }
+
+    private fun currentQueueHeaderTone(): Color =
+        when (buildQueueHeaderLine()) {
+            "PRODUCTION" -> Color(1.00f, 0.86f, 0.46f, 0.96f)
+            "RESEARCH" -> Color(0.74f, 0.86f, 1.00f, 0.96f)
+            "CONSTRUCT" -> Color(0.70f, 0.98f, 0.78f, 0.96f)
+            else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
+        }
+
+    private fun currentQueueStatusTone(): Color =
+        when (buildQueueHeaderLine()) {
+            "PRODUCTION" -> Color(1.00f, 0.92f, 0.68f, 0.94f)
+            "RESEARCH" -> Color(0.84f, 0.92f, 1.00f, 0.94f)
+            "CONSTRUCT" -> Color(0.82f, 1.00f, 0.88f, 0.94f)
+            else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
+        }
+
+    private fun currentStatusBadgeTone(): Color =
+        when {
+            runtime.attackWarningLine() != null -> Color(1.00f, 0.70f, 0.58f, 0.98f)
+            runtime.noticeLine() != null -> Color(1.00f, 0.90f, 0.62f, 0.98f)
+            runtime.playControlState.paused -> Color(0.82f, 0.88f, 0.96f, 0.96f)
+            else -> Color(0.62f, 0.96f, 0.80f, 0.96f)
         }
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
