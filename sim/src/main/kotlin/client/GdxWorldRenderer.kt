@@ -272,10 +272,33 @@ internal class GdxWorldRenderer(
                     shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = completionFlashAlpha(selected) }
+                    val completionColor = completionFlashColor(runtime, entity.id)
+                    val sparkColor = completionSparkColor(runtime, entity.id)
+                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
                     shape.rect(left - 9f, top - 9f, w + 18f, h + 18f)
-                    shape.color = completionFlashColor(runtime, entity.id)
-                    shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                    shape.color = completionColor
+                    when (runtime.completionFlashKind(entity.id)) {
+                        CompletionFlashKind.CONSTRUCTION -> {
+                            shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                            shape.color = sparkColor.cpy().apply { a = 0.84f }
+                            shape.rect(left - 8f, top + (h * 0.5f), w + 16f, 2f)
+                            shape.rect(left + (w * 0.5f), top - 8f, 2f, h + 16f)
+                        }
+                        CompletionFlashKind.PRODUCTION -> {
+                            shape.rect(left - 6f, top - 2f, w + 12f, h + 4f)
+                            shape.color = sparkColor.cpy().apply { a = 0.86f }
+                            shape.rect(left - 8f, top + h + 2f, w + 16f, 3f)
+                            shape.rect(left - 8f, top - 5f, w + 16f, 3f)
+                        }
+                        CompletionFlashKind.RESEARCH, null -> {
+                            shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                            shape.color = sparkColor.cpy().apply { a = 0.84f }
+                            shape.rect(left + (w * 0.18f), top - 7f, w * 0.64f, 2f)
+                            shape.rect(left + (w * 0.18f), top + h + 5f, w * 0.64f, 2f)
+                            shape.rect(left - 7f, top + (h * 0.18f), 2f, h * 0.64f)
+                            shape.rect(left + w + 5f, top + (h * 0.18f), 2f, h * 0.64f)
+                        }
+                    }
                 }
                 shape.color = Color(0f, 0f, 0f, 0.22f)
                 shape.rect(left + 3f, top + 3f, w, h)
@@ -304,10 +327,33 @@ internal class GdxWorldRenderer(
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = completionFlashAlpha(selected) }
+                    val completionColor = completionFlashColor(runtime, entity.id)
+                    val sparkColor = completionSparkColor(runtime, entity.id)
+                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
                     shape.circle(screenX, screenY, if (selected) 17f else 15f)
-                    shape.color = completionFlashColor(runtime, entity.id)
-                    shape.circle(screenX, screenY, if (selected) 15f else 13f)
+                    shape.color = completionColor
+                    when (runtime.completionFlashKind(entity.id)) {
+                        CompletionFlashKind.CONSTRUCTION -> {
+                            shape.rect(screenX - 8f, screenY - 8f, 16f, 16f)
+                            shape.color = sparkColor
+                            shape.rect(screenX - 10f, screenY - 1f, 20f, 2f)
+                            shape.rect(screenX - 1f, screenY - 10f, 2f, 20f)
+                        }
+                        CompletionFlashKind.PRODUCTION -> {
+                            shape.circle(screenX, screenY, if (selected) 15f else 13f)
+                            shape.color = sparkColor
+                            shape.rect(screenX - 10f, screenY - 5f, 20f, 3f)
+                            shape.rect(screenX - 10f, screenY + 2f, 20f, 3f)
+                        }
+                        CompletionFlashKind.RESEARCH, null -> {
+                            shape.circle(screenX, screenY, if (selected) 15f else 13f)
+                            shape.color = sparkColor
+                            shape.rectLine(screenX - 8f, screenY, screenX, screenY - 8f, 1.8f)
+                            shape.rectLine(screenX, screenY - 8f, screenX + 8f, screenY, 1.8f)
+                            shape.rectLine(screenX + 8f, screenY, screenX, screenY + 8f, 1.8f)
+                            shape.rectLine(screenX, screenY + 8f, screenX - 8f, screenY, 1.8f)
+                        }
+                    }
                 }
                 drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
             }
