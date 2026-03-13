@@ -439,6 +439,9 @@ internal class GdxWorldRenderer(
                 shape.rect(screenX - 7f, screenY + 9f, (entity.weaponCooldownTicks.coerceAtMost(20) / 20f) * 14f, 2f)
                 val muzzleX = screenX + directionDx(entity.dir, 8f)
                 val muzzleY = screenY + directionDy(entity.dir, 8f)
+                val flashPulse = ambientPulse(420L)
+                shape.color = Color(1.00f, 0.80f, 0.46f, 0.26f + (flashPulse * 0.16f))
+                shape.circle(muzzleX, muzzleY, 6f + (flashPulse * 2f))
                 shape.color = Color(1.00f, 0.84f, 0.48f, 0.48f)
                 shape.circle(muzzleX, muzzleY, 3.5f)
                 shape.color = Color(1.00f, 0.63f, 0.28f, 0.78f)
@@ -450,6 +453,8 @@ internal class GdxWorldRenderer(
                     shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.1f)
                     shape.color = Color(1.00f, 0.88f, 0.62f, 0.24f)
                     shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.2f)
+                    shape.color = Color(1.00f, 0.78f, 0.44f, 0.26f)
+                    shape.circle(targetX, targetY, 8f)
                 }
             }
             if (entity.pathRemainingNodes > 0) {

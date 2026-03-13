@@ -34,29 +34,50 @@ internal class MainMenuScreen(
             Table().apply {
                 setFillParent(true)
                 background = assets.panelDrawable(Color(0.03f, 0.06f, 0.09f, 0.96f))
-                pad(28f)
+                pad(24f)
             }
 
         val hero =
             Table().apply {
-                background = assets.panelDrawable(Color(0.08f, 0.13f, 0.18f, 0.94f))
-                pad(24f)
-                defaults().left().padBottom(10f)
-                add(Label("STARKRAFT", assets.titleLabelStyle)).left().row()
-                add(Label("Deterministic RTS sandbox with a live libGDX command deck.", assets.bodyLabelStyle)).width(480f).left().row()
-                add(statusLabel).left().row()
+                background = null
+                pad(12f)
+                defaults().left().padBottom(8f)
+                add(
+                    Table().apply {
+                        background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
+                        pad(4f, 10f, 4f, 10f)
+                        add(Label("STARKRAFT", assets.titleLabelStyle)).left()
+                    }
+                ).left().row()
+                add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).width(420f).height(2f).left().padBottom(12f).row()
+                add(Label("Deterministic RTS sandbox with a live libGDX command deck.", assets.bodyLabelStyle)).width(520f).left().row()
+                add(
+                    Table().apply {
+                        background = assets.panelDrawable(Color(0.08f, 0.13f, 0.18f, 0.68f))
+                        pad(8f, 10f, 8f, 10f)
+                        add(statusLabel).left()
+                    }
+                ).width(520f).left().padTop(8f).row()
             }
 
         val controlsPanel =
             Table().apply {
-                background = assets.panelDrawable(Color(0.08f, 0.11f, 0.15f, 0.90f))
-                pad(18f)
+                background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.92f))
+                pad(16f)
                 defaults().left().pad(6f)
             }
+        controlsPanel.add(
+            Table().apply {
+                background = assets.panelDrawable(Color(0.14f, 0.22f, 0.27f, 0.94f))
+                pad(4f, 8f, 4f, 8f)
+                add(Label("TACTICAL CONSOLE", assets.titleLabelStyle)).left()
+            }
+        ).left().expandX().fillX().row()
+        controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).expandX().fillX().padBottom(8f).row()
         controlsPanel.add(Label("Scenario", assets.titleLabelStyle)).left().row()
         controlsPanel.add(scenarioLabel).left().row()
         controlsPanel.add(summaryLabel).width(340f).left().padBottom(10f).row()
-        controlsLabel.setText("keys: left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
+        controlsLabel.setText("keys  left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
         controlsPanel.add(controlsLabel).width(340f).left().padBottom(12f).row()
 
         val scenarioButtons = Table()
@@ -64,6 +85,9 @@ internal class MainMenuScreen(
         scenarioButtons.add(makeButton("Previous Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(-1); refresh() }).width(164f)
         scenarioButtons.add(makeButton("Next Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(1); refresh() }).width(164f)
         controlsPanel.add(scenarioButtons).left().row()
+
+        controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f)) }).height(1f).expandX().fillX().padTop(6f).padBottom(4f).row()
+        controlsPanel.add(Label("Presets", assets.titleLabelStyle)).left().row()
 
         val presetButtons = Table()
         presetButtons.defaults().pad(4f)
@@ -73,11 +97,13 @@ internal class MainMenuScreen(
         presetButtons.add(makeButton("Load Alt", style = assets.secondaryButtonStyle()) { runtime.loadPreset("alt"); refresh() }).width(164f)
         controlsPanel.add(presetButtons).left().padBottom(8f).row()
 
+        controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f)) }).height(1f).expandX().fillX().padTop(4f).padBottom(4f).row()
+        controlsPanel.add(Label("Session", assets.titleLabelStyle)).left().row()
         controlsPanel.add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
-        controlsPanel.add(makeButton("Restart Match", style = assets.subtleButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
-        controlsPanel.add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(336f).row()
+        controlsPanel.add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
+        controlsPanel.add(makeButton("Quit", style = assets.buttonStyle(Color(0.32f, 0.16f, 0.16f, 0.98f), Color(0.40f, 0.18f, 0.18f, 0.98f))) { Gdx.app.exit() }).width(336f).row()
 
-        root.add(hero).expand().fill().left().top().padRight(16f)
+        root.add(hero).expand().fill().left().top().padRight(20f)
         root.add(controlsPanel).width(380f).right().top()
         stage.addActor(root)
 
