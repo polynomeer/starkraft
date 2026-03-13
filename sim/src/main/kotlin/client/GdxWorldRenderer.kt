@@ -34,6 +34,10 @@ internal class GdxWorldRenderer(
             entity.underConstruction -> completionBuildSparkColor
             else -> Color(0.80f, 0.80f, 0.80f, 0.92f)
         }
+
+    private fun damageFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.14f
+
+    private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.12f
     private val fogColor = Color(0.07f, 0.12f, 0.14f, 0.18f)
     private val shroudColor = Color(0.05f, 0.09f, 0.11f, 0.32f)
     private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
@@ -255,16 +259,16 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0f, 0f, 0f, 0.12f)
                 shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, 0.18f)
-                    shape.rect(left - 10f, top - 10f, w + 20f, h + 20f)
+                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, damageFlashAlpha(selected))
+                    shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
                     shape.color = impactFlashColor
-                    shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                    shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = 0.14f }
-                    shape.rect(left - 11f, top - 11f, w + 22f, h + 22f)
+                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = completionFlashAlpha(selected) }
+                    shape.rect(left - 9f, top - 9f, w + 18f, h + 18f)
                     shape.color = completionFlashColor(runtime, entity.id)
-                    shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
+                    shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
                 }
                 if (selected) {
                     val pulse = selectionPulse()
@@ -295,19 +299,19 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0f, 0f, 0f, 0.20f)
                 shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, 0.12f)
-                    shape.circle(screenX, screenY, if (selected) 18f else 15f)
+                    shape.color = Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, damageFlashAlpha(selected))
+                    shape.circle(screenX, screenY, if (selected) 16f else 14f)
                     shape.color = impactFlashColor
-                    shape.circle(screenX, screenY, if (selected) 15.5f else 13f)
+                    shape.circle(screenX, screenY, if (selected) 13.5f else 12f)
                     shape.color = impactSparkColor
                     shape.rect(screenX - 1.5f, screenY - 9f, 3f, 18f)
                     shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
                 if (runtime.isCompletionFlashActive(entity.id)) {
-                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = 0.14f }
-                    shape.circle(screenX, screenY, if (selected) 19f else 16f)
+                    shape.color = completionFlashColor(runtime, entity.id).cpy().apply { a = completionFlashAlpha(selected) }
+                    shape.circle(screenX, screenY, if (selected) 17f else 15f)
                     shape.color = completionFlashColor(runtime, entity.id)
-                    shape.circle(screenX, screenY, if (selected) 17f else 14f)
+                    shape.circle(screenX, screenY, if (selected) 15f else 13f)
                 }
                 if (selected) {
                     val pulse = selectionPulse()
@@ -898,9 +902,9 @@ internal class GdxWorldRenderer(
         when (ping.kind) {
             GroundPingKind.MOVE -> {
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 20f + (pulse * 10f))
+                shape.circle(x, y, 18f + (pulse * 8f))
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.12f))
-                shape.circle(x, y, 12f + (pulse * 6f))
+                shape.circle(x, y, 10f + (pulse * 5f))
                 shape.color = Color(0.74f, 1.00f, 0.82f, 0.96f)
                 shape.rect(x - 2f, y - 10f, 4f, 20f)
                 shape.rect(x - 10f, y - 2f, 20f, 4f)
@@ -911,9 +915,9 @@ internal class GdxWorldRenderer(
             }
             GroundPingKind.ATTACK -> {
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 22f + (pulse * 10f))
+                shape.circle(x, y, 20f + (pulse * 8f))
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.10f))
-                shape.circle(x, y, 14f + (pulse * 6f))
+                shape.circle(x, y, 12f + (pulse * 5f))
                 shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
                 shape.rectLine(x - 10f, y - 10f, x + 10f, y + 10f, 2.2f)
                 shape.rectLine(x - 10f, y + 10f, x + 10f, y - 10f, 2.2f)
@@ -939,9 +943,9 @@ internal class GdxWorldRenderer(
             }
             GroundPingKind.INVALID -> {
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 20f + (pulse * 8f))
+                shape.circle(x, y, 18f + (pulse * 7f))
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.08f))
-                shape.circle(x, y, 12f + (pulse * 4f))
+                shape.circle(x, y, 10f + (pulse * 4f))
                 shape.color = Color(1.00f, 0.76f, 0.76f, 0.96f)
                 shape.rectLine(x - 9f, y - 9f, x + 9f, y + 9f, 2f)
                 shape.rectLine(x - 9f, y + 9f, x + 9f, y - 9f, 2f)
