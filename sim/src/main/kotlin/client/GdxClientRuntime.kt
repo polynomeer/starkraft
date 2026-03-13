@@ -188,7 +188,7 @@ internal class GdxClientRuntime(
         if (intent is ClientIntent.Command) {
             session.append(intent)
             recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
-            recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
+            recentGroundPingUntilMillis = System.currentTimeMillis() + 780L
             groundMode = null
         }
     }
@@ -202,7 +202,7 @@ internal class GdxClientRuntime(
         val tileY = floor(camera.screenToWorldY(screenY)).toInt()
         if (!isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)) {
             recentGroundPing = GroundPing(tileX + 0.5f, tileY + 0.5f, GroundPingKind.INVALID)
-            recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
+            recentGroundPingUntilMillis = System.currentTimeMillis() + 780L
             showNotice("invalid build placement")
             return
         }
@@ -220,7 +220,7 @@ internal class GdxClientRuntime(
             )
         )
         recentGroundPing = GroundPing(tileX + (spec.width / 2f), tileY + (spec.height / 2f), GroundPingKind.BUILD)
-        recentGroundPingUntilMillis = System.currentTimeMillis() + 900L
+        recentGroundPingUntilMillis = System.currentTimeMillis() + 780L
         buildModeTypeId = null
     }
 
@@ -816,7 +816,7 @@ internal class GdxClientRuntime(
 
     private fun showNotice(message: String) {
         noticeMessage = message
-        noticeUntilMillis = System.currentTimeMillis() + 2500L
+        noticeUntilMillis = System.currentTimeMillis() + 2200L
     }
 
     private fun queueCameraCenter(viewWidth: Int, viewHeight: Int, worldX: Float, worldY: Float) {
@@ -840,7 +840,7 @@ internal class GdxClientRuntime(
         val damage = session.state.lastDamageActivity ?: return
         if (damage.tick == lastAttackAlertTick) return
         recentDamageEntityIds = damage.targetIds.toSet()
-        recentDamageUntilMillis = System.currentTimeMillis() + 650L
+        recentDamageUntilMillis = System.currentTimeMillis() + 720L
         val snapshot = session.state.snapshot ?: return
         val viewedFaction = session.state.viewedFaction ?: return
         val affected =
@@ -850,7 +850,7 @@ internal class GdxClientRuntime(
         if (!affected) return
         lastAttackAlertTick = damage.tick
         attackWarningMessage = "Warning: under attack"
-        attackWarningUntilMillis = System.currentTimeMillis() + 1800L
+        attackWarningUntilMillis = System.currentTimeMillis() + 1600L
         pendingAttackAlertSound = true
     }
 
@@ -878,7 +878,7 @@ internal class GdxClientRuntime(
         if (completed.isNotEmpty()) {
             recentCompletionEntityIds = completed.keys.map { it.id }.toSet()
             recentCompletionKindsByEntityId = completed.entries.associate { it.key.id to it.value }
-            recentCompletionUntilMillis = System.currentTimeMillis() + 1200L
+            recentCompletionUntilMillis = System.currentTimeMillis() + 1450L
             pendingCompletionAlertSound = true
             val lead = completed.keys.first()
             val label =

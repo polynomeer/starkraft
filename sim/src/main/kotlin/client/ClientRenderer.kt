@@ -1465,17 +1465,17 @@ internal fun buildPreviewLabel(spec: BuildPreviewSpec?, valid: Boolean): BuildPr
     if (spec == null) return null
     return BuildPreviewLabel(
         title = spec.typeId,
-        cost = "cost=${spec.mineralCost}/${spec.gasCost}",
-        size = "size=${spec.width}x${spec.height} clr=${spec.clearance}",
+        cost = "M${spec.mineralCost} G${spec.gasCost}",
+        size = "${spec.width}x${spec.height} C${spec.clearance}",
         valid = valid
     )
 }
 
 internal fun buildEntityStatusLabel(entity: EntitySnapshot): String? =
     when {
-        entity.underConstruction -> "build ${entity.constructionRemainingTicks ?: 0}"
-        entity.activeProductionType != null -> "train ${entity.activeProductionType} ${entity.activeProductionRemainingTicks}"
-        entity.activeResearchTech != null -> "research ${entity.activeResearchTech} ${entity.activeResearchRemainingTicks}"
+        entity.underConstruction -> "B ${entity.constructionRemainingTicks ?: 0}"
+        entity.activeProductionType != null -> "T ${entity.activeProductionType} ${entity.activeProductionRemainingTicks}"
+        entity.activeResearchTech != null -> "R ${entity.activeResearchTech} ${entity.activeResearchRemainingTicks}"
         else -> null
     }
 
