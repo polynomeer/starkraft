@@ -18,6 +18,14 @@ internal class GdxWorldRenderer(
     private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
     private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
     private val selectionSoftColor = Color(0.44f, 0.80f, 0.92f, 0.28f)
+
+    private fun pingTone(kind: GroundPingKind): Color =
+        when (kind) {
+            GroundPingKind.MOVE -> Color(0.34f, 0.98f, 0.58f, 0.94f)
+            GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.96f)
+            GroundPingKind.BUILD -> Color(0.64f, 0.84f, 1.00f, 0.96f)
+            GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.96f)
+        }
     private val fogColor = Color(0.07f, 0.12f, 0.14f, 0.18f)
     private val shroudColor = Color(0.05f, 0.09f, 0.11f, 0.32f)
     private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
@@ -761,13 +769,7 @@ internal class GdxWorldRenderer(
         runtime.currentGroundPing()?.let { ping ->
             val x = left + (ping.worldX / snapshot.mapWidth) * boundsWidth
             val y = top + (ping.worldY / snapshot.mapHeight) * boundsHeight
-            shape.color =
-                when (ping.kind) {
-                    GroundPingKind.MOVE -> Color(0.38f, 0.92f, 0.56f, 0.75f)
-                    GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.82f)
-                    GroundPingKind.BUILD -> Color(0.56f, 0.82f, 1.00f, 0.82f)
-                    GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.85f)
-                }
+            shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.82f)
             shape.circle(x, y, 5f)
             when (ping.kind) {
                 GroundPingKind.MOVE -> {
@@ -893,9 +895,9 @@ internal class GdxWorldRenderer(
         val pulse = ambientPulse(900L)
         when (ping.kind) {
             GroundPingKind.MOVE -> {
-                shape.color = Color(0.22f, 0.88f, 0.48f, 0.12f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
                 shape.circle(x, y, 20f + (pulse * 10f))
-                shape.color = Color(0.34f, 0.98f, 0.58f, 0.18f + (pulse * 0.12f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.12f))
                 shape.circle(x, y, 12f + (pulse * 6f))
                 shape.color = Color(0.74f, 1.00f, 0.82f, 0.96f)
                 shape.rect(x - 2f, y - 10f, 4f, 20f)
@@ -906,9 +908,9 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, 3.5f)
             }
             GroundPingKind.ATTACK -> {
-                shape.color = Color(0.96f, 0.34f, 0.22f, 0.12f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
                 shape.circle(x, y, 22f + (pulse * 10f))
-                shape.color = Color(1.00f, 0.50f, 0.30f, 0.20f + (pulse * 0.10f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.10f))
                 shape.circle(x, y, 14f + (pulse * 6f))
                 shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
                 shape.rectLine(x - 10f, y - 10f, x + 10f, y + 10f, 2.2f)
@@ -920,9 +922,9 @@ internal class GdxWorldRenderer(
             }
             GroundPingKind.BUILD -> {
                 val outer = 16f + (pulse * 4f)
-                shape.color = Color(0.42f, 0.76f, 1.00f, 0.14f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.14f + (pulse * 0.08f))
                 shape.rect(x - outer, y - outer, outer * 2f, outer * 2f)
-                shape.color = Color(0.58f, 0.86f, 1.00f, 0.22f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.rect(x - 10f, y - 10f, 20f, 20f)
                 shape.color = Color(0.84f, 0.96f, 1.00f, 0.94f)
                 shape.rect(x - 8f, y - 8f, 16f, 16f)
@@ -934,9 +936,9 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 8f, y + 8f, 4f, 4f)
             }
             GroundPingKind.INVALID -> {
-                shape.color = Color(0.92f, 0.18f, 0.18f, 0.12f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
                 shape.circle(x, y, 20f + (pulse * 8f))
-                shape.color = Color(0.96f, 0.26f, 0.26f, 0.18f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.08f))
                 shape.circle(x, y, 12f + (pulse * 4f))
                 shape.color = Color(1.00f, 0.76f, 0.76f, 0.96f)
                 shape.rectLine(x - 9f, y - 9f, x + 9f, y + 9f, 2f)

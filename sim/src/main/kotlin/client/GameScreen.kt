@@ -592,11 +592,11 @@ internal class GameScreen(
                         val cardTone =
                             when {
                                 button.actionId.startsWith("build") ->
-                                    Color(0.30f, 0.24f, 0.08f, 0.98f)
+                                    Color(0.20f, 0.24f, 0.32f, 0.98f)
                                 button.actionId.startsWith("train") || button.actionId.startsWith("research") ->
                                     Color(0.22f, 0.20f, 0.10f, 0.98f)
                                 button.actionId == "move" || button.actionId == "hold" ->
-                                    Color(0.07f, 0.24f, 0.28f, 0.98f)
+                                    Color(0.10f, 0.24f, 0.16f, 0.98f)
                                 button.actionId == "patrol" ->
                                     Color(0.10f, 0.20f, 0.30f, 0.98f)
                                 button.actionId == "attackMove" ->
@@ -630,9 +630,10 @@ internal class GameScreen(
                                                             when {
                                                                 actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
                                                             actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.78f + (activePulse * 0.10f))
-                                                            button.actionId == "attackMove" -> Color(1.00f, 0.54f, 0.30f, 0.72f)
-                                                            button.actionId.startsWith("build:") -> Color(0.96f, 0.78f, 0.34f, 0.72f)
+                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.76f)
+                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.74f)
                                                             button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.64f, 0.78f, 1.00f, 0.72f)
+                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
                                                             else -> Color(0.56f, 0.88f, 0.96f, 0.64f)
                                                         }
                                                     )
@@ -1436,6 +1437,14 @@ internal class GameScreen(
             runtime.groundMode != null -> Color(0.74f, 0.96f, 0.84f, 0.96f)
             groups.any { it.first == "Production" && it.second.isNotEmpty() } -> Color(0.88f, 0.92f, 0.98f, 0.96f)
             else -> Color(0.78f, 0.86f, 0.92f, 0.94f)
+        }
+
+    private fun pingTone(kind: GroundPingKind): Color =
+        when (kind) {
+            GroundPingKind.MOVE -> Color(0.34f, 0.98f, 0.58f, 0.94f)
+            GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.96f)
+            GroundPingKind.BUILD -> Color(0.64f, 0.84f, 1.00f, 0.96f)
+            GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.96f)
         }
 
     private fun commandGroupHeaderTone(group: String): Color =
