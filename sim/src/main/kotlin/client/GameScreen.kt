@@ -563,6 +563,7 @@ internal class GameScreen(
                         }
                     ).colspan(commandColumns).left().padBottom(4f).row()
                     group.second.forEachIndexed { index, button ->
+                        val activePulse = uiPulse()
                         val actor = makeButton(
                             commandButtonLabel(button),
                             runtime.actionHint(button.actionId),
@@ -593,13 +594,13 @@ internal class GameScreen(
                         val frameTone =
                             when {
                                 actor.isDisabled -> Color(0.05f, 0.06f, 0.08f, 0.94f)
-                                actor.isChecked -> Color(0.30f, 0.34f, 0.16f, 0.98f)
+                                actor.isChecked -> Color(0.34f + (activePulse * 0.10f), 0.38f + (activePulse * 0.08f), 0.14f, 0.98f)
                                 else -> cardTone
                             }
                         val shellTone =
                             when {
                                 actor.isDisabled -> Color(0.01f, 0.03f, 0.05f, 0.88f)
-                                actor.isChecked -> Color(0.38f, 0.32f, 0.12f, 0.98f)
+                                actor.isChecked -> Color(0.42f + (activePulse * 0.08f), 0.36f + (activePulse * 0.06f), 0.10f, 0.98f)
                                 else -> Color(0.01f, 0.03f, 0.05f, 0.98f)
                             }
                         add(
@@ -614,9 +615,9 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        when {
-                                                            actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
-                                                            actor.isChecked -> Color(1.00f, 0.90f, 0.44f, 0.82f)
+                                                            when {
+                                                                actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
+                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.78f + (activePulse * 0.10f))
                                                             button.actionId == "attackMove" -> Color(1.00f, 0.54f, 0.30f, 0.72f)
                                                             button.actionId.startsWith("build:") -> Color(0.96f, 0.78f, 0.34f, 0.72f)
                                                             button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.64f, 0.78f, 1.00f, 0.72f)
@@ -1040,6 +1041,7 @@ internal class GameScreen(
     private fun buildSelectionSlot(entity: EntitySnapshot): Table {
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
+        val focusPulse = if (focused) uiPulse(900L) else 0f
         val tone =
             when {
                 entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
@@ -1054,14 +1056,30 @@ internal class GameScreen(
             }
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
-            background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.12f, 0.96f) else Color(0.08f, 0.12f, 0.16f, 0.92f))
+            background =
+                assets.panelDrawable(
+                    if (focused) Color(0.26f + (focusPulse * 0.08f), 0.36f + (focusPulse * 0.06f), 0.10f, 0.96f)
+                    else Color(0.08f, 0.12f, 0.16f, 0.92f)
+                )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             pad(1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(if (focused) Color(0.34f, 0.42f, 0.10f, 0.98f) else tone)
+                    background =
+                        assets.panelDrawable(
+                            if (focused) Color(0.36f + (focusPulse * 0.08f), 0.46f + (focusPulse * 0.06f), 0.08f, 0.98f)
+                            else tone
+                        )
                     pad(if (focused) 2f else 1.5f)
-                    add(Table().apply { background = assets.panelDrawable(if (focused) Color(0.98f, 0.92f, 0.56f, 0.72f) else Color(1f, 1f, 1f, 0.08f)) }).height(2f).expandX().fillX().padBottom(2f).row()
+                    add(
+                        Table().apply {
+                            background =
+                                assets.panelDrawable(
+                                    if (focused) Color(1.00f, 0.94f, 0.60f, 0.68f + (focusPulse * 0.16f))
+                                    else Color(1f, 1f, 1f, 0.08f)
+                                )
+                        }
+                    ).height(2f).expandX().fillX().padBottom(2f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
                     add(
@@ -1251,7 +1269,7 @@ internal class GameScreen(
     }
 
     private fun buildCommandHintLine(): String =
-        runtime.hoverHintLine()
+        runtime.hoverHintLine()?.let(::compactHint)
             ?: when {
                 runtime.buildModeTypeId != null -> "Build armed"
                 runtime.groundMode != null -> "Order armed"
@@ -1281,6 +1299,26 @@ internal class GameScreen(
             "CONSTRUCT" -> Color(0.70f, 0.98f, 0.78f, 0.96f)
             else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
         }
+
+    private fun compactHint(raw: String): String {
+        val cleaned =
+            raw
+                .removePrefix("Switch to ")
+                .removeSuffix(" view")
+                .replace("faction ", "f")
+                .replace("selection", "sel")
+                .replace("current ", "")
+                .replace("camera ", "")
+                .replace("scenario ", "")
+                .replace("preset", "pst")
+                .trim()
+        return if (cleaned.length <= 24) cleaned else cleaned.take(21).trimEnd() + "..."
+    }
+
+    private fun uiPulse(periodMs: Long = 1200L): Float {
+        val cycle = (System.currentTimeMillis() % periodMs).toFloat() / periodMs.toFloat()
+        return if (cycle < 0.5f) cycle * 2f else (1f - cycle) * 2f
+    }
 
     private fun currentQueueStatusTone(): Color =
         when (buildQueueHeaderLine()) {
