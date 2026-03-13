@@ -298,6 +298,45 @@ fun main(args: Array<String>) {
         world.visions[idB] = Vision(6f)
         team2.add(idB)
     }
+    repeat(6) {
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.5f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.5f } ?: 0f
+        val id =
+            world.spawn(
+                Transform(79f + (it % 3) * 1.2f + jitterX, 76f + (it / 3) * 1.2f + jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
+        world.visions[id] = Vision(6f)
+        team2.add(id)
+    }
+    repeat(3) {
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.5f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.5f } ?: 0f
+        val id =
+            world.spawn(
+                Transform(67f + it * 1.4f + jitterX, 62f + jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
+        world.visions[id] = Vision(6f)
+        team2.add(id)
+    }
+    repeat(4) {
+        val jitterX = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val jitterY = rng?.let { (it.nextFloat() - 0.5f) * 0.6f } ?: 0f
+        val id =
+            world.spawn(
+                Transform(56f + (it % 2) * 1.6f + jitterX, 52f + (it / 2) * 1.5f + jitterY),
+                UnitTag(2, "Zergling"),
+                Health(35, 35),
+                WeaponRef("Claw")
+            )
+        world.visions[id] = Vision(6f)
+        team2.add(id)
+    }
     val mineralNodeId =
         world.spawn(
             Transform(14f, 10f),
@@ -338,6 +377,15 @@ fun main(args: Array<String>) {
             w = null
         )
     world.harvesters[workerId] = Harvester(targetNodeId = mineralNodeId, harvestPerTick = 2)
+    val enemyWorkerId =
+        world.spawn(
+            Transform(82.5f, 82f),
+            UnitTag(2, "Worker"),
+            Health(40, 40),
+            w = null
+        )
+    world.visions[enemyWorkerId] = Vision(6f)
+    world.harvesters[enemyWorkerId] = Harvester(targetNodeId = enemyMineralNodeId, harvestPerTick = 2)
 
     val replayPath = parseReplayPath(args)
     val scriptPath = parseScriptPath(args)
