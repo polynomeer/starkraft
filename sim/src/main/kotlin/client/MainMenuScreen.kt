@@ -155,15 +155,15 @@ internal class MainMenuScreen(
         summaryLabel.setWrap(true)
         statusLabel.setText(
             if (runtime.scenarioRestartRequired()) {
-                "Pending scenario switch. Entering the match will restart the play session."
+                "Scenario switch pending. Entering restarts play."
             } else {
-                "Live scenario ready. Enter match to attach to the current play session."
+                "Scenario live. Enter to attach."
             }
         )
         statusLabel.color = if (runtime.scenarioRestartRequired()) assets.alert else assets.ink
         enterMatchButton.setText(
             if (runtime.scenarioRestartRequired()) {
-                "Restart And Enter Match"
+                "Restart + Enter"
             } else {
                 "Enter Match"
             }

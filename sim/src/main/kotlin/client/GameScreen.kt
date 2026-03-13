@@ -610,7 +610,7 @@ internal class GameScreen(
         if (!raw.isNullOrBlank() && !raw.equals("selection hud: none", ignoreCase = true)) {
             return raw
         }
-        val snapshot = runtime.snapshot ?: return "Waiting for battlefield state"
+        val snapshot = runtime.snapshot ?: return "Awaiting view"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
             "$faction · ${snapshot.entities.size} live"
@@ -643,7 +643,7 @@ internal class GameScreen(
     }
 
     private fun buildSelectionRosterLine(): String {
-        val snapshot = runtime.snapshot ?: return "No roster data"
+        val snapshot = runtime.snapshot ?: return "No roster"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) {
             return "No card"
@@ -660,8 +660,8 @@ internal class GameScreen(
     }
 
     private fun buildFactionOverviewLine(): String {
-        val snapshot = runtime.snapshot ?: return "No battlefield telemetry"
-        if (snapshot.factions.isEmpty()) return "No faction telemetry"
+        val snapshot = runtime.snapshot ?: return "No telemetry"
+        if (snapshot.factions.isEmpty()) return "No faction data"
         return snapshot.factions.joinToString("\n") { faction ->
             val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
             "F${faction.faction}  M${faction.minerals}  G${faction.gas}  Vis${faction.visibleTiles}$viewed"
@@ -826,9 +826,9 @@ internal class GameScreen(
     }
 
     private fun buildCenterStatusLine(): String {
-        val snapshot = runtime.snapshot ?: return "Status unavailable"
+        val snapshot = runtime.snapshot ?: return "No status"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "No active card"
+        if (selected.isEmpty()) return "No status"
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val statusBits = buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("ord ${it.lowercase()}") }
@@ -842,7 +842,7 @@ internal class GameScreen(
                 add("cargo ${lead.harvestCargoKind ?: "res"}:${lead.harvestCargoAmount}")
             }
         }
-        return if (statusBits.isEmpty()) "Standing by" else statusBits.joinToString(" · ")
+        return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
     }
 
     private fun buildCenterFooterLine(): String =
@@ -854,9 +854,9 @@ internal class GameScreen(
         }
 
     private fun buildQueueStatusLine(): String {
-        val snapshot = runtime.snapshot ?: return "Queue unavailable"
+        val snapshot = runtime.snapshot ?: return "No queue"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "Queue idle"
+        if (selected.isEmpty()) return "Idle"
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val parts = buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
@@ -888,7 +888,7 @@ internal class GameScreen(
                 )
             }
         }
-        return if (parts.isEmpty()) "Queue idle" else parts.joinToString("  |  ")
+        return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
     }
 
     private fun buildQueueHeaderLine(): String {
@@ -1170,7 +1170,7 @@ internal class GameScreen(
                 runtime.buildModeTypeId != null -> "Placement mode armed"
                 runtime.groundMode != null -> "Ground order armed"
                 runtime.session.state.selectedIds.isNotEmpty() -> "Command palette ready"
-                else -> "Select units to unlock orders"
+                else -> "Select to unlock orders"
             }
 
     private fun currentActionBannerTone(): Color =
