@@ -293,6 +293,7 @@ class GdxClientRuntimeTest {
 
         assertEquals(1, runtime.activeDeathBursts().size)
         assertEquals(1, runtime.activeDeathRemains().size)
+        assertTrue(runtime.noticeLine()?.contains("enemy down") == true)
         assertTrue(runtime.consumeDeathSound())
         assertFalse(runtime.consumeDeathSound())
     }

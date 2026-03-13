@@ -983,6 +983,7 @@ internal class GdxClientRuntime(
         val vanished = previousEntitiesById.values.filter { it.id !in liveIds && it.faction > 0 }
         if (vanished.isEmpty()) return
         var deathSound = false
+        val viewedFaction = session.state.viewedFaction
         for (entity in vanished) {
             recentDeathBursts +=
                 DeathBurst(
@@ -1005,6 +1006,15 @@ internal class GdxClientRuntime(
                     expiresAtMillis = now + DEATH_REMAINS_DURATION_MS
                 )
             deathSound = true
+        }
+        if (viewedFaction != null) {
+            val friendlyLosses = vanished.count { it.faction == viewedFaction }
+            val enemyLosses = vanished.count { it.faction != viewedFaction }
+            when {
+                friendlyLosses > 0 && enemyLosses > 0 -> showNotice("trade ${enemyLosses}/${friendlyLosses}")
+                friendlyLosses > 0 -> showNotice(if (friendlyLosses == 1) "unit lost" else "$friendlyLosses lost")
+                enemyLosses > 0 -> showNotice(if (enemyLosses == 1) "enemy down" else "$enemyLosses enemies down")
+            }
         }
         if (deathSound) {
             pendingDeathSound = true
