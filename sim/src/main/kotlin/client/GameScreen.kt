@@ -72,7 +72,9 @@ internal class GameScreen(
     private val selectionHeadlineCard = Table()
     private val commandHintCard = Table()
     private val pauseOverlay = Table()
+    private val pauseHeaderCard = Table()
     private val helpOverlay = Table()
+    private val helpHeaderCard = Table()
     private val screenFade = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
     private val footerLabel = Label("", assets.mutedLabelStyle)
@@ -405,7 +407,7 @@ internal class GameScreen(
                     pad(12f)
                     defaults().pad(5f)
                     add(
-                        Table().apply {
+                        pauseHeaderCard.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
                             pad(4f, 10f, 4f, 10f)
                             add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
@@ -441,7 +443,7 @@ internal class GameScreen(
                     background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
                     pad(9f, 11f, 9f, 11f)
                     add(
-                        Table().apply {
+                        helpHeaderCard.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
                             pad(4f, 10f, 4f, 10f)
                             add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
@@ -558,6 +560,8 @@ internal class GameScreen(
         updateSelectionPager(snapshot)
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
+        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderTone())
+        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderTone())
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
@@ -1338,6 +1342,20 @@ internal class GameScreen(
         when {
             runtime.attackWarningLine() != null -> Color(0.66f, 0.18f, 0.14f, 0.94f)
             runtime.noticeLine() != null -> Color(0.38f, 0.28f, 0.10f, 0.92f)
+            else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
+        }
+
+    private fun currentPauseHeaderTone(): Color =
+        when {
+            runtime.attackWarningLine() != null -> Color(0.34f, 0.18f, 0.16f, 0.92f)
+            runtime.noticeLine() != null -> Color(0.30f, 0.24f, 0.10f, 0.92f)
+            else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
+        }
+
+    private fun currentHelpHeaderTone(): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.30f, 0.24f, 0.10f, 0.92f)
+            runtime.groundMode != null -> Color(0.16f, 0.28f, 0.20f, 0.92f)
             else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
         }
 

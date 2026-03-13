@@ -25,6 +25,10 @@ internal class MainMenuScreen(
     private val summaryLabel = Label("", assets.mutedLabelStyle)
     private val controlsLabel = Label("", assets.mutedLabelStyle)
     private val statusLabel = Label("ready", assets.bodyLabelStyle)
+    private val statusCard = Table()
+    private val scenarioHeader = Label("Scenario", assets.titleLabelStyle)
+    private val presetHeader = Label("Presets", assets.titleLabelStyle)
+    private val sessionHeader = Label("Session", assets.titleLabelStyle)
     private val enterMatchButton = makeButton("Enter Match") { runtime.enterMatch(game::openGameScreen) }
     private val screenFade = Table()
     private var screenFadeAlpha = 1f
@@ -53,7 +57,7 @@ internal class MainMenuScreen(
                 add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).width(420f).height(2f).left().padBottom(12f).row()
                 add(Label("Deterministic RTS sandbox with a live libGDX command deck.", assets.bodyLabelStyle)).width(520f).left().row()
                 add(
-                    Table().apply {
+                    statusCard.apply {
                         background = assets.panelDrawable(Color(0.08f, 0.13f, 0.18f, 0.68f))
                         pad(8f, 10f, 8f, 10f)
                         add(
@@ -83,7 +87,7 @@ internal class MainMenuScreen(
         controlsPanel.add(
             Table().apply {
                 add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.80f)) }).width(2f).expandY().fillY().padRight(5f)
-                add(Label("Scenario", assets.titleLabelStyle)).left()
+                add(scenarioHeader).left()
             }
         ).left().row()
         controlsPanel.add(scenarioLabel).left().row()
@@ -101,7 +105,7 @@ internal class MainMenuScreen(
         controlsPanel.add(
             Table().apply {
                 add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.76f)) }).width(2f).expandY().fillY().padRight(5f)
-                add(Label("Presets", assets.titleLabelStyle)).left()
+                add(presetHeader).left()
             }
         ).left().row()
 
@@ -117,7 +121,7 @@ internal class MainMenuScreen(
         controlsPanel.add(
             Table().apply {
                 add(Table().apply { background = assets.panelDrawable(Color(0.70f, 0.98f, 0.78f, 0.76f)) }).width(2f).expandY().fillY().padRight(5f)
-                add(Label("Session", assets.titleLabelStyle)).left()
+                add(sessionHeader).left()
             }
         ).left().row()
         controlsPanel.add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
@@ -160,6 +164,10 @@ internal class MainMenuScreen(
     }
 
     private fun refresh() {
+        scenarioHeader.color = currentScenarioTone()
+        presetHeader.color = currentPresetTone()
+        sessionHeader.color = currentSessionTone()
+        statusCard.background = assets.panelDrawable(currentMenuStatusCardTone())
         scenarioLabel.setText(
             if (runtime.scenarioRestartRequired()) {
                 "Scenario: ${runtime.playScenario.id} (restart required)"
@@ -185,6 +193,21 @@ internal class MainMenuScreen(
             }
         )
     }
+
+    private fun currentMenuStatusCardTone(): Color =
+        if (runtime.scenarioRestartRequired()) {
+            Color(0.22f, 0.18f, 0.08f, 0.78f)
+        } else {
+            Color(0.08f, 0.13f, 0.18f, 0.68f)
+        }
+
+    private fun currentScenarioTone(): Color =
+        if (runtime.scenarioRestartRequired()) Color(1.00f, 0.92f, 0.62f, 0.96f) else Color(0.78f, 0.94f, 0.98f, 0.96f)
+
+    private fun currentPresetTone(): Color = Color(1.00f, 0.92f, 0.62f, 0.96f)
+
+    private fun currentSessionTone(): Color =
+        if (runtime.scenarioRestartRequired()) Color(0.88f, 0.92f, 0.98f, 0.96f) else Color(0.74f, 0.96f, 0.84f, 0.96f)
 
     private fun updateScreenFade(delta: Float) {
         if (screenFadeAlpha <= 0f) {
