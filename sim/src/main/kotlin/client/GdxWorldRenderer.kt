@@ -777,10 +777,12 @@ internal class GdxWorldRenderer(
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
             val y = top + (entity.y / snapshot.mapHeight) * boundsHeight
             val visible = visibleTiles == null || isEntityVisible(entity, runtime)
+            val selected = entity.id in runtime.session.state.selectedIds
+            val damaged = runtime.isDamageFlashActive(entity.id)
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
-            val size = if (entity.id in runtime.session.state.selectedIds) 5f else 4f
+            val size = if (selected) 5f else 4f
             shape.rect(x - (size / 2f), y - (size / 2f), size, size)
-            if (runtime.isDamageFlashActive(entity.id)) {
+            if (damaged) {
                 shape.color = Color(1.00f, 0.48f, 0.30f, if (visible) 0.34f else 0.16f)
                 shape.rect(x - 5f, y - 5f, 10f, 10f)
                 shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
@@ -828,13 +830,18 @@ internal class GdxWorldRenderer(
                     }
                 shape.rect(x - 1.5f, y - 6f, 3f, 3f)
             }
-            if (entity.id in runtime.session.state.selectedIds) {
+            if (selected) {
                 shape.color = Color(0.95f, 0.97f, 1f, if (visible) 0.95f else 0.40f)
                 shape.rect(x - 4.5f, y - 4.5f, 9f, 1f)
                 shape.rect(x - 4.5f, y + 3.5f, 9f, 1f)
                 shape.rect(x - 4.5f, y - 4.5f, 1f, 9f)
                 shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
                 shape.rect(x - 1f, y - 7f, 2f, 2f)
+                if (damaged) {
+                    shape.color = Color(0.92f, 1.00f, 0.78f, if (visible) 0.88f else 0.34f)
+                    shape.rect(x - 6.5f, y - 1f, 13f, 2f)
+                    shape.rect(x - 1f, y - 6.5f, 2f, 13f)
+                }
             }
         }
         drawMiniMapStatusLegend(shape, left, top, boundsWidth)

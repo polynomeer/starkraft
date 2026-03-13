@@ -1100,6 +1100,7 @@ internal class GameScreen(
     private fun buildSelectionSlot(entity: EntitySnapshot): Table {
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
+        val damaged = runtime.isDamageFlashActive(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
         val tone =
             when {
@@ -1118,6 +1119,7 @@ internal class GameScreen(
             background =
                 assets.panelDrawable(
                     if (focused) selectionFocusShellTone(focusPulse)
+                    else if (damaged) Color(0.22f, 0.10f, 0.10f, 0.94f)
                     else Color(0.08f, 0.12f, 0.16f, 0.92f)
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
@@ -1127,6 +1129,7 @@ internal class GameScreen(
                     background =
                         assets.panelDrawable(
                             if (focused) selectionFocusCardTone(focusPulse)
+                            else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
                             else tone
                         )
                     pad(if (focused) 2f else 1.5f)
@@ -1135,6 +1138,7 @@ internal class GameScreen(
                             background =
                                 assets.panelDrawable(
                                     if (focused) selectionFocusBaseTone().cpy().apply { a = 0.62f + (focusPulse * 0.18f) }
+                                    else if (damaged) Color(1.00f, 0.74f, 0.64f, 0.28f)
                                     else Color(1f, 1f, 1f, 0.08f)
                                 )
                         }
@@ -1143,10 +1147,15 @@ internal class GameScreen(
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(if (focused) Color(0.16f, 0.20f, 0.08f, 1f) else Color(0.09f, 0.11f, 0.13f, 1f))
+                            background =
+                                assets.panelDrawable(
+                                    if (focused) Color(0.16f, 0.20f, 0.08f, 1f)
+                                    else if (damaged) Color(0.18f, 0.08f, 0.08f, 1f)
+                                    else Color(0.09f, 0.11f, 0.13f, 1f)
+                                )
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(hpColor)
+                                    background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
                             ).width(20f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
