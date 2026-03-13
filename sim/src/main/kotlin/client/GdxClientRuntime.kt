@@ -37,7 +37,7 @@ internal class GdxClientRuntime(
     private var attackWarningUntilMillis: Long = 0L
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
-    private var pendingAttackCommandSound: Boolean = false
+    private var pendingCommandSoundKind: CommandSoundKind? = null
     private var pendingCombatSoundKind: CombatSoundKind? = null
     private var pendingDeathSoundKind: DeathSoundKind? = null
     private var pendingCompletionAlertSound: Boolean = false
@@ -128,7 +128,7 @@ internal class GdxClientRuntime(
     fun attackWarningLine(): String? = attackWarningMessage
     fun isStructureLossWarning(): Boolean = attackWarningMessage == "Warning: structure lost"
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
-    fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
+    fun consumeCommandSoundKind(): CommandSoundKind? = pendingCommandSoundKind.also { pendingCommandSoundKind = null }
     fun consumeCombatSoundKind(): CombatSoundKind? = pendingCombatSoundKind.also { pendingCombatSoundKind = null }
     fun consumeDeathSoundKind(): DeathSoundKind? = pendingDeathSoundKind.also { pendingDeathSoundKind = null }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
@@ -188,9 +188,12 @@ internal class GdxClientRuntime(
                 session.append(intent)
                 recentGroundPing = GroundPing(worldX, worldY, if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") GroundPingKind.ATTACK else GroundPingKind.MOVE)
                 recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
-                if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
-                    pendingAttackCommandSound = true
-                }
+                pendingCommandSoundKind =
+                    if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
+                        CommandSoundKind.ATTACK
+                    } else {
+                        CommandSoundKind.MOVE
+                    }
                 groundMode = null
             }
             return
@@ -261,9 +264,12 @@ internal class GdxClientRuntime(
             session.append(intent)
             recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
-            if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
-                pendingAttackCommandSound = true
-            }
+            pendingCommandSoundKind =
+                if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
+                    CommandSoundKind.ATTACK
+                } else {
+                    CommandSoundKind.MOVE
+                }
             groundMode = null
         }
     }
@@ -278,6 +284,7 @@ internal class GdxClientRuntime(
         if (!isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)) {
             recentGroundPing = GroundPing(tileX + 0.5f, tileY + 0.5f, GroundPingKind.INVALID)
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+            pendingCommandSoundKind = CommandSoundKind.INVALID
             showNotice("invalid build placement")
             return
         }
@@ -296,6 +303,7 @@ internal class GdxClientRuntime(
         )
         recentGroundPing = GroundPing(tileX + (spec.width / 2f), tileY + (spec.height / 2f), GroundPingKind.BUILD)
         recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+        pendingCommandSoundKind = CommandSoundKind.BUILD
         buildModeTypeId = null
     }
 
@@ -1101,6 +1109,13 @@ internal data class GroundPing(
 )
 
 internal enum class GroundPingKind {
+    MOVE,
+    ATTACK,
+    BUILD,
+    INVALID
+}
+
+internal enum class CommandSoundKind {
     MOVE,
     ATTACK,
     BUILD,

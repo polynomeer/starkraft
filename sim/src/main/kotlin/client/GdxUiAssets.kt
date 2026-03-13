@@ -26,6 +26,9 @@ internal class GdxUiAssets : Disposable {
     val shapeRenderer = ShapeRenderer()
     private var alertSoundPath: Path? = null
     private var attackSoundPath: Path? = null
+    private var moveSoundPath: Path? = null
+    private var buildSoundPath: Path? = null
+    private var invalidSoundPath: Path? = null
     private var rangedCombatSoundPath: Path? = null
     private var meleeCombatSoundPath: Path? = null
     private var marineCombatSoundPath: Path? = null
@@ -38,6 +41,9 @@ internal class GdxUiAssets : Disposable {
     private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
     val attackSound: Sound = createAttackSound()
+    val moveSound: Sound = createMoveSound()
+    val buildSound: Sound = createBuildSound()
+    val invalidSound: Sound = createInvalidSound()
     val rangedCombatSound: Sound = createRangedCombatSound()
     val meleeCombatSound: Sound = createMeleeCombatSound()
     val marineCombatSound: Sound = createMarineCombatSound()
@@ -95,6 +101,9 @@ internal class GdxUiAssets : Disposable {
         shapeRenderer.dispose()
         alertSound.dispose()
         attackSound.dispose()
+        moveSound.dispose()
+        buildSound.dispose()
+        invalidSound.dispose()
         rangedCombatSound.dispose()
         meleeCombatSound.dispose()
         marineCombatSound.dispose()
@@ -107,6 +116,9 @@ internal class GdxUiAssets : Disposable {
         completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
         attackSoundPath?.let(Files::deleteIfExists)
+        moveSoundPath?.let(Files::deleteIfExists)
+        buildSoundPath?.let(Files::deleteIfExists)
+        invalidSoundPath?.let(Files::deleteIfExists)
         rangedCombatSoundPath?.let(Files::deleteIfExists)
         meleeCombatSoundPath?.let(Files::deleteIfExists)
         marineCombatSoundPath?.let(Files::deleteIfExists)
@@ -152,6 +164,44 @@ internal class GdxUiAssets : Disposable {
         val bytes = renderToneWav(primaryHz = 220.0, secondaryHz = 440.0, durationSeconds = 0.10f, primaryMix = 0.58, secondaryMix = 0.22)
         val tempPath = Files.createTempFile("starkraft-attack-", ".wav")
         attackSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createMoveSound(): Sound {
+        val bytes = renderToneWav(primaryHz = 180.0, secondaryHz = 360.0, durationSeconds = 0.08f, primaryMix = 0.46, secondaryMix = 0.18)
+        val tempPath = Files.createTempFile("starkraft-move-", ".wav")
+        moveSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createBuildSound(): Sound {
+        val bytes = renderToneWav(primaryHz = 260.0, secondaryHz = 520.0, durationSeconds = 0.10f, primaryMix = 0.42, secondaryMix = 0.18)
+        val tempPath = Files.createTempFile("starkraft-build-", ".wav")
+        buildSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createInvalidSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 240.0,
+                endHz = 110.0,
+                accentHz = 280.0,
+                durationSeconds = 0.09f,
+                sweepMix = 0.34,
+                accentMix = 0.16
+            )
+        val tempPath = Files.createTempFile("starkraft-invalid-", ".wav")
+        invalidSoundPath = tempPath
         tempPath.toFile().deleteOnExit()
         val handle = Gdx.files.absolute(tempPath.toString())
         handle.writeBytes(bytes, false)

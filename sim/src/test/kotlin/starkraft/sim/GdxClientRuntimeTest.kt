@@ -13,6 +13,7 @@ import starkraft.sim.client.ClientSession
 import starkraft.sim.client.ClientSessionState
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.CombatSoundKind
+import starkraft.sim.client.CommandSoundKind
 import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.CompletionFlashKind
@@ -416,8 +417,8 @@ class GdxClientRuntimeTest {
         assertEquals(linkedSetOf(4), runtime.session.state.selectedIds)
         assertEquals(GroundPingKind.ATTACK, runtime.currentGroundPing()?.kind)
         assertNull(runtime.groundMode)
-        assertTrue(runtime.consumeAttackCommandSound())
-        assertFalse(runtime.consumeAttackCommandSound())
+        assertEquals(CommandSoundKind.ATTACK, runtime.consumeCommandSoundKind())
+        assertNull(runtime.consumeCommandSoundKind())
     }
 
     @Test
@@ -430,6 +431,7 @@ class GdxClientRuntimeTest {
 
         assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
         assertNull(runtime.groundMode)
+        assertEquals(CommandSoundKind.MOVE, runtime.consumeCommandSoundKind())
     }
 
     @Test
@@ -443,6 +445,20 @@ class GdxClientRuntimeTest {
 
         assertEquals(GroundPingKind.BUILD, runtime.currentGroundPing()?.kind)
         assertNull(runtime.buildModeTypeId)
+        assertEquals(CommandSoundKind.BUILD, runtime.consumeCommandSoundKind())
+    }
+
+    @Test
+    fun `invalid build placement raises invalid command sound`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.state.mapState = ClientMapState(width = 32, height = 32)
+        runtime.buildModeTypeId = "Depot"
+
+        runtime.issueLeftClick(screenX = -120f, screenY = -120f, additiveSelection = false)
+
+        assertEquals(GroundPingKind.INVALID, runtime.currentGroundPing()?.kind)
+        assertEquals(CommandSoundKind.INVALID, runtime.consumeCommandSoundKind())
     }
 
     @Test

@@ -106,8 +106,12 @@ internal class GameScreen(
         if (runtime.consumeAttackAlertSound()) {
             playSoundVariant(assets.alertSound, 0.7f, 0.98f, 1.04f)
         }
-        if (runtime.consumeAttackCommandSound()) {
-            playSoundVariant(assets.attackSound, 0.55f, 0.97f, 1.05f)
+        when (runtime.consumeCommandSoundKind()) {
+            CommandSoundKind.MOVE -> playSoundVariant("cmd-move", assets.moveSound, 0.48f, 0.98f, 1.05f, 30L)
+            CommandSoundKind.ATTACK -> playSoundVariant("cmd-attack", assets.attackSound, 0.55f, 0.97f, 1.05f, 30L)
+            CommandSoundKind.BUILD -> playSoundVariant("cmd-build", assets.buildSound, 0.52f, 0.98f, 1.04f, 45L)
+            CommandSoundKind.INVALID -> playSoundVariant("cmd-invalid", assets.invalidSound, 0.48f, 0.94f, 1.00f, 45L)
+            null -> Unit
         }
         when (runtime.consumeCombatSoundKind()) {
             CombatSoundKind.MARINE_RANGED -> playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
