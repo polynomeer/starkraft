@@ -246,8 +246,9 @@ internal class GdxWorldRenderer(
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
             val recoil = damageRecoilOffset(runtime, snapshot, entity)
-            val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first
-            val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second
+            val criticalShake = criticalShakeOffset(entity)
+            val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first
+            val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
             if (!isOnScreen(screenX, screenY)) continue
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
@@ -1479,6 +1480,16 @@ internal class GdxWorldRenderer(
         val dir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
         val scale = if (entity.footprintWidth != null && entity.footprintHeight != null) 1.6f else 2.8f
         return directionDx(dir, scale) to directionDy(dir, scale)
+    }
+
+    private fun criticalShakeOffset(entity: EntitySnapshot): Pair<Float, Float> {
+        val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
+        if (hpRatio > 0.35f) return 0f to 0f
+        val severity = ((0.35f - hpRatio) / 0.35f).coerceIn(0f, 1f)
+        val phase = ((System.currentTimeMillis() % 170L).toFloat() / 170f) + ((entity.id % 11) * 0.08f)
+        val lateral = kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * (0.7f + (severity * 1.9f))
+        val vertical = kotlin.math.cos(phase * Math.PI * 2.0).toFloat() * (0.2f + (severity * 0.9f))
+        return lateral to vertical
     }
 
     private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
