@@ -16,8 +16,8 @@ internal class GdxWorldRenderer(
     private val friendlyColor = Color(0.30f, 0.60f, 1.00f, 1f)
     private val enemyColor = Color(0.90f, 0.36f, 0.28f, 1f)
     private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
-    private val selectionColor = Color(0.98f, 0.92f, 0.56f, 1f)
-    private val selectionSoftColor = Color(0.92f, 0.84f, 0.34f, 0.20f)
+    private val selectionColor = Color(0.62f, 1.00f, 0.56f, 1f)
+    private val selectionSoftColor = Color(0.46f, 0.96f, 0.54f, 0.14f)
 
     private fun pingTone(kind: GroundPingKind): Color =
         when (kind) {
@@ -270,11 +270,6 @@ internal class GdxWorldRenderer(
                     shape.color = completionFlashColor(runtime, entity.id)
                     shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
                 }
-                if (selected) {
-                    val pulse = selectionPulse()
-                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.12f + (pulse * 0.10f))
-                    shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
-                }
                 shape.color = Color(0f, 0f, 0f, 0.22f)
                 shape.rect(left + 3f, top + 3f, w, h)
                 drawStructureSilhouette(
@@ -287,14 +282,6 @@ internal class GdxWorldRenderer(
                     runtime = runtime,
                     factionColor = factionColor(entity.faction, viewedFaction)
                 )
-                if (selected) {
-                    shape.color = selectionSoftColor
-                    shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
-                    shape.color = selectionColor
-                    shape.rect(left - 3f, top - 3f, w + 6f, h + 6f)
-                    shape.color = Color(0.98f, 0.96f, 0.72f, 0.34f)
-                    shape.rect(left + (w * 0.18f), top - 5f, w * 0.64f, 2f)
-                }
             } else {
                 shape.color = Color(0f, 0f, 0f, 0.20f)
                 shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
@@ -313,18 +300,7 @@ internal class GdxWorldRenderer(
                     shape.color = completionFlashColor(runtime, entity.id)
                     shape.circle(screenX, screenY, if (selected) 15f else 13f)
                 }
-                if (selected) {
-                    val pulse = selectionPulse()
-                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.14f + (pulse * 0.12f))
-                    shape.circle(screenX, screenY, 14f)
-                }
                 drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
-                if (selected) {
-                    shape.color = selectionSoftColor
-                    shape.circle(screenX, screenY, 11f)
-                    shape.color = Color(0.98f, 0.96f, 0.72f, 0.54f)
-                    shape.rect(screenX - 5f, screenY + 11f, 10f, 2f)
-                }
             }
             drawHealthBar(shape, screenX, screenY, entity.hp, entity.maxHp, selected)
         }
@@ -392,11 +368,11 @@ internal class GdxWorldRenderer(
                 val height = footprintHeight * runtime.camera.tileSize + 12f
                 val corner = 12f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.08f + (pulse * 0.08f))
-                shape.rect(left - 4f, top - 4f, width + 8f, height + 8f)
-                shape.color = Color(0.98f, 0.96f, 0.72f, 0.34f + (pulse * 0.12f))
-                shape.rect(left + (width * 0.18f), top - 5f, width * 0.64f, 2f)
-                shape.rect(left + (width * 0.18f), top + height + 3f, width * 0.64f, 2f)
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.10f))
+                shape.line(left - 3f, top - 3f, left + width + 3f, top - 3f)
+                shape.line(left - 3f, top + height + 3f, left + width + 3f, top + height + 3f)
+                shape.line(left - 3f, top - 3f, left - 3f, top + height + 3f)
+                shape.line(left + width + 3f, top - 3f, left + width + 3f, top + height + 3f)
                 shape.color = selectionColor
                 shape.line(left, top, left + corner, top)
                 shape.line(left, top, left, top + corner)
@@ -406,19 +382,27 @@ internal class GdxWorldRenderer(
                 shape.line(left, top + height, left, top + height - corner)
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
+                shape.color = Color(0.84f, 1.00f, 0.76f, 0.52f + (pulse * 0.16f))
+                shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
+                shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
             } else {
-                val radius = 12f
+                val radius = 11f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.18f + (pulse * 0.12f))
-                shape.circle(screenX, screenY, radius + 4f)
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.24f + (pulse * 0.12f))
+                shape.circle(screenX, screenY, radius + 2.5f)
                 shape.color = selectionColor
                 shape.circle(screenX, screenY, radius)
-                shape.line(screenX - radius - 3f, screenY, screenX - radius + 2f, screenY)
-                shape.line(screenX + radius - 2f, screenY, screenX + radius + 3f, screenY)
-                shape.line(screenX, screenY - radius - 3f, screenX, screenY - radius + 2f)
-                shape.line(screenX, screenY + radius - 2f, screenX, screenY + radius + 3f)
-                shape.color = Color(0.98f, 0.96f, 0.72f, 0.44f + (pulse * 0.16f))
-                shape.rect(screenX - 5f, screenY + radius + 3f, 10f, 2f)
+                val wing = 5.5f
+                shape.line(screenX - radius - wing, screenY, screenX - radius + 1.5f, screenY)
+                shape.line(screenX + radius - 1.5f, screenY, screenX + radius + wing, screenY)
+                shape.line(screenX, screenY - radius - wing, screenX, screenY - radius + 1.5f)
+                shape.line(screenX, screenY + radius - 1.5f, screenX, screenY + radius + wing)
+                shape.line(screenX - 7f, screenY - 7f, screenX - 3.5f, screenY - 3.5f)
+                shape.line(screenX + 7f, screenY - 7f, screenX + 3.5f, screenY - 3.5f)
+                shape.line(screenX - 7f, screenY + 7f, screenX - 3.5f, screenY + 3.5f)
+                shape.line(screenX + 7f, screenY + 7f, screenX + 3.5f, screenY + 3.5f)
+                shape.color = Color(0.84f, 1.00f, 0.76f, 0.46f + (pulse * 0.18f))
+                shape.rect(screenX - 4.5f, screenY + radius + 2.5f, 9f, 1.5f)
             }
         }
     }
