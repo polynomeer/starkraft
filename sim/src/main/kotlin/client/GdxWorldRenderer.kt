@@ -1055,6 +1055,10 @@ internal class GdxWorldRenderer(
             if (burst.isStructure) {
                 shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
                 shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
+                shape.color = Color(0.72f, 0.66f, 0.52f, 0.36f * fade)
+                shape.rectLine(x - (shard * 1.18f), y + (shard * 0.18f), x - (shard * 0.52f), y + (shard * 0.48f), 2.8f)
+                shape.rectLine(x + (shard * 1.12f), y - (shard * 0.08f), x + (shard * 0.44f), y - (shard * 0.34f), 2.6f)
+                shape.rectLine(x - (shard * 0.14f), y + (shard * 1.18f), x + (shard * 0.22f), y + (shard * 0.46f), 2.4f)
             }
         }
     }
@@ -1082,6 +1086,10 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
                 shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
                 shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
+                shape.circle(x - 8f, y + 6f, 5f + ((1f - progress) * 4f))
+                shape.color = Color(0.24f, 0.22f, 0.18f, alpha * 0.78f)
+                shape.rect(x - 17f, y + 5f, 7f, 4f)
+                shape.rect(x + 10f, y - 10f, 6f, 5f)
             } else {
                 val debris =
                     when {
@@ -1095,6 +1103,11 @@ internal class GdxWorldRenderer(
                 if (remain.typeId.contains("Marine", ignoreCase = true)) {
                     shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
                     shape.rect(x - 3f, y - 6f, 6f, 2f)
+                }
+                if (remain.typeId.contains("Zergling", ignoreCase = true)) {
+                    shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
+                    shape.rect(x - 7f, y + 1f, 4f, 2f)
+                    shape.rect(x + 3f, y - 1f, 3f, 2f)
                 }
             }
             shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.7f)
