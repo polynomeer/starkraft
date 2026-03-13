@@ -306,7 +306,7 @@ class GdxClientRuntimeTest {
         assertEquals(1, runtime.activeDeathBursts().size)
         assertEquals(1, runtime.activeDeathRemains().size)
         assertTrue(runtime.noticeLine()?.contains("zergling down") == true)
-        assertEquals(DeathSoundKind.UNIT, runtime.consumeDeathSoundKind())
+        assertEquals(DeathSoundKind.ZERGLING, runtime.consumeDeathSoundKind())
         assertNull(runtime.consumeDeathSoundKind())
     }
 

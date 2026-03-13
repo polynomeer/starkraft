@@ -85,6 +85,7 @@ internal class GameScreen(
     private var focusedSelectionId: Int? = null
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
+    private val soundCooldownUntilMillis = HashMap<String, Long>()
 
     init {
         buildHud()
@@ -116,10 +117,12 @@ internal class GameScreen(
             null -> Unit
         }
         when (runtime.consumeDeathSoundKind()) {
-            DeathSoundKind.UNIT -> playSoundVariant(assets.deathSound, 0.56f, 0.94f, 1.03f)
+            DeathSoundKind.UNIT -> playSoundVariant("death-unit", assets.deathSound, 0.56f, 0.94f, 1.03f, 55L)
+            DeathSoundKind.MARINE -> playSoundVariant("death-marine", assets.marineDeathSound, 0.58f, 0.95f, 1.04f, 55L)
+            DeathSoundKind.ZERGLING -> playSoundVariant("death-zergling", assets.zerglingDeathSound, 0.56f, 0.92f, 1.01f, 45L)
             DeathSoundKind.STRUCTURE -> {
-                playSoundVariant(assets.structureDeathSound, 0.60f, 0.92f, 1.00f)
-                playSoundVariant(assets.structureDeathTailSound, 0.38f, 0.88f, 0.96f)
+                playSoundVariant("death-structure-main", assets.structureDeathSound, 0.60f, 0.92f, 1.00f, 80L)
+                playSoundVariant("death-structure-tail", assets.structureDeathTailSound, 0.38f, 0.88f, 0.96f, 120L)
             }
             null -> Unit
         }
@@ -146,6 +149,13 @@ internal class GameScreen(
         val pitch = minPitch + ((maxPitch - minPitch) * phase)
         val volume = (baseVolume * (0.94f + ((1f - phase) * 0.10f))).coerceIn(0f, 1f)
         sound.play(volume, pitch, 0f)
+    }
+
+    private fun playSoundVariant(key: String, sound: com.badlogic.gdx.audio.Sound, baseVolume: Float, minPitch: Float, maxPitch: Float, cooldownMillis: Long) {
+        val now = System.currentTimeMillis()
+        if ((soundCooldownUntilMillis[key] ?: 0L) > now) return
+        soundCooldownUntilMillis[key] = now + cooldownMillis
+        playSoundVariant(sound, baseVolume, minPitch, maxPitch)
     }
 
     private fun buildHud() {

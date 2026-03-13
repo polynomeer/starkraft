@@ -1012,6 +1012,8 @@ internal class GdxClientRuntime(
             deathSoundKind =
                 when {
                     entity.footprintWidth != null && entity.footprintHeight != null -> DeathSoundKind.STRUCTURE
+                    entity.typeId.contains("Marine", ignoreCase = true) -> DeathSoundKind.MARINE
+                    entity.typeId.contains("Zergling", ignoreCase = true) -> DeathSoundKind.ZERGLING
                     deathSoundKind == null -> DeathSoundKind.UNIT
                     else -> deathSoundKind
                 }
@@ -1134,6 +1136,8 @@ internal enum class CombatSoundKind {
 
 internal enum class DeathSoundKind {
     UNIT,
+    MARINE,
+    ZERGLING,
     STRUCTURE
 }
 
