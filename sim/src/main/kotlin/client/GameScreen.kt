@@ -310,11 +310,11 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.62f))
+                                    background = assets.panelDrawable(currentQueueCardTone())
                                     pad(2f, 4f, 2f, 4f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.18f, 0.28f, 0.34f, 0.82f))
+                                            background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
                                             pad(1f, 4f, 1f, 4f)
                                             add(queueHeaderLabel).left()
                                         }
@@ -520,8 +520,9 @@ internal class GameScreen(
                     pad(4f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.12f, 0.22f, 0.27f, 0.82f))
+                            background = assets.panelDrawable(commandGroupHeaderTone(group.first))
                             pad(2f, 6f, 2f, 6f)
+                            add(Table().apply { background = assets.panelDrawable(commandGroupAccentTone(group.first)) }).width(2f).expandY().fillY().padRight(4f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
                     ).colspan(commandColumns).left().padBottom(4f).row()
@@ -559,9 +560,15 @@ internal class GameScreen(
                                 actor.isChecked -> Color(0.30f, 0.34f, 0.16f, 0.98f)
                                 else -> cardTone
                             }
+                        val shellTone =
+                            when {
+                                actor.isDisabled -> Color(0.01f, 0.03f, 0.05f, 0.88f)
+                                actor.isChecked -> Color(0.38f, 0.32f, 0.12f, 0.98f)
+                                else -> Color(0.01f, 0.03f, 0.05f, 0.98f)
+                            }
                         add(
                             Table().apply {
-                                background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
+                                background = assets.panelDrawable(shellTone)
                                 pad(1f)
                                 add(
                                     Table().apply {
@@ -1239,12 +1246,44 @@ internal class GameScreen(
             else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
         }
 
+    private fun currentQueueCardTone(): Color =
+        when (buildQueueHeaderLine()) {
+            "PRODUCTION" -> Color(0.14f, 0.12f, 0.08f, 0.74f)
+            "RESEARCH" -> Color(0.10f, 0.12f, 0.18f, 0.74f)
+            "CONSTRUCT" -> Color(0.10f, 0.15f, 0.12f, 0.74f)
+            else -> Color(0.08f, 0.12f, 0.16f, 0.62f)
+        }
+
+    private fun currentQueueHeaderBackgroundTone(): Color =
+        when (buildQueueHeaderLine()) {
+            "PRODUCTION" -> Color(0.36f, 0.28f, 0.10f, 0.84f)
+            "RESEARCH" -> Color(0.18f, 0.26f, 0.40f, 0.84f)
+            "CONSTRUCT" -> Color(0.18f, 0.30f, 0.20f, 0.84f)
+            else -> Color(0.18f, 0.28f, 0.34f, 0.82f)
+        }
+
     private fun currentStatusBadgeTone(): Color =
         when {
             runtime.attackWarningLine() != null -> Color(1.00f, 0.70f, 0.58f, 0.98f)
             runtime.noticeLine() != null -> Color(1.00f, 0.90f, 0.62f, 0.98f)
             runtime.playControlState.paused -> Color(0.82f, 0.88f, 0.96f, 0.96f)
             else -> Color(0.62f, 0.96f, 0.80f, 0.96f)
+        }
+
+    private fun commandGroupHeaderTone(group: String): Color =
+        when (group) {
+            "Orders" -> Color(0.10f, 0.20f, 0.26f, 0.86f)
+            "Production" -> Color(0.24f, 0.20f, 0.10f, 0.86f)
+            "Utility" -> Color(0.14f, 0.18f, 0.22f, 0.86f)
+            else -> Color(0.12f, 0.22f, 0.27f, 0.82f)
+        }
+
+    private fun commandGroupAccentTone(group: String): Color =
+        when (group) {
+            "Orders" -> Color(0.58f, 0.88f, 0.96f, 0.82f)
+            "Production" -> Color(0.98f, 0.90f, 0.52f, 0.78f)
+            "Utility" -> Color(0.74f, 0.96f, 0.82f, 0.78f)
+            else -> Color(0.58f, 0.88f, 0.96f, 0.72f)
         }
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
