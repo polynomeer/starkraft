@@ -84,6 +84,7 @@ internal class GameScreen(
     private var lastSelectionSignature = ""
     private var focusedSelectionId: Int? = null
     private var screenFadeAlpha = 1f
+    private var soundVariantTick = 0
 
     init {
         buildHud()
@@ -102,25 +103,28 @@ internal class GameScreen(
         runtime.constrainCamera(Gdx.graphics.width, worldViewportHeight)
         refreshHud()
         if (runtime.consumeAttackAlertSound()) {
-            assets.alertSound.play(0.7f)
+            playSoundVariant(assets.alertSound, 0.7f, 0.98f, 1.04f)
         }
         if (runtime.consumeAttackCommandSound()) {
-            assets.attackSound.play(0.55f)
+            playSoundVariant(assets.attackSound, 0.55f, 0.97f, 1.05f)
         }
         when (runtime.consumeCombatSoundKind()) {
-            CombatSoundKind.MARINE_RANGED -> assets.marineCombatSound.play(0.46f)
-            CombatSoundKind.ZERGLING_MELEE -> assets.zerglingCombatSound.play(0.46f)
-            CombatSoundKind.MELEE -> assets.meleeCombatSound.play(0.44f)
-            CombatSoundKind.RANGED -> assets.rangedCombatSound.play(0.42f)
+            CombatSoundKind.MARINE_RANGED -> playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
+            CombatSoundKind.ZERGLING_MELEE -> playSoundVariant(assets.zerglingCombatSound, 0.46f, 0.93f, 1.03f)
+            CombatSoundKind.MELEE -> playSoundVariant(assets.meleeCombatSound, 0.44f, 0.95f, 1.04f)
+            CombatSoundKind.RANGED -> playSoundVariant(assets.rangedCombatSound, 0.42f, 0.97f, 1.05f)
             null -> Unit
         }
         when (runtime.consumeDeathSoundKind()) {
-            DeathSoundKind.UNIT -> assets.deathSound.play(0.56f)
-            DeathSoundKind.STRUCTURE -> assets.structureDeathSound.play(0.60f)
+            DeathSoundKind.UNIT -> playSoundVariant(assets.deathSound, 0.56f, 0.94f, 1.03f)
+            DeathSoundKind.STRUCTURE -> {
+                playSoundVariant(assets.structureDeathSound, 0.60f, 0.92f, 1.00f)
+                playSoundVariant(assets.structureDeathTailSound, 0.38f, 0.88f, 0.96f)
+            }
             null -> Unit
         }
         if (runtime.consumeCompletionAlertSound()) {
-            assets.completeSound.play(0.55f)
+            playSoundVariant(assets.completeSound, 0.55f, 0.98f, 1.04f)
         }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, worldViewportHeight, dragSelection)
         updateScreenFade(delta)
@@ -134,6 +138,14 @@ internal class GameScreen(
 
     override fun dispose() {
         stage.dispose()
+    }
+
+    private fun playSoundVariant(sound: com.badlogic.gdx.audio.Sound, baseVolume: Float, minPitch: Float, maxPitch: Float) {
+        soundVariantTick += 1
+        val phase = ((soundVariantTick * 37) % 100) / 100f
+        val pitch = minPitch + ((maxPitch - minPitch) * phase)
+        val volume = (baseVolume * (0.94f + ((1f - phase) * 0.10f))).coerceIn(0f, 1f)
+        sound.play(volume, pitch, 0f)
     }
 
     private fun buildHud() {

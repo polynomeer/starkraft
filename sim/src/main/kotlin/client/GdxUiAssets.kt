@@ -32,6 +32,7 @@ internal class GdxUiAssets : Disposable {
     private var zerglingCombatSoundPath: Path? = null
     private var deathSoundPath: Path? = null
     private var structureDeathSoundPath: Path? = null
+    private var structureDeathTailSoundPath: Path? = null
     private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
     val attackSound: Sound = createAttackSound()
@@ -41,6 +42,7 @@ internal class GdxUiAssets : Disposable {
     val zerglingCombatSound: Sound = createZerglingCombatSound()
     val deathSound: Sound = createDeathSound()
     val structureDeathSound: Sound = createStructureDeathSound()
+    val structureDeathTailSound: Sound = createStructureDeathTailSound()
     val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
@@ -95,6 +97,7 @@ internal class GdxUiAssets : Disposable {
         zerglingCombatSound.dispose()
         deathSound.dispose()
         structureDeathSound.dispose()
+        structureDeathTailSound.dispose()
         completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
         attackSoundPath?.let(Files::deleteIfExists)
@@ -104,6 +107,7 @@ internal class GdxUiAssets : Disposable {
         zerglingCombatSoundPath?.let(Files::deleteIfExists)
         deathSoundPath?.let(Files::deleteIfExists)
         structureDeathSoundPath?.let(Files::deleteIfExists)
+        structureDeathTailSoundPath?.let(Files::deleteIfExists)
         completeSoundPath?.let(Files::deleteIfExists)
     }
 
@@ -248,6 +252,24 @@ internal class GdxUiAssets : Disposable {
             )
         val tempPath = Files.createTempFile("starkraft-death-structure-", ".wav")
         structureDeathSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createStructureDeathTailSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 120.0,
+                endHz = 34.0,
+                accentHz = 58.0,
+                durationSeconds = 0.42f,
+                sweepMix = 0.48,
+                accentMix = 0.12
+            )
+        val tempPath = Files.createTempFile("starkraft-death-structure-tail-", ".wav")
+        structureDeathTailSoundPath = tempPath
         tempPath.toFile().deleteOnExit()
         val handle = Gdx.files.absolute(tempPath.toString())
         handle.writeBytes(bytes, false)
