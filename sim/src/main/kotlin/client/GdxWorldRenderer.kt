@@ -1208,6 +1208,7 @@ internal class GdxWorldRenderer(
         val stride = moveStride(entity.id, if (moving) 1f else 0f)
         val sway = moveStride(entity.id + 17, if (moving) 0.8f else 0f)
         val lead = if (moving) (moveStride(entity.id + 31, 0.55f) + 0.55f).coerceAtLeast(0f) else 0f
+        val settle = unitBob(entity.id + 23, if (moving) 0.45f else 0.2f)
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, lead * 0.9f)
         val y = screenY + bobY + directionDy(entity.dir, lead * 0.5f)
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
@@ -1216,13 +1217,25 @@ internal class GdxWorldRenderer(
         val shadowRadius = if (selected) 9f else 7f
         val typeName = entity.typeId.orEmpty()
         shape.color = Color(0f, 0f, 0f, 0.34f)
-        shape.circle(x + 1.5f, screenY + 1.5f, shadowRadius)
+        val shadowX = x + 1.5f - directionDx(entity.dir, lead * 0.45f)
+        val shadowY = screenY + 1.5f - directionDy(entity.dir, lead * 0.25f)
+        shape.circle(shadowX, shadowY, shadowRadius)
+        if (moving) {
+            shape.color = Color(0f, 0f, 0f, 0.18f)
+            shape.rectLine(
+                shadowX - directionDx(entity.dir, 1.5f),
+                shadowY - directionDy(entity.dir, 1.5f),
+                shadowX - directionDx(entity.dir, 5.5f),
+                shadowY - directionDy(entity.dir, 5.5f),
+                shadowRadius * 1.15f
+            )
+        }
         when {
             entity.archetype == "worker" || typeName.contains("Worker", ignoreCase = true) -> {
                 val toolSwing = stride * 1.4f
                 val bodyLean = sway * 1.2f
                 shape.color = body
-                shape.circle(x + bodyLean * 0.25f, y, 6.5f)
+                shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.5f)
                 shape.color = teamStripe
                 shape.rect(x - 5f, y - 2f + (toolSwing * 0.15f), 10f, 4f)
                 shape.color = trim
@@ -1245,7 +1258,7 @@ internal class GdxWorldRenderer(
                 val lunge = stride * 1.8f
                 val clawSpread = sway * 1.5f
                 shape.color = body
-                shape.rect(x - 6.5f + directionDx(entity.dir, lunge * 0.4f), y - 3.2f, 13f, 6.4f)
+                shape.rect(x - 6.5f + directionDx(entity.dir, lunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
                 shape.color = teamStripe
                 shape.rect(x - 5.2f + directionDx(entity.dir, lunge * 0.5f), y - 2.2f, 10.4f, 4.4f)
                 shape.color = trim
@@ -1259,7 +1272,7 @@ internal class GdxWorldRenderer(
                 val march = stride * 0.8f
                 val torsoLean = sway * 0.55f
                 shape.color = body
-                shape.rect(x - 3.8f + torsoLean, y - 6.8f, 7.6f, 13.6f)
+                shape.rect(x - 3.8f + torsoLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
                 shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
                 shape.color = teamStripe
                 shape.rect(x - 2.6f + torsoLean, y - 5.8f, 5.2f, 11.6f)
@@ -1276,17 +1289,18 @@ internal class GdxWorldRenderer(
                 )
             }
             entity.weaponId != null -> {
+                val brace = sway * 0.35f
                 shape.color = body
-                shape.rect(x - 3.5f, y - 6.5f, 7f, 13f)
-                shape.rect(x - 6.5f, y - 1.8f, 13f, 3.6f)
+                shape.rect(x - 3.5f + brace, y - 6.5f + settle * 0.15f, 7f, 13f)
+                shape.rect(x - 6.5f, y - 1.8f + stride * 0.35f, 13f, 3.6f)
                 shape.color = teamStripe
-                shape.rect(x - 2.5f, y - 5.5f, 5f, 11f)
+                shape.rect(x - 2.5f + brace, y - 5.5f, 5f, 11f)
                 shape.color = trim
-                shape.rect(x - 1.4f, y - 6.5f, 2.8f, 2.8f)
+                shape.rect(x - 1.4f + brace, y - 6.5f, 2.8f, 2.8f)
                 shape.rect(x - 6.5f, y - 0.8f, 2.4f, 1.6f)
                 shape.rect(x + 4.1f, y - 0.8f, 2.4f, 1.6f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
-                shape.rectLine(x, y, x + directionDx(entity.dir, 7.5f), y + directionDy(entity.dir, 7.5f), 1.8f)
+                shape.rectLine(x + brace, y, x + directionDx(entity.dir, 7.5f) + brace, y + directionDy(entity.dir, 7.5f), 1.8f)
                 if (entity.weaponCooldownTicks > 0) {
                     shape.color = Color(1.00f, 0.68f, 0.32f, 0.40f)
                     shape.rectLine(x - directionDx(entity.dir, 4f), y - directionDy(entity.dir, 4f), x, y, 2.4f)
@@ -1295,8 +1309,9 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 1.5f, y - 4.5f, 3f, 4f)
             }
             else -> {
+                val hover = settle * 0.25f
                 shape.color = body
-                shape.rect(x - 5.5f, y - 4.5f, 11f, 9f)
+                shape.rect(x - 5.5f, y - 4.5f + hover, 11f, 9f)
                 shape.color = teamStripe
                 shape.rect(x - 4.5f, y - 3.5f, 9f, 7f)
                 shape.color = trim
