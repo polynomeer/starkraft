@@ -16,8 +16,8 @@ internal class GdxWorldRenderer(
     private val friendlyColor = Color(0.30f, 0.60f, 1.00f, 1f)
     private val enemyColor = Color(0.90f, 0.36f, 0.28f, 1f)
     private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
-    private val selectionColor = Color(0.96f, 0.90f, 0.45f, 1f)
-    private val selectionSoftColor = Color(0.44f, 0.80f, 0.92f, 0.28f)
+    private val selectionColor = Color(0.98f, 0.92f, 0.56f, 1f)
+    private val selectionSoftColor = Color(0.92f, 0.84f, 0.34f, 0.20f)
 
     private fun pingTone(kind: GroundPingKind): Color =
         when (kind) {

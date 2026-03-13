@@ -1071,7 +1071,7 @@ internal class GameScreen(
         return Table().apply {
             background =
                 assets.panelDrawable(
-                    if (focused) Color(0.26f + (focusPulse * 0.08f), 0.36f + (focusPulse * 0.06f), 0.10f, 0.96f)
+                    if (focused) selectionFocusShellTone(focusPulse)
                     else Color(0.08f, 0.12f, 0.16f, 0.92f)
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
@@ -1080,7 +1080,7 @@ internal class GameScreen(
                 Table().apply {
                     background =
                         assets.panelDrawable(
-                            if (focused) Color(0.36f + (focusPulse * 0.08f), 0.46f + (focusPulse * 0.06f), 0.08f, 0.98f)
+                            if (focused) selectionFocusCardTone(focusPulse)
                             else tone
                         )
                     pad(if (focused) 2f else 1.5f)
@@ -1088,7 +1088,7 @@ internal class GameScreen(
                         Table().apply {
                             background =
                                 assets.panelDrawable(
-                                    if (focused) Color(1.00f, 0.94f, 0.60f, 0.68f + (focusPulse * 0.16f))
+                                    if (focused) selectionFocusBaseTone().cpy().apply { a = 0.62f + (focusPulse * 0.18f) }
                                     else Color(1f, 1f, 1f, 0.08f)
                                 )
                         }
@@ -1337,6 +1337,14 @@ internal class GameScreen(
                 Color(0.98f, 0.92f, 0.62f, 0.96f)
             else -> Color(0.74f, 0.94f, 0.98f, 0.96f)
         }
+
+    private fun selectionFocusBaseTone(): Color = Color(0.98f, 0.92f, 0.56f, 0.96f)
+
+    private fun selectionFocusShellTone(pulse: Float): Color =
+        Color(0.26f + (pulse * 0.10f), 0.22f + (pulse * 0.06f), 0.08f, 0.96f)
+
+    private fun selectionFocusCardTone(pulse: Float): Color =
+        Color(0.38f + (pulse * 0.08f), 0.30f + (pulse * 0.06f), 0.08f, 0.98f)
 
     private fun currentSelectionMetaTone(): Color =
         when {
