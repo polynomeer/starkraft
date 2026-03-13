@@ -349,11 +349,11 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = null
-            pad(0f, 20f, 10f, 20f)
+            pad(0f, 18f, 8f, 18f)
             add().width(208f).bottom()
             add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
             add().expandX().fillX()
-            add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(286f).right().bottom()
+            add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
 
         root.top()
@@ -399,8 +399,8 @@ internal class GameScreen(
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
-                    pad(14f)
-                    defaults().pad(6f)
+                    pad(12f)
+                    defaults().pad(5f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
@@ -408,20 +408,20 @@ internal class GameScreen(
                             add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
                             add(Label("PAUSED", assets.titleLabelStyle)).left()
                         }
-                    ).width(264f).left().row()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).width(264f).padBottom(8f).row()
-                    add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(264f).row()
-                    add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(264f).row()
-                    add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(264f).row()
-                    add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(264f).row()
-                    add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(264f).row()
-                    add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(264f).row()
-                    add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(264f).row()
+                    ).width(248f).left().row()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).width(248f).padBottom(8f).row()
+                    add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(248f).row()
+                    add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(248f).row()
+                    add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(248f).row()
+                    add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(248f).row()
+                    add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(248f).row()
+                    add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(248f).row()
+                    add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(248f).row()
                     add(makeButton("Main Menu", style = assets.subtleButtonStyle()) {
                         runtime.togglePauseOverlay()
                         game.openMainMenu()
-                    }).width(264f).row()
-                    add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(264f).row()
+                    }).width(248f).row()
+                    add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(248f).row()
                 }
             )
         }
@@ -431,12 +431,12 @@ internal class GameScreen(
             setFillParent(true)
             isVisible = false
             top().left()
-            pad(18f)
+            pad(16f)
             background = assets.panelDrawable(Color(0.03f, 0.05f, 0.08f, 0.78f))
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
-                    pad(10f, 12f, 10f, 12f)
+                    pad(9f, 11f, 9f, 11f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
@@ -469,9 +469,9 @@ internal class GameScreen(
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
         val centerWidth = (width * 0.188f).coerceIn(228f, 292f)
-        val commandWidth = (width * 0.192f).coerceIn(252f, 310f)
+        val commandWidth = (width * 0.186f).coerceIn(244f, 300f)
         val commandHeight = (height * 0.096f).coerceIn(82f, 106f)
-        val commandButtonHeight = if (width >= 1440) 24f else 22f
+        val commandButtonHeight = if (width >= 1440) 23f else 21f
         val commandColumns = 3
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - 18f
