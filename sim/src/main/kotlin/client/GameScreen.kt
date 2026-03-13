@@ -248,6 +248,13 @@ internal class GameScreen(
                             ).width(122f).height(7f).left().padTop(1f).row()
                             add(
                                 Table().apply {
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    pad(1f, 5f, 1f, 5f)
+                                    add(Label("STATUS", assets.mutedLabelStyle)).left()
+                                }
+                            ).left().expandX().fillX().padTop(2f).row()
+                            add(
+                                Table().apply {
                                     background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.52f))
                                     pad(2f, 4f, 2f, 4f)
                                     add(centerStatusLabel).left().expandX().fillX()

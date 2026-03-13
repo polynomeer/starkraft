@@ -98,12 +98,14 @@ internal class GdxWorldRenderer(
                 val sy = runtime.camera.worldToScreenY(y.toFloat())
                 val macroPatch = ((x / 10) + (y / 8)) % 3
                 val ridgeBand = ((x * 3) + (y * 2)) % 17
+                val terrainDrift = ((x / 14) - (y / 11)) % 4
                 val base =
                     when {
                         x in 40..56 && y in 40..56 -> terrainDust
                         ridgeBand < 3 -> terrainRidge
                         macroPatch == 0 -> terrainA
-                        macroPatch == 1 -> terrainB
+                        macroPatch == 1 && terrainDrift != 0 -> terrainB
+                        terrainDrift == 0 -> terrainA.cpy().lerp(terrainDust, 0.18f)
                         else -> terrainB
                     }
                 shape.color = base
@@ -115,6 +117,10 @@ internal class GdxWorldRenderer(
                 if ((x / 3 + y / 2) % 4 == 0) {
                     shape.color = base.cpy().lerp(Color.BLACK, 0.24f).apply { a = 0.18f }
                     shape.rect(sx + (tileSize * 0.58f), sy + 2f, 2f, tileSize - 4f)
+                }
+                if (((x / 5) + (y / 7)) % 6 == 0) {
+                    shape.color = base.cpy().lerp(Color.WHITE, 0.10f).apply { a = 0.12f }
+                    shape.rect(sx + 2f, sy + (tileSize * 0.48f), tileSize - 5f, 2f)
                 }
                 if ((x + y) % 5 == 0) {
                     shape.color = base.cpy().lerp(Color.WHITE, 0.14f).apply { a = 0.18f }
@@ -468,6 +474,8 @@ internal class GdxWorldRenderer(
                 shape.circle(trailX, trailY, 4.5f)
                 shape.color = Color(0.68f, 0.86f, 0.96f, 0.34f)
                 shape.rectLine(trailX, trailY, screenX, screenY, 1.4f)
+                shape.color = Color(0.84f, 0.96f, 1.00f, 0.12f)
+                shape.circle(trailX - 4f, trailY - 2f, 2.8f)
             }
             if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
                 shape.color =
@@ -531,6 +539,7 @@ internal class GdxWorldRenderer(
                     )
                     shape.color = Color(1.00f, 0.82f, 0.56f, 0.44f)
                     shape.circle(hitX, hitY, 4f)
+                    shape.rectLine(hitX, hitY, screenX - directionDx(attackDir, 2f), screenY - directionDy(attackDir, 2f), 1.2f)
                 }
                 shape.color = impactSparkColor
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
