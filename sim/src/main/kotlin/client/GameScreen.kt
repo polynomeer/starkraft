@@ -131,8 +131,8 @@ internal class GameScreen(
         }
 
         minimapFrame.apply {
-            background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.34f))
-            pad(10f)
+            background = null
+            pad(0f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
         }
 
@@ -264,7 +264,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(wrapMinimapPanel(minimapFrame)).width(214f).height(146f).padLeft(2f).padBottom(2f)
+            add(minimapFrame).padLeft(20f).padBottom(20f)
         }
         stage.addActor(leftHudColumn)
 
@@ -327,8 +327,9 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
-        val minimapWidth = (width * 0.14f).coerceIn(188f, 220f)
-        val minimapHeight = (height * 0.136f).coerceIn(118f, 138f)
+        val minimapBounds = gdxMiniMapBounds(width, height)
+        val minimapWidth = minimapBounds.width
+        val minimapHeight = minimapBounds.height
         val centerWidth = (width * 0.166f).coerceIn(204f, 252f)
         val commandWidth = (width * 0.176f).coerceIn(234f, 280f)
         val commandHeight = (height * 0.089f).coerceIn(74f, 92f)
@@ -1011,7 +1012,6 @@ internal class GameScreen(
 
     private fun buildActionBannerLine(): String {
         runtime.noticeLine()?.removePrefix("notice: ")?.let { return it }
-        runtime.currentHudLines().firstOrNull { it.startsWith("hint:") }?.removePrefix("hint: ")?.let { return it }
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId} with right click"
