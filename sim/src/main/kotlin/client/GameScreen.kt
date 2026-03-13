@@ -126,10 +126,34 @@ internal class GameScreen(
         topBar.apply {
             background = null
             pad(4f, 8f, 4f, 8f)
-            add(economyLabel).left().expandX().fillX()
-            add(topSelectionLabel).center().padLeft(12f).padRight(12f)
-            add(modeLabel).center().padLeft(12f).padRight(12f)
-            add(statusBadgeLabel).right()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                    pad(2f, 6f, 2f, 6f)
+                    add(economyLabel).left()
+                }
+            ).left().expandX().fillX()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
+                    pad(2f, 6f, 2f, 6f)
+                    add(topSelectionLabel).center()
+                }
+            ).center().padLeft(10f).padRight(10f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.82f))
+                    pad(2f, 6f, 2f, 6f)
+                    add(modeLabel).center()
+                }
+            ).center().padRight(10f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.86f))
+                    pad(2f, 6f, 2f, 6f)
+                    add(statusBadgeLabel).right()
+                }
+            ).right()
         }
 
         minimapFrame.apply {
@@ -142,7 +166,12 @@ internal class GameScreen(
             background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.92f))
             pad(12f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(statusHeader).left().row()
+            add(
+                Table().apply {
+                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(5f)
+                    add(statusHeader).left()
+                }
+            ).left().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
             add(hudLinesLabel).left().expandX().fillX().padTop(8f)
@@ -268,6 +297,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
                                     pad(1f, 5f, 1f, 5f)
+                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.76f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()
@@ -296,6 +326,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
                                     pad(1f, 5f, 1f, 5f)
+                                    add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.74f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()

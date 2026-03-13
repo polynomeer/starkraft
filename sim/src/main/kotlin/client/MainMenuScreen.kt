@@ -46,6 +46,7 @@ internal class MainMenuScreen(
                     Table().apply {
                         background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
                         pad(4f, 10f, 4f, 10f)
+                        add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
                         add(Label("STARKRAFT", assets.titleLabelStyle)).left()
                     }
                 ).left().row()
@@ -79,7 +80,12 @@ internal class MainMenuScreen(
             }
         ).left().expandX().fillX().row()
         controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).expandX().fillX().padBottom(8f).row()
-        controlsPanel.add(Label("Scenario", assets.titleLabelStyle)).left().row()
+        controlsPanel.add(
+            Table().apply {
+                add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.80f)) }).width(2f).expandY().fillY().padRight(5f)
+                add(Label("Scenario", assets.titleLabelStyle)).left()
+            }
+        ).left().row()
         controlsPanel.add(scenarioLabel).left().row()
         controlsPanel.add(summaryLabel).width(340f).left().padBottom(10f).row()
         controlsLabel.setText("keys  left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
@@ -92,7 +98,12 @@ internal class MainMenuScreen(
         controlsPanel.add(scenarioButtons).left().row()
 
         controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f)) }).height(1f).expandX().fillX().padTop(6f).padBottom(4f).row()
-        controlsPanel.add(Label("Presets", assets.titleLabelStyle)).left().row()
+        controlsPanel.add(
+            Table().apply {
+                add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.76f)) }).width(2f).expandY().fillY().padRight(5f)
+                add(Label("Presets", assets.titleLabelStyle)).left()
+            }
+        ).left().row()
 
         val presetButtons = Table()
         presetButtons.defaults().pad(4f)
@@ -103,7 +114,12 @@ internal class MainMenuScreen(
         controlsPanel.add(presetButtons).left().padBottom(8f).row()
 
         controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f)) }).height(1f).expandX().fillX().padTop(4f).padBottom(4f).row()
-        controlsPanel.add(Label("Session", assets.titleLabelStyle)).left().row()
+        controlsPanel.add(
+            Table().apply {
+                add(Table().apply { background = assets.panelDrawable(Color(0.70f, 0.98f, 0.78f, 0.76f)) }).width(2f).expandY().fillY().padRight(5f)
+                add(Label("Session", assets.titleLabelStyle)).left()
+            }
+        ).left().row()
         controlsPanel.add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
         controlsPanel.add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
         controlsPanel.add(makeButton("Quit", style = assets.buttonStyle(Color(0.32f, 0.16f, 0.16f, 0.98f), Color(0.40f, 0.18f, 0.18f, 0.98f))) { Gdx.app.exit() }).width(336f).row()
