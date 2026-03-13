@@ -1363,8 +1363,16 @@ internal class GdxWorldRenderer(
         runtime: GdxClientRuntime,
         factionColor: Color
     ) {
-        val left = runtime.camera.worldToScreenX(tileX.toFloat())
-        val top = runtime.camera.worldToScreenY(tileY.toFloat())
+        val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
+        val collapseSeverity = ((0.32f - hpRatio) / 0.32f).coerceIn(0f, 1f)
+        val collapseWobble = if (collapseSeverity > 0f) {
+            moveStride(entity.id + 41, 1.2f + (collapseSeverity * 2.4f))
+        } else {
+            0f
+        }
+        val settleDrop = collapseSeverity * 1.4f
+        val left = runtime.camera.worldToScreenX(tileX.toFloat()) + collapseWobble
+        val top = runtime.camera.worldToScreenY(tileY.toFloat()) + settleDrop
         val shell = Color(0.18f, 0.20f, 0.22f, 1f)
         val roof = Color(0.24f, 0.27f, 0.30f, 1f)
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
@@ -1450,6 +1458,17 @@ internal class GdxWorldRenderer(
         if (entity.activeResearchTech != null) {
             shape.color = Color(0.62f, 0.76f, 1.00f, 0.18f + (ambientPulse(1200L) * 0.10f))
             shape.rect(left + 6f, top + 6f, 8f, height - 12f)
+        }
+        if (collapseSeverity > 0f) {
+            shape.color = Color(0.08f, 0.08f, 0.08f, 0.30f + (collapseSeverity * 0.18f))
+            shape.rectLine(left + width * 0.24f, top + height * 0.18f, left + width * 0.48f, top + height * 0.48f, 1.8f)
+            shape.rectLine(left + width * 0.62f, top + height * 0.22f, left + width * 0.40f, top + height * 0.64f, 1.6f)
+            shape.color = Color(0.34f, 0.34f, 0.36f, 0.16f + (collapseSeverity * 0.24f))
+            shape.circle(left + width * 0.32f, top + 6f, 4f + (collapseSeverity * 2f))
+            shape.circle(left + width * 0.66f, top + 8f, 5f + (collapseSeverity * 3f))
+            shape.color = Color(0.58f, 0.58f, 0.60f, 0.10f + (collapseSeverity * 0.18f))
+            shape.circle(left + width * 0.34f, top + 4f, 6f + (collapseSeverity * 3f))
+            shape.circle(left + width * 0.68f, top + 5f, 7f + (collapseSeverity * 4f))
         }
     }
 
