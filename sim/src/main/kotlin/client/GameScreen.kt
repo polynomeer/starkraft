@@ -39,6 +39,7 @@ internal class GameScreen(
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
     private val queueStatusLabel = Label("", assets.mutedLabelStyle)
+    private val queueHeaderLabel = Label("QUEUE", assets.mutedLabelStyle)
     private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
     private val centerFooterLabel = Label("home center  esc clear  tab debug", assets.mutedLabelStyle)
     private val portraitFrame = Table()
@@ -280,7 +281,7 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.18f, 0.28f, 0.34f, 0.82f))
                                             pad(1f, 4f, 1f, 4f)
-                                            add(Label("QUEUE", assets.mutedLabelStyle)).left()
+                                            add(queueHeaderLabel).left()
                                         }
                                     ).left().padRight(4f)
                                     add(queueStatusLabel).left().expandX().fillX()
@@ -437,6 +438,7 @@ internal class GameScreen(
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
         queueStatusLabel.setText(buildQueueStatusLine())
+        queueHeaderLabel.setText(buildQueueHeaderLine())
         selectionRosterLabel.setText(buildSelectionRosterLine())
         factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
@@ -882,6 +884,19 @@ internal class GameScreen(
             }
         }
         return if (parts.isEmpty()) "Queue idle" else parts.joinToString("  |  ")
+    }
+
+    private fun buildQueueHeaderLine(): String {
+        val snapshot = runtime.snapshot ?: return "QUEUE"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "QUEUE"
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return when {
+            lead.activeResearchTech != null || lead.researchQueueSize > 0 -> "RESEARCH"
+            lead.activeProductionType != null || lead.productionQueueSize > 0 -> "PRODUCTION"
+            lead.underConstruction -> "CONSTRUCT"
+            else -> "QUEUE"
+        }
     }
 
     private fun updateHealthBar() {

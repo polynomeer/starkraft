@@ -712,6 +712,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 4.5f, y + 3.5f, 9f, 1f)
                 shape.rect(x - 4.5f, y - 4.5f, 1f, 9f)
                 shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
+                shape.rect(x - 1f, y - 7f, 2f, 2f)
             }
         }
         drawMiniMapStatusLegend(shape, left, top, boundsWidth)
@@ -728,9 +729,18 @@ internal class GdxWorldRenderer(
             shape.circle(x, y, 5f)
             when (ping.kind) {
                 GroundPingKind.MOVE -> shape.rect(x - 1f, y - 6f, 2f, 12f)
-                GroundPingKind.ATTACK -> shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
-                GroundPingKind.BUILD -> shape.rect(x - 5f, y - 1f, 10f, 2f)
-                GroundPingKind.INVALID -> shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
+                GroundPingKind.ATTACK -> {
+                    shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
+                    shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
+                }
+                GroundPingKind.BUILD -> {
+                    shape.rect(x - 5f, y - 1f, 10f, 2f)
+                    shape.rect(x - 1f, y - 5f, 2f, 10f)
+                }
+                GroundPingKind.INVALID -> {
+                    shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
+                    shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
+                }
             }
         }
     }
