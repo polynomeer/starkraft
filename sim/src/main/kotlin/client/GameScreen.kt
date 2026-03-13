@@ -983,7 +983,13 @@ internal class GameScreen(
         val pageStart = selectionPage * pageSize
         val selected = selectedEntities.drop(pageStart).take(pageSize)
         if (selected.isEmpty()) {
-            selectionGrid.add(Label("No slots", assets.mutedLabelStyle)).left()
+            selectionGrid.add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.74f))
+                    pad(4f, 8f, 4f, 8f)
+                    add(Label("No slots", assets.mutedLabelStyle)).left()
+                }
+            ).left()
             return
         }
         selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
@@ -1019,11 +1025,7 @@ internal class GameScreen(
                 Table().apply {
                     background = assets.panelDrawable(if (focused) Color(0.34f, 0.42f, 0.10f, 0.98f) else tone)
                     pad(if (focused) 2f else 1.5f)
-                    add(
-                        Table().apply {
-                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.18f else 0.05f))
-                        }
-                    ).size(18f, 6f).center().padBottom(2f).row()
+                    add(Table().apply { background = assets.panelDrawable(if (focused) Color(0.98f, 0.92f, 0.56f, 0.72f) else Color(1f, 1f, 1f, 0.08f)) }).height(2f).expandX().fillX().padBottom(2f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
                     add(
@@ -1083,8 +1085,8 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        selectionPageLabel.setText(if (selectedCount == 0) "0/0" else "${selectionPage + 1}/$pageCount")
-        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "empty")
+        selectionPageLabel.setText(if (selectedCount == 0) "Page 0/0" else "Page ${selectionPage + 1}/$pageCount")
+        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "Groups empty")
         rebuildControlGroupButtons()
     }
 
@@ -1103,8 +1105,14 @@ internal class GameScreen(
         controlGroupButtons.defaults().padRight(2f)
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
-                makeButton("$group:$count", style = assets.subtleButtonStyle()) {
-                    runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.92f))
+                    pad(1f)
+                    add(
+                        makeButton("$group:$count", style = assets.subtleButtonStyle()) {
+                            runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
+                        }
+                    ).height(18f)
                 }
             ).height(18f)
         }
