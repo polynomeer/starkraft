@@ -958,13 +958,56 @@ internal class GdxWorldRenderer(
         val tileX = floor(runtime.camera.screenToWorldX(Gdx.input.x.toFloat())).toInt()
         val tileY = floor(runtime.camera.screenToWorldY(Gdx.input.y.toFloat())).toInt()
         val valid = isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)
-        shape.color = if (valid) Color(0.29f, 0.84f, 0.49f, 0.35f) else Color(0.86f, 0.30f, 0.30f, 0.35f)
-        shape.rect(
-            runtime.camera.worldToScreenX(tileX.toFloat()),
-            runtime.camera.worldToScreenY(tileY.toFloat()),
-            spec.width * runtime.camera.tileSize,
-            spec.height * runtime.camera.tileSize
-        )
+        val left = runtime.camera.worldToScreenX(tileX.toFloat())
+        val top = runtime.camera.worldToScreenY(tileY.toFloat())
+        val width = spec.width * runtime.camera.tileSize
+        val height = spec.height * runtime.camera.tileSize
+        val tileSize = runtime.camera.tileSize
+        val fillColor = if (valid) Color(0.34f, 0.98f, 0.58f, 0.18f) else Color(1.00f, 0.34f, 0.34f, 0.18f)
+        val frameColor = if (valid) Color(0.76f, 1.00f, 0.84f, 0.92f) else Color(1.00f, 0.72f, 0.72f, 0.94f)
+        val accentColor = if (valid) Color(0.50f, 1.00f, 0.70f, 0.34f) else Color(1.00f, 0.48f, 0.48f, 0.32f)
+        for (dx in 0 until spec.width) {
+            for (dy in 0 until spec.height) {
+                val cellX = left + (dx * tileSize)
+                val cellY = top + (dy * tileSize)
+                shape.color = fillColor
+                shape.rect(cellX + 1f, cellY + 1f, tileSize - 2f, tileSize - 2f)
+                shape.color = accentColor
+                shape.rect(cellX + 2f, cellY + 2f, tileSize - 4f, 2f)
+                if (!valid) {
+                    shape.color = Color(1.00f, 0.78f, 0.78f, 0.22f)
+                    shape.rectLine(cellX + 2f, cellY + 2f, cellX + tileSize - 2f, cellY + tileSize - 2f, 1.4f)
+                    shape.rectLine(cellX + 2f, cellY + tileSize - 2f, cellX + tileSize - 2f, cellY + 2f, 1.4f)
+                }
+            }
+        }
+        shape.color = frameColor.cpy().mul(1f, 1f, 1f, 0.18f)
+        shape.rect(left - 5f, top - 5f, width + 10f, height + 10f)
+        shape.color = frameColor
+        shape.rect(left - 1f, top - 1f, width + 2f, 2f)
+        shape.rect(left - 1f, top + height - 1f, width + 2f, 2f)
+        shape.rect(left - 1f, top, 2f, height)
+        shape.rect(left + width - 1f, top, 2f, height)
+        val corner = 10f
+        shape.rect(left - 3f, top - 3f, corner, 2f)
+        shape.rect(left - 3f, top - 3f, 2f, corner)
+        shape.rect(left + width - corner + 3f, top - 3f, corner, 2f)
+        shape.rect(left + width + 1f, top - 3f, 2f, corner)
+        shape.rect(left - 3f, top + height + 1f, corner, 2f)
+        shape.rect(left - 3f, top + height - corner + 3f, 2f, corner)
+        shape.rect(left + width - corner + 3f, top + height + 1f, corner, 2f)
+        shape.rect(left + width + 1f, top + height - corner + 3f, 2f, corner)
+        val centerX = left + (width / 2f)
+        val centerY = top + (height / 2f)
+        shape.color = frameColor
+        if (valid) {
+            shape.rect(centerX - 1f, centerY - 8f, 2f, 16f)
+            shape.rect(centerX - 8f, centerY - 1f, 16f, 2f)
+            shape.circle(centerX, centerY, 4f)
+        } else {
+            shape.rectLine(centerX - 7f, centerY - 7f, centerX + 7f, centerY + 7f, 1.8f)
+            shape.rectLine(centerX - 7f, centerY + 7f, centerX + 7f, centerY - 7f, 1.8f)
+        }
     }
 
     private fun drawGroundPing(shape: ShapeRenderer, runtime: GdxClientRuntime) {
