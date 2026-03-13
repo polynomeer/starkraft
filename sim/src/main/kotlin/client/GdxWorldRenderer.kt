@@ -475,12 +475,23 @@ internal class GdxWorldRenderer(
                 val muzzleX = screenX + directionDx(entity.dir, 8f)
                 val muzzleY = screenY + directionDy(entity.dir, 8f)
                 val flashPulse = ambientPulse(420L)
-                shape.color = if (isMelee) Color(0.86f, 1.00f, 0.74f, 0.24f + (flashPulse * 0.14f)) else Color(1.00f, 0.80f, 0.46f, 0.26f + (flashPulse * 0.16f))
-                shape.circle(muzzleX, muzzleY, if (isMelee) 7f + (flashPulse * 2.6f) else 6f + (flashPulse * 2f))
-                shape.color = if (isMelee) Color(0.92f, 1.00f, 0.82f, 0.46f) else Color(1.00f, 0.84f, 0.48f, 0.48f)
-                shape.circle(muzzleX, muzzleY, if (isMelee) 4.2f else 3.5f)
-                shape.color = if (isMelee) Color(0.74f, 0.98f, 0.58f, 0.74f) else Color(1.00f, 0.63f, 0.28f, 0.78f)
-                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, if (isMelee) 10f else 13f), screenY + directionDy(entity.dir, if (isMelee) 10f else 13f), if (isMelee) 2.2f else 1.8f)
+                val marineStyle = entity.typeId.contains("Marine", ignoreCase = true)
+                shape.color = if (isMelee) Color(0.86f, 1.00f, 0.74f, 0.24f + (flashPulse * 0.14f)) else if (marineStyle) Color(1.00f, 0.92f, 0.60f, 0.22f + (flashPulse * 0.16f)) else Color(1.00f, 0.80f, 0.46f, 0.26f + (flashPulse * 0.16f))
+                if (marineStyle && !isMelee) {
+                    shape.rectLine(muzzleX - directionDy(entity.dir, 3.5f), muzzleY + directionDx(entity.dir, 3.5f), muzzleX + directionDy(entity.dir, 3.5f), muzzleY - directionDx(entity.dir, 3.5f), 3.2f)
+                    shape.rectLine(muzzleX, muzzleY, muzzleX + directionDx(entity.dir, 9f), muzzleY + directionDy(entity.dir, 9f), 2.4f)
+                } else {
+                    shape.circle(muzzleX, muzzleY, if (isMelee) 7f + (flashPulse * 2.6f) else 6f + (flashPulse * 2f))
+                }
+                shape.color = if (isMelee) Color(0.92f, 1.00f, 0.82f, 0.46f) else if (marineStyle) Color(1.00f, 0.98f, 0.80f, 0.54f) else Color(1.00f, 0.84f, 0.48f, 0.48f)
+                if (marineStyle && !isMelee) {
+                    shape.rectLine(muzzleX - directionDy(entity.dir, 2f), muzzleY + directionDx(entity.dir, 2f), muzzleX + directionDy(entity.dir, 2f), muzzleY - directionDx(entity.dir, 2f), 1.8f)
+                    shape.rectLine(muzzleX, muzzleY, muzzleX + directionDx(entity.dir, 6f), muzzleY + directionDy(entity.dir, 6f), 1.4f)
+                } else {
+                    shape.circle(muzzleX, muzzleY, if (isMelee) 4.2f else 3.5f)
+                }
+                shape.color = if (isMelee) Color(0.74f, 0.98f, 0.58f, 0.74f) else if (marineStyle) Color(1.00f, 0.72f, 0.24f, 0.86f) else Color(1.00f, 0.63f, 0.28f, 0.78f)
+                shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, if (isMelee) 10f else if (marineStyle) 15f else 13f), screenY + directionDy(entity.dir, if (isMelee) 10f else if (marineStyle) 15f else 13f), if (isMelee) 2.2f else if (marineStyle) 1.4f else 1.8f)
                 hostile?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
@@ -510,7 +521,6 @@ internal class GdxWorldRenderer(
                         val midY = muzzleY + ((targetY - muzzleY) * 0.48f)
                         val farX = muzzleX + ((targetX - muzzleX) * 0.78f)
                         val farY = muzzleY + ((targetY - muzzleY) * 0.78f)
-                        val marineStyle = entity.typeId.contains("Marine", ignoreCase = true)
                         shape.color = if (marineStyle) Color(1.00f, 0.82f, 0.46f, 0.20f) else Color(1.00f, 0.72f, 0.36f, 0.26f)
                         shape.rectLine(muzzleX, muzzleY, targetX, targetY, if (marineStyle) 3.4f else 4.2f)
                         shape.color = if (marineStyle) Color(1.00f, 0.96f, 0.74f, 0.86f) else Color(1.00f, 0.88f, 0.62f, 0.74f)
@@ -592,24 +602,31 @@ internal class GdxWorldRenderer(
                     val attackDir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
                     val hitX = screenX - directionDx(attackDir, 10f)
                     val hitY = screenY - directionDy(attackDir, 10f)
-                    shape.color = Color(1.00f, 0.74f, 0.44f, 0.82f)
+                    val meleeHit = isMeleeAttacker(attacker)
+                    shape.color = if (meleeHit) Color(0.84f, 1.00f, 0.74f, 0.86f) else Color(1.00f, 0.74f, 0.44f, 0.82f)
                     shape.rectLine(hitX, hitY, screenX, screenY, 2.2f)
-                    shape.rectLine(
-                        hitX + directionDy(attackDir, 4f),
-                        hitY - directionDx(attackDir, 4f),
-                        hitX,
-                        hitY,
-                        1.8f
-                    )
-                    shape.rectLine(
-                        hitX - directionDy(attackDir, 4f),
-                        hitY + directionDx(attackDir, 4f),
-                        hitX,
-                        hitY,
-                        1.8f
-                    )
-                    shape.color = Color(1.00f, 0.82f, 0.56f, 0.44f)
-                    shape.circle(hitX, hitY, 4f)
+                    if (meleeHit) {
+                        shape.rectLine(hitX + directionDy(attackDir, 6f), hitY - directionDx(attackDir, 6f), hitX - directionDy(attackDir, 6f), hitY + directionDx(attackDir, 6f), 2.2f)
+                        shape.color = Color(0.92f, 1.00f, 0.82f, 0.48f)
+                        shape.circle(hitX, hitY, 5f)
+                    } else {
+                        shape.rectLine(
+                            hitX + directionDy(attackDir, 4f),
+                            hitY - directionDx(attackDir, 4f),
+                            hitX,
+                            hitY,
+                            1.8f
+                        )
+                        shape.rectLine(
+                            hitX - directionDy(attackDir, 4f),
+                            hitY + directionDx(attackDir, 4f),
+                            hitX,
+                            hitY,
+                            1.8f
+                        )
+                        shape.color = Color(1.00f, 0.82f, 0.56f, 0.44f)
+                        shape.circle(hitX, hitY, 4f)
+                    }
                     shape.rectLine(hitX, hitY, screenX - directionDx(attackDir, 2f), screenY - directionDy(attackDir, 2f), 1.2f)
                 }
                 shape.color = impactSparkForEntity(runtime, entity.id)
@@ -1408,6 +1425,8 @@ internal class GdxWorldRenderer(
             .asSequence()
             .filter { it.faction > 0 && it.faction != entity.faction }
             .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
+
+    private fun isMeleeAttacker(entity: EntitySnapshot): Boolean = isMeleeWeapon(entity)
 
     private fun isMeleeWeapon(entity: EntitySnapshot): Boolean =
         entity.weaponId?.contains("Claw", ignoreCase = true) == true ||
