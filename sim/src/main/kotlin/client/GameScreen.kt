@@ -278,7 +278,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
-                                    pad(1f, 5f, 1f, 5f)
+                                    pad(1f, 4f, 1f, 4f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
@@ -309,14 +309,14 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.52f))
-                                    pad(2f, 4f, 2f, 4f)
+                                    pad(2f, 3f, 2f, 3f)
                                     add(centerStatusLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
-                                    pad(2f, 4f, 2f, 4f)
+                                    pad(2f, 3f, 2f, 3f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
@@ -330,7 +330,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
-                                    pad(1f, 5f, 1f, 5f)
+                                    pad(1f, 4f, 1f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.74f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
@@ -341,8 +341,8 @@ internal class GameScreen(
                                     clearChildren()
                                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(20f).height(18f).padRight(2f)
                                     add(selectionPageLabel).width(62f).left()
-                                    add(controlGroupButtons).minWidth(58f).right().padRight(2f)
-                                    add(controlGroupsLabel).width(92f).right().padRight(2f)
+                                    add(controlGroupButtons).minWidth(56f).right().padRight(2f)
+                                    add(controlGroupsLabel).width(88f).right().padRight(2f)
                                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(20f).height(18f)
                                 }
                             ).expandX().fillX()

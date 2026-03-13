@@ -1328,7 +1328,9 @@ internal class GdxWorldRenderer(
         shape.projectionMatrix = textCamera.combined
         shape.begin(ShapeRenderer.ShapeType.Filled)
         shape.color = color
-        shape.rect(x, y, width, 12f)
+        shape.rect(x, y, width, 11f)
+        shape.color = color.cpy().lerp(Color.WHITE, 0.08f).apply { a = color.a * 0.82f }
+        shape.rect(x, y, width, 1f)
         shape.end()
         batch.begin()
     }
