@@ -139,21 +139,21 @@ internal class GameScreen(
                     pad(2f, 6f, 2f, 6f)
                     add(topSelectionLabel).center()
                 }
-            ).center().padLeft(10f).padRight(10f)
+            ).width(154f).center().padLeft(10f).padRight(10f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.82f))
                     pad(2f, 6f, 2f, 6f)
                     add(modeLabel).center()
                 }
-            ).center().padRight(10f)
+            ).width(154f).center().padRight(10f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.86f))
                     pad(2f, 6f, 2f, 6f)
                     add(statusBadgeLabel).right()
                 }
-            ).right()
+            ).width(92f).right()
         }
 
         minimapFrame.apply {
@@ -335,9 +335,9 @@ internal class GameScreen(
                                 selectionPager.apply {
                                     clearChildren()
                                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(20f).height(18f).padRight(2f)
-                                    add(selectionPageLabel).expandX().left()
-                                    add(controlGroupButtons).right().padRight(2f)
-                                    add(controlGroupsLabel).right().padRight(2f)
+                                    add(selectionPageLabel).width(62f).left()
+                                    add(controlGroupButtons).minWidth(58f).right().padRight(2f)
+                                    add(controlGroupsLabel).width(92f).right().padRight(2f)
                                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(20f).height(18f)
                                 }
                             ).expandX().fillX()
@@ -632,7 +632,7 @@ internal class GameScreen(
                                                 checked = actor.isChecked
                                             )
                                         ).size(10f, 10f).left().padRight(4f)
-                                        add(actor).width(commandActorWidth).height(commandButtonHeight).left()
+                                        add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
                                     }
                                 ).expand().fill()
                             }
