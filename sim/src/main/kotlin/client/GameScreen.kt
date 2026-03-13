@@ -377,9 +377,16 @@ internal class GameScreen(
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.32f, 0.05f, 0.05f, 0.88f))
-                    pad(8f, 18f, 8f, 18f)
-                    add(attackWarningLabel).center()
+                    background = assets.panelDrawable(Color(0.22f, 0.05f, 0.05f, 0.86f))
+                    pad(2f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.66f, 0.18f, 0.14f, 0.94f))
+                            pad(8f, 18f, 8f, 18f)
+                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.84f, 0.70f, 0.82f)) }).width(3f).expandY().fillY().padRight(8f)
+                            add(attackWarningLabel).center()
+                        }
+                    )
                 }
             ).padTop(18f)
         }
@@ -388,21 +395,35 @@ internal class GameScreen(
         pauseOverlay.apply {
             setFillParent(true)
             isVisible = false
-            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.92f))
-            defaults().pad(8f)
-            add(Label("Paused", assets.titleLabelStyle)).row()
-            add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(240f).row()
-            add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(240f).row()
-            add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(240f).row()
-            add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(240f).row()
-            add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(240f).row()
-            add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(240f).row()
-            add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(240f).row()
-            add(makeButton("Main Menu", style = assets.subtleButtonStyle()) {
-                runtime.togglePauseOverlay()
-                game.openMainMenu()
-            }).width(240f).row()
-            add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(240f).row()
+            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.86f))
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
+                    pad(14f)
+                    defaults().pad(6f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
+                            pad(4f, 10f, 4f, 10f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
+                            add(Label("PAUSED", assets.titleLabelStyle)).left()
+                        }
+                    ).width(264f).left().row()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).width(264f).padBottom(8f).row()
+                    add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(264f).row()
+                    add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(264f).row()
+                    add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(264f).row()
+                    add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(264f).row()
+                    add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(264f).row()
+                    add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(264f).row()
+                    add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(264f).row()
+                    add(makeButton("Main Menu", style = assets.subtleButtonStyle()) {
+                        runtime.togglePauseOverlay()
+                        game.openMainMenu()
+                    }).width(264f).row()
+                    add(makeButton("Quit", style = assets.subtleButtonStyle()) { Gdx.app.exit() }).width(264f).row()
+                }
+            )
         }
         stage.addActor(pauseOverlay)
 
@@ -411,8 +432,23 @@ internal class GameScreen(
             isVisible = false
             top().left()
             pad(18f)
-            background = assets.panelDrawable(Color(0.04f, 0.07f, 0.10f, 0.92f))
-            add(helpLabel).left().top()
+            background = assets.panelDrawable(Color(0.03f, 0.05f, 0.08f, 0.78f))
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
+                    pad(10f, 12f, 10f, 12f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
+                            pad(4f, 10f, 4f, 10f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
+                            add(Label("HELP", assets.titleLabelStyle)).left()
+                        }
+                    ).left().row()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).expandX().fillX().padTop(6f).padBottom(8f).row()
+                    add(helpLabel).left().top()
+                }
+            ).left().top()
         }
         stage.addActor(helpOverlay)
 

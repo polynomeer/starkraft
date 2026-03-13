@@ -131,7 +131,7 @@ internal class MainMenuScreen(
         screenFade.apply {
             setFillParent(true)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            background = assets.panelDrawable(Color(0f, 0f, 0f, 1f))
+            background = assets.panelDrawable(Color(0.02f, 0.03f, 0.05f, 1f))
             color.a = screenFadeAlpha
         }
         stage.addActor(screenFade)
