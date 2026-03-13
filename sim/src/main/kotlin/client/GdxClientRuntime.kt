@@ -699,8 +699,8 @@ internal class GdxClientRuntime(
     fun mainMenuSummaryLines(): List<String> =
         listOfNotNull(
             "scenario: ${playScenario.id}",
-            if (scenarioRestartRequired()) "scenario status: restart required before match" else "scenario status: live",
-            "play: ${if (playControlState.paused) "paused" else "running"} x${playControlState.speed}",
+            if (scenarioRestartRequired()) "status: restart required" else "status: live",
+            "play: ${if (playControlState.paused) "paused" else "run"} x${playControlState.speed}",
             presetAvailabilityLine(),
             noticeLine()
         )

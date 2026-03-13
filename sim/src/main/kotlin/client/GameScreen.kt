@@ -675,7 +675,7 @@ internal class GameScreen(
             lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
         }
         if (runtime.session.state.viewedFaction != null && buildTopEconomyLine().contains("vis 0")) {
-            picked.add(0, "warning: current faction has no vision, press 1/2/3 to switch view")
+            picked.add(0, "warning: no vision, press 1/2/3")
         }
         if (picked.isEmpty()) {
             picked.addAll(lines.take(6))
@@ -688,12 +688,12 @@ internal class GameScreen(
         if (!raw.isNullOrBlank() && !raw.equals("selection hud: none", ignoreCase = true)) {
             return raw
         }
-        val snapshot = runtime.snapshot ?: return "Awaiting view"
+        val snapshot = runtime.snapshot ?: return "Awaiting"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
             "$faction · ${snapshot.entities.size} live"
         } else {
-            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
+            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
         }
     }
 
@@ -721,7 +721,7 @@ internal class GameScreen(
     }
 
     private fun buildSelectionRosterLine(): String {
-        val snapshot = runtime.snapshot ?: return "No roster"
+        val snapshot = runtime.snapshot ?: return "No ros"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) {
             return "No card"
@@ -738,11 +738,11 @@ internal class GameScreen(
     }
 
     private fun buildFactionOverviewLine(): String {
-        val snapshot = runtime.snapshot ?: return "No telemetry"
-        if (snapshot.factions.isEmpty()) return "No faction data"
+        val snapshot = runtime.snapshot ?: return "No data"
+        if (snapshot.factions.isEmpty()) return "No factions"
         return snapshot.factions.joinToString("\n") { faction ->
             val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
-            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  Vis${faction.visibleTiles}$viewed"
+            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  V${faction.visibleTiles}$viewed"
         }
     }
 
