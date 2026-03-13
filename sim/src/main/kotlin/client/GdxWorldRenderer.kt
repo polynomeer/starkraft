@@ -680,18 +680,23 @@ internal class GdxWorldRenderer(
             if (runtime.isCompletionFlashActive(entity.id)) {
                 shape.color = completionSparkColor(runtime, entity.id).cpy().apply { a = if (visible) 0.90f else 0.40f }
                 shape.rect(x - 4f, y - 4f, 8f, 8f)
+                shape.rect(x - 6f, y - 1f, 12f, 2f)
+                shape.rect(x - 1f, y - 6f, 2f, 12f)
             }
             if (entity.pathRemainingNodes > 0) {
                 shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)
                 shape.rect(x - 1f, y + 3.5f, 2f, 3f)
+                shape.rect(x + 3.5f, y + 3.5f, 2f, 2f)
             }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
                 shape.color = Color(0.98f, 0.76f, 0.34f, if (visible) 0.78f else 0.34f)
                 shape.rect(x + 3.5f, y - 1f, 3f, 2f)
+                shape.rect(x + 7f, y - 1f, 2f, 2f)
             }
             if (entity.activeResearchTech != null) {
                 shape.color = Color(0.62f, 0.76f, 1.00f, if (visible) 0.78f else 0.34f)
                 shape.rect(x - 6.5f, y - 1f, 3f, 2f)
+                shape.rect(x - 9.5f, y - 1f, 2f, 2f)
             }
             if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
                 shape.color =
@@ -721,6 +726,12 @@ internal class GdxWorldRenderer(
                     GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.85f)
                 }
             shape.circle(x, y, 5f)
+            when (ping.kind) {
+                GroundPingKind.MOVE -> shape.rect(x - 1f, y - 6f, 2f, 12f)
+                GroundPingKind.ATTACK -> shape.rectLine(x - 5f, y - 5f, x + 5f, y + 5f, 1.4f)
+                GroundPingKind.BUILD -> shape.rect(x - 5f, y - 1f, 10f, 2f)
+                GroundPingKind.INVALID -> shape.rectLine(x - 5f, y + 5f, x + 5f, y - 5f, 1.4f)
+            }
         }
     }
 

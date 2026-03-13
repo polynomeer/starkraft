@@ -526,6 +526,21 @@ internal class GameScreen(
                                         background = assets.panelDrawable(frameTone)
                                         pad(1f)
                                         add(
+                                            Table().apply {
+                                                background =
+                                                    assets.panelDrawable(
+                                                        when {
+                                                            actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
+                                                            actor.isChecked -> Color(1.00f, 0.90f, 0.44f, 0.82f)
+                                                            button.actionId == "attackMove" -> Color(1.00f, 0.54f, 0.30f, 0.72f)
+                                                            button.actionId.startsWith("build:") -> Color(0.96f, 0.78f, 0.34f, 0.72f)
+                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.64f, 0.78f, 1.00f, 0.72f)
+                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.64f)
+                                                        }
+                                                    )
+                                            }
+                                        ).width(2f).expandY().fillY().padRight(2f)
+                                        add(
                                             buildCommandGlyph(
                                                 actionId = button.actionId,
                                                 disabled = actor.isDisabled,
