@@ -147,7 +147,7 @@ internal class GameScreen(
         }
 
         commandCard.apply {
-            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
+            background = null
             pad(4f)
             top()
             add(
@@ -174,13 +174,13 @@ internal class GameScreen(
         commandCard.add(commandScroll).top().left().padTop(6f)
 
         actionBanner.apply {
-            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+            background = null
             pad(4f, 8f, 4f, 8f)
             add(actionBannerLabel).center()
         }
 
         centerCard.apply {
-            background = assets.panelDrawable(Color(0.04f, 0.08f, 0.12f, 0.96f))
+            background = null
             pad(2f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
@@ -240,7 +240,7 @@ internal class GameScreen(
         }
 
         bottomHud.apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.78f))
+            background = null
             pad(0f, 2f, 0f, 2f)
             add(
                 Table().apply {
@@ -600,11 +600,11 @@ internal class GameScreen(
 
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.92f))
+            background = null
             pad(1f, 1f, 2f, 1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(tone)
+                    background = assets.panelDrawable(tone.cpy().apply { a = 0f })
                     pad(1f, 1f, 2f, 1f)
                     add(content).expand().fill()
                 }
