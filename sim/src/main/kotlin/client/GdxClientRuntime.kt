@@ -19,6 +19,7 @@ internal class GdxClientRuntime(
         const val DAMAGE_FLASH_DURATION_MS = 820L
         const val GROUND_PING_DURATION_MS = 720L
         const val COMPLETION_FLASH_DURATION_MS = 1700L
+        const val DEATH_BURST_DURATION_MS = 980L
     }
 
     private val requestIds = ClientCommandIds("gdx")
@@ -36,6 +37,8 @@ internal class GdxClientRuntime(
     private var lastAttackAlertTick: Int = Int.MIN_VALUE
     private var pendingAttackAlertSound: Boolean = false
     private var pendingAttackCommandSound: Boolean = false
+    private var pendingCombatSound: Boolean = false
+    private var pendingDeathSound: Boolean = false
     private var pendingCompletionAlertSound: Boolean = false
     private var recentDamageEntityIds: Set<Int> = emptySet()
     private var recentDamageUntilMillis: Long = 0L
@@ -44,6 +47,7 @@ internal class GdxClientRuntime(
     private var recentCompletionEntityIds: Set<Int> = emptySet()
     private var recentCompletionKindsByEntityId: Map<Int, CompletionFlashKind> = emptyMap()
     private var recentCompletionUntilMillis: Long = 0L
+    private val recentDeathBursts = ArrayList<DeathBurst>()
     private var lastSnapshotTick: Int? = null
     private var previousEntitiesById: Map<Int, EntitySnapshot> = emptyMap()
     private var cameraTarget: CameraView? = null
@@ -94,6 +98,10 @@ internal class GdxClientRuntime(
             recentCompletionEntityIds = emptySet()
             recentCompletionKindsByEntityId = emptyMap()
         }
+        if (recentDeathBursts.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            recentDeathBursts.removeAll { now > it.expiresAtMillis }
+        }
         maybeRaiseCompletionNotice()
         maybeRaiseAttackAlert()
         updateCameraGlide()
@@ -104,11 +112,14 @@ internal class GdxClientRuntime(
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
+    fun consumeCombatSound(): Boolean = pendingCombatSound.also { pendingCombatSound = false }
+    fun consumeDeathSound(): Boolean = pendingDeathSound.also { pendingDeathSound = false }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
     fun completionFlashKind(entityId: Int): CompletionFlashKind? = recentCompletionKindsByEntityId[entityId]?.takeIf { isCompletionFlashActive(entityId) }
+    fun activeDeathBursts(): List<DeathBurst> = recentDeathBursts.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
 
     fun overlayModeLabel(): String =
@@ -886,6 +897,9 @@ internal class GdxClientRuntime(
         if (damage.tick == lastAttackAlertTick) return
         recentDamageEntityIds = damage.targetIds.toSet()
         recentDamageUntilMillis = System.currentTimeMillis() + DAMAGE_FLASH_DURATION_MS
+        if (damage.targetIds.isNotEmpty()) {
+            pendingCombatSound = true
+        }
         val snapshot = session.state.snapshot ?: return
         val viewedFaction = session.state.viewedFaction ?: return
         val affected =
@@ -902,6 +916,7 @@ internal class GdxClientRuntime(
     private fun maybeRaiseCompletionNotice() {
         val snapshot = session.state.snapshot ?: return
         if (lastSnapshotTick == snapshot.tick) return
+        maybeRaiseDeathBursts(snapshot)
         val completed = LinkedHashMap<EntitySnapshot, CompletionFlashKind>()
         for (entity in snapshot.entities) {
             val previous = previousEntitiesById[entity.id] ?: continue
@@ -936,6 +951,30 @@ internal class GdxClientRuntime(
         }
         previousEntitiesById = snapshot.entities.associateBy { it.id }
         lastSnapshotTick = snapshot.tick
+    }
+
+    private fun maybeRaiseDeathBursts(snapshot: ClientSnapshot) {
+        if (previousEntitiesById.isEmpty()) return
+        val now = System.currentTimeMillis()
+        val liveIds = snapshot.entities.asSequence().map { it.id }.toHashSet()
+        val vanished = previousEntitiesById.values.filter { it.id !in liveIds && it.faction > 0 }
+        if (vanished.isEmpty()) return
+        var deathSound = false
+        for (entity in vanished) {
+            recentDeathBursts +=
+                DeathBurst(
+                    entityId = entity.id,
+                    x = entity.x,
+                    y = entity.y,
+                    isStructure = entity.footprintWidth != null && entity.footprintHeight != null,
+                    faction = entity.faction,
+                    expiresAtMillis = now + DEATH_BURST_DURATION_MS
+                )
+            deathSound = true
+        }
+        if (deathSound) {
+            pendingDeathSound = true
+        }
     }
 
     private fun recallControlGroup(group: Int, viewWidth: Int, viewHeight: Int) {
@@ -979,3 +1018,12 @@ internal enum class GroundPingKind {
     BUILD,
     INVALID
 }
+
+internal data class DeathBurst(
+    val entityId: Int,
+    val x: Float,
+    val y: Float,
+    val isStructure: Boolean,
+    val faction: Int,
+    val expiresAtMillis: Long
+)

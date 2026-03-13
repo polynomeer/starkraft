@@ -26,9 +26,13 @@ internal class GdxUiAssets : Disposable {
     val shapeRenderer = ShapeRenderer()
     private var alertSoundPath: Path? = null
     private var attackSoundPath: Path? = null
+    private var combatSoundPath: Path? = null
+    private var deathSoundPath: Path? = null
     private var completeSoundPath: Path? = null
     val alertSound: Sound = createAlertSound()
     val attackSound: Sound = createAttackSound()
+    val combatSound: Sound = createCombatSound()
+    val deathSound: Sound = createDeathSound()
     val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
@@ -77,9 +81,13 @@ internal class GdxUiAssets : Disposable {
         shapeRenderer.dispose()
         alertSound.dispose()
         attackSound.dispose()
+        combatSound.dispose()
+        deathSound.dispose()
         completeSound.dispose()
         alertSoundPath?.let(Files::deleteIfExists)
         attackSoundPath?.let(Files::deleteIfExists)
+        combatSoundPath?.let(Files::deleteIfExists)
+        deathSoundPath?.let(Files::deleteIfExists)
         completeSoundPath?.let(Files::deleteIfExists)
     }
 
@@ -122,6 +130,42 @@ internal class GdxUiAssets : Disposable {
         return Gdx.audio.newSound(handle)
     }
 
+    private fun createCombatSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 520.0,
+                endHz = 220.0,
+                accentHz = 1240.0,
+                durationSeconds = 0.12f,
+                sweepMix = 0.46,
+                accentMix = 0.18
+            )
+        val tempPath = Files.createTempFile("starkraft-combat-", ".wav")
+        combatSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
+    private fun createDeathSound(): Sound {
+        val bytes =
+            renderSweepWav(
+                startHz = 240.0,
+                endHz = 72.0,
+                accentHz = 480.0,
+                durationSeconds = 0.24f,
+                sweepMix = 0.50,
+                accentMix = 0.14
+            )
+        val tempPath = Files.createTempFile("starkraft-death-", ".wav")
+        deathSoundPath = tempPath
+        tempPath.toFile().deleteOnExit()
+        val handle = Gdx.files.absolute(tempPath.toString())
+        handle.writeBytes(bytes, false)
+        return Gdx.audio.newSound(handle)
+    }
+
     private fun renderToneWav(primaryHz: Double, secondaryHz: Double, durationSeconds: Float, primaryMix: Double, secondaryMix: Double): ByteArray {
         val sampleRate = 22050
         val sampleCount = (sampleRate * durationSeconds).toInt()
@@ -138,6 +182,60 @@ internal class GdxUiAssets : Disposable {
                 (
                     kotlin.math.sin(2.0 * Math.PI * primaryHz * t) * primaryMix +
                         kotlin.math.sin(2.0 * Math.PI * secondaryHz * t) * secondaryMix
+                ) * envelope
+            val shortValue = (sample * Short.MAX_VALUE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+            pcm.write(shortValue.toInt() and 0xff)
+            pcm.write((shortValue.toInt() shr 8) and 0xff)
+        }
+        val pcmBytes = pcm.toByteArray()
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray())
+        header.putInt(36 + pcmBytes.size)
+        header.put("WAVE".toByteArray())
+        header.put("fmt ".toByteArray())
+        header.putInt(16)
+        header.putShort(1)
+        header.putShort(1)
+        header.putInt(sampleRate)
+        header.putInt(sampleRate * 2)
+        header.putShort(2)
+        header.putShort(16)
+        header.put("data".toByteArray())
+        header.putInt(pcmBytes.size)
+        return header.array() + pcmBytes
+    }
+
+    private fun renderSweepWav(
+        startHz: Double,
+        endHz: Double,
+        accentHz: Double,
+        durationSeconds: Float,
+        sweepMix: Double,
+        accentMix: Double
+    ): ByteArray {
+        val sampleRate = 22050
+        val sampleCount = (sampleRate * durationSeconds).toInt()
+        val pcm = ByteArrayOutputStream(sampleCount * 2)
+        var phase = 0.0
+        var accentPhase = 0.0
+        for (i in 0 until sampleCount) {
+            val t = i / sampleRate.toFloat()
+            val progress = (t / durationSeconds).coerceIn(0f, 1f)
+            val hz = startHz + ((endHz - startHz) * progress)
+            phase += (2.0 * Math.PI * hz) / sampleRate
+            accentPhase += (2.0 * Math.PI * accentHz) / sampleRate
+            val envelope =
+                when {
+                    t < 0.01f -> t / 0.01f
+                    t > durationSeconds - 0.05f -> (durationSeconds - t) / 0.05f
+                    else -> 1f
+                }.coerceIn(0f, 1f)
+            val grit = kotlin.math.sin(accentPhase) * kotlin.math.sin(accentPhase * 0.31)
+            val sample =
+                (
+                    kotlin.math.sin(phase) * sweepMix +
+                        kotlin.math.sin(phase * 1.7) * (sweepMix * 0.38) +
+                        grit * accentMix
                 ) * envelope
             val shortValue = (sample * Short.MAX_VALUE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
             pcm.write(shortValue.toInt() and 0xff)

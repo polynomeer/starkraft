@@ -107,6 +107,12 @@ internal class GameScreen(
         if (runtime.consumeAttackCommandSound()) {
             assets.attackSound.play(0.55f)
         }
+        if (runtime.consumeCombatSound()) {
+            assets.combatSound.play(0.42f)
+        }
+        if (runtime.consumeDeathSound()) {
+            assets.deathSound.play(0.56f)
+        }
         if (runtime.consumeCompletionAlertSound()) {
             assets.completeSound.play(0.55f)
         }

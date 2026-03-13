@@ -81,7 +81,8 @@ internal data class ClientTickActivity(
 internal data class ClientDamageActivity(
     val tick: Int,
     val targetIds: IntArray = intArrayOf(),
-    val totalDamage: Int = 0
+    val totalDamage: Int = 0,
+    val killedTargetIds: IntArray = intArrayOf()
 )
 
 internal data class ClientMapState(
@@ -524,18 +525,23 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
         "damage" -> {
             val events = obj["events"]?.jsonArray ?: return null
             val targetIds = IntArray(events.size)
+            val killedIds = ArrayList<Int>(events.size)
             var totalDamage = 0
             events.forEachIndexed { index, event ->
                 val eventObj = event.jsonObject
                 targetIds[index] = eventObj["targetId"]?.jsonPrimitive?.content?.toIntOrNull() ?: -1
                 totalDamage += eventObj["damage"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+                if (eventObj["killed"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true) {
+                    killedIds += targetIds[index]
+                }
             }
             ClientStreamState(
                 damageActivity =
                     ClientDamageActivity(
                         tick = obj["tick"]?.jsonPrimitive?.content?.toInt() ?: 0,
                         targetIds = targetIds,
-                        totalDamage = totalDamage
+                        totalDamage = totalDamage,
+                        killedTargetIds = killedIds.toIntArray()
                     )
             )
         }

@@ -217,6 +217,18 @@ class ClientSessionTest {
     }
 
     @Test
+    fun `damage stream parses killed target ids`() {
+        val update =
+            starkraft.sim.client.parseClientStreamLine(
+                "{\"recordType\":\"damage\",\"tick\":17,\"events\":[{\"attackerId\":3,\"targetId\":8,\"damage\":6,\"targetHp\":12,\"killed\":false},{\"attackerId\":4,\"targetId\":9,\"damage\":9,\"targetHp\":-1,\"killed\":true}]}"
+            )
+
+        assertArrayEquals(intArrayOf(8, 9), update?.damageActivity?.targetIds)
+        assertArrayEquals(intArrayOf(9), update?.damageActivity?.killedTargetIds)
+        assertEquals(15, update?.damageActivity?.totalDamage)
+    }
+
+    @Test
     fun `shared file sink keeps ndjson records intact under concurrent appends`(@TempDir tempDir: Path) {
         val inputPath = tempDir.resolve("client-input.ndjson")
         val sink = FileClientInputSink(inputPath)

@@ -76,6 +76,7 @@ internal class GdxWorldRenderer(
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
+        drawDeathBursts(shape, runtime)
         drawBuildPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
         shape.end()
@@ -474,26 +475,43 @@ internal class GdxWorldRenderer(
                 hostile?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
-                    val nearX = muzzleX + ((targetX - muzzleX) * 0.22f)
-                    val nearY = muzzleY + ((targetY - muzzleY) * 0.22f)
-                    val midX = muzzleX + ((targetX - muzzleX) * 0.48f)
-                    val midY = muzzleY + ((targetY - muzzleY) * 0.48f)
-                    val farX = muzzleX + ((targetX - muzzleX) * 0.78f)
-                    val farY = muzzleY + ((targetY - muzzleY) * 0.78f)
-                    shape.color = Color(1.00f, 0.72f, 0.36f, 0.26f)
-                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.6f)
-                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.62f)
-                    shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.4f)
-                    shape.color = Color(1.00f, 0.92f, 0.76f, 0.72f)
-                    shape.circle(nearX, nearY, 1.6f)
-                    shape.circle(midX, midY, 2.2f)
-                    shape.circle(farX, farY, 1.8f)
-                    shape.color = Color(1.00f, 0.78f, 0.44f, 0.18f)
-                    shape.circle(targetX, targetY, 9f)
-                    shape.color = Color(1.00f, 0.92f, 0.72f, 0.74f)
-                    shape.circle(targetX, targetY, 4.2f)
-                    shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
-                    shape.circle(midX, midY, 2.2f)
+                    if (isMeleeWeapon(entity)) {
+                        val strikeX = screenX + ((targetX - screenX) * 0.62f)
+                        val strikeY = screenY + ((targetY - screenY) * 0.62f)
+                        val slashDx = directionDx(entity.dir, 8f)
+                        val slashDy = directionDy(entity.dir, 8f)
+                        shape.color = Color(0.98f, 0.90f, 0.68f, 0.14f)
+                        shape.circle(strikeX, strikeY, 12f + (flashPulse * 3f))
+                        shape.color = Color(1.00f, 0.92f, 0.76f, 0.84f)
+                        shape.rectLine(strikeX - slashDy, strikeY + slashDx, strikeX + slashDy, strikeY - slashDx, 2.2f)
+                        shape.rectLine(strikeX - (slashDx * 0.7f), strikeY - (slashDy * 0.7f), strikeX + (slashDx * 0.7f), strikeY + (slashDy * 0.7f), 1.6f)
+                        shape.color = Color(1.00f, 0.72f, 0.38f, 0.74f)
+                        shape.circle(targetX, targetY, 5f)
+                        shape.rectLine(strikeX, strikeY, targetX, targetY, 1.4f)
+                    } else {
+                        val nearX = muzzleX + ((targetX - muzzleX) * 0.22f)
+                        val nearY = muzzleY + ((targetY - muzzleY) * 0.22f)
+                        val midX = muzzleX + ((targetX - muzzleX) * 0.48f)
+                        val midY = muzzleY + ((targetY - muzzleY) * 0.48f)
+                        val farX = muzzleX + ((targetX - muzzleX) * 0.78f)
+                        val farY = muzzleY + ((targetY - muzzleY) * 0.78f)
+                        shape.color = Color(1.00f, 0.72f, 0.36f, 0.26f)
+                        shape.rectLine(muzzleX, muzzleY, targetX, targetY, 4.2f)
+                        shape.color = Color(1.00f, 0.88f, 0.62f, 0.74f)
+                        shape.rectLine(muzzleX, muzzleY, targetX, targetY, 1.6f)
+                        shape.color = Color(1.00f, 0.92f, 0.76f, 0.72f)
+                        shape.circle(nearX, nearY, 1.6f)
+                        shape.circle(midX, midY, 2.4f)
+                        shape.circle(farX, farY, 1.8f)
+                        shape.color = Color(1.00f, 0.78f, 0.44f, 0.22f)
+                        shape.circle(targetX, targetY, 10f)
+                        shape.color = Color(1.00f, 0.92f, 0.72f, 0.80f)
+                        shape.circle(targetX, targetY, 4.4f)
+                        shape.rect(targetX - 7f, targetY - 1f, 14f, 2f)
+                        shape.rect(targetX - 1f, targetY - 7f, 2f, 14f)
+                        shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
+                        shape.circle(midX, midY, 2.2f)
+                    }
                 }
             }
             if (entity.pathRemainingNodes > 0) {
@@ -961,6 +979,37 @@ internal class GdxWorldRenderer(
         shape.rect(minX + (width * 0.22f), bottom - 0.5f, width * 0.56f, 1.5f)
     }
 
+    private fun drawDeathBursts(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val bursts = runtime.activeDeathBursts()
+        if (bursts.isEmpty()) return
+        val now = System.currentTimeMillis()
+        for (burst in bursts) {
+            val x = runtime.camera.worldToScreenX(burst.x)
+            val y = runtime.camera.worldToScreenY(burst.y)
+            if (!isOnScreen(x, y)) continue
+            val progress = (1f - ((burst.expiresAtMillis - now).toFloat() / 980f)).coerceIn(0f, 1f)
+            val fade = (1f - progress).coerceIn(0f, 1f)
+            val core = if (burst.isStructure) 8f + (progress * 14f) else 5f + (progress * 9f)
+            val outer = if (burst.isStructure) 16f + (progress * 28f) else 11f + (progress * 18f)
+            shape.color = Color(1.00f, 0.58f, 0.28f, 0.22f * fade)
+            shape.circle(x, y, outer)
+            shape.color = Color(1.00f, 0.78f, 0.40f, 0.40f * fade)
+            shape.circle(x, y, core)
+            shape.color = Color(1.00f, 0.92f, 0.72f, 0.62f * fade)
+            shape.circle(x, y, core * 0.42f)
+            val shard = if (burst.isStructure) 18f else 12f
+            shape.color = Color(1.00f, 0.76f, 0.44f, 0.50f * fade)
+            shape.rectLine(x - shard, y, x - (shard * 0.35f), y, 2.2f)
+            shape.rectLine(x + shard, y, x + (shard * 0.35f), y, 2.2f)
+            shape.rectLine(x, y - shard, x, y - (shard * 0.35f), 2.2f)
+            shape.rectLine(x, y + shard, x, y + (shard * 0.35f), 2.2f)
+            shape.rectLine(x - (shard * 0.72f), y - (shard * 0.72f), x - (shard * 0.22f), y - (shard * 0.22f), 1.6f)
+            shape.rectLine(x + (shard * 0.72f), y - (shard * 0.72f), x + (shard * 0.22f), y - (shard * 0.22f), 1.6f)
+            shape.rectLine(x - (shard * 0.72f), y + (shard * 0.72f), x - (shard * 0.22f), y + (shard * 0.22f), 1.6f)
+            shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
+        }
+    }
+
     private fun drawLabels(runtime: GdxClientRuntime, width: Int, height: Int) {
         val snapshot = runtime.snapshot ?: return
         val batch = assets.batch
@@ -1275,6 +1324,10 @@ internal class GdxWorldRenderer(
             .asSequence()
             .filter { it.faction > 0 && it.faction != entity.faction }
             .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
+
+    private fun isMeleeWeapon(entity: EntitySnapshot): Boolean =
+        entity.weaponId?.contains("Claw", ignoreCase = true) == true ||
+            entity.typeId.contains("Zergling", ignoreCase = true)
 
     private fun distanceSq(ax: Float, ay: Float, bx: Float, by: Float): Float {
         val dx = ax - bx

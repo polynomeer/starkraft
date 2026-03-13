@@ -229,7 +229,42 @@ class GdxClientRuntimeTest {
         assertTrue(runtime.isDamageFlashActive(4))
         assertFalse(runtime.isDamageFlashActive(5))
         assertTrue(runtime.consumeAttackAlertSound())
+        assertTrue(runtime.consumeCombatSound())
+        assertFalse(runtime.consumeCombatSound())
         assertFalse(runtime.consumeAttackAlertSound())
+    }
+
+    @Test
+    fun `entity death creates death burst and sound`(@TempDir tempDir: Path) {
+        val before =
+            ClientSnapshot(
+                tick = 7,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities =
+                    listOf(
+                        EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 6f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Gauss"),
+                        EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "infantry", x = 8f, y = 6f, dir = 0f, hp = 35, maxHp = 35, armor = 0, weaponId = "Claw")
+                    ),
+                resourceNodes = emptyList()
+            )
+        val runtime = runtime(tempDir, snapshot = before)
+
+        runtime.tick()
+        runtime.session.state.snapshot =
+            before.copy(
+                tick = 8,
+                entities = listOf(before.entities.first())
+            )
+
+        runtime.tick()
+
+        assertEquals(1, runtime.activeDeathBursts().size)
+        assertTrue(runtime.consumeDeathSound())
+        assertFalse(runtime.consumeDeathSound())
     }
 
     @Test
