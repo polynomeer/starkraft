@@ -62,7 +62,7 @@ internal class GameScreen(
     private val attackWarningLabel = Label("", assets.alertLabelStyle)
     private val minimapFrame = Table()
     private val minimapTitle = Label("Tac Map", assets.titleLabelStyle)
-    private val minimapHint = Label("click or drag to move camera", assets.mutedLabelStyle)
+    private val minimapHint = Label("click or drag map", assets.mutedLabelStyle)
     private val bottomHud = Table()
     private val leftHudColumn = Table()
     private val statusCard = Table()
@@ -411,13 +411,13 @@ internal class GameScreen(
                     ).width(248f).left().row()
                     add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).width(248f).padBottom(8f).row()
                     add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(248f).row()
-                    add(makeButton("Toggle Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(248f).row()
-                    add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(248f).row()
-                    add(makeButton("Save Quick", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(248f).row()
-                    add(makeButton("Load Quick", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(248f).row()
-                    add(makeButton("Save Alt", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(248f).row()
-                    add(makeButton("Load Alt", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(248f).row()
-                    add(makeButton("Main Menu", style = assets.subtleButtonStyle()) {
+                    add(makeButton("Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(248f).row()
+                    add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(248f).row()
+                    add(makeButton("Save Q", style = assets.subtleButtonStyle()) { runtime.savePreset("quick") }).width(248f).row()
+                    add(makeButton("Load Q", style = assets.subtleButtonStyle()) { runtime.loadPreset("quick") }).width(248f).row()
+                    add(makeButton("Save A", style = assets.subtleButtonStyle()) { runtime.savePreset("alt") }).width(248f).row()
+                    add(makeButton("Load A", style = assets.subtleButtonStyle()) { runtime.loadPreset("alt") }).width(248f).row()
+                    add(makeButton("Menu", style = assets.subtleButtonStyle()) {
                         runtime.togglePauseOverlay()
                         game.openMainMenu()
                     }).width(248f).row()
@@ -925,10 +925,10 @@ internal class GameScreen(
 
     private fun buildCenterFooterLine(): String =
         when {
-            runtime.buildModeTypeId != null -> "right click place  esc cancel build"
-            runtime.groundMode != null -> "right click confirm order  esc cancel"
-            runtime.session.state.selectedIds.isNotEmpty() -> "home center  esc clear  shift add"
-            else -> "drag select  right click order  middle drag pan"
+            runtime.buildModeTypeId != null -> "RMB place  Esc cancel"
+            runtime.groundMode != null -> "RMB confirm  Esc cancel"
+            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
+            else -> "Drag select  RMB order  MMB pan"
         }
 
     private fun buildQueueStatusLine(): String {

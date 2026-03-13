@@ -88,7 +88,7 @@ internal class MainMenuScreen(
         ).left().row()
         controlsPanel.add(scenarioLabel).left().row()
         controlsPanel.add(summaryLabel).width(340f).left().padBottom(10f).row()
-        controlsLabel.setText("keys  left/right scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
+        controlsLabel.setText("keys  <- -> scenario  enter match  s/l quick  a/k alt  f5 restart  esc quit")
         controlsPanel.add(controlsLabel).width(340f).left().padBottom(12f).row()
 
         val scenarioButtons = Table()
@@ -107,10 +107,10 @@ internal class MainMenuScreen(
 
         val presetButtons = Table()
         presetButtons.defaults().pad(4f)
-        presetButtons.add(makeButton("Save Quick", style = assets.secondaryButtonStyle()) { runtime.savePreset("quick"); refresh() }).width(164f)
-        presetButtons.add(makeButton("Load Quick", style = assets.secondaryButtonStyle()) { runtime.loadPreset("quick"); refresh() }).width(164f).row()
-        presetButtons.add(makeButton("Save Alt", style = assets.secondaryButtonStyle()) { runtime.savePreset("alt"); refresh() }).width(164f)
-        presetButtons.add(makeButton("Load Alt", style = assets.secondaryButtonStyle()) { runtime.loadPreset("alt"); refresh() }).width(164f)
+        presetButtons.add(makeButton("Save Q", style = assets.secondaryButtonStyle()) { runtime.savePreset("quick"); refresh() }).width(164f)
+        presetButtons.add(makeButton("Load Q", style = assets.secondaryButtonStyle()) { runtime.loadPreset("quick"); refresh() }).width(164f).row()
+        presetButtons.add(makeButton("Save A", style = assets.secondaryButtonStyle()) { runtime.savePreset("alt"); refresh() }).width(164f)
+        presetButtons.add(makeButton("Load A", style = assets.secondaryButtonStyle()) { runtime.loadPreset("alt"); refresh() }).width(164f)
         controlsPanel.add(presetButtons).left().padBottom(8f).row()
 
         controlsPanel.add(Table().apply { background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f)) }).height(1f).expandX().fillX().padTop(4f).padBottom(4f).row()
@@ -121,7 +121,7 @@ internal class MainMenuScreen(
             }
         ).left().row()
         controlsPanel.add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
-        controlsPanel.add(makeButton("Restart Match", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
+        controlsPanel.add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
         controlsPanel.add(makeButton("Quit", style = assets.buttonStyle(Color(0.32f, 0.16f, 0.16f, 0.98f), Color(0.40f, 0.18f, 0.18f, 0.98f))) { Gdx.app.exit() }).width(336f).row()
 
         root.add(hero).expand().fill().left().top().padRight(20f)
