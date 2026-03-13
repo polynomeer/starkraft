@@ -1203,8 +1203,10 @@ internal class GdxWorldRenderer(
         factionColor: Color,
         selected: Boolean
     ) {
-        val bobY = unitBob(entity.id, if (selected) 0.9f else 0.6f)
-        val x = screenX
+        val moving = entity.pathRemainingNodes > 0
+        val bobY = unitBob(entity.id, if (moving) 1.5f else if (selected) 0.9f else 0.6f)
+        val stride = moveStride(entity.id, if (moving) 1f else 0f)
+        val x = screenX + directionDy(entity.dir, stride * 1.2f)
         val y = screenY + bobY
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
@@ -1221,9 +1223,9 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 2f, 10f, 4f)
                 shape.color = trim
                 shape.circle(x, y, 2.8f)
-                shape.rectLine(x - 4f, y + 4f, x + 4f, y + 4f, 1.2f)
-                shape.rect(x - 6.2f, y - 0.7f, 1.6f, 1.4f)
-                shape.rect(x + 4.6f, y - 0.7f, 1.6f, 1.4f)
+                shape.rectLine(x - 4f, y + 4f + stride, x + 4f, y + 4f - stride, 1.2f)
+                shape.rect(x - 6.2f, y - 0.7f + stride, 1.6f, 1.4f)
+                shape.rect(x + 4.6f, y - 0.7f - stride, 1.6f, 1.4f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f), 1.4f)
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
@@ -1236,20 +1238,20 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5.2f, y - 2.2f, 10.4f, 4.4f)
                 shape.color = trim
                 shape.rectLine(x - 5f, y + 2.2f, x + 5f, y + 2.2f, 1.1f)
-                shape.rectLine(x - 4.5f, y - 2.4f, x - 6.8f, y + 3.8f, 1f)
-                shape.rectLine(x + 4.5f, y - 2.4f, x + 6.8f, y + 3.8f, 1f)
+                shape.rectLine(x - 4.5f, y - 2.4f + stride, x - 6.8f, y + 3.8f - stride, 1f)
+                shape.rectLine(x + 4.5f, y - 2.4f - stride, x + 6.8f, y + 3.8f + stride, 1f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 8.5f), y + directionDy(entity.dir, 8.5f), 1.6f)
             }
             typeName.contains("Marine", ignoreCase = true) -> {
                 shape.color = body
                 shape.rect(x - 3.8f, y - 6.8f, 7.6f, 13.6f)
-                shape.rect(x - 6.8f, y - 1.4f, 13.6f, 2.8f)
+                shape.rect(x - 6.8f, y - 1.4f + (stride * 0.6f), 13.6f, 2.8f)
                 shape.color = teamStripe
                 shape.rect(x - 2.6f, y - 5.8f, 5.2f, 11.6f)
                 shape.color = trim
                 shape.rect(x - 1.5f, y - 6.8f, 3f, 2.8f)
-                shape.rectLine(x - 5.6f, y - 0.8f, x + 5.6f, y - 0.8f, 1.2f)
+                shape.rectLine(x - 5.6f, y - 0.8f + stride, x + 5.6f, y - 0.8f - stride, 1.2f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(x, y, x + directionDx(entity.dir, 8.8f), y + directionDy(entity.dir, 8.8f), 1.9f)
             }
@@ -1400,6 +1402,12 @@ internal class GdxWorldRenderer(
 
     private fun unitBob(entityId: Int, amplitude: Float): Float {
         val phase = ((System.currentTimeMillis() % 1400L).toFloat() / 1400f) + ((entityId % 11) * 0.07f)
+        return kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * amplitude
+    }
+
+    private fun moveStride(entityId: Int, amplitude: Float): Float {
+        if (amplitude == 0f) return 0f
+        val phase = ((System.currentTimeMillis() % 520L).toFloat() / 520f) + ((entityId % 7) * 0.11f)
         return kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * amplitude
     }
 

@@ -19,7 +19,7 @@ class MovementSystem(
     private val pathQueue: PathRequestQueue,
     private val data: DataRepo? = null
 ) {
-    private val speed = 0.06f // tiles/tick demo speed
+    private val defaultSpeed = 0.085f
     private val arrivalEps = 0.05f
     private val attackMoveLeash = 3.0f
     private val repathCooldownTicks = 10
@@ -146,7 +146,7 @@ class MovementSystem(
                         }
                         }
                     } else {
-                        val step = min(speed, dist)
+                        val step = min(movementSpeedFor(id), dist)
                         tr.x += (dx / dist) * step
                         tr.y += (dy / dist) * step
                     }
@@ -220,7 +220,7 @@ class MovementSystem(
                         val remaining = (pf.length - pf.index).coerceAtLeast(0)
                         recordProgress(id, pf.index, remaining, completed = pf.index >= pf.length)
                     } else {
-                        val step = min(speed, dist)
+                        val step = min(movementSpeedFor(id), dist)
                         tr.x += (dx / dist) * step
                         tr.y += (dy / dist) * step
                     }
@@ -237,6 +237,11 @@ class MovementSystem(
             lastTickReplans++
             // This is a "missing path" request, not caused by blocked/stuck.
         }
+    }
+
+    private fun movementSpeedFor(id: EntityId): Float {
+        val typeId = world.tags[id]?.typeId ?: return defaultSpeed
+        return data?.unit(typeId)?.speed ?: defaultSpeed
     }
 
     private fun isDiagonalCornerBlocked(cx: Int, cy: Int, nx: Int, ny: Int): Boolean {
