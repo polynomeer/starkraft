@@ -529,6 +529,8 @@ internal class GdxWorldRenderer(
                         hitY,
                         1.8f
                     )
+                    shape.color = Color(1.00f, 0.82f, 0.56f, 0.44f)
+                    shape.circle(hitX, hitY, 4f)
                 }
                 shape.color = impactSparkColor
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
@@ -544,6 +546,8 @@ internal class GdxWorldRenderer(
                     shape.rect(left + width, top - 2f, 2f, height + 4f)
                 } else {
                     shape.circle(screenX, screenY, 5f)
+                    shape.rect(screenX - 7f, screenY - 1f, 14f, 2f)
+                    shape.rect(screenX - 1f, screenY - 7f, 2f, 14f)
                 }
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
@@ -580,6 +584,11 @@ internal class GdxWorldRenderer(
         shape.rect(left - 2f, top + boundsHeight, boundsWidth + 4f, 2f)
         shape.rect(left - 2f, top, 2f, boundsHeight)
         shape.rect(left + boundsWidth, top, 2f, boundsHeight)
+        shape.color = Color(0.18f, 0.28f, 0.32f, 0.92f)
+        shape.rect(left + 6f, top - 8f, 26f, 3f)
+        shape.rect(left + 36f, top - 8f, 8f, 3f)
+        shape.rect(left + boundsWidth - 20f, top - 8f, 14f, 3f)
+        shape.rect(left + boundsWidth - 8f, top + boundsHeight - 22f, 3f, 14f)
         shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
         val viewedFaction = runtime.session.state.viewedFaction
@@ -630,6 +639,8 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 5f, 10f, 10f)
                 shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
                 shape.rect(x - 3f, y - 3f, 6f, 6f)
+                shape.rect(x - 5f, y - 1f, 10f, 2f)
+                shape.rect(x - 1f, y - 5f, 2f, 10f)
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
                 shape.color = completionSparkColor(runtime, entity.id).cpy().apply { a = if (visible) 0.90f else 0.40f }

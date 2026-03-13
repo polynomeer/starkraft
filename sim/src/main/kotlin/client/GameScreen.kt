@@ -500,30 +500,12 @@ internal class GameScreen(
                                         background = assets.panelDrawable(frameTone)
                                         pad(1f)
                                         add(
-                                            Table().apply {
-                                                background =
-                                                    assets.panelDrawable(
-                                                        when {
-                                                            actor.isDisabled -> Color(0.04f, 0.05f, 0.07f, 0.94f)
-                                                            actor.isChecked -> Color(0.34f, 0.40f, 0.16f, 0.98f)
-                                                            else -> Color(0.05f, 0.09f, 0.12f, 0.95f)
-                                                        }
-                                                    )
-                                                pad(1f)
-                                                add(
-                                                    Table().apply {
-                                                        background =
-                                                            assets.panelDrawable(
-                                                                when {
-                                                                    actor.isDisabled -> Color(1f, 1f, 1f, 0.04f)
-                                                                    actor.isChecked -> Color(1f, 0.96f, 0.62f, 0.18f)
-                                                                    else -> Color(1f, 1f, 1f, 0.10f)
-                                                                }
-                                                            )
-                                                    }
-                                                ).size(10f, 10f)
-                                            }
-                                                ).size(10f, 10f).left().padRight(4f)
+                                            buildCommandGlyph(
+                                                actionId = button.actionId,
+                                                disabled = actor.isDisabled,
+                                                checked = actor.isChecked
+                                            )
+                                        ).size(10f, 10f).left().padRight(4f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left()
                                     }
                                 ).expand().fill()
@@ -664,6 +646,54 @@ internal class GameScreen(
             add(content).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.78f)) }).height(1f).expandX().fillX().padTop(3f)
         }
+
+    private fun buildCommandGlyph(actionId: String, disabled: Boolean, checked: Boolean): Table {
+        val frameColor =
+            when {
+                disabled -> Color(0.04f, 0.05f, 0.07f, 0.94f)
+                checked -> Color(0.34f, 0.40f, 0.16f, 0.98f)
+                else -> Color(0.05f, 0.09f, 0.12f, 0.95f)
+            }
+        val accentColor =
+            when {
+                disabled -> Color(1f, 1f, 1f, 0.04f)
+                checked -> Color(1f, 0.96f, 0.62f, 0.18f)
+                actionId == "attackMove" -> Color(1.00f, 0.62f, 0.38f, 0.22f)
+                actionId.startsWith("build:") -> Color(1.00f, 0.82f, 0.44f, 0.18f)
+                actionId.startsWith("train:") || actionId.startsWith("research:") -> Color(0.82f, 0.88f, 1.00f, 0.18f)
+                else -> Color(1f, 1f, 1f, 0.10f)
+            }
+        return Table().apply {
+            background = assets.panelDrawable(frameColor)
+            pad(1f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(accentColor)
+                    when {
+                        actionId == "attackMove" -> {
+                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.72f, 0.42f, if (disabled) 0.16f else 0.82f)) }).width(2f).height(8f).padRight(1f)
+                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.72f, 0.42f, if (disabled) 0.16f else 0.82f)) }).width(6f).height(2f)
+                        }
+                        actionId == "move" || actionId == "patrol" || actionId == "hold" -> {
+                            add(Table().apply { background = assets.panelDrawable(Color(0.62f, 0.90f, 0.96f, if (disabled) 0.14f else 0.78f)) }).width(6f).height(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.62f, 0.90f, 0.96f, if (disabled) 0.14f else 0.78f)) }).width(2f).height(5f)
+                        }
+                        actionId.startsWith("build:") -> {
+                            add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.82f, 0.42f, if (disabled) 0.14f else 0.82f)) }).size(6f, 2f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.82f, 0.42f, if (disabled) 0.14f else 0.82f)) }).size(2f, 6f)
+                        }
+                        actionId.startsWith("train:") || actionId.startsWith("research:") -> {
+                            add(Table().apply { background = assets.panelDrawable(Color(0.72f, 0.82f, 1.00f, if (disabled) 0.14f else 0.82f)) }).width(7f).height(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.72f, 0.82f, 1.00f, if (disabled) 0.14f else 0.82f)) }).width(5f).height(2f)
+                        }
+                        else -> {
+                            add(Table().apply { background = assets.panelDrawable(Color(1f, 1f, 1f, if (disabled) 0.10f else 0.48f)) }).size(4f, 4f)
+                        }
+                    }
+                }
+            ).size(10f, 10f)
+        }
+    }
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
