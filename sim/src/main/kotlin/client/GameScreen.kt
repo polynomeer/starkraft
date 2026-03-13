@@ -244,6 +244,11 @@ internal class GameScreen(
                             ).expandX().fillX().row()
                             add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(1f).row()
                             add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.44f))
+                                }
+                            ).height(2f).expandX().fillX().padTop(1f).row()
+                            add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
                                     clearChildren()

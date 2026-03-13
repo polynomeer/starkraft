@@ -519,6 +519,20 @@ internal class GdxWorldRenderer(
                         else -> 0.15f
                 }.coerceIn(0.08f, 1f)
                 shape.rect(markerX + 1f, markerY + 1f, 16f * fillRatio, 3f)
+                when {
+                    entity.activeResearchTech != null -> {
+                        shape.color = Color(0.74f, 0.84f, 1.00f, 0.74f)
+                        shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
+                    }
+                    entity.activeProductionType != null || entity.productionQueueSize > 0 -> {
+                        shape.color = Color(1.00f, 0.84f, 0.44f, 0.74f)
+                        shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
+                    }
+                    entity.underConstruction -> {
+                        shape.color = Color(0.62f, 0.98f, 0.72f, 0.74f)
+                        shape.rect(markerX - 4f, markerY + 1f, 2f, 3f)
+                    }
+                }
             }
             if (runtime.isDamageFlashActive(entity.id)) {
                 nearestHostile(snapshot, entity)?.let { attacker ->
@@ -574,8 +588,12 @@ internal class GdxWorldRenderer(
                     val height = entity.footprintHeight * runtime.camera.tileSize
                     shape.rect(left - 3f, top - 3f, width + 6f, 2f)
                     shape.rect(left - 3f, top + height + 1f, width + 6f, 2f)
+                    shape.rect(left - 3f, top - 3f, 2f, height + 6f)
+                    shape.rect(left + width + 1f, top - 3f, 2f, height + 6f)
                 } else {
                     shape.circle(screenX, screenY, 6f)
+                    shape.rect(screenX - 8f, screenY - 1f, 16f, 2f)
+                    shape.rect(screenX - 1f, screenY - 8f, 2f, 16f)
                 }
             }
         }
