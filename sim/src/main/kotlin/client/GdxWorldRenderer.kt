@@ -30,12 +30,12 @@ internal class GdxWorldRenderer(
     private val completionProductionSparkColor = Color(1.00f, 0.92f, 0.62f, 0.92f)
     private val completionResearchFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
     private val completionResearchSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
-    private val terrainA = Color(0.09f, 0.13f, 0.10f, 1f)
-    private val terrainB = Color(0.11f, 0.16f, 0.12f, 1f)
-    private val terrainRidge = Color(0.16f, 0.20f, 0.14f, 1f)
-    private val terrainDust = Color(0.19f, 0.17f, 0.12f, 1f)
-    private val terrainMetal = Color(0.16f, 0.19f, 0.22f, 1f)
-    private val mapFrameColor = Color(0.18f, 0.42f, 0.48f, 0.90f)
+    private val terrainA = Color(0.10f, 0.15f, 0.11f, 1f)
+    private val terrainB = Color(0.12f, 0.18f, 0.13f, 1f)
+    private val terrainRidge = Color(0.18f, 0.22f, 0.15f, 1f)
+    private val terrainDust = Color(0.22f, 0.19f, 0.13f, 1f)
+    private val terrainMetal = Color(0.15f, 0.18f, 0.21f, 1f)
+    private val mapFrameColor = Color(0.20f, 0.38f, 0.42f, 0.82f)
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, worldViewportHeight: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
@@ -44,7 +44,7 @@ internal class GdxWorldRenderer(
         screenCamera.update()
         shape.projectionMatrix = screenCamera.combined
 
-        Gdx.gl.glClearColor(0.05f, 0.08f, 0.11f, 1f)
+        Gdx.gl.glClearColor(0.06f, 0.09f, 0.08f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         beginWorldScissor(width, height, worldViewportHeight)
@@ -148,7 +148,7 @@ internal class GdxWorldRenderer(
 
     private fun drawGrid(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        shape.color = Color(0.16f, 0.20f, 0.18f, 0.35f)
+        shape.color = Color(0.18f, 0.22f, 0.18f, 0.22f)
         for (x in 0..snapshot.mapWidth) {
             val px = runtime.camera.worldToScreenX(x.toFloat())
             shape.line(px, 0f, px, runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat()))
@@ -162,14 +162,14 @@ internal class GdxWorldRenderer(
     private fun drawTerrainEdges(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState ?: return
-        shape.color = Color(0.38f, 0.44f, 0.48f, 0.55f)
+        shape.color = Color(0.34f, 0.40f, 0.42f, 0.42f)
         mapState.blockedTiles.forEach { (x, y) ->
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             val tile = runtime.camera.tileSize
             shape.rect(sx, sy, tile, tile)
         }
-        shape.color = Color(0.55f, 0.40f, 0.20f, 0.42f)
+        shape.color = Color(0.58f, 0.42f, 0.22f, 0.34f)
         for (x in 40..56) {
             val topY = runtime.camera.worldToScreenY(40f)
             val bottomY = runtime.camera.worldToScreenY(57f)
@@ -631,17 +631,17 @@ internal class GdxWorldRenderer(
         val boundsHeight = bounds.height
         val left = bounds.left
         val top = bounds.top
-        shape.color = Color(0.10f, 0.18f, 0.22f, 0.92f)
+        shape.color = Color(0.10f, 0.18f, 0.20f, 0.78f)
         shape.rect(left - 2f, top - 2f, boundsWidth + 4f, 2f)
         shape.rect(left - 2f, top + boundsHeight, boundsWidth + 4f, 2f)
         shape.rect(left - 2f, top, 2f, boundsHeight)
         shape.rect(left + boundsWidth, top, 2f, boundsHeight)
-        shape.color = Color(0.18f, 0.28f, 0.32f, 0.92f)
+        shape.color = Color(0.18f, 0.28f, 0.30f, 0.82f)
         shape.rect(left + 6f, top - 8f, 26f, 3f)
         shape.rect(left + 36f, top - 8f, 8f, 3f)
         shape.rect(left + boundsWidth - 20f, top - 8f, 14f, 3f)
         shape.rect(left + boundsWidth - 8f, top + boundsHeight - 22f, 3f, 14f)
-        shape.color = Color(0.05f, 0.09f, 0.11f, 0.95f)
+        shape.color = Color(0.05f, 0.09f, 0.10f, 0.88f)
         shape.rect(left, top, boundsWidth, boundsHeight)
         val viewedFaction = runtime.session.state.viewedFaction
         val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
@@ -791,7 +791,7 @@ internal class GdxWorldRenderer(
     private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {
         val legendTop = top + 6f
         val startX = left + width - 54f
-        shape.color = Color(0.04f, 0.07f, 0.10f, 0.68f)
+        shape.color = Color(0.04f, 0.07f, 0.09f, 0.58f)
         shape.rect(startX - 6f, legendTop - 4f, 58f, 14f)
         shape.color = Color(0.64f, 0.88f, 0.98f, 0.82f)
         shape.rect(startX, legendTop, 4f, 4f)
