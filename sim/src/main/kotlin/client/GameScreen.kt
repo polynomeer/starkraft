@@ -68,6 +68,8 @@ internal class GameScreen(
     private val statusCard = Table()
     private val centerCard = Table()
     private val commandCard = Table()
+    private val selectionHeadlineCard = Table()
+    private val commandHintCard = Table()
     private val pauseOverlay = Table()
     private val helpOverlay = Table()
     private val screenFade = Table()
@@ -197,7 +199,7 @@ internal class GameScreen(
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
             add(
-                Table().apply {
+                commandHintCard.apply {
                     pad(2f, 2f, 0f, 2f)
                     add(
                         Table().apply {
@@ -234,7 +236,7 @@ internal class GameScreen(
             ).expandX().fillX().padBottom(1f).row()
             add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(2f).row()
             add(
-                Table().apply {
+                selectionHeadlineCard.apply {
                     background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
                     pad(1f, 4f, 1f, 4f)
                     add(selectionLabel).left().expandX().fillX()
@@ -511,10 +513,13 @@ internal class GameScreen(
         centerStatusLabel.setText(buildCenterStatusLine())
         queueStatusLabel.setText(buildQueueStatusLine())
         queueHeaderLabel.setText(buildQueueHeaderLine())
+        selectionLabel.color = currentSelectionHeadlineTone()
+        selectionMetaLabel.color = currentSelectionMetaTone()
         centerStatusLabel.color = currentCenterStatusTone()
         queueHeaderLabel.color = currentQueueHeaderTone()
         queueStatusLabel.color = currentQueueStatusTone()
         selectionRosterLabel.setText(buildSelectionRosterLine())
+        selectionRosterLabel.color = currentRosterTone()
         factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
         healthLabel.setText(buildHealthLine())
@@ -533,7 +538,11 @@ internal class GameScreen(
         statusBadgeLabel.color = currentStatusBadgeTone()
         val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
+        actionBannerLabel.color = currentActionBannerTextTone()
         commandHintLabel.setText(buildCommandHintLine())
+        commandHintLabel.color = currentCommandHintTextTone()
+        commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone())
+        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone())
         attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
@@ -1283,6 +1292,58 @@ internal class GameScreen(
             runtime.groundMode != null -> Color(0.14f, 0.22f, 0.18f, 0.76f)
             runtime.noticeLine() != null -> Color(0.18f, 0.16f, 0.10f, 0.76f)
             else -> Color(0.08f, 0.14f, 0.18f, 0.62f)
+        }
+
+    private fun currentActionBannerTextTone(): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.62f, 0.96f)
+            runtime.groundMode != null -> Color(0.72f, 0.96f, 0.82f, 0.96f)
+            runtime.noticeLine() != null -> Color(1.00f, 0.88f, 0.58f, 0.96f)
+            else -> Color(0.86f, 0.94f, 0.98f, 0.94f)
+        }
+
+    private fun currentCommandHintCardTone(): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.86f)
+            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.86f)
+            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.84f)
+            else -> Color(0.12f, 0.16f, 0.18f, 0.82f)
+        }
+
+    private fun currentCommandHintTextTone(): Color =
+        when {
+            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.96f)
+            runtime.groundMode != null -> Color(0.72f, 0.96f, 0.84f, 0.96f)
+            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.76f, 0.92f, 0.98f, 0.96f)
+            else -> Color(0.72f, 0.78f, 0.82f, 0.94f)
+        }
+
+    private fun currentSelectionHeadlineCardTone(): Color =
+        when {
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.90f)
+            runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
+                Color(0.18f, 0.24f, 0.12f, 0.92f)
+            else -> Color(0.12f, 0.20f, 0.24f, 0.92f)
+        }
+
+    private fun currentSelectionHeadlineTone(): Color =
+        when {
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.76f, 0.84f, 0.88f, 0.94f)
+            runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
+                Color(0.98f, 0.92f, 0.62f, 0.96f)
+            else -> Color(0.74f, 0.94f, 0.98f, 0.96f)
+        }
+
+    private fun currentSelectionMetaTone(): Color =
+        when {
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.66f, 0.72f, 0.76f, 0.92f)
+            else -> Color(0.80f, 0.88f, 0.92f, 0.94f)
+        }
+
+    private fun currentRosterTone(): Color =
+        when {
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.64f, 0.70f, 0.74f, 0.90f)
+            else -> Color(0.84f, 0.88f, 0.92f, 0.94f)
         }
 
     private fun currentCenterStatusTone(): Color =
