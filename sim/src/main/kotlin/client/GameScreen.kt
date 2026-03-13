@@ -221,7 +221,14 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.96f))
                                     pad(5f, 4f, 3f, 4f)
-                                    add(portraitLabel).center()
+                                    add(portraitLabel).center().row()
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.76f))
+                                            pad(1f, 4f, 1f, 4f)
+                                            add(healthLabel).center()
+                                        }
+                                    ).padTop(4f)
                                 }
                             ).expand().fill().padTop(3f)
                         }

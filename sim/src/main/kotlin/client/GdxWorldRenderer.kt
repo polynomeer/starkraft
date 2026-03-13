@@ -465,6 +465,10 @@ internal class GdxWorldRenderer(
                     shape.rectLine(muzzleX, muzzleY, targetX, targetY, 3.2f)
                     shape.color = Color(1.00f, 0.78f, 0.44f, 0.26f)
                     shape.circle(targetX, targetY, 8f)
+                    val midX = muzzleX + ((targetX - muzzleX) * 0.45f)
+                    val midY = muzzleY + ((targetY - muzzleY) * 0.45f)
+                    shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
+                    shape.circle(midX, midY, 2.2f)
                 }
             }
             if (entity.pathRemainingNodes > 0) {
@@ -1056,6 +1060,7 @@ internal class GdxWorldRenderer(
             shape.rect(left + width * 0.25f, top + height - 6f, width * 0.5f, 3f)
             shape.color = Color(0.84f, 0.74f, 0.36f, 0.24f)
             shape.rect(left + width * 0.18f, top + height * 0.30f, width * 0.18f, height * 0.26f)
+            shape.rect(left + width * 0.62f, top + height * 0.30f, width * 0.18f, height * 0.18f)
         }
         if (isResourceDepot) {
             shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
@@ -1065,6 +1070,7 @@ internal class GdxWorldRenderer(
             shape.rect(left + width * 0.18f, top + height - 5f, width * 0.64f, 3f)
             shape.color = Color(1.00f, 0.90f, 0.56f, 0.24f)
             shape.rect(left + width * 0.38f, top + height * 0.24f, width * 0.24f, height * 0.22f)
+            shape.rect(left + width * 0.22f, top + height * 0.46f, width * 0.56f, height * 0.10f)
         }
         if (isGasDepot) {
             shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
@@ -1073,14 +1079,17 @@ internal class GdxWorldRenderer(
             shape.circle(left + width * 0.5f, top + height * 0.55f, 9f)
             shape.color = Color(0.64f, 1.00f, 0.86f, 0.22f)
             shape.rect(left + width * 0.42f, top + height * 0.18f, width * 0.16f, height * 0.16f)
+            shape.rect(left + width * 0.28f, top + height * 0.62f, width * 0.44f, height * 0.08f)
         }
         if (entity.supportsResearch == true) {
             shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
             shape.rect(left + width - 11f, top + height - 11f, 6f, 6f)
+            shape.rect(left + width - 16f, top + height - 8f, 3f, 3f)
         }
         if (entity.supportsTraining == true) {
             shape.color = Color(0.97f, 0.68f, 0.28f, 0.82f)
             shape.rect(left + 5f, top + height - 11f, 6f, 6f)
+            shape.rect(left + 13f, top + height - 8f, 3f, 3f)
         }
         if (entity.underConstruction) {
             shape.color = Color(0.78f, 0.64f, 0.30f, 0.35f)
