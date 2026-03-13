@@ -1167,31 +1167,31 @@ internal class GameScreen(
     }
 
     private fun buildTopEconomyLine(): String {
-        val snapshot = runtime.snapshot ?: return "Awaiting snapshot"
+        val snapshot = runtime.snapshot ?: return "Awaiting"
         val viewedFaction = runtime.session.state.viewedFaction
         val faction = snapshot.factions.firstOrNull { it.faction == viewedFaction }
         return if (faction != null) {
-            "Tick ${snapshot.tick}  F${faction.faction}  minerals ${faction.minerals}  gas ${faction.gas}  vis ${faction.visibleTiles}"
+            "T${snapshot.tick}  F${faction.faction}  M${faction.minerals}  G${faction.gas}  V${faction.visibleTiles}"
         } else {
-            "Tick ${snapshot.tick}  Observer  entities ${snapshot.entities.size}  nodes ${snapshot.resourceNodes.size}"
+            "T${snapshot.tick}  OBS  E${snapshot.entities.size}  N${snapshot.resourceNodes.size}"
         }
     }
 
     private fun buildTopModeLine(): String {
         val mode = runtime.overlayModeLabel()
         val viewed = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-        return "Mode ${mode.uppercase()}  View ${viewed.uppercase()}"
+        return "${mode.uppercase()}  ${viewed.uppercase()}"
     }
 
     private fun buildTopSelectionLine(): String {
-        val snapshot = runtime.snapshot ?: return "No selection"
+        val snapshot = runtime.snapshot ?: return "No sel"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "No active control group"
+        if (selected.isEmpty()) return "No sel"
         val lead = selected.first()
         return if (selected.size == 1) {
             "${lead.typeId} ${lead.hp}/${lead.maxHp}"
         } else {
-            "${selected.size} ${lead.typeId}"
+            "${selected.size}x ${lead.typeId}"
         }
     }
 
@@ -1200,15 +1200,15 @@ internal class GameScreen(
         if (snapshot.matchEnded) {
             return buildGameState(snapshot, runtime.session.state.viewedFaction)?.title?.uppercase() ?: "ENDED"
         }
-        return if (runtime.pauseOverlayVisible) "PAUSED" else if (runtime.playControlState.paused) "SIM PAUSED" else "LIVE"
+        return if (runtime.pauseOverlayVisible) "PAUSED" else if (runtime.playControlState.paused) "SIM HOLD" else "LIVE"
     }
 
     private fun buildActionBannerLine(): String {
         runtime.noticeLine()?.removePrefix("notice: ")?.let { return it }
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
-            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId} with right click"
-            runtime.groundMode != null -> "Issue ${runtime.overlayModeLabel()} with right click"
+            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  RMB confirm"
+            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()}  RMB confirm"
             selectionCount > 0 -> ""
             else -> ""
         }
@@ -1217,9 +1217,9 @@ internal class GameScreen(
     private fun buildCommandHintLine(): String =
         runtime.hoverHintLine()
             ?: when {
-                runtime.buildModeTypeId != null -> "Placement mode armed"
-                runtime.groundMode != null -> "Ground order armed"
-                runtime.session.state.selectedIds.isNotEmpty() -> "Command palette ready"
+                runtime.buildModeTypeId != null -> "Build armed"
+                runtime.groundMode != null -> "Order armed"
+                runtime.session.state.selectedIds.isNotEmpty() -> "Cmd ready"
                 else -> "Select to unlock orders"
             }
 
