@@ -52,6 +52,7 @@ internal class GameScreen(
     private val controlGroupsLabel = Label("", assets.mutedLabelStyle)
     private val controlGroupButtons = Table()
     private val commandHeaderLabel = Label("Command Deck", assets.titleLabelStyle)
+    private val commandHintLabel = Label("", assets.mutedLabelStyle)
     private val buttonTable = Table()
     private val commandScroll = ScrollPane(buttonTable)
     private val actionBanner = Table()
@@ -165,7 +166,13 @@ internal class GameScreen(
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
-            add(actionBanner).left().expandX().fillX().padTop(4f).row()
+            add(
+                Table().apply {
+                    pad(2f, 2f, 0f, 2f)
+                    add(commandHintLabel).left().expandX().fillX()
+                }
+            ).expandX().fillX().padTop(3f).row()
+            add(actionBanner).left().expandX().fillX().padTop(3f).row()
         }
         buttonTable.top().left()
         buttonTable.defaults().left()
@@ -222,7 +229,9 @@ internal class GameScreen(
                                     add().expandX().fillX()
                                 }
                             ).width(122f).height(7f).left().padTop(1f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(1f).row()
+                            add(centerStatusLabel).left().expandX().fillX().padTop(2f).row()
+                            add(queueStatusLabel).left().expandX().fillX().padTop(1f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(2f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
@@ -384,6 +393,7 @@ internal class GameScreen(
         statusBadgeLabel.setText(buildStatusBadgeLine())
         val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
+        commandHintLabel.setText(buildCommandHintLine())
         attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
@@ -394,8 +404,8 @@ internal class GameScreen(
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
-        actionBanner.background = if (showActionBanner) assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f)) else null
-        actionBanner.pad(if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f, if (showActionBanner) 4f else 0f, if (showActionBanner) 8f else 0f)
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(Color(0.08f, 0.14f, 0.18f, 0.62f)) else null
+        actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
         bottomHud.invalidateHierarchy()
         buttonTable.clearChildren()
         groupedButtons.forEachIndexed { groupIndex, group ->
@@ -704,23 +714,21 @@ internal class GameScreen(
     private fun buildCenterStatusLine(): String {
         val snapshot = runtime.snapshot ?: return "Status unavailable"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "No command focus"
+        if (selected.isEmpty()) return "No active card"
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val statusBits = buildList {
-            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("order ${it.lowercase()}") }
-            if (lead.orderQueueSize > 0) add("queue ${lead.orderQueueSize}")
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("ord ${it.lowercase()}") }
+            if (lead.orderQueueSize > 0) add("q ${lead.orderQueueSize}")
             if (lead.pathRemainingNodes > 0) add("path ${lead.pathRemainingNodes}")
             lead.activeProductionType?.let { add("prod $it") }
-            if (lead.activeProductionRemainingTicks > 0) add("prod ${lead.activeProductionRemainingTicks}t")
             lead.activeResearchTech?.let { add("tech $it") }
-            if (lead.activeResearchRemainingTicks > 0) add("tech ${lead.activeResearchRemainingTicks}t")
             if (lead.underConstruction) add("construct")
             lead.harvestPhase?.let { add("harvest ${it.lowercase()}") }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
                 add("cargo ${lead.harvestCargoKind ?: "res"}:${lead.harvestCargoAmount}")
             }
         }
-        return if (statusBits.isEmpty()) "Standing by" else statusBits.joinToString("  ·  ")
+        return if (statusBits.isEmpty()) "Standing by" else statusBits.joinToString(" · ")
     }
 
     private fun buildCenterFooterLine(): String =
@@ -740,7 +748,7 @@ internal class GameScreen(
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
                     buildString {
-                        append("production ")
+                        append("prod ")
                         append(lead.activeProductionType ?: "queue")
                         if (lead.productionQueueSize > 0) append(" x${lead.productionQueueSize}")
                         if (lead.activeProductionRemainingTicks > 0) append(" ${lead.activeProductionRemainingTicks}t")
@@ -750,7 +758,7 @@ internal class GameScreen(
             if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
                 add(
                     buildString {
-                        append("research ")
+                        append("res ")
                         append(lead.activeResearchTech ?: "queue")
                         if (lead.researchQueueSize > 0) append(" x${lead.researchQueueSize}")
                         if (lead.activeResearchRemainingTicks > 0) append(" ${lead.activeResearchRemainingTicks}t")
@@ -760,7 +768,7 @@ internal class GameScreen(
             if (lead.underConstruction) {
                 add(
                     buildString {
-                        append("construction")
+                        append("build")
                         lead.constructionRemainingTicks?.let { append(" ${it}t") }
                     }
                 )
@@ -809,9 +817,9 @@ internal class GameScreen(
             selectionGrid.add(Label("No slots", assets.mutedLabelStyle)).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 1f, 1f, 0f)
+        selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(34f, 34f)
+            selectionGrid.add(buildSelectionSlot(entity)).size(38f, 38f)
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
@@ -835,18 +843,18 @@ internal class GameScreen(
             }
         val shortName = (entity.typeId ?: "?").take(3).uppercase()
         return Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.98f))
+            background = assets.panelDrawable(if (focused) Color(0.24f, 0.34f, 0.12f, 0.96f) else Color(0.08f, 0.12f, 0.16f, 0.92f))
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(0f)
+            pad(1f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(if (focused) Color(0.34f, 0.42f, 0.10f, 0.98f) else tone)
-                    pad(if (focused) 2f else 1f)
+                    pad(if (focused) 2f else 1.5f)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.18f else 0.05f))
                         }
-                    ).size(16f, 6f).center().padBottom(1f).row()
+                    ).size(18f, 6f).center().padBottom(2f).row()
                     add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
                     add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
                     add(
@@ -859,7 +867,7 @@ internal class GameScreen(
                             ).width(20f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(16f).height(3f).padTop(1f)
+                    ).width(20f).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
@@ -1028,6 +1036,15 @@ internal class GameScreen(
             else -> ""
         }
     }
+
+    private fun buildCommandHintLine(): String =
+        runtime.hoverHintLine()
+            ?: when {
+                runtime.buildModeTypeId != null -> "Placement mode armed"
+                runtime.groundMode != null -> "Ground order armed"
+                runtime.session.state.selectedIds.isNotEmpty() -> "Command palette ready"
+                else -> "Select units to unlock orders"
+            }
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
         when {

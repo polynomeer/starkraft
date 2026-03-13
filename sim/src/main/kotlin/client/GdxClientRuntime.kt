@@ -88,6 +88,7 @@ internal class GdxClientRuntime(
     }
 
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
+    fun hoverHintLine(): String? = hoverHint
     fun attackWarningLine(): String? = attackWarningMessage
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun consumeCompletionAlertSound(): Boolean = pendingCompletionAlertSound.also { pendingCompletionAlertSound = false }
