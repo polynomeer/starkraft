@@ -1206,8 +1206,10 @@ internal class GdxWorldRenderer(
         val moving = entity.pathRemainingNodes > 0
         val bobY = unitBob(entity.id, if (moving) 1.5f else if (selected) 0.9f else 0.6f)
         val stride = moveStride(entity.id, if (moving) 1f else 0f)
-        val x = screenX + directionDy(entity.dir, stride * 1.2f)
-        val y = screenY + bobY
+        val sway = moveStride(entity.id + 17, if (moving) 0.8f else 0f)
+        val lead = if (moving) (moveStride(entity.id + 31, 0.55f) + 0.55f).coerceAtLeast(0f) else 0f
+        val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, lead * 0.9f)
+        val y = screenY + bobY + directionDy(entity.dir, lead * 0.5f)
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
         val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
@@ -1217,43 +1219,61 @@ internal class GdxWorldRenderer(
         shape.circle(x + 1.5f, screenY + 1.5f, shadowRadius)
         when {
             entity.archetype == "worker" || typeName.contains("Worker", ignoreCase = true) -> {
+                val toolSwing = stride * 1.4f
+                val bodyLean = sway * 1.2f
                 shape.color = body
-                shape.circle(x, y, 6.5f)
+                shape.circle(x + bodyLean * 0.25f, y, 6.5f)
                 shape.color = teamStripe
-                shape.rect(x - 5f, y - 2f, 10f, 4f)
+                shape.rect(x - 5f, y - 2f + (toolSwing * 0.15f), 10f, 4f)
                 shape.color = trim
-                shape.circle(x, y, 2.8f)
-                shape.rectLine(x - 4f, y + 4f + stride, x + 4f, y + 4f - stride, 1.2f)
-                shape.rect(x - 6.2f, y - 0.7f + stride, 1.6f, 1.4f)
-                shape.rect(x + 4.6f, y - 0.7f - stride, 1.6f, 1.4f)
+                shape.circle(x + bodyLean * 0.4f, y, 2.8f)
+                shape.rectLine(x - 4f - bodyLean, y + 4f + toolSwing, x + 4f + bodyLean, y + 4f - toolSwing, 1.2f)
+                shape.rect(x - 6.2f - bodyLean, y - 0.7f + toolSwing, 1.6f, 1.4f)
+                shape.rect(x + 4.6f + bodyLean, y - 0.7f - toolSwing, 1.6f, 1.4f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
-                shape.rectLine(x, y, x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f), 1.4f)
+                shape.rectLine(
+                    x + directionDx(entity.dir, 0.8f),
+                    y + directionDy(entity.dir, 0.8f),
+                    x + directionDx(entity.dir, 5.8f) + bodyLean,
+                    y + directionDy(entity.dir, 5.8f),
+                    1.4f
+                )
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
-                shape.circle(x - 1f, y - 1f, 2.2f)
+                shape.circle(x - 1f + bodyLean * 0.3f, y - 1f, 2.2f)
             }
             typeName.contains("Zergling", ignoreCase = true) -> {
+                val lunge = stride * 1.8f
+                val clawSpread = sway * 1.5f
                 shape.color = body
-                shape.rect(x - 6.5f, y - 3.2f, 13f, 6.4f)
+                shape.rect(x - 6.5f + directionDx(entity.dir, lunge * 0.4f), y - 3.2f, 13f, 6.4f)
                 shape.color = teamStripe
-                shape.rect(x - 5.2f, y - 2.2f, 10.4f, 4.4f)
+                shape.rect(x - 5.2f + directionDx(entity.dir, lunge * 0.5f), y - 2.2f, 10.4f, 4.4f)
                 shape.color = trim
-                shape.rectLine(x - 5f, y + 2.2f, x + 5f, y + 2.2f, 1.1f)
-                shape.rectLine(x - 4.5f, y - 2.4f + stride, x - 6.8f, y + 3.8f - stride, 1f)
-                shape.rectLine(x + 4.5f, y - 2.4f - stride, x + 6.8f, y + 3.8f + stride, 1f)
+                shape.rectLine(x - 5f, y + 2.2f + (lunge * 0.15f), x + 5f, y + 2.2f - (lunge * 0.15f), 1.1f)
+                shape.rectLine(x - 4.5f - clawSpread, y - 2.4f + lunge, x - 6.8f - clawSpread, y + 3.8f - lunge, 1f)
+                shape.rectLine(x + 4.5f + clawSpread, y - 2.4f - lunge, x + 6.8f + clawSpread, y + 3.8f + lunge, 1f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
-                shape.rectLine(x, y, x + directionDx(entity.dir, 8.5f), y + directionDy(entity.dir, 8.5f), 1.6f)
+                shape.rectLine(x, y, x + directionDx(entity.dir, 9.2f) + clawSpread, y + directionDy(entity.dir, 9.2f), 1.6f)
             }
             typeName.contains("Marine", ignoreCase = true) -> {
+                val march = stride * 0.8f
+                val torsoLean = sway * 0.55f
                 shape.color = body
-                shape.rect(x - 3.8f, y - 6.8f, 7.6f, 13.6f)
-                shape.rect(x - 6.8f, y - 1.4f + (stride * 0.6f), 13.6f, 2.8f)
+                shape.rect(x - 3.8f + torsoLean, y - 6.8f, 7.6f, 13.6f)
+                shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
                 shape.color = teamStripe
-                shape.rect(x - 2.6f, y - 5.8f, 5.2f, 11.6f)
+                shape.rect(x - 2.6f + torsoLean, y - 5.8f, 5.2f, 11.6f)
                 shape.color = trim
-                shape.rect(x - 1.5f, y - 6.8f, 3f, 2.8f)
-                shape.rectLine(x - 5.6f, y - 0.8f + stride, x + 5.6f, y - 0.8f - stride, 1.2f)
+                shape.rect(x - 1.5f + torsoLean, y - 6.8f, 3f, 2.8f)
+                shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
-                shape.rectLine(x, y, x + directionDx(entity.dir, 8.8f), y + directionDy(entity.dir, 8.8f), 1.9f)
+                shape.rectLine(
+                    x + torsoLean,
+                    y,
+                    x + directionDx(entity.dir, 9.4f) + torsoLean,
+                    y + directionDy(entity.dir, 9.4f),
+                    1.9f
+                )
             }
             entity.weaponId != null -> {
                 shape.color = body
