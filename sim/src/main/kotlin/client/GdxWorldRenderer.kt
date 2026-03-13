@@ -477,10 +477,18 @@ internal class GdxWorldRenderer(
                 val muzzleY = screenY + directionDy(entity.dir, 8f)
                 val flashPulse = ambientPulse(420L)
                 val marineStyle = entity.typeId.contains("Marine", ignoreCase = true)
+                val zerglingStyle = entity.typeId.contains("Zergling", ignoreCase = true)
                 shape.color = if (isMelee) Color(0.86f, 1.00f, 0.74f, 0.24f + (flashPulse * 0.14f)) else if (marineStyle) Color(1.00f, 0.92f, 0.60f, 0.22f + (flashPulse * 0.16f)) else Color(1.00f, 0.80f, 0.46f, 0.26f + (flashPulse * 0.16f))
                 if (marineStyle && !isMelee) {
                     shape.rectLine(muzzleX - directionDy(entity.dir, 3.5f), muzzleY + directionDx(entity.dir, 3.5f), muzzleX + directionDy(entity.dir, 3.5f), muzzleY - directionDx(entity.dir, 3.5f), 3.2f)
                     shape.rectLine(muzzleX, muzzleY, muzzleX + directionDx(entity.dir, 9f), muzzleY + directionDy(entity.dir, 9f), 2.4f)
+                    shape.rectLine(
+                        muzzleX + directionDx(entity.dir, 3f) - directionDy(entity.dir, 1.8f),
+                        muzzleY + directionDy(entity.dir, 3f) + directionDx(entity.dir, 1.8f),
+                        muzzleX + directionDx(entity.dir, 6.5f) + directionDy(entity.dir, 1.4f),
+                        muzzleY + directionDy(entity.dir, 6.5f) - directionDx(entity.dir, 1.4f),
+                        1.8f
+                    )
                 } else {
                     shape.circle(muzzleX, muzzleY, if (isMelee) 7f + (flashPulse * 2.6f) else 6f + (flashPulse * 2f))
                 }
@@ -508,6 +516,9 @@ internal class GdxWorldRenderer(
                             shape.rectLine(strikeX - slashDy, strikeY + slashDx, strikeX + slashDy, strikeY - slashDx, 2.6f)
                             shape.rectLine(strikeX - (slashDx * 0.9f), strikeY - (slashDy * 0.9f), strikeX + (slashDx * 0.9f), strikeY + (slashDy * 0.9f), 1.8f)
                             shape.rectLine(strikeX - (slashDx * 0.2f) - (slashDy * 0.9f), strikeY - (slashDy * 0.2f) + (slashDx * 0.9f), strikeX, strikeY, 1.4f)
+                            shape.color = Color(0.82f, 1.00f, 0.74f, 0.40f)
+                            shape.circle(targetX, targetY, 8f)
+                            shape.rectLine(targetX - 5f, targetY, targetX + 5f, targetY, 1.4f)
                         } else {
                             shape.color = Color(0.96f, 1.00f, 0.88f, 0.82f)
                             shape.rectLine(strikeX - slashDy, strikeY + slashDx, strikeX + slashDy, strikeY - slashDx, 2.0f)
@@ -530,14 +541,19 @@ internal class GdxWorldRenderer(
                         shape.circle(nearX, nearY, if (marineStyle) 1.2f else 1.6f)
                         shape.circle(midX, midY, if (marineStyle) 1.8f else 2.4f)
                         shape.circle(farX, farY, if (marineStyle) 1.4f else 1.8f)
-                        shape.color = Color(1.00f, 0.78f, 0.44f, 0.22f)
+                        shape.color = if (marineStyle) Color(1.00f, 0.86f, 0.56f, 0.18f) else Color(1.00f, 0.78f, 0.44f, 0.22f)
                         shape.circle(targetX, targetY, 10f)
-                        shape.color = Color(1.00f, 0.92f, 0.72f, 0.80f)
+                        shape.color = if (marineStyle) Color(1.00f, 0.98f, 0.80f, 0.88f) else Color(1.00f, 0.92f, 0.72f, 0.80f)
                         shape.circle(targetX, targetY, 4.4f)
                         shape.rect(targetX - 7f, targetY - 1f, 14f, 2f)
                         shape.rect(targetX - 1f, targetY - 7f, 2f, 14f)
                         shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
                         shape.circle(midX, midY, 2.2f)
+                        if (marineStyle) {
+                            shape.color = Color(1.00f, 0.96f, 0.78f, 0.44f)
+                            shape.rectLine(targetX - 4f, targetY - 4f, targetX + 4f, targetY + 4f, 1.2f)
+                            shape.rectLine(targetX - 4f, targetY + 4f, targetX + 4f, targetY - 4f, 1.2f)
+                        }
                     }
                 }
             }
@@ -1104,16 +1120,29 @@ internal class GdxWorldRenderer(
                 if (remain.typeId.contains("Marine", ignoreCase = true)) {
                     shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
                     shape.rect(x - 3f, y - 6f, 6f, 2f)
+                    shape.color = Color(0.20f, 0.22f, 0.24f, alpha * 0.52f)
+                    shape.circle(x + 4f, y + 4f, 4f + ((1f - progress) * 2f))
                 }
                 if (remain.typeId.contains("Zergling", ignoreCase = true)) {
                     shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
                     shape.rect(x - 7f, y + 1f, 4f, 2f)
                     shape.rect(x + 3f, y - 1f, 3f, 2f)
+                    shape.color = Color(0.30f, 0.20f, 0.18f, alpha * 0.42f)
+                    shape.circle(x - 2f, y + 5f, 3.6f + ((1f - progress) * 2f))
                 }
             }
-            shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.7f)
+            val smokeColor =
+                when {
+                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * 0.78f)
+                    remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.20f, 0.18f, 0.16f, alpha * 0.44f)
+                    else -> Color(0.16f, 0.18f, 0.18f, alpha * 0.62f)
+                }
+            shape.color = smokeColor
             shape.circle(x + 3f, y + 6f, 7f + ((1f - progress) * 5f))
             shape.circle(x - 5f, y + 3f, 5f + ((1f - progress) * 3f))
+            if (remain.isStructure) {
+                shape.circle(x + 8f, y + 10f, 8f + ((1f - progress) * 6f))
+            }
         }
     }
 
