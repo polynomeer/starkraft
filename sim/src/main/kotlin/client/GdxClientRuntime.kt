@@ -116,8 +116,17 @@ internal class GdxClientRuntime(
     }
 
     fun noticeLine(): String? = noticeMessage?.let { "notice: $it" }
+    fun noticeKind(): NoticeKind? =
+        when {
+            noticeMessage == null -> null
+            noticeMessage!!.startsWith("trade ") -> NoticeKind.TRADE
+            noticeMessage!!.contains(" lost") -> NoticeKind.LOSS
+            noticeMessage!!.contains(" down") -> NoticeKind.KILL
+            else -> NoticeKind.INFO
+        }
     fun hoverHintLine(): String? = hoverHint
     fun attackWarningLine(): String? = attackWarningMessage
+    fun isStructureLossWarning(): Boolean = attackWarningMessage == "Warning: structure lost"
     fun consumeAttackAlertSound(): Boolean = pendingAttackAlertSound.also { pendingAttackAlertSound = false }
     fun consumeAttackCommandSound(): Boolean = pendingAttackCommandSound.also { pendingAttackCommandSound = false }
     fun consumeCombatSoundKind(): CombatSoundKind? = pendingCombatSoundKind.also { pendingCombatSoundKind = null }
@@ -1111,4 +1120,11 @@ internal data class DeathRemains(
 internal enum class CombatSoundKind {
     RANGED,
     MELEE
+}
+
+internal enum class NoticeKind {
+    KILL,
+    LOSS,
+    TRADE,
+    INFO
 }

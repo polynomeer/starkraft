@@ -1314,6 +1314,9 @@ internal class GameScreen(
         when {
             runtime.buildModeTypeId != null -> Color(0.16f, 0.24f, 0.30f, 0.76f)
             runtime.groundMode != null -> Color(0.14f, 0.22f, 0.18f, 0.76f)
+            runtime.noticeKind() == NoticeKind.TRADE -> Color(0.20f, 0.18f, 0.12f, 0.80f)
+            runtime.noticeKind() == NoticeKind.LOSS -> Color(0.26f, 0.14f, 0.12f, 0.80f)
+            runtime.noticeKind() == NoticeKind.KILL -> Color(0.12f, 0.20f, 0.12f, 0.80f)
             runtime.noticeLine() != null -> Color(0.18f, 0.16f, 0.10f, 0.76f)
             else -> Color(0.08f, 0.14f, 0.18f, 0.62f)
         }
@@ -1322,6 +1325,9 @@ internal class GameScreen(
         when {
             runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.62f, 0.96f)
             runtime.groundMode != null -> Color(0.72f, 0.96f, 0.82f, 0.96f)
+            runtime.noticeKind() == NoticeKind.TRADE -> Color(1.00f, 0.92f, 0.68f, 0.98f)
+            runtime.noticeKind() == NoticeKind.LOSS -> Color(1.00f, 0.78f, 0.72f, 0.98f)
+            runtime.noticeKind() == NoticeKind.KILL -> Color(0.84f, 1.00f, 0.78f, 0.98f)
             runtime.noticeLine() != null -> Color(1.00f, 0.88f, 0.58f, 0.96f)
             else -> Color(0.86f, 0.94f, 0.98f, 0.94f)
         }
@@ -1351,7 +1357,11 @@ internal class GameScreen(
 
     private fun currentAttackWarningCardTone(): Color =
         when {
+            runtime.isStructureLossWarning() -> Color(0.48f, 0.12f, 0.10f, 0.96f)
             runtime.attackWarningLine() != null -> Color(0.66f, 0.18f, 0.14f, 0.94f)
+            runtime.noticeKind() == NoticeKind.TRADE -> Color(0.36f, 0.28f, 0.10f, 0.92f)
+            runtime.noticeKind() == NoticeKind.LOSS -> Color(0.34f, 0.18f, 0.16f, 0.92f)
+            runtime.noticeKind() == NoticeKind.KILL -> Color(0.16f, 0.28f, 0.18f, 0.92f)
             runtime.noticeLine() != null -> Color(0.38f, 0.28f, 0.10f, 0.92f)
             else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
         }

@@ -16,6 +16,7 @@ import starkraft.sim.client.CombatSoundKind
 import starkraft.sim.client.ClientDamageActivity
 import starkraft.sim.client.ClientMapState
 import starkraft.sim.client.CompletionFlashKind
+import starkraft.sim.client.NoticeKind
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.GdxClientRuntime
@@ -327,7 +328,41 @@ class GdxClientRuntimeTest {
         runtime.tick()
 
         assertEquals("Warning: structure lost", runtime.attackWarningLine())
+        assertTrue(runtime.isStructureLossWarning())
+        assertEquals(NoticeKind.LOSS, runtime.noticeKind())
         assertTrue(runtime.noticeLine()?.contains("depot lost") == true)
+    }
+
+    @Test
+    fun `trade notice is classified separately`(@TempDir tempDir: Path) {
+        val before =
+            ClientSnapshot(
+                tick = 7,
+                mapId = "demo-map",
+                buildVersion = "test-build",
+                mapWidth = 32,
+                mapHeight = 32,
+                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8), FactionSnapshot(faction = 2, visibleTiles = 8)),
+                entities =
+                    listOf(
+                        EntitySnapshot(id = 4, faction = 1, typeId = "Marine", archetype = "infantry", x = 5f, y = 6f, dir = 0f, hp = 45, maxHp = 45, armor = 0, weaponId = "Gauss"),
+                        EntitySnapshot(id = 9, faction = 2, typeId = "Zergling", archetype = "infantry", x = 8f, y = 6f, dir = 0f, hp = 35, maxHp = 35, armor = 0, weaponId = "Claw")
+                    ),
+                resourceNodes = emptyList()
+            )
+        val runtime = runtime(tempDir, snapshot = before)
+
+        runtime.tick()
+        runtime.session.state.snapshot =
+            before.copy(
+                tick = 8,
+                entities = emptyList()
+            )
+
+        runtime.tick()
+
+        assertEquals(NoticeKind.TRADE, runtime.noticeKind())
+        assertTrue(runtime.noticeLine()?.contains("trade") == true)
     }
 
     @Test
