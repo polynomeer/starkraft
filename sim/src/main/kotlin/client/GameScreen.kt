@@ -383,11 +383,23 @@ internal class GameScreen(
                             add(
                                 selectionPager.apply {
                                     clearChildren()
-                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(20f).height(18f).padRight(2f)
-                                    add(selectionPageLabel).width(62f).left()
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(18f).height(18f).padRight(2f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                                            pad(1f, 4f, 1f, 4f)
+                                            add(selectionPageLabel).left()
+                                        }
+                                    ).width(54f).left().padRight(2f)
                                     add(controlGroupButtons).minWidth(56f).right().padRight(2f)
-                                    add(controlGroupsLabel).width(88f).right().padRight(2f)
-                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(20f).height(18f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                                            pad(1f, 4f, 1f, 4f)
+                                            add(controlGroupsLabel).right()
+                                        }
+                                    ).width(66f).right().padRight(2f)
+                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(18f).height(18f)
                                 }
                             ).expandX().fillX()
                         }
@@ -1496,8 +1508,8 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        selectionPageLabel.setText(if (selectedCount == 0) "Page 0/0" else "Page ${selectionPage + 1}/$pageCount")
-        controlGroupsLabel.setText(runtime.controlGroupSummaryLine() ?: "Groups empty")
+        selectionPageLabel.setText(if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
+        controlGroupsLabel.setText(runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
         rebuildControlGroupButtons()
     }
 
@@ -1517,7 +1529,7 @@ internal class GameScreen(
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.92f))
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.90f))
                     pad(1f)
                     add(
                         makeButton("$group:$count", style = assets.subtleButtonStyle()) {
