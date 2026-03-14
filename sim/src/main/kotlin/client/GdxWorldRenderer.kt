@@ -1288,6 +1288,8 @@ internal class GdxWorldRenderer(
             if (!isOnScreen(x, y)) continue
             val alpha = 0.08f + (progress * 0.22f)
             val hotAlpha = (progress * progress).coerceIn(0f, 1f)
+            val smokeDrift = if (remain.isStructure) settle * 1.8f else settle * 0.8f
+            val smokeRise = if (remain.isStructure) settle * 6f else settle * 3f
             if (remain.isStructure) {
                 shape.color = Color(1.00f, 0.62f, 0.32f, 0.08f * hotAlpha)
                 shape.circle(x, y, 14f + ((1f - progress) * 10f))
@@ -1341,10 +1343,10 @@ internal class GdxWorldRenderer(
                     else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
                 }
             shape.color = smokeColor
-            shape.circle(x + 3f, y + 6f, 7f + ((1f - progress) * 5f))
-            shape.circle(x - 5f, y + 3f, 5f + ((1f - progress) * 3f))
+            shape.circle(x + 3f + smokeDrift, y + 6f + smokeRise, 7f + ((1f - progress) * 5f))
+            shape.circle(x - 5f - (smokeDrift * 0.6f), y + 3f + (smokeRise * 0.7f), 5f + ((1f - progress) * 3f))
             if (remain.isStructure) {
-                shape.circle(x + 8f, y + 10f, 8f + ((1f - progress) * 6f))
+                shape.circle(x + 8f + (smokeDrift * 0.8f), y + 10f + (smokeRise * 1.1f), 8f + ((1f - progress) * 6f))
             }
         }
     }
@@ -1438,14 +1440,16 @@ internal class GdxWorldRenderer(
     ) {
         val moving = entity.pathRemainingNodes > 0
         val attackReady = if (entity.weaponCooldownTicks in 1..8) 1f - (entity.weaponCooldownTicks / 8f) else 0f
+        val attackRecovery = if (entity.weaponCooldownTicks > 8) ((entity.weaponCooldownTicks.coerceAtMost(22) - 8) / 14f) else 0f
         val bobY = unitBob(entity.id, if (moving) 1.5f else if (selected) 0.9f else 0.6f)
         val stride = moveStride(entity.id, if (moving) 1f else 0f)
         val sway = moveStride(entity.id + 17, if (moving) 0.8f else 0f)
         val lead = if (moving) (moveStride(entity.id + 31, 0.55f) + 0.55f).coerceAtLeast(0f) else 0f
         val settle = unitBob(entity.id + 23, if (moving) 0.45f else 0.2f)
         val aimBias = attackReady * 1.8f
-        val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, lead * 0.9f)
-        val y = screenY + bobY + directionDy(entity.dir, lead * 0.5f)
+        val recoilBack = attackRecovery * 1.4f
+        val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, (lead * 0.9f) - (recoilBack * 0.45f))
+        val y = screenY + bobY + directionDy(entity.dir, (lead * 0.5f) - (recoilBack * 0.30f))
         val body = Color(0.17f, 0.19f, 0.22f, 1f)
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
         val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
@@ -1492,7 +1496,7 @@ internal class GdxWorldRenderer(
             typeName.contains("Zergling", ignoreCase = true) -> {
                 val lunge = stride * 1.8f
                 val clawSpread = sway * 1.5f
-                val attackLunge = lunge + aimBias
+                val attackLunge = lunge + aimBias - (attackRecovery * 0.9f)
                 shape.color = body
                 shape.rect(x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
                 shape.color = teamStripe
@@ -1513,7 +1517,7 @@ internal class GdxWorldRenderer(
             typeName.contains("Marine", ignoreCase = true) -> {
                 val march = stride * 0.8f
                 val torsoLean = sway * 0.55f
-                val aimLean = torsoLean + (aimBias * 0.45f)
+                val aimLean = torsoLean + (aimBias * 0.45f) - (attackRecovery * 0.60f)
                 shape.color = body
                 shape.rect(x - 3.8f + aimLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
                 shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
@@ -1543,7 +1547,7 @@ internal class GdxWorldRenderer(
             }
             entity.weaponId != null -> {
                 val brace = sway * 0.35f
-                val aimBrace = brace + (aimBias * 0.35f)
+                val aimBrace = brace + (aimBias * 0.35f) - (attackRecovery * 0.45f)
                 shape.color = body
                 shape.rect(x - 3.5f + aimBrace, y - 6.5f + settle * 0.15f, 7f, 13f)
                 shape.rect(x - 6.5f, y - 1.8f + stride * 0.35f, 13f, 3.6f)
