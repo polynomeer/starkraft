@@ -874,12 +874,9 @@ internal class GdxWorldRenderer(
             val size = if (selected) 5f else 4f
             shape.rect(x - (size / 2f), y - (size / 2f), size, size)
             if (damaged) {
-                shape.color = Color(1.00f, 0.48f, 0.30f, if (visible) 0.34f else 0.16f)
-                shape.rect(x - 5f, y - 5f, 10f, 10f)
-                shape.color = impactSparkColor.cpy().apply { a = if (visible) 0.95f else 0.45f }
-                shape.rect(x - 3f, y - 3f, 6f, 6f)
-                shape.rect(x - 5f, y - 1f, 10f, 2f)
-                shape.rect(x - 1f, y - 5f, 2f, 10f)
+                shape.color = Color(1.00f, 0.48f, 0.30f, if (visible) 0.88f else 0.30f)
+                shape.rect(x - 4f, y - 0.75f, 8f, 1.5f)
+                shape.rect(x - 0.75f, y - 4f, 1.5f, 8f)
             }
             if (runtime.isCompletionFlashActive(entity.id)) {
                 shape.color = completionSparkColor(runtime, entity.id).cpy().apply { a = if (visible) 0.90f else 0.40f }
@@ -922,16 +919,19 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 1.5f, y - 6f, 3f, 3f)
             }
             if (selected) {
-                shape.color = Color(0.95f, 0.97f, 1f, if (visible) 0.95f else 0.40f)
-                shape.rect(x - 4.5f, y - 4.5f, 9f, 1f)
-                shape.rect(x - 4.5f, y + 3.5f, 9f, 1f)
-                shape.rect(x - 4.5f, y - 4.5f, 1f, 9f)
-                shape.rect(x + 3.5f, y - 4.5f, 1f, 9f)
-                shape.rect(x - 1f, y - 7f, 2f, 2f)
+                shape.color = selectionColor.cpy().apply { a = if (visible) 0.96f else 0.40f }
+                shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
+                shape.rect(x - 4.5f, y - 4.5f, 1f, 4f)
+                shape.rect(x + 0.5f, y - 4.5f, 4f, 1f)
+                shape.rect(x + 3.5f, y - 4.5f, 1f, 4f)
+                shape.rect(x - 4.5f, y + 3.5f, 4f, 1f)
+                shape.rect(x - 4.5f, y + 0.5f, 1f, 4f)
+                shape.rect(x + 0.5f, y + 3.5f, 4f, 1f)
+                shape.rect(x + 3.5f, y + 0.5f, 1f, 4f)
                 if (damaged) {
                     shape.color = Color(0.92f, 1.00f, 0.78f, if (visible) 0.88f else 0.34f)
-                    shape.rect(x - 6.5f, y - 1f, 13f, 2f)
-                    shape.rect(x - 1f, y - 6.5f, 2f, 13f)
+                    shape.rect(x - 5.5f, y - 0.75f, 11f, 1.5f)
+                    shape.rect(x - 0.75f, y - 5.5f, 1.5f, 11f)
                 }
             }
         }
@@ -1008,24 +1008,13 @@ internal class GdxWorldRenderer(
         val viewportTop = top + (topWorld / snapshot.mapHeight) * boundsHeight
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
-        shape.color = Color(0.82f, 0.92f, 0.98f, 0.12f)
+        shape.color = Color(0.82f, 0.92f, 0.98f, 0.10f)
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
         shape.color = Color(0.10f, 0.18f, 0.22f, 0.95f)
         shape.rect(left, top, boundsWidth, boundsHeight)
-        shape.color = Color(0.92f, 0.98f, 1f, 0.90f)
-        shape.rect(
-            viewportLeft - 1f,
-            viewportTop - 1f,
-            viewportWidth + 2f,
-            viewportHeight + 2f
-        )
-        shape.rect(
-            viewportLeft - 2f,
-            viewportTop - 2f,
-            viewportWidth + 4f,
-            viewportHeight + 4f
-        )
-        val corner = 8f
+        shape.color = Color(0.92f, 0.98f, 1f, 0.84f)
+        shape.rect(viewportLeft - 1f, viewportTop - 1f, viewportWidth + 2f, viewportHeight + 2f)
+        val corner = 7f
         shape.color = selectionColor
         shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
         shape.line(viewportLeft, viewportTop, viewportLeft, viewportTop + corner)
