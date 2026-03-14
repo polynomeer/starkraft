@@ -365,11 +365,14 @@ internal class GdxWorldRenderer(
         val hp = entity.hp
         val maxHp = entity.maxHp
         val damaged = runtime.isDamageFlashActive(entity.id)
+        val impactKind = runtime.damageImpactKind(entity.id)
+        val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
         val barWidth = if (selected) 22f else 18f
         val barHeight = if (selected) 4f else 3f
         val top = y - if (selected) 16f else 14f
         shape.color =
             when {
+                damaged && meleeImpact -> Color(0.10f, 0.18f, 0.08f, 0.98f)
                 damaged -> Color(0.18f, 0.08f, 0.08f, 0.98f)
                 selected -> Color(0.04f, 0.04f, 0.04f, 0.98f)
                 else -> Color(0.1f, 0.1f, 0.1f, 0.92f)
@@ -377,6 +380,9 @@ internal class GdxWorldRenderer(
         shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         val fillColor =
             when {
+                meleeImpact && hp * 100 >= maxHp * 66 -> Color(0.68f, 1.00f, 0.60f, 1f)
+                meleeImpact && hp * 100 >= maxHp * 33 -> Color(0.92f, 1.00f, 0.42f, 1f)
+                meleeImpact -> Color(1.00f, 0.58f, 0.34f, 1f)
                 hp * 100 >= maxHp * 66 -> Color(0.30f, 0.83f, 0.43f, 1f)
                 hp * 100 >= maxHp * 33 -> Color(0.89f, 0.71f, 0.22f, 1f)
                 else -> Color(0.84f, 0.29f, 0.29f, 1f)
@@ -412,6 +418,15 @@ internal class GdxWorldRenderer(
             val screenX = runtime.camera.worldToScreenX(entity.x)
             val screenY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(screenX, screenY)) continue
+            val impactKind = runtime.damageImpactKind(entity.id)
+            val bracketColor =
+                when (impactKind) {
+                    CombatSoundKind.MELEE,
+                    CombatSoundKind.ZERGLING_MELEE -> Color(0.82f, 1.00f, 0.68f, 1f)
+                    CombatSoundKind.MARINE_RANGED,
+                    CombatSoundKind.RANGED,
+                    null -> selectionColor
+                }
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
             val confirmPulse = runtime.selectionConfirmPulse(entity.id)
@@ -429,7 +444,7 @@ internal class GdxWorldRenderer(
                 shape.line(left - 3f, top + height + 3f, left + width + 3f, top + height + 3f)
                 shape.line(left - 3f, top - 3f, left - 3f, top + height + 3f)
                 shape.line(left + width + 3f, top - 3f, left + width + 3f, top + height + 3f)
-                shape.color = selectionColor
+                shape.color = bracketColor
                 shape.line(left, top, left + corner, top)
                 shape.line(left, top, left, top + corner)
                 shape.line(left + width, top, left + width - corner, top)
@@ -439,14 +454,19 @@ internal class GdxWorldRenderer(
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.28f * confirmPulse)
+                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.28f * confirmPulse)
                     shape.line(left - 6f, top - 6f, left + width + 6f, top - 6f)
                     shape.line(left - 6f, top + height + 6f, left + width + 6f, top + height + 6f)
                     shape.line(left - 6f, top - 6f, left - 6f, top + height + 6f)
                     shape.line(left + width + 6f, top - 6f, left + width + 6f, top + height + 6f)
                 }
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(0.92f, 1.00f, 0.78f, 0.76f)
+                    shape.color =
+                        when (impactKind) {
+                            CombatSoundKind.MELEE,
+                            CombatSoundKind.ZERGLING_MELEE -> Color(0.92f, 1.00f, 0.72f, 0.76f)
+                            else -> Color(0.92f, 1.00f, 0.78f, 0.76f)
+                        }
                     shape.rect(left - 2f, top + (height * 0.5f), width + 4f, 1.5f)
                     shape.rect(left + (width * 0.5f), top - 2f, 1.5f, height + 4f)
                 }
@@ -459,10 +479,10 @@ internal class GdxWorldRenderer(
                 shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.08f))
                 shape.circle(screenX, screenY, radius + 1.5f)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.22f * confirmPulse)
+                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.22f * confirmPulse)
                     shape.circle(screenX, screenY, radius + 6f + ((1f - confirmPulse) * 4f))
                 }
-                shape.color = selectionColor
+                shape.color = bracketColor
                 shape.circle(screenX, screenY, radius)
                 val wing = 5.5f
                 shape.line(screenX - radius - wing, screenY, screenX - radius + 1.5f, screenY)
