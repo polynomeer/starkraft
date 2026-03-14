@@ -252,8 +252,8 @@ internal class GameScreen(
         }
 
         statusCard.apply {
-            background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.92f))
-            pad(12f)
+            background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.72f))
+            pad(10f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -261,25 +261,25 @@ internal class GameScreen(
                     add(statusHeader).left()
                 }
             ).left().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
             add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
             add(hudLinesLabel).left().expandX().fillX().padTop(8f)
         }
 
         commandCard.apply {
             background = null
-            pad(4f)
+            pad(3f)
             top()
             add(
                 Table().apply {
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.96f))
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.76f))
                             pad(1f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.96f))
-                                    pad(3f, 7f, 3f, 7f)
+                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
+                                    pad(2f, 6f, 2f, 6f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHeaderLabel).left()
                                 }
@@ -291,17 +291,17 @@ internal class GameScreen(
                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(22f).height(18f)
                 }
             ).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.85f)) }).height(2f).expandX().fillX().padTop(6f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
             add(
                 commandHintCard.apply {
                     pad(2f, 2f, 0f, 2f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
                             pad(1f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
+                                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.72f))
                                     pad(2f, 4f, 2f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHintLabel).left().expandX().fillX()
@@ -324,7 +324,7 @@ internal class GameScreen(
             pad(0f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.62f))
+                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.48f))
                     pad(1f, 5f, 1f, 5f)
                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
                     add(actionBannerLabel).center()
@@ -334,7 +334,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = null
-            pad(2f)
+            pad(1f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
@@ -343,34 +343,34 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().padBottom(1f).row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.85f)) }).height(1f).expandX().fillX().padTop(2f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(2f).row()
             add(
                 selectionHeadlineCard.apply {
-                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
+                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.70f))
                     pad(1f, 4f, 1f, 4f)
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(2f).row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.09f, 0.15f, 0.19f, 0.90f)) }).height(1f).expandX().fillX().padTop(1f).row()
+            add(Table().apply { background = assets.panelDrawable(Color(0.09f, 0.15f, 0.19f, 0.60f)) }).height(1f).expandX().fillX().padTop(1f).row()
             add(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.98f))
+                            background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f))
                             pad(3f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.34f, 0.40f, 0.16f, 0.92f))
+                                    background = assets.panelDrawable(Color(0.34f, 0.40f, 0.16f, 0.76f))
                                 }
                             ).height(2f).expandX().fillX().row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.96f))
+                                    background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.76f))
                                     pad(5f, 4f, 3f, 4f)
                                     add(portraitLabel).center().row()
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.76f))
+                                            background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.58f))
                                             pad(1f, 4f, 1f, 4f)
                                             add(healthLabel).center()
                                         }
@@ -383,15 +383,15 @@ internal class GameScreen(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
                                     pad(1f, 4f, 1f, 4f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.88f)) }).height(1f).expandX().fillX().padTop(1f).row()
+                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.58f)) }).height(1f).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.44f))
+                                    background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.30f))
                                 }
                             ).height(2f).expandX().fillX().padTop(1f).row()
                             add(
@@ -406,7 +406,7 @@ internal class GameScreen(
                             ).width(122f).height(7f).left().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
                                     pad(1f, 5f, 1f, 5f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.76f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
@@ -414,7 +414,7 @@ internal class GameScreen(
                             ).left().expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.52f))
+                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.38f))
                                     pad(2f, 3f, 2f, 3f)
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
@@ -435,7 +435,7 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
+                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
                                     pad(1f, 4f, 1f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.74f)) }).width(2f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
@@ -930,21 +930,21 @@ internal class GameScreen(
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = null
-            add(Table().apply { background = assets.panelDrawable(tone) }).height(2f).expandX().fillX().row()
+            add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.76f }) }).height(1f).expandX().fillX().row()
             add(
                 Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f)) }).width(2f).expandY().fillY()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
                     add(
                         Table().apply {
                             background = null
-                            pad(4f, 6f, 6f, 6f)
+                            pad(3f, 5f, 5f, 5f)
                             add(content).expand().fill()
                         }
                     ).expand().fill()
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f)) }).width(2f).expandY().fillY()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
                 }
             ).expand().fill().row()
-            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f)) }).height(2f).expandX().fillX()
+            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f).apply { a *= 0.72f }) }).height(1f).expandX().fillX()
         }
 
     private fun wrapTopStrip(content: Table): Table =
