@@ -174,35 +174,60 @@ internal class GameScreen(
 
         topBar.apply {
             background = null
-            pad(2f, 6f, 2f, 6f)
+            pad(1f, 4f, 1f, 4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
-                    pad(1f, 5f, 1f, 5f)
-                    add(economyLabel).left()
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.80f))
+                    pad(1f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.88f))
+                            pad(1f, 4f, 1f, 4f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
+                            add(economyLabel).left()
+                        }
+                    ).left().expandX().fillX()
                 }
             ).left().expandX().fillX()
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
-                    pad(1f, 5f, 1f, 5f)
-                    add(topSelectionLabel).center()
+                    pad(1f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                            pad(1f, 4f, 1f, 4f)
+                            add(topSelectionLabel).center()
+                        }
+                    ).expandX().fillX()
                 }
-            ).width(132f).center().padLeft(6f).padRight(6f)
+            ).width(126f).center().padLeft(4f).padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.82f))
-                    pad(1f, 5f, 1f, 5f)
-                    add(modeLabel).center()
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
+                    pad(1f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.88f))
+                            pad(1f, 4f, 1f, 4f)
+                            add(modeLabel).center()
+                        }
+                    ).expandX().fillX()
                 }
-            ).width(126f).center().padRight(6f)
+            ).width(118f).center().padRight(4f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.86f))
-                    pad(1f, 5f, 1f, 5f)
-                    add(statusBadgeLabel).right()
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.80f))
+                    pad(1f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.90f))
+                            pad(1f, 4f, 1f, 4f)
+                            add(statusBadgeLabel).right()
+                        }
+                    ).expandX().fillX()
                 }
-            ).width(74f).right()
+            ).width(68f).right()
         }
 
         minimapFrame.apply {
@@ -281,8 +306,15 @@ internal class GameScreen(
 
         actionBanner.apply {
             background = null
-            pad(4f, 8f, 4f, 8f)
-            add(actionBannerLabel).center()
+            pad(1f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.84f))
+                    pad(2f, 6f, 2f, 6f)
+                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
+                    add(actionBannerLabel).center()
+                }
+            ).center()
         }
 
         centerCard.apply {
