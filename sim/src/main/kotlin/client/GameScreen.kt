@@ -1004,7 +1004,7 @@ internal class GameScreen(
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
                     buildString {
-                        append("prod ")
+                        append("P ")
                         append(lead.activeProductionType ?: "queue")
                         if (lead.productionQueueSize > 0) append(" x${lead.productionQueueSize}")
                         if (lead.activeProductionRemainingTicks > 0) append(" ${lead.activeProductionRemainingTicks}t")
@@ -1014,7 +1014,7 @@ internal class GameScreen(
             if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
                 add(
                     buildString {
-                        append("res ")
+                        append("R ")
                         append(lead.activeResearchTech ?: "queue")
                         if (lead.researchQueueSize > 0) append(" x${lead.researchQueueSize}")
                         if (lead.activeResearchRemainingTicks > 0) append(" ${lead.activeResearchRemainingTicks}t")
@@ -1024,7 +1024,7 @@ internal class GameScreen(
             if (lead.underConstruction) {
                 add(
                     buildString {
-                        append("build")
+                        append("B")
                         lead.constructionRemainingTicks?.let { append(" ${it}t") }
                     }
                 )
