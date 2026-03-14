@@ -91,6 +91,21 @@ internal class GameScreen(
     private val soundCooldownUntilMillis = HashMap<String, Long>()
 
     init {
+        statusHeader.setFontScale(0.94f)
+        centerHeaderLabel.setFontScale(0.94f)
+        commandHeaderLabel.setFontScale(0.94f)
+        queueHeaderLabel.setFontScale(0.86f)
+        economyLabel.setFontScale(0.92f)
+        topSelectionLabel.setFontScale(0.88f)
+        modeLabel.setFontScale(0.88f)
+        statusBadgeLabel.setFontScale(0.88f)
+        commandHintLabel.setFontScale(0.84f)
+        selectionMetaLabel.setFontScale(0.84f)
+        factionOverviewLabel.setFontScale(0.84f)
+        selectionRosterLabel.setFontScale(0.84f)
+        footerLabel.setFontScale(0.84f)
+        centerFooterLabel.setFontScale(0.84f)
+        minimapHint.setFontScale(0.82f)
         buildHud()
     }
 

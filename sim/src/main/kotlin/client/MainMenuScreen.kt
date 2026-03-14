@@ -34,6 +34,13 @@ internal class MainMenuScreen(
     private var screenFadeAlpha = 1f
 
     init {
+        scenarioHeader.setFontScale(0.94f)
+        presetHeader.setFontScale(0.94f)
+        sessionHeader.setFontScale(0.94f)
+        scenarioLabel.setFontScale(0.90f)
+        summaryLabel.setFontScale(0.86f)
+        controlsLabel.setFontScale(0.82f)
+        statusLabel.setFontScale(0.88f)
         val root =
             Table().apply {
                 setFillParent(true)
