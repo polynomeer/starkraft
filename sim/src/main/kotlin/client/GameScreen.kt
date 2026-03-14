@@ -593,7 +593,7 @@ internal class GameScreen(
         commandHintLabel.color = currentCommandHintTextTone()
         commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone())
         selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone())
-        attackWarningLabel.setText(runtime.attackWarningLine() ?: "")
+        attackWarningLabel.setText(buildAttackWarningText())
         attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
@@ -1330,15 +1330,22 @@ internal class GameScreen(
     }
 
     private fun buildActionBannerLine(): String {
-        runtime.noticeLine()?.removePrefix("notice: ")?.let { return it }
+        runtime.noticeLine()?.removePrefix("notice: ")?.let(::compactNotice)?.let { return it }
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
-            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  LMB/RMB confirm"
-            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()}  LMB/RMB confirm"
+            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}"
+            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()} ready"
             selectionCount > 0 -> ""
             else -> ""
         }
     }
+
+    private fun buildAttackWarningText(): String =
+        when {
+            runtime.isStructureLossWarning() -> "STRUCTURE LOST"
+            runtime.attackWarningLine() != null -> "UNDER ATTACK"
+            else -> ""
+        }
 
     private fun buildCommandHintLine(): String =
         runtime.hoverHintLine()?.let(::compactHint)
@@ -1499,6 +1506,21 @@ internal class GameScreen(
                 .replace("preset", "pst")
                 .trim()
         return if (cleaned.length <= 24) cleaned else cleaned.take(21).trimEnd() + "..."
+    }
+
+    private fun compactNotice(raw: String): String {
+        val cleaned =
+            raw
+                .replace("Warning: ", "")
+                .replace("structure lost", "STRUCT LOST")
+                .replace("invalid build placement", "INVALID BUILD")
+                .replace("research complete", "tech done")
+                .replace(" complete", " done")
+                .replace(" ready", " ready")
+                .replace("view auto-switched to ", "view ")
+                .replace("observer", "obs")
+                .trim()
+        return if (cleaned.length <= 26) cleaned else cleaned.take(23).trimEnd() + "..."
     }
 
     private fun uiPulse(periodMs: Long = 1200L): Float {
