@@ -392,28 +392,14 @@ internal class GdxWorldRenderer(
 
     private fun drawSelectionOverlays(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        val entitiesById = snapshot.entities.associateBy { it.id }
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
             if (!isEntityVisible(entity, runtime)) continue
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(startX, startY)) continue
-            shape.color = Color(0.48f, 0.84f, 0.95f, 1f)
-            shape.circle(startX, startY, 11f)
-            if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
-                shape.line(startX, startY, runtime.camera.worldToScreenX(entity.pathGoalX + 0.5f), runtime.camera.worldToScreenY(entity.pathGoalY + 0.5f))
-            }
-            if (entity.rallyX != null && entity.rallyY != null) {
-                shape.color = Color(0.55f, 0.93f, 0.55f, 1f)
-                shape.line(startX, startY, runtime.camera.worldToScreenX(entity.rallyX), runtime.camera.worldToScreenY(entity.rallyY))
-            }
-            if (entity.buildTargetId != null) {
-                entitiesById[entity.buildTargetId]?.let { target ->
-                    shape.color = Color(0.95f, 0.80f, 0.36f, 1f)
-                    shape.line(startX, startY, runtime.camera.worldToScreenX(target.x), runtime.camera.worldToScreenY(target.y))
-                }
-            }
+            shape.color = selectionColor.cpy().apply { a = 0.16f }
+            shape.circle(startX, startY, 8f)
         }
     }
 
@@ -462,8 +448,8 @@ internal class GdxWorldRenderer(
             } else {
                 val radius = 11f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.24f + (pulse * 0.12f))
-                shape.circle(screenX, screenY, radius + 2.5f)
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.08f))
+                shape.circle(screenX, screenY, radius + 1.5f)
                 shape.color = selectionColor
                 shape.circle(screenX, screenY, radius)
                 val wing = 5.5f
@@ -1111,8 +1097,10 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, inner)
                 shape.color = Color(0.74f, 1.00f, 0.82f, 0.82f)
                 shape.circle(x, y, 2.5f + (pulse * 1.2f))
-                shape.color = Color(0.78f, 1.00f, 0.86f, 0.22f + (pulse * 0.10f))
-                shape.circle(x, y, 22f + (pulse * 10f))
+                shape.color = Color(0.78f, 1.00f, 0.86f, 0.18f + (pulse * 0.08f))
+                shape.circle(x, y, 18f + (pulse * 8f))
+                shape.rect(x - 1f, y - 7f, 2f, 14f)
+                shape.rect(x - 7f, y - 1f, 14f, 2f)
             }
             GroundPingKind.ATTACK -> {
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
@@ -1134,9 +1122,10 @@ internal class GdxWorldRenderer(
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.rect(x - 10f, y - 10f, 20f, 20f)
                 shape.color = Color(0.84f, 0.96f, 1.00f, 0.94f)
-                shape.rect(x - 8f, y - 8f, 16f, 16f)
-                shape.rect(x - 1f, y - 12f, 2f, 24f)
-                shape.rect(x - 12f, y - 1f, 24f, 2f)
+                shape.rect(x - 8f, y - 8f, 16f, 2f)
+                shape.rect(x - 8f, y + 6f, 16f, 2f)
+                shape.rect(x - 8f, y - 8f, 2f, 16f)
+                shape.rect(x + 6f, y - 8f, 2f, 16f)
                 shape.rect(x - 12f, y - 12f, 4f, 4f)
                 shape.rect(x + 8f, y - 12f, 4f, 4f)
                 shape.rect(x - 12f, y + 8f, 4f, 4f)
