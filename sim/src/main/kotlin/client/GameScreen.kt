@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import kotlin.math.abs
 
@@ -1094,7 +1095,7 @@ internal class GameScreen(
         }
         selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(38f, 38f)
+            selectionGrid.add(buildSelectionSlot(entity)).size(40f, 40f)
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
@@ -1106,11 +1107,26 @@ internal class GameScreen(
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
         val damaged = runtime.isDamageFlashActive(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
+        val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
+        val badgeText =
+            when {
+                entity.footprintWidth != null -> "BLD"
+                isWorker -> "WRK"
+                entity.weaponId != null -> "ATK"
+                else -> "UNT"
+            }
         val tone =
             when {
                 entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
                 entity.footprintWidth != null -> Color(0.28f, 0.24f, 0.15f, 0.96f)
                 else -> Color(0.16f, 0.25f, 0.18f, 0.96f)
+            }
+        val badgeTone =
+            when {
+                entity.footprintWidth != null -> Color(0.44f, 0.34f, 0.16f, 0.96f)
+                isWorker -> Color(0.20f, 0.44f, 0.28f, 0.96f)
+                entity.weaponId != null -> Color(0.18f, 0.46f, 0.48f, 0.96f)
+                else -> Color(0.28f, 0.34f, 0.40f, 0.96f)
             }
         val hpColor =
             when {
@@ -1147,8 +1163,19 @@ internal class GameScreen(
                                 )
                         }
                     ).height(2f).expandX().fillX().padBottom(2f).row()
-                    add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX().row()
-                    add(Label(entity.id.toString(), assets.mutedLabelStyle)).center().row()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
+                            pad(2f, 1f, 1f, 1f)
+                            add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
+                        }
+                    ).expandX().fillX().height(18f).row()
+                    add(
+                        Label(badgeText, assets.mutedLabelStyle).apply {
+                            color = badgeTone
+                            setAlignment(Align.center)
+                        }
+                    ).center().padTop(1f).row()
                     add(
                         Table().apply {
                             background =
@@ -1161,10 +1188,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
-                            ).width(20f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
+                            ).width(24f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(20f).height(4f).padTop(2f)
+                    ).width(24f).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
