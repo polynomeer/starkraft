@@ -1665,6 +1665,30 @@ internal class GdxWorldRenderer(
             shape.color = Color(1.00f, 0.70f, 0.38f, 0.04f + (collapseSeverity * 0.10f))
             shape.rect(left + width * 0.18f, top + height * 0.22f, width * 0.18f, 2f)
             shape.rect(left + width * 0.58f, top + height * 0.52f, width * 0.14f, 2f)
+            if (collapseSeverity > 0.40f) {
+                val slump = (collapseSeverity - 0.40f) / 0.60f
+                val slumpDrop = 1.2f + (slump * 4.0f)
+                shape.color = Color(0.12f, 0.13f, 0.14f, 0.22f + (slump * 0.18f))
+                shape.rect(left + width * 0.20f, top + height * 0.18f + slumpDrop, width * 0.54f, height * 0.12f)
+                shape.color = Color(0.42f, 0.42f, 0.44f, 0.18f + (slump * 0.18f))
+                shape.rect(left + width * 0.24f, top + height * 0.16f + slumpDrop, width * 0.46f, 3f)
+                shape.color = Color(0.08f, 0.08f, 0.08f, 0.18f + (slump * 0.18f))
+                shape.rect(left + width * 0.34f, top + height * 0.18f + slumpDrop, width * 0.14f, height * 0.18f)
+            }
+            if (collapseSeverity > 0.62f) {
+                val fracture = (collapseSeverity - 0.62f) / 0.38f
+                val emberPulse = ambientPulse(540L)
+                shape.color = Color(1.00f, 0.78f, 0.46f, 0.10f + (fracture * 0.14f) + (emberPulse * 0.04f))
+                shape.circle(left + width * 0.28f, top + height * 0.30f, 4f + (fracture * 4f))
+                shape.circle(left + width * 0.62f, top + height * 0.26f, 3f + (fracture * 3f))
+                shape.color = Color(0.60f, 0.56f, 0.48f, 0.20f + (fracture * 0.24f))
+                shape.rect(left + width * 0.16f, top + height - 5f, 5f, 4f)
+                shape.rect(left + width * 0.72f, top + height - 8f, 4f, 5f)
+                shape.rect(left + width * 0.48f, top + height - 12f, 4f, 4f)
+                shape.color = Color(0.18f, 0.18f, 0.18f, 0.16f + (fracture * 0.20f))
+                shape.circle(left + width * 0.22f, top + height - 2f, 5f + (fracture * 3f))
+                shape.circle(left + width * 0.70f, top + height - 3f, 4f + (fracture * 3f))
+            }
         }
     }
 
