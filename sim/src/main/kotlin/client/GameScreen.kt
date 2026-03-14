@@ -189,15 +189,15 @@ internal class GameScreen(
 
         topBar.apply {
             background = null
-            pad(1f, 4f, 1f, 4f)
+            pad(0f, 3f, 0f, 3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.80f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
                     pad(1f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.88f))
-                            pad(1f, 4f, 1f, 4f)
+                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.74f))
+                            pad(1f, 3f, 1f, 3f)
                             add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
                             add(economyLabel).left()
                         }
@@ -206,43 +206,43 @@ internal class GameScreen(
             ).left().expandX().fillX()
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
-                            pad(1f, 4f, 1f, 4f)
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f))
+                            pad(1f, 3f, 1f, 3f)
                             add(topSelectionLabel).center()
                         }
                     ).expandX().fillX()
                 }
-            ).width(126f).center().padLeft(4f).padRight(4f)
+            ).width(118f).center().padLeft(3f).padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.88f))
-                            pad(1f, 4f, 1f, 4f)
+                            background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f))
+                            pad(1f, 3f, 1f, 3f)
                             add(modeLabel).center()
                         }
                     ).expandX().fillX()
                 }
-            ).width(118f).center().padRight(4f)
+            ).width(110f).center().padRight(3f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.80f))
+                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
                     pad(1f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.90f))
-                            pad(1f, 4f, 1f, 4f)
+                            background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f))
+                            pad(1f, 3f, 1f, 3f)
                             add(statusBadgeLabel).right()
                         }
                     ).expandX().fillX()
                 }
-            ).width(68f).right()
+            ).width(60f).right()
         }
 
         minimapFrame.apply {
@@ -321,11 +321,11 @@ internal class GameScreen(
 
         actionBanner.apply {
             background = null
-            pad(1f)
+            pad(0f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.84f))
-                    pad(2f, 6f, 2f, 6f)
+                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.62f))
+                    pad(1f, 5f, 1f, 5f)
                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
                     add(actionBannerLabel).center()
                 }
@@ -480,7 +480,7 @@ internal class GameScreen(
         }
 
         root.top()
-        root.add(wrapTopStrip(topBar)).expandX().fillX().pad(8f, 18f, 0f, 18f).row()
+        root.add(wrapTopStrip(topBar)).expandX().fillX().pad(6f, 18f, 0f, 18f).row()
         root.add().expand().fill().row()
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
@@ -951,7 +951,7 @@ internal class GameScreen(
         Table().apply {
             background = null
             add(content).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.78f)) }).height(1f).expandX().fillX().padTop(3f)
+            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX().padTop(2f)
         }
 
     private fun buildCommandGlyph(actionId: String, disabled: Boolean, checked: Boolean): Table {
