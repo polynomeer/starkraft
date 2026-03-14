@@ -1108,13 +1108,6 @@ internal class GameScreen(
         val damaged = runtime.isDamageFlashActive(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
-        val badgeText =
-            when {
-                entity.footprintWidth != null -> "BLD"
-                isWorker -> "WRK"
-                entity.weaponId != null -> "ATK"
-                else -> "UNT"
-            }
         val tone =
             when {
                 entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
@@ -1166,16 +1159,11 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
-                            pad(2f, 1f, 1f, 1f)
+                            pad(2f, 1f, 0.5f, 1f)
                             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
                         }
                     ).expandX().fillX().height(18f).row()
-                    add(
-                        Label(badgeText, assets.mutedLabelStyle).apply {
-                            color = badgeTone
-                            setAlignment(Align.center)
-                        }
-                    ).center().padTop(1f).row()
+                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged)).center().padTop(1f).row()
                     add(
                         Table().apply {
                             background =
@@ -1215,6 +1203,106 @@ internal class GameScreen(
                     }
                 }
             )
+        }
+    }
+
+    private fun buildSelectionSlotGlyph(entity: EntitySnapshot, badgeTone: Color, focused: Boolean, damaged: Boolean): Table {
+        val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
+        val shellTone =
+            if (focused) badgeTone.cpy().lerp(Color.WHITE, 0.22f)
+            else if (damaged) badgeTone.cpy().lerp(Color.SCARLET, 0.25f)
+            else badgeTone
+        return Table().apply {
+            pad(0f)
+            when {
+                entity.footprintWidth != null -> {
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(12f, 2f).colspan(3).row()
+                    repeat(2) { row ->
+                        repeat(3) { col ->
+                            add(
+                                Table().apply {
+                                    background =
+                                        assets.panelDrawable(
+                                            if (row == 0 && col == 1) shellTone.cpy().lerp(Color.WHITE, 0.18f)
+                                            else shellTone.cpy().mul(0.82f, 0.82f, 0.82f, 1f)
+                                        )
+                                }
+                            ).size(3f, 3f).pad(0.5f)
+                        }
+                        row()
+                    }
+                }
+
+                isWorker -> {
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(8f, 2f).colspan(3).row()
+                    add().size(2f, 2f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.12f))
+                        }
+                    ).size(4f, 5f).pad(0.5f)
+                    add().size(2f, 2f).row()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(3f, 2f).padRight(0.5f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(3f, 2f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(3f, 2f).padLeft(0.5f)
+                }
+
+                entity.weaponId != null -> {
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(3f, 6f).padRight(0.5f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.14f))
+                        }
+                    ).size(6f, 2f).padTop(2f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(2f, 2f).padLeft(0.5f)
+                }
+
+                else -> {
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(4f, 4f).padRight(0.5f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.12f))
+                        }
+                    ).size(4f, 6f)
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(shellTone)
+                        }
+                    ).size(4f, 4f).padLeft(0.5f)
+                }
+            }
         }
     }
 
