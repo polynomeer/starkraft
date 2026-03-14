@@ -1248,8 +1248,22 @@ internal class GdxWorldRenderer(
         for (remain in remains) {
             val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
             val settle = (1f - progress).coerceIn(0f, 1f)
-            val settleDrop = if (remain.isStructure) settle * 4.5f else settle * 2.0f
-            val spread = if (remain.isStructure) settle * 2.6f else settle * 1.2f
+            val marineRemain = remain.typeId.contains("Marine", ignoreCase = true)
+            val zerglingRemain = remain.typeId.contains("Zergling", ignoreCase = true)
+            val settleDrop =
+                when {
+                    remain.isStructure -> settle * 4.5f
+                    zerglingRemain -> settle * 1.1f
+                    marineRemain -> settle * 2.6f
+                    else -> settle * 2.0f
+                }
+            val spread =
+                when {
+                    remain.isStructure -> settle * 2.6f
+                    zerglingRemain -> settle * 2.4f
+                    marineRemain -> settle * 1.5f
+                    else -> settle * 1.2f
+                }
             val x = runtime.camera.worldToScreenX(remain.x)
             val y = runtime.camera.worldToScreenY(remain.y) + settleDrop
             if (!isOnScreen(x, y)) continue
@@ -1277,31 +1291,34 @@ internal class GdxWorldRenderer(
             } else {
                 val debris =
                     when {
-                        remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.34f, 0.24f, 0.20f, alpha)
+                        zerglingRemain -> Color(0.34f, 0.24f, 0.20f, alpha)
                         else -> Color(0.28f, 0.30f, 0.30f, alpha)
                     }
                 shape.color = debris
-                shape.rect(x - 6f, y - 2f, 5f, 3f)
-                shape.rect(x + 1f, y - 4f, 4f, 3f)
-                shape.rect(x - 1f, y + 1f, 3f, 2f)
-                if (remain.typeId.contains("Marine", ignoreCase = true)) {
+                shape.rect(x - 6f - (spread * 0.4f), y - 2f, 5f, 3f)
+                shape.rect(x + 1f + (spread * 0.5f), y - 4f, 4f, 3f)
+                shape.rect(x - 1f, y + 1f + (settle * 0.3f), 3f, 2f)
+                if (marineRemain) {
                     shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
-                    shape.rect(x - 3f, y - 6f, 6f, 2f)
+                    shape.rect(x - 3f, y - 6f + (settle * 0.4f), 6f, 2f)
+                    shape.rect(x - 9f - spread, y - 1f, 3f, 2f)
                     shape.color = Color(0.20f, 0.22f, 0.24f, alpha * 0.52f)
-                    shape.circle(x + 4f, y + 4f, 4f + ((1f - progress) * 2f))
+                    shape.circle(x + 4f + (spread * 0.3f), y + 4f, 4f + ((1f - progress) * 2f))
                 }
-                if (remain.typeId.contains("Zergling", ignoreCase = true)) {
+                if (zerglingRemain) {
                     shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
-                    shape.rect(x - 7f, y + 1f, 4f, 2f)
-                    shape.rect(x + 3f, y - 1f, 3f, 2f)
+                    shape.rect(x - 8f - spread, y + 1f, 5f, 2f)
+                    shape.rect(x + 4f + spread, y - 1f, 4f, 2f)
+                    shape.rect(x - 2f, y - 6f + (settle * 0.5f), 4f, 2f)
                     shape.color = Color(0.30f, 0.20f, 0.18f, alpha * 0.42f)
-                    shape.circle(x - 2f, y + 5f, 3.6f + ((1f - progress) * 2f))
+                    shape.circle(x - 2f - (spread * 0.2f), y + 5f, 3.6f + ((1f - progress) * 2f))
+                    shape.circle(x + 5f + (spread * 0.4f), y + 2f, 2.8f + ((1f - progress) * 1.8f))
                 }
             }
             val smokeColor =
                 when {
                     remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * (0.52f + ((1f - progress) * 0.30f)))
-                    remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
+                    zerglingRemain -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
                     else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
                 }
             shape.color = smokeColor
