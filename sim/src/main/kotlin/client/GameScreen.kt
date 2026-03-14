@@ -66,7 +66,7 @@ internal class GameScreen(
     private val attackWarningLabel = Label("", assets.alertLabelStyle)
     private val minimapFrame = Table()
     private val minimapTitle = Label("Tac Map", assets.titleLabelStyle)
-    private val minimapHint = Label("click or drag map", assets.mutedLabelStyle)
+    private val minimapHint = Label("map drag", assets.mutedLabelStyle)
     private val bottomHud = Table()
     private val leftHudColumn = Table()
     private val statusCard = Table()
@@ -257,8 +257,16 @@ internal class GameScreen(
                     pad(2f, 2f, 0f, 2f)
                     add(
                         Table().apply {
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
-                            add(commandHintLabel).left().expandX().fillX()
+                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                            pad(1f)
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.92f))
+                                    pad(2f, 4f, 2f, 4f)
+                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
+                                    add(commandHintLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX()
                         }
                     ).expandX().fillX()
                 }
