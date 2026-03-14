@@ -770,11 +770,23 @@ internal class GameScreen(
         }
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return if (selected.size == 1) {
-            "${(lead.typeId ?: "UNIT").take(8).uppercase()}\n${(lead.archetype ?: "ROLE").take(8).uppercase()}"
+            "${compactPortraitType(lead.typeId)}\n${compactPortraitRole(lead.archetype)}"
         } else {
-            "${selected.size}\n${(lead.typeId ?: "UNIT").take(6).uppercase()}"
+            "${selected.size} UN\n${compactPortraitType(lead.typeId)}"
         }
     }
+
+    private fun compactPortraitType(typeId: String?): String =
+        (typeId ?: "UNIT")
+            .replace('_', ' ')
+            .uppercase()
+            .take(12)
+
+    private fun compactPortraitRole(archetype: String?): String =
+        (archetype ?: "ROLE")
+            .replace('_', ' ')
+            .uppercase()
+            .take(12)
 
     private fun buildHealthLine(): String {
         val snapshot = runtime.snapshot ?: return "HP -"
@@ -1127,7 +1139,7 @@ internal class GameScreen(
                 hpRatio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
                 else -> Color(0.84f, 0.30f, 0.25f, 1f)
             }
-        val shortName = (entity.typeId ?: "?").take(3).uppercase()
+        val shortName = buildSelectionSlotCode(entity)
         return Table().apply {
             background =
                 assets.panelDrawable(
@@ -1203,6 +1215,15 @@ internal class GameScreen(
                     }
                 }
             )
+        }
+    }
+
+    private fun buildSelectionSlotCode(entity: EntitySnapshot): String {
+        val type = (entity.typeId ?: "?").uppercase()
+        return when {
+            type.length <= 2 -> type
+            "_" in type -> type.split("_").mapNotNull { it.firstOrNull()?.toString() }.joinToString("").take(2)
+            else -> type.take(2)
         }
     }
 
