@@ -171,35 +171,35 @@ internal class GameScreen(
 
         topBar.apply {
             background = null
-            pad(4f, 8f, 4f, 8f)
+            pad(2f, 6f, 2f, 6f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.82f))
-                    pad(2f, 6f, 2f, 6f)
+                    pad(1f, 5f, 1f, 5f)
                     add(economyLabel).left()
                 }
             ).left().expandX().fillX()
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.78f))
-                    pad(2f, 6f, 2f, 6f)
+                    pad(1f, 5f, 1f, 5f)
                     add(topSelectionLabel).center()
                 }
-            ).width(154f).center().padLeft(10f).padRight(10f)
+            ).width(132f).center().padLeft(6f).padRight(6f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.82f))
-                    pad(2f, 6f, 2f, 6f)
+                    pad(1f, 5f, 1f, 5f)
                     add(modeLabel).center()
                 }
-            ).width(154f).center().padRight(10f)
+            ).width(126f).center().padRight(6f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.86f))
-                    pad(2f, 6f, 2f, 6f)
+                    pad(1f, 5f, 1f, 5f)
                     add(statusBadgeLabel).right()
                 }
-            ).width(92f).right()
+            ).width(74f).right()
         }
 
         minimapFrame.apply {
@@ -403,7 +403,7 @@ internal class GameScreen(
         }
 
         root.top()
-        root.add(wrapTopStrip(topBar)).expandX().fillX().pad(12f, 20f, 0f, 20f).row()
+        root.add(wrapTopStrip(topBar)).expandX().fillX().pad(8f, 18f, 0f, 18f).row()
         root.add().expand().fill().row()
         root.add(bottomHud).expandX().fillX().bottom()
         stage.addActor(root)
