@@ -738,7 +738,7 @@ internal class GdxWorldRenderer(
                     if (meleeHit) {
                         shape.rectLine(hitX + directionDy(attackDir, 6f), hitY - directionDx(attackDir, 6f), hitX - directionDy(attackDir, 6f), hitY + directionDx(attackDir, 6f), 2.2f)
                         shape.color = selectionColor.cpy().apply { a = 0.48f }
-                        shape.circle(hitX, hitY, 5f)
+                        shape.circle(hitX, hitY, 4f)
                     } else {
                         shape.rectLine(
                             hitX + directionDy(attackDir, 4f),
@@ -755,7 +755,7 @@ internal class GdxWorldRenderer(
                             1.8f
                         )
                         shape.color = pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.44f)
-                        shape.circle(hitX, hitY, 4f)
+                        shape.circle(hitX, hitY, 3f)
                     }
                     shape.rectLine(hitX, hitY, screenX - directionDx(attackDir, 2f), screenY - directionDy(attackDir, 2f), 1.2f)
                 }

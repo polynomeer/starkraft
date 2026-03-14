@@ -1290,6 +1290,7 @@ internal class GameScreen(
     private fun updateHealthBar() {
         val snapshot = runtime.snapshot
         val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        val takingDamage = selected.any { runtime.isDamageFlashActive(it.id) }
         val ratio =
             if (selected.isEmpty()) {
                 0f
@@ -1302,12 +1303,17 @@ internal class GameScreen(
         val fillWidth = (barWidth * ratio).coerceAtLeast(if (ratio > 0f) 4f else 0f)
         healthBarFill.clearChildren()
         healthBarBack.clearChildren()
+        healthBarBack.background =
+            assets.panelDrawable(
+                if (takingDamage) Color(0.20f, 0.08f, 0.08f, 0.96f)
+                else Color(0.12f, 0.14f, 0.16f, 1f)
+            )
         healthBarFill.background =
             assets.panelDrawable(
                 when {
-                    ratio >= 0.66f -> Color(0.22f, 0.78f, 0.42f, 1f)
-                    ratio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
-                    else -> Color(0.84f, 0.30f, 0.25f, 1f)
+                    ratio >= 0.66f -> if (takingDamage) Color(0.44f, 0.92f, 0.56f, 1f) else Color(0.22f, 0.78f, 0.42f, 1f)
+                    ratio >= 0.33f -> if (takingDamage) Color(1.00f, 0.82f, 0.34f, 1f) else Color(0.87f, 0.73f, 0.20f, 1f)
+                    else -> if (takingDamage) Color(1.00f, 0.42f, 0.34f, 1f) else Color(0.84f, 0.30f, 0.25f, 1f)
                 }
             )
         healthBarBack.add(healthBarFill).width(fillWidth).expandY().fillY().left()
