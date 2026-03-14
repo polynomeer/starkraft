@@ -692,6 +692,22 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
+                                                        when {
+                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
+                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.88f)
+                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.84f)
+                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.82f)
+                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.72f, 0.84f, 1.00f, 0.82f)
+                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.80f)
+                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.74f)
+                                                        }
+                                                    )
+                                            }
+                                        ).height(1.5f).expandX().fillX().colspan(4).padBottom(1f).row()
+                                        add(
+                                            Table().apply {
+                                                background =
+                                                    assets.panelDrawable(
                                                             when {
                                                                 actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
                                                             actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.78f + (activePulse * 0.10f))
@@ -712,6 +728,18 @@ internal class GameScreen(
                                             )
                                         ).size(10f, 10f).left().padRight(4f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
+                                        add(
+                                            Table().apply {
+                                                background =
+                                                    assets.panelDrawable(
+                                                        when {
+                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
+                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.90f)
+                                                            else -> Color(1f, 1f, 1f, 0.12f)
+                                                        }
+                                                    )
+                                            }
+                                        ).size(4f, 4f).padLeft(3f)
                                     }
                                 ).expand().fill()
                             }
