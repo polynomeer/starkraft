@@ -1246,10 +1246,13 @@ internal class GdxWorldRenderer(
         if (remains.isEmpty()) return
         val now = System.currentTimeMillis()
         for (remain in remains) {
-            val x = runtime.camera.worldToScreenX(remain.x)
-            val y = runtime.camera.worldToScreenY(remain.y)
-            if (!isOnScreen(x, y)) continue
             val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
+            val settle = (1f - progress).coerceIn(0f, 1f)
+            val settleDrop = if (remain.isStructure) settle * 4.5f else settle * 2.0f
+            val spread = if (remain.isStructure) settle * 2.6f else settle * 1.2f
+            val x = runtime.camera.worldToScreenX(remain.x)
+            val y = runtime.camera.worldToScreenY(remain.y) + settleDrop
+            if (!isOnScreen(x, y)) continue
             val alpha = 0.08f + (progress * 0.22f)
             val hotAlpha = (progress * progress).coerceIn(0f, 1f)
             if (remain.isStructure) {
@@ -1258,19 +1261,19 @@ internal class GdxWorldRenderer(
                 shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
                 shape.rect(x - 12f, y - 12f, 24f, 24f)
                 shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
-                shape.rect(x - 8f, y - 9f, 7f, 5f)
-                shape.rect(x + 1f, y - 6f, 8f, 6f)
-                shape.rect(x - 3f, y + 2f, 9f, 4f)
+                shape.rect(x - 8f - spread, y - 9f, 7f, 5f)
+                shape.rect(x + 1f + spread, y - 6f, 8f, 6f)
+                shape.rect(x - 3f, y + 2f + (settle * 0.8f), 9f, 4f)
                 shape.color = Color(0.22f, 0.20f, 0.18f, alpha * 0.86f)
-                shape.rect(x - 14f, y + 10f, 5f, 4f)
-                shape.rect(x + 8f, y + 6f, 4f, 5f)
+                shape.rect(x - 14f - (spread * 0.6f), y + 10f, 5f, 4f)
+                shape.rect(x + 8f + (spread * 0.5f), y + 6f, 4f, 5f)
                 shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
                 shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
                 shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
                 shape.circle(x - 8f, y + 6f, 5f + ((1f - progress) * 4f))
                 shape.color = Color(0.24f, 0.22f, 0.18f, alpha * 0.78f)
-                shape.rect(x - 17f, y + 5f, 7f, 4f)
-                shape.rect(x + 10f, y - 10f, 6f, 5f)
+                shape.rect(x - 17f - spread, y + 5f, 7f, 4f)
+                shape.rect(x + 10f + spread, y - 10f, 6f, 5f)
             } else {
                 val debris =
                     when {
