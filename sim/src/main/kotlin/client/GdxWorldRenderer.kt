@@ -1405,14 +1405,14 @@ internal class GdxWorldRenderer(
             val labelX = runtime.camera.worldToScreenX(node.x) - 8f
             val labelY = height - runtime.camera.worldToScreenY(node.y) - 10f
             if (!isOnScreen(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y))) continue
-            assets.font.color = Color(0f, 0f, 0f, 0.72f)
+            assets.font.color = Color(0f, 0f, 0f, 0.58f)
             val widthHint = (node.remaining.toString().length * 7f) + 6f
-            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 3f, y = labelY - 11f, color = Color(0.04f, 0.07f, 0.09f, 0.56f))
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 2f, y = labelY - 10f, color = Color(0.04f, 0.07f, 0.09f, 0.42f))
             assets.font.draw(
                 batch,
                 node.remaining.toString(),
-                labelX + 1f,
-                labelY + 1f
+                labelX + 0.5f,
+                labelY + 0.5f
             )
             assets.font.color = if (node.kind == "gas") Color(0.72f, 0.98f, 0.84f, 1f) else Color(1f, 0.92f, 0.70f, 1f)
             assets.font.draw(
@@ -1440,13 +1440,13 @@ internal class GdxWorldRenderer(
             val labelX = runtime.camera.worldToScreenX(entity.x) + 10f
             val labelY = height - runtime.camera.worldToScreenY(entity.y) + 14f
             val widthHint = (status.length * 7f) + 8f
-            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 4f, y = labelY - 11f, color = Color(0.04f, 0.07f, 0.09f, 0.60f))
-            assets.font.color = Color(0f, 0f, 0f, 0.72f)
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 3f, y = labelY - 10f, color = Color(0.04f, 0.07f, 0.09f, 0.46f))
+            assets.font.color = Color(0f, 0f, 0f, 0.60f)
             assets.font.draw(
                 batch,
                 status,
-                labelX + 1f,
-                labelY + 1f
+                labelX + 0.5f,
+                labelY + 0.5f
             )
             assets.font.color = Color(0.94f, 0.96f, 0.98f, 1f)
             assets.font.draw(
@@ -1970,8 +1970,8 @@ internal class GdxWorldRenderer(
         shape.projectionMatrix = textCamera.combined
         shape.begin(ShapeRenderer.ShapeType.Filled)
         shape.color = color
-        shape.rect(x, y, width, 11f)
-        shape.color = color.cpy().lerp(Color.WHITE, 0.08f).apply { a = color.a * 0.82f }
+        shape.rect(x, y, width, 10f)
+        shape.color = color.cpy().lerp(Color.WHITE, 0.06f).apply { a = color.a * 0.68f }
         shape.rect(x, y, width, 1f)
         shape.end()
         batch.begin()
