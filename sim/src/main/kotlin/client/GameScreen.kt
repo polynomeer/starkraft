@@ -41,6 +41,7 @@ internal class GameScreen(
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
     private val centerStatusStrip = Table()
     private val queueStatusLabel = Label("", assets.mutedLabelStyle)
+    private val queueStatusStrip = Table()
     private val queueHeaderLabel = Label("QUEUE", assets.mutedLabelStyle)
     private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
     private val centerFooterLabel = Label("home center  esc clear  tab debug", assets.mutedLabelStyle)
@@ -367,7 +368,7 @@ internal class GameScreen(
                                             add(queueHeaderLabel).left()
                                         }
                                     ).left().padRight(4f)
-                                    add(queueStatusLabel).left().expandX().fillX()
+                                    add(queueStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
                             add(
@@ -559,6 +560,7 @@ internal class GameScreen(
         centerStatusLabel.setText(buildCenterStatusLine())
         rebuildCenterStatusStrip()
         queueStatusLabel.setText(buildQueueStatusLine())
+        rebuildQueueStatusStrip()
         queueHeaderLabel.setText(buildQueueHeaderLine())
         selectionLabel.color = currentSelectionHeadlineTone()
         selectionMetaLabel.color = currentSelectionMetaTone()
@@ -1070,6 +1072,67 @@ internal class GameScreen(
             runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
             else -> "Drag select  RMB order  MMB pan"
         }
+
+    private fun rebuildQueueStatusStrip() {
+        queueStatusStrip.clearChildren()
+        queueStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
+        val bits = buildQueueStatusBits()
+        if (bits.isEmpty()) {
+            queueStatusStrip.add(buildStatusChip("IDLE", Color(0.10f, 0.14f, 0.18f, 0.86f), Color(0.50f, 0.58f, 0.66f, 0.86f)))
+            return
+        }
+        bits.forEachIndexed { index, bit ->
+            queueStatusStrip.add(buildStatusChip(bit.label, bit.background, bit.accent))
+            if (index == 1) {
+                queueStatusStrip.row()
+            }
+        }
+    }
+
+    private fun buildQueueStatusBits(): List<StatusChip> {
+        val snapshot = runtime.snapshot ?: return emptyList()
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return emptyList()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return buildList {
+            if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
+                add(
+                    StatusChip(
+                        "P ${(lead.activeProductionType ?: "Q").take(4)}",
+                        Color(0.20f, 0.26f, 0.12f, 0.92f),
+                        Color(0.98f, 0.84f, 0.46f, 0.90f)
+                    )
+                )
+                if (lead.productionQueueSize > 0) {
+                    add(StatusChip("x${lead.productionQueueSize}", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                }
+                if (lead.activeProductionRemainingTicks > 0) {
+                    add(StatusChip("${lead.activeProductionRemainingTicks}t", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                }
+            }
+            if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
+                add(
+                    StatusChip(
+                        "R ${(lead.activeResearchTech ?: "Q").take(4)}",
+                        Color(0.16f, 0.18f, 0.30f, 0.92f),
+                        Color(0.78f, 0.84f, 1.00f, 0.92f)
+                    )
+                )
+                if (lead.researchQueueSize > 0) {
+                    add(StatusChip("x${lead.researchQueueSize}", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+                }
+                if (lead.activeResearchRemainingTicks > 0) {
+                    add(StatusChip("${lead.activeResearchRemainingTicks}t", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+                }
+            }
+            if (lead.underConstruction) {
+                add(StatusChip("BLD", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                lead.constructionRemainingTicks?.takeIf { it > 0 }?.let {
+                    add(StatusChip("${it}t", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                }
+            }
+        }.take(6)
+    }
 
     private fun buildQueueStatusLine(): String {
         val snapshot = runtime.snapshot ?: return "No queue"
