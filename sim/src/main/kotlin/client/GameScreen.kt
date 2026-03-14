@@ -39,6 +39,7 @@ internal class GameScreen(
     private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
+    private val centerStatusStrip = Table()
     private val queueStatusLabel = Label("", assets.mutedLabelStyle)
     private val queueHeaderLabel = Label("QUEUE", assets.mutedLabelStyle)
     private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
@@ -352,7 +353,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.52f))
                                     pad(2f, 3f, 2f, 3f)
-                                    add(centerStatusLabel).left().expandX().fillX()
+                                    add(centerStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(2f).row()
                             add(
@@ -530,7 +531,6 @@ internal class GameScreen(
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
-        centerStatusLabel.setWrap(true)
         queueStatusLabel.setWrap(true)
         selectionRosterLabel.setWrap(true)
         hudLinesLabel.setWrap(true)
@@ -541,7 +541,6 @@ internal class GameScreen(
         minimapHint.color = currentMinimapHintTone()
         selectionLabel.setWidth(centerWidth)
         selectionMetaLabel.setWidth(centerWidth)
-        centerStatusLabel.setWidth(centerWidth)
         queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
         hudLinesLabel.setWidth(minimapWidth)
@@ -558,6 +557,7 @@ internal class GameScreen(
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
+        rebuildCenterStatusStrip()
         queueStatusLabel.setText(buildQueueStatusLine())
         queueHeaderLabel.setText(buildQueueHeaderLine())
         selectionLabel.color = currentSelectionHeadlineTone()
@@ -1000,6 +1000,69 @@ internal class GameScreen(
         return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
     }
 
+    private fun rebuildCenterStatusStrip() {
+        centerStatusStrip.clearChildren()
+        centerStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
+        val bits = buildCenterStatusBits()
+        if (bits.isEmpty()) {
+            centerStatusStrip.add(buildStatusChip("RDY", Color(0.20f, 0.40f, 0.46f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.92f)))
+            return
+        }
+        bits.forEachIndexed { index, bit ->
+            centerStatusStrip.add(buildStatusChip(bit.label, bit.background, bit.accent))
+            if (index == 2) {
+                centerStatusStrip.row()
+            }
+        }
+    }
+
+    private data class StatusChip(
+        val label: String,
+        val background: Color,
+        val accent: Color
+    )
+
+    private fun buildCenterStatusBits(): List<StatusChip> {
+        val snapshot = runtime.snapshot ?: return emptyList()
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return emptyList()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return buildList {
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
+                add(StatusChip("O ${it.lowercase().take(4)}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
+            }
+            if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", Color(0.16f, 0.21f, 0.11f, 0.90f), Color(0.92f, 0.88f, 0.48f, 0.90f)))
+            if (lead.pathRemainingNodes > 0) add(StatusChip("P${lead.pathRemainingNodes}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
+            lead.activeProductionType?.let {
+                add(StatusChip("P ${it.take(4)}", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+            }
+            lead.activeResearchTech?.let {
+                add(StatusChip("R ${it.take(4)}", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+            }
+            if (lead.underConstruction) add(StatusChip("BLD", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+            lead.harvestPhase?.let {
+                add(StatusChip("H ${it.lowercase().take(3)}", Color(0.10f, 0.26f, 0.20f, 0.92f), Color(0.58f, 0.92f, 0.72f, 0.90f)))
+            }
+            if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
+                add(
+                    StatusChip(
+                        "C ${(lead.harvestCargoKind ?: "res").take(1).uppercase()}${lead.harvestCargoAmount}",
+                        Color(0.10f, 0.26f, 0.20f, 0.92f),
+                        Color(0.58f, 0.92f, 0.72f, 0.90f)
+                    )
+                )
+            }
+        }.take(6)
+    }
+
+    private fun buildStatusChip(text: String, backgroundTone: Color, accentTone: Color): Table =
+        Table().apply {
+            background = assets.panelDrawable(backgroundTone)
+            pad(1f, 2f, 1f, 2f)
+            add(Table().apply { background = assets.panelDrawable(accentTone) }).width(2f).height(8f).padRight(3f)
+            add(Label(text.uppercase(), assets.mutedLabelStyle).apply { color = Color.WHITE }).left()
+        }
+
     private fun buildCenterFooterLine(): String =
         when {
             runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
@@ -1176,6 +1239,29 @@ internal class GameScreen(
                         }
                     ).expandX().fillX().height(18f).row()
                     add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged)).center().padTop(1f).row()
+                    add(
+                        Table().apply {
+                            add(
+                                Table().apply {
+                                    background =
+                                        assets.panelDrawable(
+                                            if (focused) selectionFocusBaseTone().cpy().lerp(Color.WHITE, 0.12f)
+                                            else Color(1f, 1f, 1f, 0.08f)
+                                        )
+                                }
+                            ).size(7f, 1.5f)
+                            add().expandX().fillX()
+                            add(
+                                Table().apply {
+                                    background =
+                                        assets.panelDrawable(
+                                            if (damaged) Color(0.92f, 0.34f, 0.28f, 0.96f)
+                                            else Color(1f, 1f, 1f, 0.06f)
+                                        )
+                                }
+                            ).size(5f, 5f)
+                        }
+                    ).expandX().fillX().padTop(1f).row()
                     add(
                         Table().apply {
                             background =
