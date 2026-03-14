@@ -651,6 +651,51 @@ internal class GdxWorldRenderer(
                     }
                 shape.circle(screenX + 6f, screenY - 6f, 6f)
             }
+            entity.harvestPhase?.lowercase()?.let { phase ->
+                val harvestTone =
+                    when (entity.harvestCargoKind) {
+                        "gas" -> Color(0.58f, 1.00f, 0.84f, 0.82f)
+                        else -> Color(1.00f, 0.90f, 0.56f, 0.82f)
+                    }
+                val harvestGlow =
+                    when (entity.harvestCargoKind) {
+                        "gas" -> Color(0.42f, 0.96f, 0.78f, 0.20f)
+                        else -> Color(1.00f, 0.84f, 0.42f, 0.18f)
+                    }
+                when {
+                    phase.contains("return") || phase.contains("drop") -> {
+                        val arrowX = screenX + directionDx(entity.dir, 10f)
+                        val arrowY = screenY + directionDy(entity.dir, 10f)
+                        shape.color = harvestGlow.cpy().apply { a = 0.16f + (ambientPulse(700L) * 0.08f) }
+                        shape.circle(screenX, screenY, 10f)
+                        shape.color = harvestTone
+                        shape.rectLine(screenX, screenY, arrowX, arrowY, 1.8f)
+                        shape.rectLine(
+                            arrowX,
+                            arrowY,
+                            arrowX - directionDx(entity.dir, 4f) + directionDy(entity.dir, 3f),
+                            arrowY - directionDy(entity.dir, 4f) - directionDx(entity.dir, 3f),
+                            1.4f
+                        )
+                        shape.rectLine(
+                            arrowX,
+                            arrowY,
+                            arrowX - directionDx(entity.dir, 4f) - directionDy(entity.dir, 3f),
+                            arrowY - directionDy(entity.dir, 4f) + directionDx(entity.dir, 3f),
+                            1.4f
+                        )
+                    }
+                    phase.contains("harvest") || phase.contains("gather") || phase.contains("mine") -> {
+                        val pulse = ambientPulse(820L)
+                        shape.color = harvestGlow.cpy().apply { a = 0.14f + (pulse * 0.08f) }
+                        shape.circle(screenX, screenY, 9f + (pulse * 3f))
+                        shape.color = harvestTone
+                        shape.circle(screenX - 6f, screenY, 1.6f)
+                        shape.circle(screenX + 5f, screenY - 2f, 1.4f)
+                        shape.circle(screenX + 1f, screenY + 5f, 1.2f)
+                    }
+                }
+            }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0 || entity.activeResearchTech != null || entity.underConstruction) {
                 val markerX = screenX + 10f
                 val markerY = screenY - 11f
