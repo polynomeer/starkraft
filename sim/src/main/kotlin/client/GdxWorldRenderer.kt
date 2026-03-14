@@ -500,29 +500,29 @@ internal class GdxWorldRenderer(
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
                 val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
-                shape.color = Color(0.37f, 0.90f, 0.52f, 0.16f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.14f)
                 shape.rectLine(startX, startY, rallyX, rallyY, 2f)
-                shape.color = Color(0.37f, 0.90f, 0.52f, 0.25f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.24f)
                 shape.circle(rallyX, rallyY, 11f)
-                shape.color = Color(0.37f, 0.90f, 0.52f, 0.95f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.94f)
                 shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
                 shape.rect(rallyX - 9f, rallyY - 1f, 18f, 2f)
                 shape.rect(rallyX - 1f, rallyY - 9f, 2f, 18f)
-                drawChevronTrail(shape, startX, startY, rallyX, rallyY, Color(0.54f, 0.96f, 0.66f, 0.64f))
+                drawChevronTrail(shape, startX, startY, rallyX, rallyY, pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.64f))
             }
             if (entity.buildTargetId != null) {
                 entitiesById[entity.buildTargetId]?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
-                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.18f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.16f)
                     shape.rectLine(startX, startY, targetX, targetY, 2.2f)
-                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.22f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.22f)
                     shape.circle(targetX, targetY, 10f)
-                    shape.color = Color(0.92f, 0.60f, 0.24f, 0.92f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.92f)
                     shape.circle(targetX, targetY, 3.5f)
                     shape.rect(targetX - 8f, targetY - 8f, 16f, 2f)
                     shape.rect(targetX - 8f, targetY + 6f, 16f, 2f)
-                    drawChevronTrail(shape, startX, startY, targetX, targetY, Color(0.96f, 0.72f, 0.38f, 0.68f))
+                    drawChevronTrail(shape, startX, startY, targetX, targetY, pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.68f))
                 }
             }
         }
@@ -735,11 +735,11 @@ internal class GdxWorldRenderer(
                     val hitX = screenX - directionDx(attackDir, 10f)
                     val hitY = screenY - directionDy(attackDir, 10f)
                     val meleeHit = isMeleeAttacker(attacker)
-                    shape.color = if (meleeHit) Color(0.84f, 1.00f, 0.74f, 0.86f) else Color(1.00f, 0.74f, 0.44f, 0.82f)
+                    shape.color = if (meleeHit) selectionColor.cpy().apply { a = 0.86f } else pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.82f)
                     shape.rectLine(hitX, hitY, screenX, screenY, 2.2f)
                     if (meleeHit) {
                         shape.rectLine(hitX + directionDy(attackDir, 6f), hitY - directionDx(attackDir, 6f), hitX - directionDy(attackDir, 6f), hitY + directionDx(attackDir, 6f), 2.2f)
-                        shape.color = Color(0.92f, 1.00f, 0.82f, 0.48f)
+                        shape.color = selectionColor.cpy().apply { a = 0.48f }
                         shape.circle(hitX, hitY, 5f)
                     } else {
                         shape.rectLine(
@@ -756,7 +756,7 @@ internal class GdxWorldRenderer(
                             hitY,
                             1.8f
                         )
-                        shape.color = Color(1.00f, 0.82f, 0.56f, 0.44f)
+                        shape.color = pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.44f)
                         shape.circle(hitX, hitY, 4f)
                     }
                     shape.rectLine(hitX, hitY, screenX - directionDx(attackDir, 2f), screenY - directionDy(attackDir, 2f), 1.2f)
