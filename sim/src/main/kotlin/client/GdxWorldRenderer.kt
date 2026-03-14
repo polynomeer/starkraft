@@ -414,6 +414,7 @@ internal class GdxWorldRenderer(
             if (!isOnScreen(screenX, screenY)) continue
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
+            val confirmPulse = runtime.selectionConfirmPulse(entity.id)
             if (footprintWidth != null && footprintHeight != null) {
                 val tileX = floor(entity.x).toInt()
                 val tileY = floor(entity.y).toInt()
@@ -437,6 +438,13 @@ internal class GdxWorldRenderer(
                 shape.line(left, top + height, left, top + height - corner)
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
+                if (confirmPulse > 0f) {
+                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.28f * confirmPulse)
+                    shape.line(left - 6f, top - 6f, left + width + 6f, top - 6f)
+                    shape.line(left - 6f, top + height + 6f, left + width + 6f, top + height + 6f)
+                    shape.line(left - 6f, top - 6f, left - 6f, top + height + 6f)
+                    shape.line(left + width + 6f, top - 6f, left + width + 6f, top + height + 6f)
+                }
                 if (runtime.isDamageFlashActive(entity.id)) {
                     shape.color = Color(0.92f, 1.00f, 0.78f, 0.76f)
                     shape.rect(left - 2f, top + (height * 0.5f), width + 4f, 1.5f)
@@ -450,6 +458,10 @@ internal class GdxWorldRenderer(
                 val pulse = selectionPulse()
                 shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.08f))
                 shape.circle(screenX, screenY, radius + 1.5f)
+                if (confirmPulse > 0f) {
+                    shape.color = Color(selectionColor.r, selectionColor.g, selectionColor.b, 0.22f * confirmPulse)
+                    shape.circle(screenX, screenY, radius + 6f + ((1f - confirmPulse) * 4f))
+                }
                 shape.color = selectionColor
                 shape.circle(screenX, screenY, radius)
                 val wing = 5.5f

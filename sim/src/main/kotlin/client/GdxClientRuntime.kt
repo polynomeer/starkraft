@@ -21,6 +21,7 @@ internal class GdxClientRuntime(
         const val COMPLETION_FLASH_DURATION_MS = 1700L
         const val DEATH_BURST_DURATION_MS = 980L
         const val DEATH_REMAINS_DURATION_MS = 2600L
+        const val SELECTION_CONFIRM_PULSE_DURATION_MS = 420L
     }
 
     private val requestIds = ClientCommandIds("gdx")
@@ -49,6 +50,8 @@ internal class GdxClientRuntime(
     private var recentCompletionEntityIds: Set<Int> = emptySet()
     private var recentCompletionKindsByEntityId: Map<Int, CompletionFlashKind> = emptyMap()
     private var recentCompletionUntilMillis: Long = 0L
+    private var recentSelectionPulseIds: Set<Int> = emptySet()
+    private var recentSelectionPulseUntilMillis: Long = 0L
     private val recentDeathBursts = ArrayList<DeathBurst>()
     private val recentDeathRemains = ArrayList<DeathRemains>()
     private var lastSnapshotTick: Int? = null
@@ -102,6 +105,9 @@ internal class GdxClientRuntime(
             recentCompletionEntityIds = emptySet()
             recentCompletionKindsByEntityId = emptyMap()
         }
+        if (recentSelectionPulseIds.isNotEmpty() && System.currentTimeMillis() > recentSelectionPulseUntilMillis) {
+            recentSelectionPulseIds = emptySet()
+        }
         if (recentDeathBursts.isNotEmpty()) {
             val now = System.currentTimeMillis()
             recentDeathBursts.removeAll { now > it.expiresAtMillis }
@@ -137,6 +143,12 @@ internal class GdxClientRuntime(
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
     fun completionFlashKind(entityId: Int): CompletionFlashKind? = recentCompletionKindsByEntityId[entityId]?.takeIf { isCompletionFlashActive(entityId) }
+    fun selectionConfirmPulse(entityId: Int): Float {
+        if (entityId !in recentSelectionPulseIds) return 0f
+        val remaining = recentSelectionPulseUntilMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        return (remaining.toFloat() / SELECTION_CONFIRM_PULSE_DURATION_MS.toFloat()).coerceIn(0f, 1f)
+    }
     fun activeDeathBursts(): List<DeathBurst> = recentDeathBursts.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun activeDeathRemains(): List<DeathRemains> = recentDeathRemains.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
@@ -198,6 +210,7 @@ internal class GdxClientRuntime(
             }
             return
         }
+        val beforeSelection = session.state.selectedIds.toSet()
         val intent =
             buildClientIntent(
                 snapshot = snapshot,
@@ -213,6 +226,7 @@ internal class GdxClientRuntime(
             ) ?: return
         session.append(intent)
         session.refreshViewState()
+        triggerSelectionPulse(beforeSelection)
     }
 
     fun issueSelectionBox(
@@ -223,6 +237,7 @@ internal class GdxClientRuntime(
         additiveSelection: Boolean
     ) {
         val snapshot = session.state.snapshot ?: return
+        val beforeSelection = session.state.selectedIds.toSet()
         val intent =
             selectEntitiesInBox(
                 snapshot = snapshot,
@@ -236,6 +251,14 @@ internal class GdxClientRuntime(
             )
         session.append(intent)
         session.refreshViewState()
+        triggerSelectionPulse(beforeSelection)
+    }
+
+    private fun triggerSelectionPulse(previousSelection: Set<Int>) {
+        val current = session.state.selectedIds.toSet()
+        if (current.isEmpty() || current == previousSelection) return
+        recentSelectionPulseIds = current
+        recentSelectionPulseUntilMillis = System.currentTimeMillis() + SELECTION_CONFIRM_PULSE_DURATION_MS
     }
 
     fun issueRightClick(screenX: Float, screenY: Float, attackMoveModifier: Boolean) {
