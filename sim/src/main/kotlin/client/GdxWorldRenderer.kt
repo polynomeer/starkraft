@@ -1502,20 +1502,44 @@ internal class GdxWorldRenderer(
                 val lunge = stride * 1.8f
                 val clawSpread = (sway * 1.5f) + (damageTilt * 0.60f)
                 val attackLunge = lunge + aimBias - (attackRecovery * 0.9f)
+                val crouch = attackReady * 1.8f
                 shape.color = body
-                shape.rect(x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
+                shape.rect(
+                    x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f),
+                    y - 3.2f + settle * 0.25f + crouch,
+                    13f,
+                    6.4f
+                )
                 shape.color = teamStripe
-                shape.rect(x - 5.2f + directionDx(entity.dir, attackLunge * 0.5f), y - 2.2f, 10.4f, 4.4f)
+                shape.rect(x - 5.2f + directionDx(entity.dir, attackLunge * 0.5f), y - 2.2f + crouch, 10.4f, 4.4f)
                 shape.color = trim
-                shape.rectLine(x - 5f, y + 2.2f + (attackLunge * 0.15f), x + 5f, y + 2.2f - (attackLunge * 0.15f), 1.1f)
-                shape.rectLine(x - 4.5f - clawSpread, y - 2.4f + attackLunge, x - 6.8f - clawSpread, y + 3.8f - attackLunge, 1f)
-                shape.rectLine(x + 4.5f + clawSpread, y - 2.4f - attackLunge, x + 6.8f + clawSpread, y + 3.8f + attackLunge, 1f)
+                shape.rectLine(
+                    x - 5f,
+                    y + 2.2f + (attackLunge * 0.15f) + crouch,
+                    x + 5f,
+                    y + 2.2f - (attackLunge * 0.15f) + crouch,
+                    1.1f
+                )
+                shape.rectLine(
+                    x - 4.5f - clawSpread,
+                    y - 2.4f + attackLunge + crouch,
+                    x - 6.8f - clawSpread,
+                    y + 3.8f - attackLunge + crouch,
+                    1f
+                )
+                shape.rectLine(
+                    x + 4.5f + clawSpread,
+                    y - 2.4f - attackLunge + crouch,
+                    x + 6.8f + clawSpread,
+                    y + 3.8f + attackLunge + crouch,
+                    1f
+                )
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
                 shape.rectLine(
                     x,
-                    y,
+                    y + crouch,
                     x + directionDx(entity.dir, 9.2f + (aimBias * 0.9f)) + clawSpread,
-                    y + directionDy(entity.dir, 9.2f + (aimBias * 0.9f)),
+                    y + directionDy(entity.dir, 9.2f + (aimBias * 0.9f)) + crouch,
                     1.6f
                 )
             }
@@ -1549,6 +1573,19 @@ internal class GdxWorldRenderer(
                         2.3f
                     )
                 }
+                if (attackRecovery > 0f) {
+                    shape.color = Color(0.78f, 0.82f, 0.86f, 0.12f + (attackRecovery * 0.10f))
+                    shape.circle(
+                        x + directionDx(entity.dir, 10.5f + (attackRecovery * 1.5f)),
+                        y + directionDy(entity.dir, 10.5f + (attackRecovery * 1.5f)),
+                        2.8f + (attackRecovery * 1.8f)
+                    )
+                    shape.circle(
+                        x + directionDx(entity.dir, 13.2f + (attackRecovery * 1.8f)),
+                        y + directionDy(entity.dir, 13.2f + (attackRecovery * 1.8f)),
+                        2.0f + (attackRecovery * 1.4f)
+                    )
+                }
             }
             entity.weaponId != null -> {
                 val brace = (sway * 0.35f) + (damageTilt * 0.35f)
@@ -1573,6 +1610,14 @@ internal class GdxWorldRenderer(
                 if (entity.weaponCooldownTicks > 0) {
                     shape.color = Color(1.00f, 0.68f, 0.32f, 0.40f)
                     shape.rectLine(x - directionDx(entity.dir, 4f), y - directionDy(entity.dir, 4f), x, y, 2.4f)
+                }
+                if (attackRecovery > 0f) {
+                    shape.color = Color(0.74f, 0.80f, 0.84f, 0.10f + (attackRecovery * 0.08f))
+                    shape.circle(
+                        x + directionDx(entity.dir, 8.8f + (attackRecovery * 1.4f)),
+                        y + directionDy(entity.dir, 8.8f + (attackRecovery * 1.4f)),
+                        2.4f + (attackRecovery * 1.5f)
+                    )
                 }
                 shape.color = Color.WHITE.cpy().apply { a = 0.18f }
                 shape.rect(x - 1.5f, y - 4.5f, 3f, 4f)
