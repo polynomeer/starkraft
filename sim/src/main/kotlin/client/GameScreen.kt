@@ -755,9 +755,9 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Awaiting"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "$faction · ${snapshot.entities.size} live"
+            "$faction · ${snapshot.entities.size} up"
         } else {
-            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size} sel"
+            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
         }
     }
 
@@ -771,7 +771,7 @@ internal class GameScreen(
         return if (selected.size == 1) {
             "${(lead.typeId ?: "UNIT").take(8).uppercase()}\n${(lead.archetype ?: "ROLE").take(8).uppercase()}"
         } else {
-            "${selected.size}\n${(lead.typeId ?: "UNIT").take(7).uppercase()}"
+            "${selected.size}\n${(lead.typeId ?: "UNIT").take(6).uppercase()}"
         }
     }
 
@@ -973,15 +973,15 @@ internal class GameScreen(
         if (selected.isEmpty()) return "No status"
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val statusBits = buildList {
-            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("ord ${it.lowercase()}") }
-            if (lead.orderQueueSize > 0) add("q ${lead.orderQueueSize}")
-            if (lead.pathRemainingNodes > 0) add("path ${lead.pathRemainingNodes}")
-            lead.activeProductionType?.let { add("prod $it") }
-            lead.activeResearchTech?.let { add("tech $it") }
-            if (lead.underConstruction) add("construct")
-            lead.harvestPhase?.let { add("harvest ${it.lowercase()}") }
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("O ${it.lowercase().take(6)}") }
+            if (lead.orderQueueSize > 0) add("Q${lead.orderQueueSize}")
+            if (lead.pathRemainingNodes > 0) add("P${lead.pathRemainingNodes}")
+            lead.activeProductionType?.let { add("P ${it.take(6)}") }
+            lead.activeResearchTech?.let { add("R ${it.take(6)}") }
+            if (lead.underConstruction) add("B")
+            lead.harvestPhase?.let { add("H ${it.lowercase().take(6)}") }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
-                add("cargo ${lead.harvestCargoKind ?: "res"}:${lead.harvestCargoAmount}")
+                add("C ${(lead.harvestCargoKind ?: "res").take(3)}:${lead.harvestCargoAmount}")
             }
         }
         return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
