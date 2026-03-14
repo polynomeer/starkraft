@@ -895,11 +895,15 @@ internal class GdxWorldRenderer(
             val visible = visibleTiles == null || isEntityVisible(entity, runtime)
             val selected = entity.id in runtime.session.state.selectedIds
             val damaged = runtime.isDamageFlashActive(entity.id)
+            val impactKind = runtime.damageImpactKind(entity.id)
+            val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
             val size = if (selected) 5f else 4f
             shape.rect(x - (size / 2f), y - (size / 2f), size, size)
             if (damaged) {
-                shape.color = Color(1.00f, 0.48f, 0.30f, if (visible) 0.88f else 0.30f)
+                shape.color =
+                    if (meleeImpact) Color(0.86f, 1.00f, 0.62f, if (visible) 0.88f else 0.30f)
+                    else Color(1.00f, 0.48f, 0.30f, if (visible) 0.88f else 0.30f)
                 shape.rect(x - 4f, y - 0.75f, 8f, 1.5f)
                 shape.rect(x - 0.75f, y - 4f, 1.5f, 8f)
             }
@@ -944,7 +948,13 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 1.5f, y - 6f, 3f, 3f)
             }
             if (selected) {
-                shape.color = selectionColor.cpy().apply { a = if (visible) 0.96f else 0.40f }
+                val selectedTone =
+                    when (impactKind) {
+                        CombatSoundKind.MELEE,
+                        CombatSoundKind.ZERGLING_MELEE -> Color(0.82f, 1.00f, 0.68f, if (visible) 0.96f else 0.40f)
+                        else -> selectionColor.cpy().apply { a = if (visible) 0.96f else 0.40f }
+                    }
+                shape.color = selectedTone
                 shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
                 shape.rect(x - 4.5f, y - 4.5f, 1f, 4f)
                 shape.rect(x + 0.5f, y - 4.5f, 4f, 1f)
@@ -954,7 +964,9 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 0.5f, y + 3.5f, 4f, 1f)
                 shape.rect(x + 3.5f, y + 0.5f, 1f, 4f)
                 if (damaged) {
-                    shape.color = Color(0.92f, 1.00f, 0.78f, if (visible) 0.88f else 0.34f)
+                    shape.color =
+                        if (meleeImpact) Color(0.94f, 1.00f, 0.72f, if (visible) 0.88f else 0.34f)
+                        else Color(0.92f, 1.00f, 0.78f, if (visible) 0.88f else 0.34f)
                     shape.rect(x - 5.5f, y - 0.75f, 11f, 1.5f)
                     shape.rect(x - 0.75f, y - 5.5f, 1.5f, 11f)
                 }
