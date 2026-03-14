@@ -1234,9 +1234,28 @@ internal class GdxWorldRenderer(
                 shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
                 shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
                 shape.color = Color(0.72f, 0.66f, 0.52f, 0.36f * fade)
-                shape.rectLine(x - (shard * 1.18f), y + (shard * 0.18f), x - (shard * 0.52f), y + (shard * 0.48f), 2.8f)
-                shape.rectLine(x + (shard * 1.12f), y - (shard * 0.08f), x + (shard * 0.44f), y - (shard * 0.34f), 2.6f)
-                shape.rectLine(x - (shard * 0.14f), y + (shard * 1.18f), x + (shard * 0.22f), y + (shard * 0.46f), 2.4f)
+                val collapseTilt = (((burst.entityId % 7) - 3) / 3f).coerceIn(-1f, 1f)
+                shape.rectLine(
+                    x - (shard * 1.18f),
+                    y + (shard * (0.18f + (collapseTilt * 0.12f))),
+                    x - (shard * 0.52f),
+                    y + (shard * (0.48f + (collapseTilt * 0.08f))),
+                    2.8f
+                )
+                shape.rectLine(
+                    x + (shard * 1.12f),
+                    y - (shard * (0.08f - (collapseTilt * 0.10f))),
+                    x + (shard * 0.44f),
+                    y - (shard * (0.34f - (collapseTilt * 0.06f))),
+                    2.6f
+                )
+                shape.rectLine(
+                    x - (shard * (0.14f + (collapseTilt * 0.18f))),
+                    y + (shard * 1.18f),
+                    x + (shard * (0.22f - (collapseTilt * 0.10f))),
+                    y + (shard * 0.46f),
+                    2.4f
+                )
             }
         }
     }
