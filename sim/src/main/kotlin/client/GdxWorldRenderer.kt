@@ -1256,6 +1256,10 @@ internal class GdxWorldRenderer(
                     y + (shard * 0.46f),
                     2.4f
                 )
+                shape.color = Color(0.26f, 0.24f, 0.20f, 0.28f * fade)
+                shape.rect(x - (shard * 0.88f), y + (shard * 0.86f), 10f, 3.5f)
+                shape.rect(x + (shard * 0.44f), y + (shard * 0.74f), 8f, 3f)
+                shape.rect(x - (shard * 0.16f), y + (shard * 1.02f), 7f, 3f)
             }
         }
     }
@@ -1441,6 +1445,7 @@ internal class GdxWorldRenderer(
         val moving = entity.pathRemainingNodes > 0
         val attackReady = if (entity.weaponCooldownTicks in 1..8) 1f - (entity.weaponCooldownTicks / 8f) else 0f
         val attackRecovery = if (entity.weaponCooldownTicks > 8) ((entity.weaponCooldownTicks.coerceAtMost(22) - 8) / 14f) else 0f
+        val damageTilt = if (entity.hp < entity.maxHp) recentDamageTilt(entity) else 0f
         val bobY = unitBob(entity.id, if (moving) 1.5f else if (selected) 0.9f else 0.6f)
         val stride = moveStride(entity.id, if (moving) 1f else 0f)
         val sway = moveStride(entity.id + 17, if (moving) 0.8f else 0f)
@@ -1472,7 +1477,7 @@ internal class GdxWorldRenderer(
         when {
             entity.archetype == "worker" || typeName.contains("Worker", ignoreCase = true) -> {
                 val toolSwing = stride * 1.4f
-                val bodyLean = sway * 1.2f
+                val bodyLean = (sway * 1.2f) + (damageTilt * 0.55f)
                 shape.color = body
                 shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.5f)
                 shape.color = teamStripe
@@ -1495,7 +1500,7 @@ internal class GdxWorldRenderer(
             }
             typeName.contains("Zergling", ignoreCase = true) -> {
                 val lunge = stride * 1.8f
-                val clawSpread = sway * 1.5f
+                val clawSpread = (sway * 1.5f) + (damageTilt * 0.60f)
                 val attackLunge = lunge + aimBias - (attackRecovery * 0.9f)
                 shape.color = body
                 shape.rect(x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f), y - 3.2f + settle * 0.25f, 13f, 6.4f)
@@ -1516,7 +1521,7 @@ internal class GdxWorldRenderer(
             }
             typeName.contains("Marine", ignoreCase = true) -> {
                 val march = stride * 0.8f
-                val torsoLean = sway * 0.55f
+                val torsoLean = (sway * 0.55f) + (damageTilt * 0.40f)
                 val aimLean = torsoLean + (aimBias * 0.45f) - (attackRecovery * 0.60f)
                 shape.color = body
                 shape.rect(x - 3.8f + aimLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
@@ -1546,7 +1551,7 @@ internal class GdxWorldRenderer(
                 }
             }
             entity.weaponId != null -> {
-                val brace = sway * 0.35f
+                val brace = (sway * 0.35f) + (damageTilt * 0.35f)
                 val aimBrace = brace + (aimBias * 0.35f) - (attackRecovery * 0.45f)
                 shape.color = body
                 shape.rect(x - 3.5f + aimBrace, y - 6.5f + settle * 0.15f, 7f, 13f)
@@ -1754,6 +1759,14 @@ internal class GdxWorldRenderer(
         if (amplitude == 0f) return 0f
         val phase = ((System.currentTimeMillis() % 520L).toFloat() / 520f) + ((entityId % 7) * 0.11f)
         return kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * amplitude
+    }
+
+    private fun recentDamageTilt(entity: EntitySnapshot): Float {
+        val phase = ((System.currentTimeMillis() % 220L).toFloat() / 220f) + ((entity.id % 9) * 0.09f)
+        val base = kotlin.math.sin(phase * Math.PI * 2.0).toFloat()
+        val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
+        val severity = ((1f - hpRatio) * 0.28f).coerceIn(0f, 0.28f)
+        return base * severity
     }
 
     private fun damageRecoilOffset(runtime: GdxClientRuntime, snapshot: ClientSnapshot, entity: EntitySnapshot): Pair<Float, Float> {
