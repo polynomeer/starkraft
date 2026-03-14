@@ -1251,7 +1251,10 @@ internal class GdxWorldRenderer(
             if (!isOnScreen(x, y)) continue
             val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
             val alpha = 0.08f + (progress * 0.22f)
+            val hotAlpha = (progress * progress).coerceIn(0f, 1f)
             if (remain.isStructure) {
+                shape.color = Color(1.00f, 0.62f, 0.32f, 0.08f * hotAlpha)
+                shape.circle(x, y, 14f + ((1f - progress) * 10f))
                 shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
                 shape.rect(x - 12f, y - 12f, 24f, 24f)
                 shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
@@ -1294,9 +1297,9 @@ internal class GdxWorldRenderer(
             }
             val smokeColor =
                 when {
-                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * 0.78f)
-                    remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.20f, 0.18f, 0.16f, alpha * 0.44f)
-                    else -> Color(0.16f, 0.18f, 0.18f, alpha * 0.62f)
+                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * (0.52f + ((1f - progress) * 0.30f)))
+                    remain.typeId.contains("Zergling", ignoreCase = true) -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
+                    else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
                 }
             shape.color = smokeColor
             shape.circle(x + 3f, y + 6f, 7f + ((1f - progress) * 5f))
@@ -1659,6 +1662,9 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.58f, 0.58f, 0.60f, 0.10f + (collapseSeverity * 0.18f))
             shape.circle(left + width * 0.34f, top + 4f, 6f + (collapseSeverity * 3f))
             shape.circle(left + width * 0.68f, top + 5f, 7f + (collapseSeverity * 4f))
+            shape.color = Color(1.00f, 0.70f, 0.38f, 0.04f + (collapseSeverity * 0.10f))
+            shape.rect(left + width * 0.18f, top + height * 0.22f, width * 0.18f, 2f)
+            shape.rect(left + width * 0.58f, top + height * 0.52f, width * 0.14f, 2f)
         }
     }
 
