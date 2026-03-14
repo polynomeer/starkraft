@@ -120,7 +120,7 @@ internal class MainMenuScreen(
                 ).left().padBottom(12f).row()
 
                 val scenarioButtons = Table()
-                scenarioButtons.defaults().pad(4f)
+                scenarioButtons.defaults().pad(3f)
                 scenarioButtons.add(makeButton("Previous Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(-1); refresh() }).width(164f)
                 scenarioButtons.add(makeButton("Next Scenario", style = assets.subtleButtonStyle()) { runtime.cycleScenario(1); refresh() }).width(164f)
                 add(scenarioButtons).left().row()
@@ -134,7 +134,7 @@ internal class MainMenuScreen(
                 ).left().row()
 
                 val presetButtons = Table()
-                presetButtons.defaults().pad(4f)
+                presetButtons.defaults().pad(3f)
                 presetButtons.add(makeButton("Save Q", style = assets.secondaryButtonStyle()) { runtime.savePreset("quick"); refresh() }).width(164f)
                 presetButtons.add(makeButton("Load Q", style = assets.secondaryButtonStyle()) { runtime.loadPreset("quick"); refresh() }).width(164f).row()
                 presetButtons.add(makeButton("Save A", style = assets.secondaryButtonStyle()) { runtime.savePreset("alt"); refresh() }).width(164f)
@@ -148,9 +148,9 @@ internal class MainMenuScreen(
                         add(sessionHeader).left()
                     }
                 ).left().row()
-                add(enterMatchButton).width(336f).height(42f).padTop(8f).row()
-                add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).row()
-                add(makeButton("Quit", style = assets.buttonStyle(Color(0.32f, 0.16f, 0.16f, 0.98f), Color(0.40f, 0.18f, 0.18f, 0.98f))) { Gdx.app.exit() }).width(336f).row()
+                add(enterMatchButton).width(336f).height(38f).padTop(6f).row()
+                add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.applyScenarioAndRestart() }).width(336f).height(34f).row()
+                add(makeButton("Quit", style = assets.buttonStyle(Color(0.32f, 0.16f, 0.16f, 0.98f), Color(0.40f, 0.18f, 0.18f, 0.98f))) { Gdx.app.exit() }).width(336f).height(34f).row()
             }
         ).expandX().fillX().row()
 

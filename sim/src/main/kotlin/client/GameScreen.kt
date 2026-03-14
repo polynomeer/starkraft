@@ -579,7 +579,7 @@ internal class GameScreen(
         val centerWidth = (width * 0.188f).coerceIn(228f, 292f)
         val commandWidth = (width * 0.186f).coerceIn(244f, 300f)
         val commandHeight = (height * 0.096f).coerceIn(82f, 106f)
-        val commandButtonHeight = if (width >= 1440) 23f else 21f
+        val commandButtonHeight = if (width >= 1440) 21f else 19f
         val commandColumns = 3
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - 18f
@@ -613,7 +613,7 @@ internal class GameScreen(
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
         commandScroll.setSize(commandWidth - 8f, commandHeight)
         bottomHud.setHeight(hudShellHeight)
-        buttonTable.defaults().pad(0f, 0f, 4f, 4f)
+        buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
