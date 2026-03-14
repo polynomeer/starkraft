@@ -1291,6 +1291,7 @@ internal class GameScreen(
         val snapshot = runtime.snapshot
         val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
         val takingDamage = selected.any { runtime.isDamageFlashActive(it.id) }
+        val impactKind = selected.firstNotNullOfOrNull { runtime.damageImpactKind(it.id) }
         val ratio =
             if (selected.isEmpty()) {
                 0f
@@ -1305,15 +1306,34 @@ internal class GameScreen(
         healthBarBack.clearChildren()
         healthBarBack.background =
             assets.panelDrawable(
-                if (takingDamage) Color(0.20f, 0.08f, 0.08f, 0.96f)
-                else Color(0.12f, 0.14f, 0.16f, 1f)
+                when {
+                    takingDamage && (impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE) ->
+                        Color(0.12f, 0.20f, 0.10f, 0.96f)
+                    takingDamage -> Color(0.20f, 0.08f, 0.08f, 0.96f)
+                    else -> Color(0.12f, 0.14f, 0.16f, 1f)
+                }
             )
         healthBarFill.background =
             assets.panelDrawable(
                 when {
-                    ratio >= 0.66f -> if (takingDamage) Color(0.44f, 0.92f, 0.56f, 1f) else Color(0.22f, 0.78f, 0.42f, 1f)
-                    ratio >= 0.33f -> if (takingDamage) Color(1.00f, 0.82f, 0.34f, 1f) else Color(0.87f, 0.73f, 0.20f, 1f)
-                    else -> if (takingDamage) Color(1.00f, 0.42f, 0.34f, 1f) else Color(0.84f, 0.30f, 0.25f, 1f)
+                    ratio >= 0.66f ->
+                        when {
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(0.68f, 1.00f, 0.60f, 1f)
+                            takingDamage -> Color(0.44f, 0.92f, 0.56f, 1f)
+                            else -> Color(0.22f, 0.78f, 0.42f, 1f)
+                        }
+                    ratio >= 0.33f ->
+                        when {
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(0.92f, 1.00f, 0.42f, 1f)
+                            takingDamage -> Color(1.00f, 0.82f, 0.34f, 1f)
+                            else -> Color(0.87f, 0.73f, 0.20f, 1f)
+                        }
+                    else ->
+                        when {
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(1.00f, 0.58f, 0.34f, 1f)
+                            takingDamage -> Color(1.00f, 0.42f, 0.34f, 1f)
+                            else -> Color(0.84f, 0.30f, 0.25f, 1f)
+                        }
                 }
             )
         healthBarBack.add(healthBarFill).width(fillWidth).expandY().fillY().left()
@@ -1352,6 +1372,7 @@ internal class GameScreen(
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
         val damaged = runtime.isDamageFlashActive(entity.id)
+        val impactKind = runtime.damageImpactKind(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
         val tone =
@@ -1369,6 +1390,12 @@ internal class GameScreen(
             }
         val hpColor =
             when {
+                impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE ->
+                    when {
+                        hpRatio >= 0.66f -> Color(0.68f, 1.00f, 0.60f, 1f)
+                        hpRatio >= 0.33f -> Color(0.92f, 1.00f, 0.42f, 1f)
+                        else -> Color(1.00f, 0.58f, 0.34f, 1f)
+                    }
                 hpRatio >= 0.66f -> Color(0.22f, 0.78f, 0.42f, 1f)
                 hpRatio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
                 else -> Color(0.84f, 0.30f, 0.25f, 1f)
@@ -1424,11 +1451,12 @@ internal class GameScreen(
                             add().expandX().fillX()
                             add(
                                 Table().apply {
-                                    background =
-                                        assets.panelDrawable(
-                                            if (damaged) Color(0.92f, 0.34f, 0.28f, 0.96f)
-                                            else Color(1f, 1f, 1f, 0.06f)
-                                        )
+                                background =
+                                    assets.panelDrawable(
+                                        if (impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE) Color(0.82f, 1.00f, 0.58f, 0.96f)
+                                        else if (damaged) Color(0.92f, 0.34f, 0.28f, 0.96f)
+                                        else Color(1f, 1f, 1f, 0.06f)
+                                    )
                                 }
                             ).size(5f, 5f)
                         }
