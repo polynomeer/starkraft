@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -137,6 +138,7 @@ class GdxClientRuntimeTest {
         assertTrue(centered)
         assertNotEquals(0f, runtime.camera.panX)
         assertNotEquals(0f, runtime.camera.panY)
+        assertNotNull(runtime.currentMinimapConfirm())
     }
 
     @Test

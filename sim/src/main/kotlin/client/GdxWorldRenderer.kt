@@ -1005,6 +1005,17 @@ internal class GdxWorldRenderer(
                 }
             }
         }
+        runtime.currentMinimapConfirm()?.let { confirm ->
+            val x = left + (confirm.worldX / snapshot.mapWidth) * boundsWidth
+            val y = top + (confirm.worldY / snapshot.mapHeight) * boundsHeight
+            val pulse = ambientPulse(820L)
+            shape.color = Color(0.72f, 1.00f, 0.82f, 0.12f + (pulse * 0.08f))
+            shape.circle(x, y, 7f + (pulse * 3f))
+            shape.color = Color(0.78f, 1.00f, 0.88f, 0.80f)
+            shape.rect(x - 0.8f, y - 5f, 1.6f, 10f)
+            shape.rect(x - 5f, y - 0.8f, 10f, 1.6f)
+            shape.circle(x, y, 2f)
+        }
     }
 
     private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {

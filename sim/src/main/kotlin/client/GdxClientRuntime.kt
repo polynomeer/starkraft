@@ -18,6 +18,7 @@ internal class GdxClientRuntime(
         const val ATTACK_WARNING_DURATION_MS = 1800L
         const val DAMAGE_FLASH_DURATION_MS = 820L
         const val GROUND_PING_DURATION_MS = 720L
+        const val MINIMAP_CONFIRM_DURATION_MS = 320L
         const val COMPLETION_FLASH_DURATION_MS = 1700L
         const val DEATH_BURST_DURATION_MS = 980L
         const val DEATH_REMAINS_DURATION_MS = 2600L
@@ -47,6 +48,8 @@ internal class GdxClientRuntime(
     private var recentDamageUntilMillis: Long = 0L
     private var recentGroundPing: GroundPing? = null
     private var recentGroundPingUntilMillis: Long = 0L
+    private var recentMinimapConfirm: MinimapConfirm? = null
+    private var recentMinimapConfirmUntilMillis: Long = 0L
     private var recentCompletionEntityIds: Set<Int> = emptySet()
     private var recentCompletionKindsByEntityId: Map<Int, CompletionFlashKind> = emptyMap()
     private var recentCompletionUntilMillis: Long = 0L
@@ -101,6 +104,9 @@ internal class GdxClientRuntime(
         if (recentGroundPing != null && System.currentTimeMillis() > recentGroundPingUntilMillis) {
             recentGroundPing = null
         }
+        if (recentMinimapConfirm != null && System.currentTimeMillis() > recentMinimapConfirmUntilMillis) {
+            recentMinimapConfirm = null
+        }
         if (recentCompletionEntityIds.isNotEmpty() && System.currentTimeMillis() > recentCompletionUntilMillis) {
             recentCompletionEntityIds = emptySet()
             recentCompletionKindsByEntityId = emptyMap()
@@ -141,6 +147,7 @@ internal class GdxClientRuntime(
     fun isDamageFlashActive(entityId: Int): Boolean = recentDamageEntityIds.contains(entityId) && System.currentTimeMillis() <= recentDamageUntilMillis
     fun damageImpactKind(entityId: Int): CombatSoundKind? = recentDamageKindsByEntityId[entityId]?.takeIf { isDamageFlashActive(entityId) }
     fun currentGroundPing(): GroundPing? = recentGroundPing?.takeIf { System.currentTimeMillis() <= recentGroundPingUntilMillis }
+    fun currentMinimapConfirm(): MinimapConfirm? = recentMinimapConfirm?.takeIf { System.currentTimeMillis() <= recentMinimapConfirmUntilMillis }
     fun isCompletionFlashActive(entityId: Int): Boolean = recentCompletionEntityIds.contains(entityId) && System.currentTimeMillis() <= recentCompletionUntilMillis
     fun completionFlashKind(entityId: Int): CompletionFlashKind? = recentCompletionKindsByEntityId[entityId]?.takeIf { isCompletionFlashActive(entityId) }
     fun selectionConfirmPulse(entityId: Int): Float {
@@ -448,6 +455,8 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return false
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         queueCameraCenter(viewWidth, viewHeight, world.first, world.second)
+        recentMinimapConfirm = MinimapConfirm(world.first, world.second)
+        recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
         initialCameraApplied = true
         return true
     }
@@ -457,6 +466,8 @@ internal class GdxClientRuntime(
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
         cameraTarget = null
+        recentMinimapConfirm = MinimapConfirm(world.first, world.second)
+        recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
         initialCameraApplied = true
         return true
     }
@@ -1144,6 +1155,11 @@ internal data class GroundPing(
     val worldX: Float,
     val worldY: Float,
     val kind: GroundPingKind
+)
+
+internal data class MinimapConfirm(
+    val worldX: Float,
+    val worldY: Float
 )
 
 internal enum class GroundPingKind {
