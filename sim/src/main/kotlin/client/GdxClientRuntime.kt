@@ -474,7 +474,7 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return false
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         queueCameraCenter(viewWidth, viewHeight, world.first, world.second)
-        recentMinimapConfirm = MinimapConfirm(world.first, world.second)
+        recentMinimapConfirm = MinimapConfirm(world.first, world.second, subtle = false)
         recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
         initialCameraApplied = true
         return true
@@ -485,7 +485,7 @@ internal class GdxClientRuntime(
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
         cameraTarget = null
-        recentMinimapConfirm = MinimapConfirm(world.first, world.second)
+        recentMinimapConfirm = MinimapConfirm(world.first, world.second, subtle = true)
         recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
         initialCameraApplied = true
         return true
@@ -1178,7 +1178,8 @@ internal data class GroundPing(
 
 internal data class MinimapConfirm(
     val worldX: Float,
-    val worldY: Float
+    val worldY: Float,
+    val subtle: Boolean
 )
 
 internal data class SelectionClickPulse(

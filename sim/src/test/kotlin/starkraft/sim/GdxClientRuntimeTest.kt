@@ -139,6 +139,7 @@ class GdxClientRuntimeTest {
         assertNotEquals(0f, runtime.camera.panX)
         assertNotEquals(0f, runtime.camera.panY)
         assertNotNull(runtime.currentMinimapConfirm())
+        assertTrue(runtime.currentMinimapConfirm()!!.subtle)
     }
 
     @Test

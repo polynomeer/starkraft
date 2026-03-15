@@ -1009,7 +1009,13 @@ internal class GdxWorldRenderer(
         runtime.currentMinimapConfirm()?.let { confirm ->
             val x = left + (confirm.worldX / snapshot.mapWidth) * boundsWidth
             val y = top + (confirm.worldY / snapshot.mapHeight) * boundsHeight
-            drawConfirmPulse(shape, x, y, scale = 0.78f, periodMillis = 820L)
+            drawConfirmPulse(
+                shape,
+                x,
+                y,
+                scale = if (confirm.subtle) 0.62f else 0.78f,
+                periodMillis = if (confirm.subtle) 700L else 820L
+            )
         }
     }
 
