@@ -888,7 +888,7 @@ internal class GdxWorldRenderer(
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
             val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
             shape.color = if (node.kind == "gas") Color(0.28f, 0.88f, 0.64f, 0.95f) else Color(0.90f, 0.81f, 0.42f, 0.95f)
-            shape.rect(nodeX - 1f, nodeY - 1f, 3f, 3f)
+            shape.rect(nodeX - 0.75f, nodeY - 0.75f, 2.5f, 2.5f)
         }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
@@ -927,18 +927,18 @@ internal class GdxWorldRenderer(
             }
             if (entity.pathRemainingNodes > 0) {
                 shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)
-                shape.rect(x - 1f, y + 3.5f, 2f, 3f)
-                shape.rect(x + 3.5f, y + 3.5f, 2f, 2f)
+                shape.rect(x - 0.8f, y + 3.5f, 1.6f, 2.4f)
+                shape.rect(x + 3.5f, y + 3.5f, 1.6f, 1.6f)
             }
             if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
                 shape.color = completionProductionSparkColor.cpy().apply { a = if (visible) 0.82f else 0.34f }
-                shape.rect(x + 3.5f, y - 1f, 3f, 2f)
-                shape.rect(x + 7f, y - 1f, 2f, 2f)
+                shape.rect(x + 3.5f, y - 0.8f, 2.4f, 1.6f)
+                shape.rect(x + 6.4f, y - 0.8f, 1.4f, 1.6f)
             }
             if (entity.activeResearchTech != null) {
                 shape.color = completionResearchSparkColor.cpy().apply { a = if (visible) 0.82f else 0.34f }
-                shape.rect(x - 6.5f, y - 1f, 3f, 2f)
-                shape.rect(x - 9.5f, y - 1f, 2f, 2f)
+                shape.rect(x - 5.8f, y - 0.8f, 2.4f, 1.6f)
+                shape.rect(x - 8.6f, y - 0.8f, 1.4f, 1.6f)
             }
             if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
                 shape.color =
@@ -946,7 +946,7 @@ internal class GdxWorldRenderer(
                         "gas" -> Color(0.56f, 0.98f, 0.82f, if (visible) 0.82f else 0.36f)
                         else -> Color(0.98f, 0.86f, 0.48f, if (visible) 0.82f else 0.36f)
                     }
-                shape.rect(x - 1.5f, y - 6f, 3f, 3f)
+                shape.rect(x - 1.2f, y - 5.4f, 2.4f, 2.4f)
             }
             if (selected) {
                 val selectedTone =
