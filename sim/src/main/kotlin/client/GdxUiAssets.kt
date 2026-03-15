@@ -88,11 +88,11 @@ internal class GdxUiAssets : Disposable {
             disabledFontColor = Color(0.55f, 0.58f, 0.60f, 1f)
         }
 
-    fun primaryButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeBright, chromeBright.cpy().lerp(accent, 0.15f))
+    fun primaryButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeBright, chromeBright.cpy().lerp(accent, 0.10f))
 
-    fun secondaryButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chrome, chrome.cpy().lerp(Color.WHITE, 0.08f))
+    fun secondaryButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chrome, chrome.cpy().lerp(Color.WHITE, 0.05f))
 
-    fun subtleButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeMuted, chromeMuted.cpy().lerp(Color.WHITE, 0.06f))
+    fun subtleButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeMuted, chromeMuted.cpy().lerp(Color.WHITE, 0.04f))
 
     override fun dispose() {
         whiteTexture.dispose()

@@ -713,7 +713,7 @@ internal class GameScreen(
                         actor.color =
                             when {
                                 actor.isDisabled -> Color(0.66f, 0.70f, 0.74f, 0.55f)
-                                actor.isChecked -> Color(1.00f, 0.98f, 0.82f, 1f)
+                                actor.isChecked -> Color(1.00f, 0.98f, 0.86f, 0.94f)
                                 else -> Color.WHITE
                             }
                         val cardTone =
@@ -733,14 +733,14 @@ internal class GameScreen(
                         val frameTone =
                             when {
                                 actor.isDisabled -> Color(0.05f, 0.06f, 0.08f, 0.94f)
-                                actor.isChecked -> Color(0.34f + (activePulse * 0.10f), 0.38f + (activePulse * 0.08f), 0.14f, 0.98f)
+                                actor.isChecked -> Color(0.28f + (activePulse * 0.06f), 0.32f + (activePulse * 0.05f), 0.14f, 0.90f)
                                 else -> cardTone
                             }
                         val shellTone =
                             when {
                                 actor.isDisabled -> Color(0.01f, 0.03f, 0.05f, 0.88f)
-                                actor.isChecked -> Color(0.42f + (activePulse * 0.08f), 0.36f + (activePulse * 0.06f), 0.10f, 0.98f)
-                                else -> Color(0.01f, 0.03f, 0.05f, 0.98f)
+                                actor.isChecked -> Color(0.30f + (activePulse * 0.04f), 0.28f + (activePulse * 0.03f), 0.10f, 0.86f)
+                                else -> Color(0.01f, 0.03f, 0.05f, 0.90f)
                             }
                         add(
                             Table().apply {
@@ -756,7 +756,7 @@ internal class GameScreen(
                                                     assets.panelDrawable(
                                                         when {
                                                             actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
-                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.88f)
+                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.72f)
                                                             button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.84f)
                                                             button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.82f)
                                                             button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.72f, 0.84f, 1.00f, 0.82f)
@@ -772,7 +772,7 @@ internal class GameScreen(
                                                     assets.panelDrawable(
                                                             when {
                                                                 actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
-                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.78f + (activePulse * 0.10f))
+                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.62f + (activePulse * 0.06f))
                                                             button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.76f)
                                                             button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.74f)
                                                             button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.64f, 0.78f, 1.00f, 0.72f)
@@ -796,7 +796,7 @@ internal class GameScreen(
                                                     assets.panelDrawable(
                                                         when {
                                                             actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
-                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.90f)
+                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.74f)
                                                             else -> Color(1f, 1f, 1f, 0.12f)
                                                         }
                                                     )
