@@ -38,6 +38,8 @@ internal class GameScreen(
     private val topBar = Table()
     private val topSelectionShell = Table()
     private val topSelectionCard = Table()
+    private val topModeShell = Table()
+    private val topModeCard = Table()
     private val topStatusShell = Table()
     private val topStatusCard = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
@@ -99,6 +101,8 @@ internal class GameScreen(
     private var lastSelectionSignature = ""
     private var focusedSelectionId: Int? = null
     private var selectionHudPulseUntilMillis = 0L
+    private var topModePulseUntilMillis = 0L
+    private var lastTopModeSignature = ""
     private var topStatusPulseUntilMillis = 0L
     private var lastTopStatusSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
@@ -235,11 +239,11 @@ internal class GameScreen(
                 }
             ).width(118f).center().padLeft(3f).padRight(3f)
             add(
-                Table().apply {
+                topModeShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
                     add(
-                        Table().apply {
+                        topModeCard.apply {
                             background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f))
                             pad(1f, 3f, 1f, 3f)
                             add(modeLabel).center()
@@ -689,6 +693,9 @@ internal class GameScreen(
         val selectionPulse = selectionHudPulse()
         topSelectionShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), selectionPulse * 0.20f))
         topSelectionCard.background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), selectionPulse * 0.28f))
+        val topModePulse = topModePulse()
+        topModeShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.16f, 0.22f, 0.18f, 0.68f), topModePulse * 0.20f))
+        topModeCard.background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f).lerp(Color(0.24f, 0.34f, 0.22f, 0.82f), topModePulse * 0.28f))
         val topStatusPulse = topStatusPulse()
         topStatusShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f).lerp(Color(0.24f, 0.18f, 0.14f, 0.70f), topStatusPulse * 0.22f))
         topStatusCard.background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f).lerp(Color(0.38f, 0.26f, 0.18f, 0.84f), topStatusPulse * 0.30f))
@@ -1645,6 +1652,11 @@ internal class GameScreen(
     }
 
     private fun syncSelectionPage(snapshot: ClientSnapshot?) {
+        val topModeSignature = "${runtime.overlayModeLabel()}|${runtime.playControlState.paused}|${runtime.pauseOverlayVisible}"
+        if (topModeSignature != lastTopModeSignature) {
+            lastTopModeSignature = topModeSignature
+            topModePulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
+        }
         val topStatusSignature = "${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}|${buildStatusBadgeLine()}"
         if (topStatusSignature != lastTopStatusSignature) {
             lastTopStatusSignature = topStatusSignature
@@ -1674,6 +1686,13 @@ internal class GameScreen(
 
     private fun topStatusPulse(): Float {
         val remaining = topStatusPulseUntilMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
+    }
+
+    private fun topModePulse(): Float {
+        val remaining = topModePulseUntilMillis - System.currentTimeMillis()
         if (remaining <= 0L) return 0f
         val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
         return normalized * normalized
