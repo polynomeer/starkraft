@@ -107,6 +107,8 @@ internal class GameScreen(
     private var lastTopStatusSignature = ""
     private var overlayHeaderPulseUntilMillis = 0L
     private var lastOverlaySignature = ""
+    private var bannerPulseUntilMillis = 0L
+    private var lastBannerSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
@@ -689,9 +691,11 @@ internal class GameScreen(
         val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
         actionBannerLabel.color = currentActionBannerTextTone()
-        commandHintLabel.setText(buildCommandHintLine())
+        val commandHintText = buildCommandHintLine()
+        commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
-        commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone())
+        val bannerPulse = bannerPulse()
+        commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone().cpy().lerp(Color(0.22f, 0.30f, 0.22f, 0.82f), bannerPulse * 0.22f))
         val selectionPulse = selectionHudPulse()
         topSelectionShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), selectionPulse * 0.20f))
         topSelectionCard.background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), selectionPulse * 0.28f))
@@ -717,7 +721,7 @@ internal class GameScreen(
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
-        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone()) else null
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone().cpy().lerp(Color(0.24f, 0.30f, 0.18f, 0.82f), bannerPulse * 0.24f)) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
         bottomHud.invalidateHierarchy()
         buttonTable.clearChildren()
@@ -1655,6 +1659,11 @@ internal class GameScreen(
     }
 
     private fun syncSelectionPage(snapshot: ClientSnapshot?) {
+        val bannerSignature = "${buildActionBannerLine()}|${buildCommandHintLine()}"
+        if (bannerSignature != lastBannerSignature) {
+            lastBannerSignature = bannerSignature
+            bannerPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
+        }
         val overlaySignature = "${runtime.pauseOverlayVisible}|${runtime.helpOverlayVisible}|${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}"
         if (overlaySignature != lastOverlaySignature) {
             lastOverlaySignature = overlaySignature
@@ -1708,6 +1717,13 @@ internal class GameScreen(
 
     private fun overlayHeaderPulse(): Float {
         val remaining = overlayHeaderPulseUntilMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
+    }
+
+    private fun bannerPulse(): Float {
+        val remaining = bannerPulseUntilMillis - System.currentTimeMillis()
         if (remaining <= 0L) return 0f
         val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
         return normalized * normalized
