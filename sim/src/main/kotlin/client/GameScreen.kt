@@ -357,12 +357,12 @@ internal class GameScreen(
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f))
-                            pad(3f)
+                            pad(2f)
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.34f, 0.40f, 0.16f, 0.76f))
                                 }
-                            ).height(2f).expandX().fillX().row()
+                            ).height(1f).expandX().fillX().row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.76f))
@@ -374,7 +374,7 @@ internal class GameScreen(
                                             pad(1f, 4f, 1f, 4f)
                                             add(healthLabel).center()
                                         }
-                                    ).padTop(4f)
+                                    ).padTop(3f)
                                 }
                             ).expand().fill().padTop(3f)
                         }
@@ -408,7 +408,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
                                     pad(1f, 5f, 1f, 5f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.76f)) }).width(2f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.68f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()
@@ -437,7 +437,7 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
                                     pad(1f, 4f, 1f, 4f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.74f)) }).width(2f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.64f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()
@@ -448,7 +448,7 @@ internal class GameScreen(
                                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(18f).height(18f).padRight(2f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
                                             pad(1f, 4f, 1f, 4f)
                                             add(selectionPageLabel).left()
                                         }
@@ -456,7 +456,7 @@ internal class GameScreen(
                                     add(controlGroupButtons).minWidth(56f).right().padRight(2f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.88f))
+                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
                                             pad(1f, 4f, 1f, 4f)
                                             add(controlGroupsLabel).right()
                                         }
@@ -1004,67 +1004,67 @@ internal class GameScreen(
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.82f))
-            pad(1f, 1f, 3f, 1f)
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
+            pad(1f, 1f, 2f, 1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.30f))
-                    pad(1f, 1f, 3f, 1f)
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.22f))
+                    pad(1f, 1f, 2f, 1f)
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f))
+                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.66f))
                                 }
-                            ).size(16f, 4f).left().padBottom(1f).row()
+                            ).size(12f, 3f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.95f))
+                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
                                 }
-                            ).width(8f).height(2f).left().padBottom(1f).row()
+                            ).width(6f).height(2f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
+                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
                                 }
-                            ).width(4f).height(8f).left().padBottom(1f).row()
+                            ).width(3f).height(6f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(26f).height(2f).right().row()
+                                    ).width(20f).height(2f).right().row()
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.78f))
+                                        }
+                                    ).width(8f).height(2f).right().padTop(1f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.78f))
                                         }
                                     ).width(10f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.78f))
                                         }
-                                    ).width(14f).height(2f).right().padTop(1f)
+                                    ).width(4f).height(4f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.78f))
                                         }
-                                    ).width(5f).height(5f).right().padTop(1f)
+                                    ).width(9f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
                                         }
-                                    ).width(12f).height(2f).right().padTop(1f)
+                                    ).width(3f).height(5f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.95f))
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(4f).height(6f).right().padTop(1f)
-                                    add(
-                                        Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.95f))
-                                        }
-                                    ).width(8f).height(2f).right().padTop(1f)
+                                    ).width(6f).height(2f).right().padTop(1f)
                                 }
                             ).right().padTop(1f)
                         }
