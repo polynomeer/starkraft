@@ -368,15 +368,15 @@ internal class GdxWorldRenderer(
         val damaged = runtime.isDamageFlashActive(entity.id)
         val impactKind = runtime.damageImpactKind(entity.id)
         val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
-        val barWidth = if (selected) 22f else 18f
-        val barHeight = if (selected) 4f else 3f
+        val barWidth = if (selected) 20f else 17f
+        val barHeight = if (selected) 3f else 2f
         val top = y - if (selected) 16f else 14f
         shape.color =
             when {
-                damaged && meleeImpact -> Color(0.10f, 0.18f, 0.08f, 0.98f)
-                damaged -> Color(0.18f, 0.08f, 0.08f, 0.98f)
-                selected -> Color(0.04f, 0.04f, 0.04f, 0.92f)
-                else -> Color(0.1f, 0.1f, 0.1f, 0.86f)
+                damaged && meleeImpact -> Color(0.10f, 0.18f, 0.08f, 0.78f)
+                damaged -> Color(0.18f, 0.08f, 0.08f, 0.78f)
+                selected -> Color(0.04f, 0.04f, 0.04f, 0.66f)
+                else -> Color(0.1f, 0.1f, 0.1f, 0.58f)
             }
         shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         val fillColor =
@@ -392,7 +392,7 @@ internal class GdxWorldRenderer(
         val fillWidth = barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1))
         shape.rect(x - (barWidth / 2f), top, fillWidth, barHeight)
         if (damaged) {
-            shape.color = Color(1.00f, 0.88f, 0.76f, 0.64f)
+            shape.color = Color(1.00f, 0.88f, 0.76f, 0.48f)
             shape.rect(x - (barWidth / 2f), top - 1f, fillWidth.coerceAtLeast(3f), 1f)
         }
     }
