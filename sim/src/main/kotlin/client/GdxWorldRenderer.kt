@@ -1045,13 +1045,12 @@ internal class GdxWorldRenderer(
         val viewportTop = top + (topWorld / snapshot.mapHeight) * boundsHeight
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
-        shape.color = Color(0.82f, 0.92f, 0.98f, 0.10f)
+        val pulse = ambientPulse(1050L)
+        shape.color = Color(0.82f, 0.96f, 1.00f, 0.07f + (pulse * 0.05f))
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = Color(0.10f, 0.18f, 0.22f, 0.95f)
-        shape.rect(left, top, boundsWidth, boundsHeight)
-        shape.color = Color(0.92f, 0.98f, 1f, 0.84f)
-        shape.rect(viewportLeft - 1f, viewportTop - 1f, viewportWidth + 2f, viewportHeight + 2f)
-        val corner = 7f
+        shape.color = Color(0.92f, 0.98f, 1f, 0.66f + (pulse * 0.14f))
+        shape.rect(viewportLeft - 0.8f, viewportTop - 0.8f, viewportWidth + 1.6f, viewportHeight + 1.6f)
+        val corner = minOf(9f, viewportWidth * 0.28f, viewportHeight * 0.28f).coerceAtLeast(4f)
         shape.color = selectionColor
         shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
         shape.line(viewportLeft, viewportTop, viewportLeft, viewportTop + corner)
