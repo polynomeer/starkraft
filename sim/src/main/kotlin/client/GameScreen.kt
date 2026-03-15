@@ -721,8 +721,7 @@ internal class GameScreen(
                             runtime.actionHint(button.actionId),
                             commandButtonStyle(button.actionId)
                         ) {
-                            markCommandPulse(button.actionId)
-                            runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                            runActionWithPulse(button.actionId)
                         }
                         actor.isDisabled = !runtime.isActionEnabled(button.actionId)
                         actor.isChecked = runtime.isActionActive(button.actionId)
@@ -1661,6 +1660,11 @@ internal class GameScreen(
         commandPulseUntilMillis[actionId] = System.currentTimeMillis() + COMMAND_CLICK_PULSE_DURATION_MS
     }
 
+    private fun runActionWithPulse(actionId: String) {
+        markCommandPulse(actionId)
+        runtime.executeAction(actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+    }
+
     private fun commandClickPulse(actionId: String): Float {
         val until = commandPulseUntilMillis[actionId] ?: return 0f
         val remaining = until - System.currentTimeMillis()
@@ -2344,38 +2348,38 @@ internal class GameScreen(
                 Input.Keys.NUM_1 -> runtime.setViewFaction(1)
                 Input.Keys.NUM_2 -> runtime.setViewFaction(2)
                 Input.Keys.NUM_3 -> runtime.setViewFaction(null)
-                Input.Keys.M -> runtime.executeAction("move", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.A -> runtime.executeAction("attackMove", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.P -> runtime.executeAction("patrol", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.H -> runtime.executeAction("hold", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.B -> runtime.executeAction("build:Depot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.R -> runtime.executeAction("build:ResourceDepot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.G -> runtime.executeAction("build:GasDepot", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.U -> runtime.catalog.trainOptions.getOrNull(0)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
-                Input.Keys.I -> runtime.catalog.trainOptions.getOrNull(1)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
-                Input.Keys.O -> runtime.catalog.trainOptions.getOrNull(2)?.let { runtime.executeAction("train:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
-                Input.Keys.L -> runtime.catalog.researchOptions.firstOrNull()?.let { runtime.executeAction("research:${it.typeId}", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
-                Input.Keys.X -> runtime.executeAction("cancelBuild", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.T -> runtime.executeAction("cancelTrain", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.Y -> runtime.executeAction("cancelResearch", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.F2 -> runtime.executeAction("selectViewedFaction", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.F3 -> runtime.executeAction("selectType", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.F4 -> runtime.executeAction("selectRole", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.F11 -> runtime.executeAction("selectAll", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.F12 -> runtime.executeAction("selectIdleWorkers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.M -> runActionWithPulse("move")
+                Input.Keys.A -> runActionWithPulse("attackMove")
+                Input.Keys.P -> runActionWithPulse("patrol")
+                Input.Keys.H -> runActionWithPulse("hold")
+                Input.Keys.B -> runActionWithPulse("build:Depot")
+                Input.Keys.R -> runActionWithPulse("build:ResourceDepot")
+                Input.Keys.G -> runActionWithPulse("build:GasDepot")
+                Input.Keys.U -> runtime.catalog.trainOptions.getOrNull(0)?.let { runActionWithPulse("train:${it.typeId}") }
+                Input.Keys.I -> runtime.catalog.trainOptions.getOrNull(1)?.let { runActionWithPulse("train:${it.typeId}") }
+                Input.Keys.O -> runtime.catalog.trainOptions.getOrNull(2)?.let { runActionWithPulse("train:${it.typeId}") }
+                Input.Keys.L -> runtime.catalog.researchOptions.firstOrNull()?.let { runActionWithPulse("research:${it.typeId}") }
+                Input.Keys.X -> runActionWithPulse("cancelBuild")
+                Input.Keys.T -> runActionWithPulse("cancelTrain")
+                Input.Keys.Y -> runActionWithPulse("cancelResearch")
+                Input.Keys.F2 -> runActionWithPulse("selectViewedFaction")
+                Input.Keys.F3 -> runActionWithPulse("selectType")
+                Input.Keys.F4 -> runActionWithPulse("selectRole")
+                Input.Keys.F11 -> runActionWithPulse("selectAll")
+                Input.Keys.F12 -> runActionWithPulse("selectIdleWorkers")
                 Input.Keys.F5 -> runtime.restartMatch()
                 Input.Keys.F6 -> runtime.cycleScenarioAndRestart(-1)
                 Input.Keys.F7 -> runtime.cycleScenarioAndRestart(1)
-                Input.Keys.F -> runtime.executeAction("selectDamaged", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.V -> runtime.executeAction("selectCombat", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.N -> runtime.executeAction("selectProducers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.Z -> runtime.executeAction("selectTrainers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.C -> runtime.executeAction("selectResearchers", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.J -> runtime.executeAction("selectConstruction", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.K -> runtime.executeAction("selectHarvesters", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.Q -> runtime.executeAction("selectReturning", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.E -> runtime.executeAction("selectCargo", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.D -> runtime.executeAction("selectDropoffs", Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.F -> runActionWithPulse("selectDamaged")
+                Input.Keys.V -> runActionWithPulse("selectCombat")
+                Input.Keys.N -> runActionWithPulse("selectProducers")
+                Input.Keys.Z -> runActionWithPulse("selectTrainers")
+                Input.Keys.C -> runActionWithPulse("selectResearchers")
+                Input.Keys.J -> runActionWithPulse("selectConstruction")
+                Input.Keys.K -> runActionWithPulse("selectHarvesters")
+                Input.Keys.Q -> runActionWithPulse("selectReturning")
+                Input.Keys.E -> runActionWithPulse("selectCargo")
+                Input.Keys.D -> runActionWithPulse("selectDropoffs")
                 Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
                 Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
                 Input.Keys.LEFT_BRACKET -> runtime.adjustSpeed(-1)
