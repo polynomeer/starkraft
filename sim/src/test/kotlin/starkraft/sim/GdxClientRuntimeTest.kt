@@ -129,6 +129,17 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `minimap drag recenter applies immediately`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        val centered = runtime.dragCenterFromMinimap(screenX = 50f, screenY = 560f, viewWidth = 1280, viewHeight = 720)
+
+        assertTrue(centered)
+        assertNotEquals(0f, runtime.camera.panX)
+        assertNotEquals(0f, runtime.camera.panY)
+    }
+
+    @Test
     fun `initial camera centers on the viewed faction`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
@@ -167,6 +178,17 @@ class GdxClientRuntimeTest {
 
         assertEquals(0f, runtime.camera.panX)
         assertEquals(0f, runtime.camera.panY)
+    }
+
+    @Test
+    fun `keyboard pan nudges toward a queued target`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.nudgePanBy(deltaX = -28f, deltaY = 0f)
+
+        assertEquals(0f, runtime.camera.panX)
+        runtime.tick()
+        assertTrue(runtime.camera.panX < 0f)
     }
 
     @Test

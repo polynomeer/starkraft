@@ -2162,7 +2162,7 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.LEFT -> {
-                    if (runtime.centerFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)) {
+                    if (runtime.dragCenterFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)) {
                         minimapDragging = true
                         dragSelection = null
                         return true
@@ -2185,7 +2185,7 @@ internal class GameScreen(
 
         override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
             if (minimapDragging) {
-                runtime.centerFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)
+                runtime.dragCenterFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)
                 return true
             }
             if (panning) {
@@ -2251,10 +2251,10 @@ internal class GameScreen(
                 Input.Keys.SPACE -> runtime.togglePlayPause()
                 Input.Keys.F1 -> runtime.toggleHelpOverlay()
                 Input.Keys.TAB -> runtime.toggleDebug()
-                Input.Keys.LEFT -> runtime.panBy(28f, 0f)
-                Input.Keys.RIGHT -> runtime.panBy(-28f, 0f)
-                Input.Keys.UP -> runtime.panBy(0f, 28f)
-                Input.Keys.DOWN -> runtime.panBy(0f, -28f)
+                Input.Keys.LEFT -> runtime.nudgePanBy(28f, 0f)
+                Input.Keys.RIGHT -> runtime.nudgePanBy(-28f, 0f)
+                Input.Keys.UP -> runtime.nudgePanBy(0f, 28f)
+                Input.Keys.DOWN -> runtime.nudgePanBy(0f, -28f)
                 Input.Keys.EQUALS, Input.Keys.PLUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 1.1f)
                 Input.Keys.MINUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 0.9f)
                 Input.Keys.NUM_0 -> {

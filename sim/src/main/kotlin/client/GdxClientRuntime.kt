@@ -369,6 +369,12 @@ internal class GdxClientRuntime(
         initialCameraApplied = true
     }
 
+    fun nudgePanBy(deltaX: Float, deltaY: Float) {
+        val base = cameraTarget ?: camera
+        cameraTarget = base.copy(panX = base.panX + deltaX, panY = base.panY + deltaY)
+        initialCameraApplied = true
+    }
+
     fun togglePauseOverlay() {
         pauseOverlayVisible = !pauseOverlayVisible
     }
@@ -442,6 +448,15 @@ internal class GdxClientRuntime(
         val snapshot = session.state.snapshot ?: return false
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         queueCameraCenter(viewWidth, viewHeight, world.first, world.second)
+        initialCameraApplied = true
+        return true
+    }
+
+    fun dragCenterFromMinimap(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        camera = centerCameraOnWorld(camera, viewWidth, viewHeight, world.first, world.second)
+        cameraTarget = null
         initialCameraApplied = true
         return true
     }
