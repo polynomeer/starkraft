@@ -1153,11 +1153,11 @@ internal class GdxWorldRenderer(
             GroundPingKind.MOVE -> {
                 val outer = 10f + (pulse * 7f)
                 val inner = 4f + (pulse * 3.5f)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.08f + (pulse * 0.06f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.06f))
                 shape.circle(x, y, outer)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.16f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
                 shape.circle(x, y, inner)
-                shape.color = Color(0.74f, 1.00f, 0.82f, 0.88f)
+                shape.color = Color(0.74f, 1.00f, 0.82f, 0.92f)
                 shape.circle(x, y, 2.2f + (pulse * 1.0f))
                 shape.color = Color(0.78f, 1.00f, 0.86f, 0.16f + (pulse * 0.06f))
                 shape.circle(x, y, 12f + (pulse * 4f))
@@ -1165,9 +1165,9 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 0.75f, 10f, 1.5f)
             }
             GroundPingKind.ATTACK -> {
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
                 shape.circle(x, y, 14f + (pulse * 5f))
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.circle(x, y, 8f + (pulse * 3f))
                 shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
                 shape.rectLine(x - 7f, y - 7f, x + 7f, y + 7f, 1.6f)
@@ -1212,16 +1212,16 @@ internal class GdxWorldRenderer(
         val pulse = runtime.currentSelectionClickPulse() ?: return
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
-        drawConfirmPulse(shape, x, y, scale = 1.0f, periodMillis = 760L)
+        drawConfirmPulse(shape, x, y, scale = 0.90f, periodMillis = 760L, alphaScale = 0.82f)
     }
 
-    private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long) {
+    private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long, alphaScale: Float = 1f) {
         val phase = ambientPulse(periodMillis)
-        shape.color = Color(0.66f, 1.00f, 0.74f, 0.10f + (phase * 0.06f))
+        shape.color = Color(0.66f, 1.00f, 0.74f, (0.10f + (phase * 0.06f)) * alphaScale)
         shape.circle(x, y, (9f + (phase * 4f)) * scale)
-        shape.color = Color(0.74f, 1.00f, 0.82f, 0.18f + (phase * 0.06f))
+        shape.color = Color(0.74f, 1.00f, 0.82f, (0.18f + (phase * 0.06f)) * alphaScale)
         shape.circle(x, y, (4f + (phase * 2f)) * scale)
-        shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f)
+        shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f * alphaScale)
         shape.rect(x - (0.75f * scale), y - (4.5f * scale), 1.5f * scale, 9f * scale)
         shape.rect(x - (4.5f * scale), y - (0.75f * scale), 9f * scale, 1.5f * scale)
         shape.circle(x, y, 1.7f * scale)
