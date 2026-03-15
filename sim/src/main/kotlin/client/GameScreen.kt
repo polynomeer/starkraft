@@ -25,6 +25,7 @@ internal class GameScreen(
 ) : ScreenAdapter() {
     private companion object {
         const val HUD_SELECTION_PULSE_DURATION_MS = 260L
+        const val COMMAND_CLICK_PULSE_DURATION_MS = 180L
     }
 
     private val worldRenderer = GdxWorldRenderer(assets)
@@ -93,6 +94,7 @@ internal class GameScreen(
     private var lastSelectionSignature = ""
     private var focusedSelectionId: Int? = null
     private var selectionHudPulseUntilMillis = 0L
+    private val commandPulseUntilMillis = HashMap<String, Long>()
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
@@ -716,7 +718,10 @@ internal class GameScreen(
                             commandButtonLabel(button),
                             runtime.actionHint(button.actionId),
                             commandButtonStyle(button.actionId)
-                        ) { runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height)) }
+                        ) {
+                            markCommandPulse(button.actionId)
+                            runtime.executeAction(button.actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                        }
                         actor.isDisabled = !runtime.isActionEnabled(button.actionId)
                         actor.isChecked = runtime.isActionActive(button.actionId)
                         actor.color =
@@ -739,17 +744,18 @@ internal class GameScreen(
                                     Color(0.36f, 0.14f, 0.10f, 0.98f)
                                 else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
                             }
+                        val clickPulse = commandClickPulse(button.actionId)
                         val frameTone =
                             when {
                                 actor.isDisabled -> Color(0.05f, 0.06f, 0.08f, 0.94f)
                                 actor.isChecked -> Color(0.28f + (activePulse * 0.06f), 0.32f + (activePulse * 0.05f), 0.14f, 0.90f)
-                                else -> cardTone
+                                else -> cardTone.cpy().lerp(Color(0.34f, 0.44f, 0.30f, 0.96f), clickPulse * 0.26f)
                             }
                         val shellTone =
                             when {
                                 actor.isDisabled -> Color(0.01f, 0.03f, 0.05f, 0.88f)
                                 actor.isChecked -> Color(0.30f + (activePulse * 0.04f), 0.28f + (activePulse * 0.03f), 0.10f, 0.86f)
-                                else -> Color(0.01f, 0.03f, 0.05f, 0.90f)
+                                else -> Color(0.01f, 0.03f, 0.05f, 0.90f).lerp(Color(0.12f, 0.20f, 0.14f, 0.92f), clickPulse * 0.22f)
                             }
                         add(
                             Table().apply {
@@ -772,6 +778,7 @@ internal class GameScreen(
                                                             button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.80f)
                                                             else -> Color(0.56f, 0.88f, 0.96f, 0.74f)
                                                         }
+                                                            .lerp(Color(0.78f, 1.00f, 0.86f, 0.88f), clickPulse * 0.18f)
                                                     )
                                             }
                                         ).height(1.5f).expandX().fillX().colspan(4).padBottom(1f).row()
@@ -1641,6 +1648,21 @@ internal class GameScreen(
         val remaining = selectionHudPulseUntilMillis - System.currentTimeMillis()
         if (remaining <= 0L) return 0f
         val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
+    }
+
+    private fun markCommandPulse(actionId: String) {
+        commandPulseUntilMillis[actionId] = System.currentTimeMillis() + COMMAND_CLICK_PULSE_DURATION_MS
+    }
+
+    private fun commandClickPulse(actionId: String): Float {
+        val until = commandPulseUntilMillis[actionId] ?: return 0f
+        val remaining = until - System.currentTimeMillis()
+        if (remaining <= 0L) {
+            commandPulseUntilMillis.remove(actionId)
+            return 0f
+        }
+        val normalized = remaining.toFloat() / COMMAND_CLICK_PULSE_DURATION_MS.toFloat()
         return normalized * normalized
     }
 
