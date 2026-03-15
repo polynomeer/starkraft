@@ -36,6 +36,8 @@ internal class GameScreen(
     private val middlePanScale = 0.88f
     private val middlePanDeadzone = 0.75f
     private val topBar = Table()
+    private val topSelectionShell = Table()
+    private val topSelectionCard = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
     private val topSelectionLabel = Label("", assets.mutedLabelStyle)
     private val modeLabel = Label("", assets.accentLabelStyle)
@@ -216,11 +218,11 @@ internal class GameScreen(
                 }
             ).left().expandX().fillX()
             add(
-                Table().apply {
+                topSelectionShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
                     add(
-                        Table().apply {
+                        topSelectionCard.apply {
                             background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f))
                             pad(1f, 3f, 1f, 3f)
                             add(topSelectionLabel).center()
@@ -681,6 +683,8 @@ internal class GameScreen(
         commandHintLabel.color = currentCommandHintTextTone()
         commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone())
         val selectionPulse = selectionHudPulse()
+        topSelectionShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), selectionPulse * 0.20f))
+        topSelectionCard.background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), selectionPulse * 0.28f))
         selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone().cpy().lerp(Color(0.74f, 1.00f, 0.82f, 0.86f), selectionPulse * 0.34f))
         portraitFrame.background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f).lerp(Color(0.28f, 0.36f, 0.22f, 0.86f), selectionPulse * 0.28f))
         attackWarningLabel.setText(buildAttackWarningText())
