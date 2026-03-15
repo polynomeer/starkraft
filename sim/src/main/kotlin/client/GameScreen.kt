@@ -23,6 +23,10 @@ internal class GameScreen(
     private val assets: GdxUiAssets,
     private val runtime: GdxClientRuntime
 ) : ScreenAdapter() {
+    private companion object {
+        const val HUD_SELECTION_PULSE_DURATION_MS = 260L
+    }
+
     private val worldRenderer = GdxWorldRenderer(assets)
     private val stage = Stage(ScreenViewport())
     private val edgePanMargin = 20f
@@ -88,6 +92,7 @@ internal class GameScreen(
     private var productionPage = 0
     private var lastSelectionSignature = ""
     private var focusedSelectionId: Int? = null
+    private var selectionHudPulseUntilMillis = 0L
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
@@ -671,7 +676,9 @@ internal class GameScreen(
         commandHintLabel.setText(buildCommandHintLine())
         commandHintLabel.color = currentCommandHintTextTone()
         commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone())
-        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone())
+        val selectionPulse = selectionHudPulse()
+        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone().cpy().lerp(Color(0.74f, 1.00f, 0.82f, 0.86f), selectionPulse * 0.34f))
+        portraitFrame.background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f).lerp(Color(0.28f, 0.36f, 0.22f, 0.86f), selectionPulse * 0.28f))
         attackWarningLabel.setText(buildAttackWarningText())
         attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
@@ -1623,10 +1630,18 @@ internal class GameScreen(
                 focusedSelectionId = null
             }
             lastSelectionSignature = signature
+            selectionHudPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
         }
         if (focusedSelectionId == null) {
             focusedSelectionId = runtime.session.state.selectedIds.firstOrNull()
         }
+    }
+
+    private fun selectionHudPulse(): Float {
+        val remaining = selectionHudPulseUntilMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
     }
 
     private fun updateSelectionPager(snapshot: ClientSnapshot?) {
