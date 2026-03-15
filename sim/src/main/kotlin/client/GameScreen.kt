@@ -105,6 +105,8 @@ internal class GameScreen(
     private var lastTopModeSignature = ""
     private var topStatusPulseUntilMillis = 0L
     private var lastTopStatusSignature = ""
+    private var overlayHeaderPulseUntilMillis = 0L
+    private var lastOverlaySignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
@@ -709,8 +711,9 @@ internal class GameScreen(
         updateSelectionPager(snapshot)
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
-        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderTone())
-        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderTone())
+        val overlayPulse = overlayHeaderPulse()
+        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderTone().cpy().lerp(Color(0.38f, 0.30f, 0.20f, 0.94f), overlayPulse * 0.26f))
+        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderTone().cpy().lerp(Color(0.26f, 0.34f, 0.22f, 0.90f), overlayPulse * 0.22f))
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
@@ -1652,6 +1655,11 @@ internal class GameScreen(
     }
 
     private fun syncSelectionPage(snapshot: ClientSnapshot?) {
+        val overlaySignature = "${runtime.pauseOverlayVisible}|${runtime.helpOverlayVisible}|${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}"
+        if (overlaySignature != lastOverlaySignature) {
+            lastOverlaySignature = overlaySignature
+            overlayHeaderPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
+        }
         val topModeSignature = "${runtime.overlayModeLabel()}|${runtime.playControlState.paused}|${runtime.pauseOverlayVisible}"
         if (topModeSignature != lastTopModeSignature) {
             lastTopModeSignature = topModeSignature
@@ -1693,6 +1701,13 @@ internal class GameScreen(
 
     private fun topModePulse(): Float {
         val remaining = topModePulseUntilMillis - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
+    }
+
+    private fun overlayHeaderPulse(): Float {
+        val remaining = overlayHeaderPulseUntilMillis - System.currentTimeMillis()
         if (remaining <= 0L) return 0f
         val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
         return normalized * normalized
