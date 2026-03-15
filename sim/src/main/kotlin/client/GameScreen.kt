@@ -27,6 +27,8 @@ internal class GameScreen(
     private val stage = Stage(ScreenViewport())
     private val edgePanMargin = 20f
     private val edgePanSpeed = 12f
+    private val middlePanScale = 0.88f
+    private val middlePanDeadzone = 0.75f
     private val topBar = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
     private val topSelectionLabel = Label("", assets.mutedLabelStyle)
@@ -2189,7 +2191,11 @@ internal class GameScreen(
                 return true
             }
             if (panning) {
-                runtime.panBy(screenX - lastX, screenY - lastY)
+                val deltaX = (screenX - lastX) * middlePanScale
+                val deltaY = (screenY - lastY) * middlePanScale
+                if (abs(deltaX) >= middlePanDeadzone || abs(deltaY) >= middlePanDeadzone) {
+                    runtime.panBy(deltaX, deltaY)
+                }
                 lastX = screenX.toFloat()
                 lastY = screenY.toFloat()
                 return true
