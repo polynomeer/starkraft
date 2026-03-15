@@ -797,12 +797,12 @@ internal class GameScreen(
                                                     assets.panelDrawable(
                                                         when {
                                                             actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
-                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.72f)
-                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.84f)
-                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.82f)
-                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.72f, 0.84f, 1.00f, 0.82f)
-                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.80f)
-                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.74f)
+                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.64f)
+                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.74f)
+                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
+                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.72f, 0.84f, 1.00f, 0.72f)
+                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
+                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.66f)
                                                         }
                                                             .lerp(Color(0.78f, 1.00f, 0.86f, 0.88f), clickPulse * 0.18f)
                                                     )
@@ -838,8 +838,8 @@ internal class GameScreen(
                                                     assets.panelDrawable(
                                                         when {
                                                             actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
-                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.74f)
-                                                            else -> Color(1f, 1f, 1f, 0.12f)
+                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.66f)
+                                                            else -> Color(1f, 1f, 1f, 0.09f)
                                                         }
                                                     )
                                             }
