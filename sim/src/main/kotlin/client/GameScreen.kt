@@ -26,7 +26,7 @@ internal class GameScreen(
     private val worldRenderer = GdxWorldRenderer(assets)
     private val stage = Stage(ScreenViewport())
     private val edgePanMargin = 20f
-    private val edgePanSpeed = 14f
+    private val edgePanSpeed = 12f
     private val topBar = Table()
     private val economyLabel = Label("", assets.bodyLabelStyle)
     private val topSelectionLabel = Label("", assets.mutedLabelStyle)
@@ -1692,7 +1692,7 @@ internal class GameScreen(
         if (mouseY <= edgePanMargin) deltaY += edgePanSpeed
         if (mouseY >= height - edgePanMargin) deltaY -= edgePanSpeed
         if (deltaX != 0f || deltaY != 0f) {
-            runtime.panBy(deltaX, deltaY)
+            runtime.nudgePanBy(deltaX, deltaY)
         }
     }
 
