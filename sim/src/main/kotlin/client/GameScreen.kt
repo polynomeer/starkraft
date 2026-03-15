@@ -1689,13 +1689,26 @@ internal class GameScreen(
         val mouseY = Gdx.input.y.toFloat()
         val width = Gdx.graphics.width.toFloat()
         val height = worldViewportHeight
-        if (mouseX <= edgePanMargin) deltaX += edgePanSpeed
-        if (mouseX >= width - edgePanMargin) deltaX -= edgePanSpeed
-        if (mouseY <= edgePanMargin) deltaY += edgePanSpeed
-        if (mouseY >= height - edgePanMargin) deltaY -= edgePanSpeed
+        if (mouseX <= edgePanMargin) {
+            deltaX += edgePanSpeed * edgePanIntensity((edgePanMargin - mouseX) / edgePanMargin)
+        }
+        if (mouseX >= width - edgePanMargin) {
+            deltaX -= edgePanSpeed * edgePanIntensity((mouseX - (width - edgePanMargin)) / edgePanMargin)
+        }
+        if (mouseY <= edgePanMargin) {
+            deltaY += edgePanSpeed * edgePanIntensity((edgePanMargin - mouseY) / edgePanMargin)
+        }
+        if (mouseY >= height - edgePanMargin) {
+            deltaY -= edgePanSpeed * edgePanIntensity((mouseY - (height - edgePanMargin)) / edgePanMargin)
+        }
         if (deltaX != 0f || deltaY != 0f) {
             runtime.nudgePanBy(deltaX, deltaY)
         }
+    }
+
+    private fun edgePanIntensity(normalized: Float): Float {
+        val clamped = normalized.coerceIn(0f, 1f)
+        return 0.38f + (clamped * clamped * 0.92f)
     }
 
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
