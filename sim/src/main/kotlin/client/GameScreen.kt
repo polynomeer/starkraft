@@ -500,39 +500,39 @@ internal class GameScreen(
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.22f, 0.05f, 0.05f, 0.86f))
-                    pad(2f)
+                    background = assets.panelDrawable(Color(0.22f, 0.05f, 0.05f, 0.56f))
+                    pad(1f)
                     add(
                         attackWarningCard.apply {
-                            background = assets.panelDrawable(Color(0.66f, 0.18f, 0.14f, 0.94f))
-                            pad(8f, 18f, 8f, 18f)
-                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.84f, 0.70f, 0.82f)) }).width(3f).expandY().fillY().padRight(8f)
+                            background = assets.panelDrawable(Color(0.66f, 0.18f, 0.14f, 0.76f))
+                            pad(6f, 14f, 6f, 14f)
+                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.84f, 0.70f, 0.72f)) }).width(2f).expandY().fillY().padRight(6f)
                             add(attackWarningLabel).center()
                         }
                     )
                 }
-            ).padTop(18f)
+            ).padTop(14f)
         }
         stage.addActor(attackWarningTable)
 
         pauseOverlay.apply {
             setFillParent(true)
             isVisible = false
-            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.86f))
+            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.62f))
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
-                    pad(12f)
-                    defaults().pad(5f)
+                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.76f))
+                    pad(10f)
+                    defaults().pad(4f)
                     add(
                         pauseHeaderCard.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
-                            pad(4f, 10f, 4f, 10f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
+                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.72f))
+                            pad(3f, 8f, 3f, 8f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.72f)) }).width(2f).expandY().fillY().padRight(5f)
                             add(Label("PAUSED", assets.titleLabelStyle)).left()
                         }
                     ).width(248f).left().row()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).width(248f).padBottom(8f).row()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.58f)) }).height(1f).width(248f).padBottom(6f).row()
                     add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(248f).row()
                     add(makeButton("Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(248f).row()
                     add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(248f).row()
@@ -554,21 +554,21 @@ internal class GameScreen(
             setFillParent(true)
             isVisible = false
             top().left()
-            pad(16f)
-            background = assets.panelDrawable(Color(0.03f, 0.05f, 0.08f, 0.78f))
+            pad(14f)
+            background = assets.panelDrawable(Color(0.03f, 0.05f, 0.08f, 0.56f))
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.96f))
-                    pad(9f, 11f, 9f, 11f)
+                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.74f))
+                    pad(8f, 10f, 8f, 10f)
                     add(
                         helpHeaderCard.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.92f))
-                            pad(4f, 10f, 4f, 10f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(3f).expandY().fillY().padRight(6f)
+                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.72f))
+                            pad(3f, 8f, 3f, 8f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.72f)) }).width(2f).expandY().fillY().padRight(5f)
                             add(Label("HELP", assets.titleLabelStyle)).left()
                         }
                     ).left().row()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.82f)) }).height(2f).expandX().fillX().padTop(6f).padBottom(8f).row()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.58f)) }).height(1f).expandX().fillX().padTop(5f).padBottom(6f).row()
                     add(helpLabel).left().top()
                 }
             ).left().top()
