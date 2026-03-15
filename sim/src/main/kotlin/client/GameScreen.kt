@@ -214,7 +214,7 @@ internal class GameScreen(
 
         topBar.apply {
             background = null
-            pad(0f, 3f, 0f, 3f)
+            pad(0f, 2f, 0f, 2f)
             add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
@@ -222,8 +222,8 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.74f))
-                            pad(1f, 3f, 1f, 3f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
+                            pad(1f, 2f, 1f, 2f)
+                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(3f)
                             add(economyLabel).left()
                         }
                     ).left().expandX().fillX()
@@ -236,12 +236,12 @@ internal class GameScreen(
                     add(
                         topSelectionCard.apply {
                             background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f))
-                            pad(1f, 3f, 1f, 3f)
+                            pad(1f, 2f, 1f, 2f)
                             add(topSelectionLabel).center()
                         }
                     ).expandX().fillX()
                 }
-            ).width(118f).center().padLeft(3f).padRight(3f)
+            ).width(112f).center().padLeft(2f).padRight(2f)
             add(
                 topModeShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
@@ -249,12 +249,12 @@ internal class GameScreen(
                     add(
                         topModeCard.apply {
                             background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f))
-                            pad(1f, 3f, 1f, 3f)
+                            pad(1f, 2f, 1f, 2f)
                             add(modeLabel).center()
                         }
                     ).expandX().fillX()
                 }
-            ).width(110f).center().padRight(3f)
+            ).width(104f).center().padRight(2f)
             add(
                 topStatusShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
@@ -262,12 +262,12 @@ internal class GameScreen(
                     add(
                         topStatusCard.apply {
                             background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f))
-                            pad(1f, 3f, 1f, 3f)
+                            pad(1f, 2f, 1f, 2f)
                             add(statusBadgeLabel).right()
                         }
                     ).expandX().fillX()
                 }
-            ).width(60f).right()
+            ).width(56f).right()
         }
 
         minimapFrame.apply {
