@@ -375,8 +375,8 @@ internal class GdxWorldRenderer(
             when {
                 damaged && meleeImpact -> Color(0.10f, 0.18f, 0.08f, 0.98f)
                 damaged -> Color(0.18f, 0.08f, 0.08f, 0.98f)
-                selected -> Color(0.04f, 0.04f, 0.04f, 0.98f)
-                else -> Color(0.1f, 0.1f, 0.1f, 0.92f)
+                selected -> Color(0.04f, 0.04f, 0.04f, 0.92f)
+                else -> Color(0.1f, 0.1f, 0.1f, 0.86f)
             }
         shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         val fillColor =
@@ -392,7 +392,7 @@ internal class GdxWorldRenderer(
         val fillWidth = barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1))
         shape.rect(x - (barWidth / 2f), top, fillWidth, barHeight)
         if (damaged) {
-            shape.color = Color(1.00f, 0.88f, 0.76f, 0.72f)
+            shape.color = Color(1.00f, 0.88f, 0.76f, 0.64f)
             shape.rect(x - (barWidth / 2f), top - 1f, fillWidth.coerceAtLeast(3f), 1f)
         }
     }
@@ -440,7 +440,7 @@ internal class GdxWorldRenderer(
                 val height = footprintHeight * runtime.camera.tileSize + 12f
                 val corner = 12f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.10f))
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.08f))
                 shape.line(left - 3f, top - 3f, left + width + 3f, top - 3f)
                 shape.line(left - 3f, top + height + 3f, left + width + 3f, top + height + 3f)
                 shape.line(left - 3f, top - 3f, left - 3f, top + height + 3f)
@@ -455,7 +455,7 @@ internal class GdxWorldRenderer(
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.28f * confirmPulse)
+                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.22f * confirmPulse)
                     shape.line(left - 6f, top - 6f, left + width + 6f, top - 6f)
                     shape.line(left - 6f, top + height + 6f, left + width + 6f, top + height + 6f)
                     shape.line(left - 6f, top - 6f, left - 6f, top + height + 6f)
@@ -471,16 +471,16 @@ internal class GdxWorldRenderer(
                     shape.rect(left - 2f, top + (height * 0.5f), width + 4f, 1.5f)
                     shape.rect(left + (width * 0.5f), top - 2f, 1.5f, height + 4f)
                 }
-                shape.color = Color(0.84f, 1.00f, 0.76f, 0.52f + (pulse * 0.16f))
+                shape.color = Color(0.84f, 1.00f, 0.76f, 0.44f + (pulse * 0.14f))
                 shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
                 shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
             } else {
                 val radius = 11f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.16f + (pulse * 0.08f))
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.06f))
                 shape.circle(screenX, screenY, radius + 1.5f)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.22f * confirmPulse)
+                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.18f * confirmPulse)
                     shape.circle(screenX, screenY, radius + 6f + ((1f - confirmPulse) * 4f))
                 }
                 shape.color = bracketColor
@@ -499,7 +499,7 @@ internal class GdxWorldRenderer(
                     shape.rect(screenX - radius - 2f, screenY - 0.75f, (radius * 2f) + 4f, 1.5f)
                     shape.rect(screenX - 0.75f, screenY - radius - 2f, 1.5f, (radius * 2f) + 4f)
                 }
-                shape.color = Color(0.84f, 1.00f, 0.76f, 0.46f + (pulse * 0.18f))
+                shape.color = Color(0.84f, 1.00f, 0.76f, 0.40f + (pulse * 0.14f))
                 shape.rect(screenX - 4.5f, screenY + radius + 2.5f, 9f, 1.5f)
             }
         }
