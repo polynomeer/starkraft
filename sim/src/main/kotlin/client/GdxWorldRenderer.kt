@@ -1009,13 +1009,7 @@ internal class GdxWorldRenderer(
         runtime.currentMinimapConfirm()?.let { confirm ->
             val x = left + (confirm.worldX / snapshot.mapWidth) * boundsWidth
             val y = top + (confirm.worldY / snapshot.mapHeight) * boundsHeight
-            val pulse = ambientPulse(820L)
-            shape.color = Color(0.72f, 1.00f, 0.82f, 0.12f + (pulse * 0.08f))
-            shape.circle(x, y, 7f + (pulse * 3f))
-            shape.color = Color(0.78f, 1.00f, 0.88f, 0.80f)
-            shape.rect(x - 0.8f, y - 5f, 1.6f, 10f)
-            shape.rect(x - 5f, y - 0.8f, 10f, 1.6f)
-            shape.circle(x, y, 2f)
+            drawConfirmPulse(shape, x, y, scale = 0.78f, periodMillis = 820L)
         }
     }
 
@@ -1212,15 +1206,19 @@ internal class GdxWorldRenderer(
         val pulse = runtime.currentSelectionClickPulse() ?: return
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
-        val phase = ambientPulse(760L)
+        drawConfirmPulse(shape, x, y, scale = 1.0f, periodMillis = 760L)
+    }
+
+    private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long) {
+        val phase = ambientPulse(periodMillis)
         shape.color = Color(0.66f, 1.00f, 0.74f, 0.10f + (phase * 0.06f))
-        shape.circle(x, y, 9f + (phase * 4f))
+        shape.circle(x, y, (9f + (phase * 4f)) * scale)
         shape.color = Color(0.74f, 1.00f, 0.82f, 0.18f + (phase * 0.06f))
-        shape.circle(x, y, 4f + (phase * 2f))
+        shape.circle(x, y, (4f + (phase * 2f)) * scale)
         shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f)
-        shape.rect(x - 0.75f, y - 4.5f, 1.5f, 9f)
-        shape.rect(x - 4.5f, y - 0.75f, 9f, 1.5f)
-        shape.circle(x, y, 1.7f)
+        shape.rect(x - (0.75f * scale), y - (4.5f * scale), 1.5f * scale, 9f * scale)
+        shape.rect(x - (4.5f * scale), y - (0.75f * scale), 9f * scale, 1.5f * scale)
+        shape.circle(x, y, 1.7f * scale)
     }
 
     private fun drawSelectionBox(shape: ShapeRenderer, dragBox: DragSelectionBox?) {
