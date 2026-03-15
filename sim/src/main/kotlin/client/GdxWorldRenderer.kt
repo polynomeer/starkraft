@@ -904,7 +904,7 @@ internal class GdxWorldRenderer(
             if (damaged) {
                 shape.color =
                     if (meleeImpact) Color(0.86f, 1.00f, 0.62f, if (visible) 0.88f else 0.30f)
-                    else Color(1.00f, 0.48f, 0.30f, if (visible) 0.88f else 0.30f)
+                    else Color(1.00f, 0.48f, 0.30f, if (visible) 0.82f else 0.28f)
                 shape.rect(x - 4f, y - 0.75f, 8f, 1.5f)
                 shape.rect(x - 0.75f, y - 4f, 1.5f, 8f)
             }
@@ -952,8 +952,8 @@ internal class GdxWorldRenderer(
                 val selectedTone =
                     when (impactKind) {
                         CombatSoundKind.MELEE,
-                        CombatSoundKind.ZERGLING_MELEE -> Color(0.82f, 1.00f, 0.68f, if (visible) 0.96f else 0.40f)
-                        else -> selectionColor.cpy().apply { a = if (visible) 0.96f else 0.40f }
+                        CombatSoundKind.ZERGLING_MELEE -> Color(0.82f, 1.00f, 0.68f, if (visible) 0.90f else 0.36f)
+                        else -> selectionColor.cpy().apply { a = if (visible) 0.90f else 0.36f }
                     }
                 shape.color = selectedTone
                 shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
@@ -967,7 +967,7 @@ internal class GdxWorldRenderer(
                 if (damaged) {
                     shape.color =
                         if (meleeImpact) Color(0.94f, 1.00f, 0.72f, if (visible) 0.88f else 0.34f)
-                        else Color(0.92f, 1.00f, 0.78f, if (visible) 0.88f else 0.34f)
+                        else Color(0.92f, 1.00f, 0.78f, if (visible) 0.82f else 0.30f)
                     shape.rect(x - 5.5f, y - 0.75f, 11f, 1.5f)
                     shape.rect(x - 0.75f, y - 5.5f, 1.5f, 11f)
                 }
