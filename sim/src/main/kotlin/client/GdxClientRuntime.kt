@@ -267,6 +267,7 @@ internal class GdxClientRuntime(
             )
         session.append(intent)
         session.refreshViewState()
+        triggerSelectionClickPulse((startX + endX) * 0.5f, (startY + endY) * 0.5f)
         triggerSelectionPulse(beforeSelection)
     }
 

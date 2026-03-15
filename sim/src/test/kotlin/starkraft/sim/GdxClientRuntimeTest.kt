@@ -482,6 +482,21 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `selection box raises selection click pulse`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.issueSelectionBox(
+            startX = 120f,
+            startY = 80f,
+            endX = 260f,
+            endY = 180f,
+            additiveSelection = false
+        )
+
+        assertNotNull(runtime.currentSelectionClickPulse())
+    }
+
+    @Test
     fun `invalid build placement raises invalid command sound`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.add(4)
