@@ -473,6 +473,15 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `selection left click raises selection click pulse`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.issueLeftClick(screenX = 160f, screenY = 120f, additiveSelection = false)
+
+        assertNotNull(runtime.currentSelectionClickPulse())
+    }
+
+    @Test
     fun `invalid build placement raises invalid command sound`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.add(4)

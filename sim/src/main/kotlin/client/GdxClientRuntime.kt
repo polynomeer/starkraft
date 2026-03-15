@@ -23,6 +23,7 @@ internal class GdxClientRuntime(
         const val DEATH_BURST_DURATION_MS = 980L
         const val DEATH_REMAINS_DURATION_MS = 2600L
         const val SELECTION_CONFIRM_PULSE_DURATION_MS = 420L
+        const val SELECTION_CLICK_PULSE_DURATION_MS = 280L
     }
 
     private val requestIds = ClientCommandIds("gdx")
@@ -55,6 +56,8 @@ internal class GdxClientRuntime(
     private var recentCompletionUntilMillis: Long = 0L
     private var recentSelectionPulseIds: Set<Int> = emptySet()
     private var recentSelectionPulseUntilMillis: Long = 0L
+    private var recentSelectionClickPulse: SelectionClickPulse? = null
+    private var recentSelectionClickPulseUntilMillis: Long = 0L
     private val recentDeathBursts = ArrayList<DeathBurst>()
     private val recentDeathRemains = ArrayList<DeathRemains>()
     private var lastSnapshotTick: Int? = null
@@ -114,6 +117,9 @@ internal class GdxClientRuntime(
         if (recentSelectionPulseIds.isNotEmpty() && System.currentTimeMillis() > recentSelectionPulseUntilMillis) {
             recentSelectionPulseIds = emptySet()
         }
+        if (recentSelectionClickPulse != null && System.currentTimeMillis() > recentSelectionClickPulseUntilMillis) {
+            recentSelectionClickPulse = null
+        }
         if (recentDeathBursts.isNotEmpty()) {
             val now = System.currentTimeMillis()
             recentDeathBursts.removeAll { now > it.expiresAtMillis }
@@ -156,6 +162,8 @@ internal class GdxClientRuntime(
         if (remaining <= 0L) return 0f
         return (remaining.toFloat() / SELECTION_CONFIRM_PULSE_DURATION_MS.toFloat()).coerceIn(0f, 1f)
     }
+    fun currentSelectionClickPulse(): SelectionClickPulse? =
+        recentSelectionClickPulse?.takeIf { System.currentTimeMillis() <= recentSelectionClickPulseUntilMillis }
     fun activeDeathBursts(): List<DeathBurst> = recentDeathBursts.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun activeDeathRemains(): List<DeathRemains> = recentDeathRemains.filter { System.currentTimeMillis() <= it.expiresAtMillis }
     fun controlGroupSizes(): List<Pair<Int, Int>> = controlGroups.mapIndexedNotNull { index, ids -> ids?.takeIf { it.isNotEmpty() }?.size?.let { index to it } }
@@ -233,6 +241,7 @@ internal class GdxClientRuntime(
             ) ?: return
         session.append(intent)
         session.refreshViewState()
+        triggerSelectionClickPulse(screenX, screenY)
         triggerSelectionPulse(beforeSelection)
     }
 
@@ -266,6 +275,15 @@ internal class GdxClientRuntime(
         if (current.isEmpty() || current == previousSelection) return
         recentSelectionPulseIds = current
         recentSelectionPulseUntilMillis = System.currentTimeMillis() + SELECTION_CONFIRM_PULSE_DURATION_MS
+    }
+
+    private fun triggerSelectionClickPulse(screenX: Float, screenY: Float) {
+        recentSelectionClickPulse =
+            SelectionClickPulse(
+                worldX = camera.screenToWorldX(screenX),
+                worldY = camera.screenToWorldY(screenY)
+            )
+        recentSelectionClickPulseUntilMillis = System.currentTimeMillis() + SELECTION_CLICK_PULSE_DURATION_MS
     }
 
     fun issueRightClick(screenX: Float, screenY: Float, attackMoveModifier: Boolean) {
@@ -1158,6 +1176,11 @@ internal data class GroundPing(
 )
 
 internal data class MinimapConfirm(
+    val worldX: Float,
+    val worldY: Float
+)
+
+internal data class SelectionClickPulse(
     val worldX: Float,
     val worldY: Float
 )

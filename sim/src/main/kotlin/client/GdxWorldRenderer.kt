@@ -78,6 +78,7 @@ internal class GdxWorldRenderer(
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
+        drawSelectionClickPulse(shape, runtime)
         drawDeathRemains(shape, runtime)
         drawDeathBursts(shape, runtime)
         drawBuildPreview(shape, runtime)
@@ -1205,6 +1206,21 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, 3f)
             }
         }
+    }
+
+    private fun drawSelectionClickPulse(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val pulse = runtime.currentSelectionClickPulse() ?: return
+        val x = runtime.camera.worldToScreenX(pulse.worldX)
+        val y = runtime.camera.worldToScreenY(pulse.worldY)
+        val phase = ambientPulse(760L)
+        shape.color = Color(0.66f, 1.00f, 0.74f, 0.10f + (phase * 0.06f))
+        shape.circle(x, y, 9f + (phase * 4f))
+        shape.color = Color(0.74f, 1.00f, 0.82f, 0.18f + (phase * 0.06f))
+        shape.circle(x, y, 4f + (phase * 2f))
+        shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f)
+        shape.rect(x - 0.75f, y - 4.5f, 1.5f, 9f)
+        shape.rect(x - 4.5f, y - 0.75f, 9f, 1.5f)
+        shape.circle(x, y, 1.7f)
     }
 
     private fun drawSelectionBox(shape: ShapeRenderer, dragBox: DragSelectionBox?) {
