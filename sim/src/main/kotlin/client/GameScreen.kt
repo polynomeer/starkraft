@@ -26,6 +26,7 @@ internal class GameScreen(
     private companion object {
         const val HUD_SELECTION_PULSE_DURATION_MS = 260L
         const val COMMAND_CLICK_PULSE_DURATION_MS = 180L
+        const val SLOT_CLICK_PULSE_DURATION_MS = 180L
     }
 
     private val worldRenderer = GdxWorldRenderer(assets)
@@ -95,6 +96,7 @@ internal class GameScreen(
     private var focusedSelectionId: Int? = null
     private var selectionHudPulseUntilMillis = 0L
     private val commandPulseUntilMillis = HashMap<String, Long>()
+    private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
@@ -1390,6 +1392,7 @@ internal class GameScreen(
         val damaged = runtime.isDamageFlashActive(entity.id)
         val impactKind = runtime.damageImpactKind(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
+        val clickPulse = slotClickPulse(entity.id)
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
         val tone =
             when {
@@ -1421,6 +1424,7 @@ internal class GameScreen(
             background =
                 assets.panelDrawable(
                     if (focused) selectionFocusShellTone(focusPulse)
+                    else if (clickPulse > 0f) Color(0.14f, 0.20f, 0.16f, 0.94f).lerp(Color(0.40f, 0.56f, 0.32f, 0.96f), clickPulse * 0.34f)
                     else if (damaged) Color(0.22f, 0.10f, 0.10f, 0.94f)
                     else Color(0.08f, 0.12f, 0.16f, 0.92f)
                 )
@@ -1431,6 +1435,7 @@ internal class GameScreen(
                     background =
                         assets.panelDrawable(
                             if (focused) selectionFocusCardTone(focusPulse)
+                            else if (clickPulse > 0f) tone.cpy().lerp(Color(0.40f, 0.54f, 0.30f, 0.96f), clickPulse * 0.28f)
                             else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
                             else tone
                         )
@@ -1498,6 +1503,7 @@ internal class GameScreen(
             addListener(
                 object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                        markSlotPulse(entity.id)
                         if (tapCount >= 2) {
                             runtime.session.replaceSelection(intArrayOf(entity.id))
                             focusedSelectionId = entity.id
@@ -1663,6 +1669,21 @@ internal class GameScreen(
             return 0f
         }
         val normalized = remaining.toFloat() / COMMAND_CLICK_PULSE_DURATION_MS.toFloat()
+        return normalized * normalized
+    }
+
+    private fun markSlotPulse(entityId: Int) {
+        slotPulseUntilMillis[entityId] = System.currentTimeMillis() + SLOT_CLICK_PULSE_DURATION_MS
+    }
+
+    private fun slotClickPulse(entityId: Int): Float {
+        val until = slotPulseUntilMillis[entityId] ?: return 0f
+        val remaining = until - System.currentTimeMillis()
+        if (remaining <= 0L) {
+            slotPulseUntilMillis.remove(entityId)
+            return 0f
+        }
+        val normalized = remaining.toFloat() / SLOT_CLICK_PULSE_DURATION_MS.toFloat()
         return normalized * normalized
     }
 
