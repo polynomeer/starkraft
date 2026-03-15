@@ -1212,7 +1212,7 @@ internal class GdxWorldRenderer(
         val pulse = runtime.currentSelectionClickPulse() ?: return
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
-        drawConfirmPulse(shape, x, y, scale = 0.90f, periodMillis = 760L, alphaScale = 0.82f)
+        drawConfirmPulse(shape, x, y, scale = 0.82f, periodMillis = 720L, alphaScale = 0.72f)
     }
 
     private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long, alphaScale: Float = 1f) {
