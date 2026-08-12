@@ -1951,25 +1951,25 @@ internal class GameScreen(
 
     private fun currentTopEconomyTone(): Color =
         when {
-            runtime.attackWarningLine() != null -> Color(1.00f, 0.84f, 0.72f, 0.96f)
-            runtime.noticeLine() != null -> Color(1.00f, 0.92f, 0.68f, 0.96f)
-            else -> Color(0.86f, 0.94f, 0.98f, 0.94f)
+            runtime.attackWarningLine() != null -> Color(1.00f, 0.88f, 0.78f, 0.98f)
+            runtime.noticeLine() != null -> Color(1.00f, 0.94f, 0.74f, 0.98f)
+            else -> Color(0.90f, 0.96f, 1.00f, 0.96f)
         }
 
     private fun currentTopSelectionTone(): Color =
         when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.72f, 0.78f, 0.82f, 0.92f)
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.76f, 0.82f, 0.86f, 0.94f)
             runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(0.98f, 0.92f, 0.62f, 0.96f)
-            else -> Color(0.78f, 0.94f, 0.98f, 0.96f)
+                Color(1.00f, 0.94f, 0.68f, 0.98f)
+            else -> Color(0.82f, 0.96f, 1.00f, 0.98f)
         }
 
     private fun currentTopModeTone(): Color =
         when {
-            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.96f)
-            runtime.groundMode != null -> Color(0.72f, 0.96f, 0.84f, 0.96f)
-            runtime.pauseOverlayVisible || runtime.playControlState.paused -> Color(0.84f, 0.90f, 0.98f, 0.96f)
-            else -> Color(0.72f, 0.96f, 0.84f, 0.94f)
+            runtime.buildModeTypeId != null -> Color(1.00f, 0.92f, 0.64f, 0.98f)
+            runtime.groundMode != null -> Color(0.78f, 0.98f, 0.88f, 0.98f)
+            runtime.pauseOverlayVisible || runtime.playControlState.paused -> Color(0.88f, 0.92f, 1.00f, 0.98f)
+            else -> Color(0.76f, 0.98f, 0.88f, 0.96f)
         }
 
     private fun currentAttackWarningCardTone(): Color =
