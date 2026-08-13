@@ -144,6 +144,27 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `restart clears transient ui state before restart request`(@TempDir tempDir: Path) {
+        var restarted = false
+        val runtime = runtime(tempDir, onRestart = { restarted = true })
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+        runtime.togglePauseOverlay()
+        runtime.toggleHelpOverlay()
+        runtime.setHoverHint("Build Depot")
+        runtime.issueSelectionBox(120f, 80f, 260f, 180f, additiveSelection = false)
+
+        runtime.restartMatch()
+
+        assertTrue(restarted)
+        assertNull(runtime.groundMode)
+        assertNull(runtime.buildModeTypeId)
+        assertFalse(runtime.pauseOverlayVisible)
+        assertFalse(runtime.helpOverlayVisible)
+        assertNull(runtime.hoverHintLine())
+        assertNull(runtime.currentSelectionClickPulse())
+    }
+
+    @Test
     fun `gameplay command armed helper reflects ground and build modes`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 

@@ -466,11 +466,13 @@ internal class GdxClientRuntime(
 
     fun cycleScenarioAndRestart(delta: Int) {
         cycleScenario(delta)
+        clearTransientUiState()
         requestRestart()
     }
 
     fun applyScenarioAndRestart() {
         scenarioPath?.let { writePlayScenario(it, playScenario) }
+        clearTransientUiState()
         requestRestart()
     }
 
@@ -485,6 +487,7 @@ internal class GdxClientRuntime(
     }
 
     fun restartMatch() {
+        clearTransientUiState()
         requestRestart()
     }
 
@@ -494,6 +497,23 @@ internal class GdxClientRuntime(
 
     fun toggleHelpOverlay() {
         helpOverlayVisible = !helpOverlayVisible
+    }
+
+    fun clearTransientUiState() {
+        pauseOverlayVisible = false
+        helpOverlayVisible = false
+        hoverHint = null
+        groundMode = null
+        buildModeTypeId = null
+        cameraTarget = null
+        recentGroundPing = null
+        recentGroundPingUntilMillis = 0L
+        recentMinimapConfirm = null
+        recentMinimapConfirmUntilMillis = 0L
+        recentSelectionPulseIds = emptySet()
+        recentSelectionPulseUntilMillis = 0L
+        recentSelectionClickPulse = null
+        recentSelectionClickPulseUntilMillis = 0L
     }
 
     fun resetCamera() {
