@@ -144,6 +144,22 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `gameplay command armed helper reflects ground and build modes`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        assertFalse(runtime.isGameplayCommandArmed())
+
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+        assertTrue(runtime.isGameplayCommandArmed())
+
+        runtime.cancelArmedMode()
+        assertFalse(runtime.isGameplayCommandArmed())
+
+        runtime.buildModeTypeId = "Depot"
+        assertTrue(runtime.isGameplayCommandArmed())
+    }
+
+    @Test
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 

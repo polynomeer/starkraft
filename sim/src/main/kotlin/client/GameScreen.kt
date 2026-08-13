@@ -2312,6 +2312,14 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.LEFT -> {
+                    if (runtime.isGameplayCommandArmed() &&
+                        gdxMiniMapBounds(
+                            Gdx.graphics.width,
+                            Gdx.graphics.height
+                        ).contains(screenX.toFloat(), screenY.toFloat())
+                    ) {
+                        return true
+                    }
                     if (runtime.dragCenterFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)) {
                         minimapDragging = true
                         dragSelection = null
