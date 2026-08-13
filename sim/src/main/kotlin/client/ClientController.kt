@@ -43,6 +43,21 @@ internal fun buildClientIntent(
     }
     if (!rightClick || selectedIds.isEmpty()) return null
 
+    if (forcedGroundCommandType == ClientGroundCommandMode.MOVE.commandType ||
+        forcedGroundCommandType == ClientGroundCommandMode.PATROL.commandType
+    ) {
+        return ClientIntent.Command(
+            InputJson.InputCommandRecord(
+                tick = snapshot.tick + 1,
+                commandType = forcedGroundCommandType,
+                requestId = requestIds.nextRequestId(),
+                units = selectedIds.toIntArray(),
+                x = worldX,
+                y = worldY
+            )
+        )
+    }
+
     val controlledFaction = selectedIds.asSequence().mapNotNull { id -> snapshot.entities.firstOrNull { it.id == id }?.faction }.firstOrNull()
     val enemy =
         nearestEntity(snapshot, worldX, worldY) {
