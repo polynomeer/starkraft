@@ -62,6 +62,30 @@ class ClientControllerContractTest {
         assertEquals(6f, record.y)
     }
 
+    @Test
+    fun `forced attack move ignores resource auto harvest and issues attack move`() {
+        val intent =
+            buildClientIntent(
+                snapshot = contractSnapshot(),
+                selectedIds = linkedSetOf(4),
+                viewedFaction = 1,
+                worldX = 6f,
+                worldY = 6f,
+                leftClick = false,
+                rightClick = true,
+                attackMoveModifier = false,
+                forcedGroundCommandType = ClientGroundCommandMode.ATTACK_MOVE.commandType,
+                additiveSelection = false,
+                requestIds = ClientCommandIds("test")
+            )
+
+        assertTrue(intent is ClientIntent.Command)
+        val record = (intent as ClientIntent.Command).record
+        assertEquals("attackMove", record.commandType)
+        assertEquals(6f, record.x)
+        assertEquals(6f, record.y)
+    }
+
     private fun contractSnapshot(): ClientSnapshot =
         ClientSnapshot(
             tick = 7,

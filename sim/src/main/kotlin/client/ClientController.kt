@@ -77,7 +77,7 @@ internal fun buildClientIntent(
     }
 
     val node = nearestResourceNode(snapshot, worldX, worldY)
-    if (node != null && distance(node.x, node.y, worldX, worldY) <= 0.8f) {
+    if (forcedGroundCommandType == null && node != null && distance(node.x, node.y, worldX, worldY) <= 0.8f) {
         return ClientIntent.Command(
             InputJson.InputCommandRecord(
                 tick = snapshot.tick + 1,
