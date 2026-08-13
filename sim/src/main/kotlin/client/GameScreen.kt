@@ -2321,7 +2321,7 @@ internal class GameScreen(
         private var rightClickHandled = false
 
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-            if (runtime.pauseOverlayVisible) return false
+            if (overlayBlocksWorldInput(runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) return true
             when (button) {
                 Input.Buttons.MIDDLE -> {
                     panning = true
@@ -2427,14 +2427,19 @@ internal class GameScreen(
         override fun keyDown(keycode: Int): Boolean {
             when (keycode) {
                 Input.Keys.ESCAPE -> {
-                    if (runtime.pauseOverlayVisible) {
-                        runtime.togglePauseOverlay()
-                    } else if (runtime.cancelArmedMode()) {
-                        return true
-                    } else if (runtime.session.state.selectedIds.isNotEmpty()) {
-                        runtime.clearSelection()
-                    } else {
-                        runtime.togglePauseOverlay()
+                    when (
+                        resolveEscapeAction(
+                            pauseVisible = runtime.pauseOverlayVisible,
+                            helpVisible = runtime.helpOverlayVisible,
+                            hasSelection = runtime.session.state.selectedIds.isNotEmpty(),
+                            hasArmedMode = runtime.groundMode != null || runtime.buildModeTypeId != null
+                        )
+                    ) {
+                        EscapeAction.CLOSE_PAUSE -> runtime.togglePauseOverlay()
+                        EscapeAction.CLOSE_HELP -> runtime.toggleHelpOverlay()
+                        EscapeAction.CANCEL_ARMED_MODE -> runtime.cancelArmedMode()
+                        EscapeAction.CLEAR_SELECTION -> runtime.clearSelection()
+                        EscapeAction.OPEN_PAUSE -> runtime.togglePauseOverlay()
                     }
                 }
                 Input.Keys.SPACE -> runtime.togglePlayPause()
@@ -2509,6 +2514,31 @@ internal class GameScreen(
         }
     }
 }
+
+internal enum class EscapeAction {
+    CLOSE_PAUSE,
+    CLOSE_HELP,
+    CANCEL_ARMED_MODE,
+    CLEAR_SELECTION,
+    OPEN_PAUSE
+}
+
+internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
+    pauseVisible || helpVisible
+
+internal fun resolveEscapeAction(
+    pauseVisible: Boolean,
+    helpVisible: Boolean,
+    hasSelection: Boolean,
+    hasArmedMode: Boolean
+): EscapeAction =
+    when {
+        pauseVisible -> EscapeAction.CLOSE_PAUSE
+        helpVisible -> EscapeAction.CLOSE_HELP
+        hasArmedMode -> EscapeAction.CANCEL_ARMED_MODE
+        hasSelection -> EscapeAction.CLEAR_SELECTION
+        else -> EscapeAction.OPEN_PAUSE
+    }
 
 internal fun shouldIssueSelectionBox(commandArmed: Boolean, startX: Float, startY: Float, endX: Float, endY: Float): Boolean {
     if (commandArmed) return false
