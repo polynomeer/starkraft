@@ -2313,6 +2313,7 @@ internal class GameScreen(
         private var dragging = false
         private var panning = false
         private var minimapDragging = false
+        private var armedLeftPress = false
         private var startX = 0f
         private var startY = 0f
         private var lastX = 0f
@@ -2345,6 +2346,7 @@ internal class GameScreen(
                     startY = screenY.toFloat()
                     lastX = startX
                     lastY = startY
+                    armedLeftPress = runtime.isGameplayCommandArmed()
                     dragging = true
                     return true
                 }
@@ -2377,7 +2379,9 @@ internal class GameScreen(
                 return true
             }
             if (dragging) {
-                dragSelection = DragSelectionBox(startX, startY, screenX.toFloat(), screenY.toFloat(), true)
+                if (!armedLeftPress) {
+                    dragSelection = DragSelectionBox(startX, startY, screenX.toFloat(), screenY.toFloat(), true)
+                }
                 lastX = screenX.toFloat()
                 lastY = screenY.toFloat()
                 return true
@@ -2403,12 +2407,13 @@ internal class GameScreen(
             }
             if (button != Input.Buttons.LEFT || !dragging) return false
             val additive = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
-            if (abs(screenX - startX) >= 6f || abs(screenY - startY) >= 6f) {
+            if (shouldIssueSelectionBox(armedLeftPress, startX, startY, screenX.toFloat(), screenY.toFloat())) {
                 runtime.issueSelectionBox(startX, startY, screenX.toFloat(), screenY.toFloat(), additive)
             } else {
                 runtime.issueLeftClick(screenX.toFloat(), screenY.toFloat(), additive)
             }
             dragging = false
+            armedLeftPress = false
             dragSelection = null
             return true
         }
@@ -2503,4 +2508,9 @@ internal class GameScreen(
             runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
         }
     }
+}
+
+internal fun shouldIssueSelectionBox(commandArmed: Boolean, startX: Float, startY: Float, endX: Float, endY: Float): Boolean {
+    if (commandArmed) return false
+    return abs(endX - startX) >= 6f || abs(endY - startY) >= 6f
 }
