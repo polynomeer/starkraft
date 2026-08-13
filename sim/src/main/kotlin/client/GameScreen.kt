@@ -2396,7 +2396,9 @@ internal class GameScreen(
                 Input.Keys.ESCAPE -> {
                     if (runtime.pauseOverlayVisible) {
                         runtime.togglePauseOverlay()
-                    } else if (runtime.session.state.selectedIds.isNotEmpty() || runtime.groundMode != null || runtime.buildModeTypeId != null) {
+                    } else if (runtime.cancelArmedMode()) {
+                        return true
+                    } else if (runtime.session.state.selectedIds.isNotEmpty()) {
                         runtime.clearSelection()
                     } else {
                         runtime.togglePauseOverlay()

@@ -108,6 +108,20 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `cancel armed mode preserves selection`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.addAll(listOf(4, 5))
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+
+        val cancelled = runtime.cancelArmedMode()
+
+        assertTrue(cancelled)
+        assertEquals(linkedSetOf(4, 5), runtime.session.state.selectedIds)
+        assertNull(runtime.groundMode)
+        assertNull(runtime.buildModeTypeId)
+    }
+
+    @Test
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 

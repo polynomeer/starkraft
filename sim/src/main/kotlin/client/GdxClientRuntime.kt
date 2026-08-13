@@ -366,6 +366,13 @@ internal class GdxClientRuntime(
         buildModeTypeId = null
     }
 
+    fun cancelArmedMode(): Boolean {
+        val hadArmedMode = groundMode != null || buildModeTypeId != null
+        groundMode = null
+        buildModeTypeId = null
+        return hadArmedMode
+    }
+
     fun centerOnSelection(viewWidth: Int, viewHeight: Int) {
         val snapshot = session.state.snapshot ?: return
         val ids = session.state.selectedIds.toIntArray()
