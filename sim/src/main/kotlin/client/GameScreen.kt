@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -1846,6 +1847,22 @@ internal class GameScreen(
         return 0.38f + (clamped * clamped * 0.92f)
     }
 
+    private fun isHudSurface(screenX: Float, screenY: Float): Boolean {
+        if (screenY >= computeWorldViewportHeight(Gdx.graphics.height)) return true
+        if (gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(screenX, screenY)) return true
+        return actorContains(topBar, screenX, screenY) ||
+            actorContains(bottomHud, screenX, screenY) ||
+            actorContains(attackWarningTable, screenX, screenY) ||
+            actorContains(pauseOverlay, screenX, screenY) ||
+            actorContains(helpOverlay, screenX, screenY)
+    }
+
+    private fun actorContains(actor: com.badlogic.gdx.scenes.scene2d.Actor, screenX: Float, screenY: Float): Boolean {
+        val stageY = stage.viewport.screenHeight - screenY
+        val local = actor.stageToLocalCoordinates(Vector2(screenX, stageY))
+        return actor.hit(local.x, local.y, false) != null
+    }
+
     private fun computeWorldViewportHeight(screenHeight: Int): Int {
         val reservedHudHeight = (screenHeight * 0.128f).coerceIn(96f, 120f)
         return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
@@ -2312,17 +2329,16 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.LEFT -> {
-                    if (runtime.isGameplayCommandArmed() &&
-                        gdxMiniMapBounds(
-                            Gdx.graphics.width,
-                            Gdx.graphics.height
-                        ).contains(screenX.toFloat(), screenY.toFloat())
-                    ) {
-                        return true
-                    }
-                    if (runtime.dragCenterFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)) {
-                        minimapDragging = true
-                        dragSelection = null
+                    val clickX = screenX.toFloat()
+                    val clickY = screenY.toFloat()
+                    if (isHudSurface(clickX, clickY)) {
+                        if (!runtime.isGameplayCommandArmed() &&
+                            gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY) &&
+                            runtime.dragCenterFromMinimap(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height)
+                        ) {
+                            minimapDragging = true
+                            dragSelection = null
+                        }
                         return true
                     }
                     startX = screenX.toFloat()
@@ -2333,6 +2349,10 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.RIGHT -> {
+                    if (isHudSurface(screenX.toFloat(), screenY.toFloat())) {
+                        rightClickHandled = false
+                        return true
+                    }
                     runtime.issueRightClick(screenX.toFloat(), screenY.toFloat(), Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
                     rightClickHandled = true
                     return true
