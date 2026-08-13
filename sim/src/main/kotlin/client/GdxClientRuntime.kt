@@ -705,6 +705,11 @@ internal class GdxClientRuntime(
             actionId == "loadAlt" -> loadPreset("alt")
             actionId == "help" -> toggleHelpOverlay()
             actionId.startsWith("build:") -> {
+                if (!hasSelection) {
+                    pendingCommandSoundKind = CommandSoundKind.INVALID
+                    showNotice("select units first")
+                    return
+                }
                 buildModeTypeId = actionId.removePrefix("build:")
                 groundMode = null
             }

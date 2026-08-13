@@ -133,6 +133,17 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `build action without selection does not arm build mode`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.executeAction(actionId = "build:Depot", viewWidth = 1280, viewHeight = 720)
+
+        assertNull(runtime.buildModeTypeId)
+        assertEquals(CommandSoundKind.INVALID, runtime.consumeCommandSoundKind())
+        assertEquals("notice: select units first", runtime.noticeLine())
+    }
+
+    @Test
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
