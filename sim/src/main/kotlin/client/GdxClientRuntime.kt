@@ -636,16 +636,32 @@ internal class GdxClientRuntime(
 
     fun executeAction(actionId: String, viewWidth: Int, viewHeight: Int) {
         val snapshot = session.state.snapshot
+        val hasSelection = session.state.selectedIds.isNotEmpty()
         when {
             actionId == "move" -> {
+                if (!hasSelection) {
+                    pendingCommandSoundKind = CommandSoundKind.INVALID
+                    showNotice("select units first")
+                    return
+                }
                 groundMode = ClientGroundCommandMode.MOVE
                 buildModeTypeId = null
             }
             actionId == "attackMove" -> {
+                if (!hasSelection) {
+                    pendingCommandSoundKind = CommandSoundKind.INVALID
+                    showNotice("select units first")
+                    return
+                }
                 groundMode = ClientGroundCommandMode.ATTACK_MOVE
                 buildModeTypeId = null
             }
             actionId == "patrol" -> {
+                if (!hasSelection) {
+                    pendingCommandSoundKind = CommandSoundKind.INVALID
+                    showNotice("select units first")
+                    return
+                }
                 groundMode = ClientGroundCommandMode.PATROL
                 buildModeTypeId = null
             }

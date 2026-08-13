@@ -122,6 +122,17 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `move action without selection does not arm command mode`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+
+        runtime.executeAction(actionId = "move", viewWidth = 1280, viewHeight = 720)
+
+        assertNull(runtime.groundMode)
+        assertEquals(CommandSoundKind.INVALID, runtime.consumeCommandSoundKind())
+        assertEquals("notice: select units first", runtime.noticeLine())
+    }
+
+    @Test
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
