@@ -197,6 +197,10 @@ internal class GdxClientRuntime(
             }
             val worldX = camera.screenToWorldX(screenX)
             val worldY = camera.screenToWorldY(screenY)
+            if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && isFriendlyEntityAt(snapshot, worldX, worldY)) {
+                rejectGroundCommand(worldX, worldY, "invalid attack target")
+                return
+            }
             val intent =
                 buildClientIntent(
                     snapshot = snapshot,
@@ -295,6 +299,10 @@ internal class GdxClientRuntime(
             placeBuildingAt(screenX, screenY)
             return
         }
+        if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && isFriendlyEntityAt(snapshot, worldX, worldY)) {
+            rejectGroundCommand(worldX, worldY, "invalid attack target")
+            return
+        }
         val intent =
             buildClientIntent(
                 snapshot = snapshot,
@@ -321,6 +329,25 @@ internal class GdxClientRuntime(
                 }
             groundMode = null
         }
+    }
+
+    private fun rejectGroundCommand(worldX: Float, worldY: Float, notice: String) {
+        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.INVALID)
+        recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+        pendingCommandSoundKind = CommandSoundKind.INVALID
+        showNotice(notice)
+    }
+
+    private fun isFriendlyEntityAt(snapshot: ClientSnapshot, worldX: Float, worldY: Float): Boolean {
+        val controlledFaction =
+            session.state.selectedIds
+                .asSequence()
+                .mapNotNull { id -> snapshot.entities.firstOrNull { it.id == id }?.faction }
+                .firstOrNull()
+                ?: return false
+        return nearestEntity(snapshot, worldX, worldY) {
+            it.faction == controlledFaction && distance(it.x, it.y, worldX, worldY) <= 0.8f
+        } != null
     }
 
     fun placeBuildingAt(screenX: Float, screenY: Float) {

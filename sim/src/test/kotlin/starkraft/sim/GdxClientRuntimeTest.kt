@@ -512,6 +512,34 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `attack mode left click on friendly target is rejected and stays armed`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE
+
+        runtime.issueLeftClick(screenX = 100f, screenY = 120f, additiveSelection = false)
+
+        assertEquals(GroundPingKind.INVALID, runtime.currentGroundPing()?.kind)
+        assertEquals(CommandSoundKind.INVALID, runtime.consumeCommandSoundKind())
+        assertEquals("notice: invalid attack target", runtime.noticeLine())
+        assertEquals(starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE, runtime.groundMode)
+    }
+
+    @Test
+    fun `attack mode right click on friendly target is rejected and stays armed`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE
+
+        runtime.issueRightClick(screenX = 100f, screenY = 120f, attackMoveModifier = false)
+
+        assertEquals(GroundPingKind.INVALID, runtime.currentGroundPing()?.kind)
+        assertEquals(CommandSoundKind.INVALID, runtime.consumeCommandSoundKind())
+        assertEquals("notice: invalid attack target", runtime.noticeLine())
+        assertEquals(starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE, runtime.groundMode)
+    }
+
+    @Test
     fun `build mode left click places building and clears mode`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.add(4)
