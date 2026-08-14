@@ -8,6 +8,7 @@ import com.badlogic.gdx.Input
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
+import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
 
@@ -53,6 +54,13 @@ class GameScreenInputRulesTest {
         assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.F1, pauseVisible = false, helpVisible = true))
         assertFalse(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.SPACE, pauseVisible = false, helpVisible = true))
         assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.M, pauseVisible = false, helpVisible = false))
+    }
+
+    @Test
+    fun `overlay blocks command ui actions`() {
+        assertFalse(shouldDispatchCommandUiAction(pauseVisible = true, helpVisible = false))
+        assertFalse(shouldDispatchCommandUiAction(pauseVisible = false, helpVisible = true))
+        assertTrue(shouldDispatchCommandUiAction(pauseVisible = false, helpVisible = false))
     }
 
     @Test

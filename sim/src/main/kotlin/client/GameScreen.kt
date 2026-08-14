@@ -1735,6 +1735,9 @@ internal class GameScreen(
     }
 
     private fun runActionWithPulse(actionId: String) {
+        if (!shouldDispatchCommandUiAction(runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) {
+            return
+        }
         markCommandPulse(actionId)
         runtime.executeAction(actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
     }
@@ -2535,6 +2538,9 @@ internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: B
     if (helpVisible && keycode == Input.Keys.F1) return true
     return false
 }
+
+internal fun shouldDispatchCommandUiAction(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
+    !overlayBlocksWorldInput(pauseVisible, helpVisible)
 
 internal fun resolveEscapeAction(
     pauseVisible: Boolean,
