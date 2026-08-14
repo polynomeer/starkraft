@@ -43,7 +43,7 @@ internal enum class PlayScenario(val id: String, val simArgs: List<String>) {
 }
 
 internal fun writePlayScenario(path: Path, scenario: PlayScenario) {
-    Files.writeString(path, scenario.id + "\n")
+    writeTextAtomically(path, scenario.id + "\n")
 }
 
 internal fun readPlayScenario(path: Path, fallback: PlayScenario): PlayScenario {
@@ -85,7 +85,7 @@ internal fun parsePlayPreset(text: String, fallbackScenario: PlayScenario): Play
 
 internal fun savePlayPreset(presetsDir: Path, name: String, state: PlayPresetState) {
     Files.createDirectories(presetsDir)
-    Files.writeString(presetFilePath(presetsDir, name), renderPlayPreset(state))
+    writeTextAtomically(presetFilePath(presetsDir, name), renderPlayPreset(state))
 }
 
 internal fun loadPlayPreset(presetsDir: Path, name: String, fallbackScenario: PlayScenario): PlayPresetState? {
@@ -154,7 +154,7 @@ internal fun resetPlayFiles(paths: PlayPaths) {
     Files.deleteIfExists(paths.control)
     Files.createFile(paths.snapshots)
     Files.createFile(paths.input)
-    Files.writeString(paths.control, renderPlayControlState(PlayControlState()))
+    writePlayControl(paths.control, PlayControlState())
 }
 
 internal fun shouldRestartPlay(exitCode: Int): Boolean = exitCode == CLIENT_EXIT_RESTART

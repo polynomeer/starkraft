@@ -1041,7 +1041,7 @@ internal class GdxClientRuntime(
 
     private fun writePlayControl() {
         val path = controlPath ?: return
-        Files.writeString(path, renderPlayControlState(playControlState))
+        writePlayControl(path, playControlState)
     }
 
     private fun showNotice(message: String) {

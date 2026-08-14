@@ -793,7 +793,7 @@ private class ClientPanel(
 
     private fun writePlayControl() {
         val path = controlPath ?: return
-        Files.writeString(path, renderPlayControlState(playControlState))
+        writePlayControl(path, playControlState)
     }
 
     private fun cycleScenario(delta: Int) {

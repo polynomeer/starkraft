@@ -24,6 +24,7 @@ import starkraft.sim.client.renderPlayControlState
 import starkraft.sim.client.shouldRestartPlay
 import starkraft.sim.client.waitForInitialSnapshot
 import starkraft.sim.client.writePlayScenario
+import starkraft.sim.client.writePlayControl
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -200,6 +201,19 @@ class PlayLauncherTest {
     }
 
     @Test
+    fun `play control writes atomically without temp residue`(@TempDir tempDir: Path) {
+        val path = tempDir.resolve("play-control.txt")
+
+        writePlayControl(path, starkraft.sim.client.PlayControlState(paused = true, speed = 3))
+        writePlayControl(path, starkraft.sim.client.PlayControlState(paused = false, speed = 5))
+
+        assertEquals("paused=0\nspeed=5\n", Files.readString(path))
+        Files.list(tempDir).use { entries ->
+            assertEquals(listOf("play-control.txt"), entries.map { it.fileName.toString() }.sorted().toList())
+        }
+    }
+
+    @Test
     fun `play scenario file round trips`(@TempDir tempDir: Path) {
         val path = tempDir.resolve("play-scenario.txt")
 
@@ -226,5 +240,8 @@ class PlayLauncherTest {
         assertEquals(preset, loadPlayPreset(tempDir, "quick", PlayScenario.SKIRMISH))
         assertEquals(preset, parsePlayPreset(renderPlayPreset(preset), PlayScenario.SKIRMISH))
         assertEquals(null, loadPlayPreset(tempDir, "missing", PlayScenario.SKIRMISH))
+        Files.list(tempDir).use { entries ->
+            assertEquals(listOf("quick.play"), entries.map { it.fileName.toString() }.sorted().toList())
+        }
     }
 }
