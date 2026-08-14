@@ -140,7 +140,7 @@ internal class GameScreen(
     }
 
     override fun render(delta: Float) {
-        val worldViewportHeight = computeWorldViewportHeight(Gdx.graphics.height)
+        val worldViewportHeight = computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height)
         runtime.tick()
         runtime.ensurePlayableView(Gdx.graphics.width, worldViewportHeight)
         runtime.ensureInitialCamera(Gdx.graphics.width, worldViewportHeight)
@@ -625,9 +625,7 @@ internal class GameScreen(
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - 18f
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
-        val commandShellHeight = (commandHeight + 28f).coerceIn(108f, 134f)
-        val minimapShellHeight = minimapHeight
-        val hudShellHeight = maxOf(minimapShellHeight, centerHeight, commandShellHeight)
+        val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
@@ -1532,7 +1530,7 @@ internal class GameScreen(
                         if (tapCount >= 2) {
                             runtime.session.replaceSelection(intArrayOf(entity.id))
                             focusedSelectionId = entity.id
-                            runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                            runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
                         } else {
                             focusedSelectionId = entity.id
                         }
@@ -1739,7 +1737,7 @@ internal class GameScreen(
             return
         }
         markCommandPulse(actionId)
-        runtime.executeAction(actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+        runtime.executeAction(actionId, Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
     }
 
     private fun commandClickPulse(actionId: String): Float {
@@ -1798,7 +1796,7 @@ internal class GameScreen(
                     pad(1f)
                     add(
                         makeButton("$group:$count", style = assets.subtleButtonStyle()) {
-                            runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
+                            runtime.handleControlGroup(group, assign = false, add = false, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
                         }
                     ).height(18f)
                 }
@@ -1851,7 +1849,7 @@ internal class GameScreen(
     }
 
     private fun isHudSurface(screenX: Float, screenY: Float): Boolean {
-        if (screenY >= computeWorldViewportHeight(Gdx.graphics.height)) return true
+        if (screenY >= computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height)) return true
         if (gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(screenX, screenY)) return true
         return actorContains(topBar, screenX, screenY) ||
             actorContains(bottomHud, screenX, screenY) ||
@@ -1866,10 +1864,8 @@ internal class GameScreen(
         return actor.hit(local.x, local.y, false) != null
     }
 
-    private fun computeWorldViewportHeight(screenHeight: Int): Int {
-        val reservedHudHeight = (screenHeight * 0.128f).coerceIn(96f, 120f)
-        return (screenHeight - reservedHudHeight).toInt().coerceAtLeast(240)
-    }
+    private fun computeWorldViewportHeight(screenWidth: Int, screenHeight: Int): Int =
+        computeWorldViewportHeightForLayout(screenWidth, screenHeight)
 
     private fun buildSelectionMetaLine(): String {
         val snapshot = runtime.snapshot ?: return "No live snapshot"
@@ -2514,8 +2510,8 @@ internal class GameScreen(
                 Input.Keys.Q -> runActionWithPulse("selectReturning")
                 Input.Keys.E -> runActionWithPulse("selectCargo")
                 Input.Keys.D -> runActionWithPulse("selectDropoffs")
-                Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
-                Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.height))
+                Input.Keys.HOME -> runtime.centerOnSelection(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
+                Input.Keys.END -> runtime.centerOnViewedFaction(Gdx.graphics.width, computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
                 Input.Keys.LEFT_BRACKET -> runtime.adjustSpeed(-1)
                 Input.Keys.RIGHT_BRACKET -> runtime.adjustSpeed(1)
                 Input.Keys.NUM_4 -> handleGroupKey(4)
@@ -2531,7 +2527,7 @@ internal class GameScreen(
         private fun handleGroupKey(group: Int) {
             val assign = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
             val add = Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)
-            runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.height))
+            runtime.handleControlGroup(group, assign = assign, add = add, viewWidth = Gdx.graphics.width, viewHeight = computeWorldViewportHeight(Gdx.graphics.width, Gdx.graphics.height))
         }
     }
 }
@@ -2546,6 +2542,20 @@ internal enum class EscapeAction {
 
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
+
+internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
+    val minimapHeight = gdxMiniMapBounds(screenWidth, screenHeight).height
+    val centerHeight = (screenHeight * 0.146f).coerceIn(120f, 152f)
+    val commandHeight = (screenHeight * 0.096f).coerceIn(82f, 106f)
+    val commandShellHeight = (commandHeight + 28f).coerceIn(108f, 134f)
+    return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
+}
+
+internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight: Int): Int {
+    val bottomHudTop = screenHeight - computeBottomHudHeight(screenWidth, screenHeight)
+    val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
+    return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
+}
 
 internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {
     if (!pauseVisible && !helpVisible) return true

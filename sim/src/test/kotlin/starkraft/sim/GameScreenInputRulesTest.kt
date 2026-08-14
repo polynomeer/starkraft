@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import com.badlogic.gdx.Input
 import starkraft.sim.client.EscapeAction
+import starkraft.sim.client.computeBottomHudHeight
+import starkraft.sim.client.computeWorldViewportHeightForLayout
+import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.shouldAbortPointerGesture
@@ -14,6 +17,19 @@ import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
 
 class GameScreenInputRulesTest {
+    @Test
+    fun `world viewport stays above bottom hud and minimap at supported resolutions`() {
+        listOf(1280 to 720, 1440 to 900, 1600 to 900, 1920 to 1080).forEach { (width, height) ->
+            val viewportHeight = computeWorldViewportHeightForLayout(width, height)
+            val hudTop = height - computeBottomHudHeight(width, height)
+            val minimapTop = gdxMiniMapBounds(width, height).top.toInt()
+
+            assertTrue(viewportHeight <= hudTop, "viewport should stop above hud at ${width}x$height")
+            assertTrue(viewportHeight <= minimapTop, "viewport should stop above minimap at ${width}x$height")
+            assertTrue(viewportHeight >= 240, "viewport should remain playable at ${width}x$height")
+        }
+    }
+
     @Test
     fun `drag issues selection box when command is not armed`() {
         assertTrue(
