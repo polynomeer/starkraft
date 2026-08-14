@@ -2323,6 +2323,15 @@ internal class GameScreen(
         private var lastY = 0f
         private var rightClickHandled = false
 
+        private fun resetPointerState() {
+            dragging = false
+            panning = false
+            minimapDragging = false
+            armedLeftPress = false
+            rightClickHandled = false
+            dragSelection = null
+        }
+
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             if (overlayBlocksWorldInput(runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) return true
             when (button) {
@@ -2367,6 +2376,10 @@ internal class GameScreen(
         }
 
         override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+            if (shouldAbortPointerGesture(runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) {
+                resetPointerState()
+                return true
+            }
             if (minimapDragging) {
                 runtime.dragCenterFromMinimap(screenX.toFloat(), screenY.toFloat(), Gdx.graphics.width, Gdx.graphics.height)
                 return true
@@ -2393,6 +2406,10 @@ internal class GameScreen(
         }
 
         override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+            if (shouldAbortPointerGesture(runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) {
+                resetPointerState()
+                return true
+            }
             if (button == Input.Buttons.MIDDLE) {
                 panning = false
                 return true
@@ -2415,9 +2432,7 @@ internal class GameScreen(
             } else {
                 runtime.issueLeftClick(screenX.toFloat(), screenY.toFloat(), additive)
             }
-            dragging = false
-            armedLeftPress = false
-            dragSelection = null
+            resetPointerState()
             return true
         }
 
@@ -2541,6 +2556,9 @@ internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: B
 
 internal fun shouldDispatchCommandUiAction(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     !overlayBlocksWorldInput(pauseVisible, helpVisible)
+
+internal fun shouldAbortPointerGesture(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
+    overlayBlocksWorldInput(pauseVisible, helpVisible)
 
 internal fun resolveEscapeAction(
     pauseVisible: Boolean,
