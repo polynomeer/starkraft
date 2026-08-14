@@ -482,6 +482,7 @@ internal class GdxClientRuntime(
         if (scenarioRestartRequired()) {
             applyScenarioAndRestart()
         } else {
+            clearTransientUiState()
             openGameScreen()
         }
     }
@@ -634,6 +635,7 @@ internal class GdxClientRuntime(
             showNotice("preset missing: $name")
             return
         }
+        clearTransientUiState()
         playScenario = preset.scenario
         playControlState = preset.control
         scenarioPath?.let { writePlayScenario(it, playScenario) }

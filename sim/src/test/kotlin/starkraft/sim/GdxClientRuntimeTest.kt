@@ -82,12 +82,22 @@ class GdxClientRuntimeTest {
         var restarted = false
         var opened = false
         val runtime = runtime(tempDir, onRestart = { restarted = true })
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+        runtime.togglePauseOverlay()
+        runtime.toggleHelpOverlay()
+        runtime.setHoverHint("Move")
+        runtime.issueSelectionBox(120f, 80f, 260f, 180f, additiveSelection = false)
 
         runtime.enterMatch { opened = true }
 
         assertFalse(runtime.scenarioRestartRequired())
         assertFalse(restarted)
         assertTrue(opened)
+        assertNull(runtime.groundMode)
+        assertFalse(runtime.pauseOverlayVisible)
+        assertFalse(runtime.helpOverlayVisible)
+        assertNull(runtime.hoverHintLine())
+        assertNull(runtime.currentSelectionClickPulse())
     }
 
     @Test
@@ -156,6 +166,32 @@ class GdxClientRuntimeTest {
         runtime.restartMatch()
 
         assertTrue(restarted)
+        assertNull(runtime.groundMode)
+        assertNull(runtime.buildModeTypeId)
+        assertFalse(runtime.pauseOverlayVisible)
+        assertFalse(runtime.helpOverlayVisible)
+        assertNull(runtime.hoverHintLine())
+        assertNull(runtime.currentSelectionClickPulse())
+    }
+
+    @Test
+    fun `load preset clears transient ui state before applying control state`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.playScenario = PlayScenario.GAS
+        runtime.playControlState = PlayControlState(paused = true, speed = 3)
+        runtime.savePreset("quick")
+        runtime.playScenario = PlayScenario.SKIRMISH
+        runtime.playControlState = PlayControlState()
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE
+        runtime.togglePauseOverlay()
+        runtime.toggleHelpOverlay()
+        runtime.setHoverHint("Attack")
+        runtime.issueSelectionBox(120f, 80f, 260f, 180f, additiveSelection = false)
+
+        runtime.loadPreset("quick")
+
+        assertEquals(PlayScenario.GAS, runtime.playScenario)
+        assertEquals(PlayControlState(paused = true, speed = 3), runtime.playControlState)
         assertNull(runtime.groundMode)
         assertNull(runtime.buildModeTypeId)
         assertFalse(runtime.pauseOverlayVisible)
