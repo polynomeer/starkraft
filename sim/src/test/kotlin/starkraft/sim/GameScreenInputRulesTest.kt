@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import com.badlogic.gdx.Input
+import starkraft.sim.client.computeBottomHudLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
@@ -17,6 +18,18 @@ import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
 
 class GameScreenInputRulesTest {
+    @Test
+    fun `bottom hud layout scales down at supported resolutions`() {
+        val compact = computeBottomHudLayout(1280, 720)
+        val wide = computeBottomHudLayout(1920, 1080)
+
+        assertTrue(compact.centerWidth < 266, "1280 layout should shrink center panel")
+        assertTrue(compact.commandWidth < 278, "1280 layout should shrink command panel")
+        assertTrue(compact.leftSlotWidth <= 228, "1280 layout should keep minimap lane compact")
+        assertTrue(wide.centerWidth >= compact.centerWidth, "wider layout should not shrink center panel further")
+        assertTrue(wide.commandWidth >= compact.commandWidth, "wider layout should not shrink command panel further")
+    }
+
     @Test
     fun `world viewport stays above bottom hud and minimap at supported resolutions`() {
         listOf(1280 to 720, 1440 to 900, 1600 to 900, 1920 to 1080).forEach { (width, height) ->

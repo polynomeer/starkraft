@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
@@ -115,6 +116,9 @@ internal class GameScreen(
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
+    private lateinit var leftHudSpacerCell: Cell<*>
+    private lateinit var centerHudCell: Cell<*>
+    private lateinit var commandHudCell: Cell<*>
 
     init {
         statusHeader.setFontScale(0.94f)
@@ -499,10 +503,10 @@ internal class GameScreen(
         bottomHud.apply {
             background = null
             pad(0f, 18f, 8f, 18f)
-            add().width(208f).bottom()
-            add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
+            leftHudSpacerCell = add().width(208f).bottom()
+            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
             add().expandX().fillX()
-            add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
+            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
 
         root.top()
@@ -615,10 +619,11 @@ internal class GameScreen(
         val width = Gdx.graphics.width
         val height = Gdx.graphics.height
         val minimapBounds = gdxMiniMapBounds(width, height)
+        val bottomHudLayout = computeBottomHudLayout(width, height)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
-        val centerWidth = (width * 0.188f).coerceIn(228f, 292f)
-        val commandWidth = (width * 0.186f).coerceIn(244f, 300f)
+        val centerWidth = bottomHudLayout.centerWidth.toFloat()
+        val commandWidth = bottomHudLayout.commandWidth.toFloat()
         val commandHeight = (height * 0.096f).coerceIn(82f, 106f)
         val commandButtonHeight = if (width >= 1440) 21f else 19f
         val commandColumns = 3
@@ -627,6 +632,9 @@ internal class GameScreen(
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
+        leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
+        centerHudCell.width(centerWidth)
+        commandHudCell.width(commandWidth)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -2540,6 +2548,12 @@ internal enum class EscapeAction {
     OPEN_PAUSE
 }
 
+internal data class BottomHudLayout(
+    val leftSlotWidth: Int,
+    val centerWidth: Int,
+    val commandWidth: Int
+)
+
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
 
@@ -2549,6 +2563,18 @@ internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
     val commandHeight = (screenHeight * 0.096f).coerceIn(82f, 106f)
     val commandShellHeight = (commandHeight + 28f).coerceIn(108f, 134f)
     return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
+}
+
+internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
+    val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
+    val leftSlotWidth = (minimapWidth + 8).coerceAtLeast(156)
+    val centerWidth = (screenWidth * 0.162f).coerceIn(212f, 272f).toInt()
+    val commandWidth = (screenWidth * 0.170f).coerceIn(220f, 286f).toInt()
+    return BottomHudLayout(
+        leftSlotWidth = leftSlotWidth,
+        centerWidth = centerWidth,
+        commandWidth = commandWidth
+    )
 }
 
 internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight: Int): Int {
