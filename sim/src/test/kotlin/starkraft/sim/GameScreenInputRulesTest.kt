@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
+import starkraft.sim.client.computeCommandDeckLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
@@ -28,6 +29,16 @@ class GameScreenInputRulesTest {
         assertTrue(compact.leftSlotWidth <= 228, "1280 layout should keep minimap lane compact")
         assertTrue(wide.centerWidth >= compact.centerWidth, "wider layout should not shrink center panel further")
         assertTrue(wide.commandWidth >= compact.commandWidth, "wider layout should not shrink command panel further")
+    }
+
+    @Test
+    fun `command deck compacts on smaller resolutions`() {
+        val compact = computeCommandDeckLayout(1280, 720)
+        val wide = computeCommandDeckLayout(1920, 1080)
+
+        assertTrue(compact.scrollHeight < wide.scrollHeight, "small screens should use shorter command deck")
+        assertTrue(compact.buttonHeight < wide.buttonHeight, "small screens should use shorter command buttons")
+        assertTrue(compact.actorInset < wide.actorInset, "small screens should reduce command button chrome")
     }
 
     @Test

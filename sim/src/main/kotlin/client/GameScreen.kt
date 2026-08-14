@@ -620,15 +620,16 @@ internal class GameScreen(
         val height = Gdx.graphics.height
         val minimapBounds = gdxMiniMapBounds(width, height)
         val bottomHudLayout = computeBottomHudLayout(width, height)
+        val commandDeckLayout = computeCommandDeckLayout(width, height)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
         val centerWidth = bottomHudLayout.centerWidth.toFloat()
         val commandWidth = bottomHudLayout.commandWidth.toFloat()
-        val commandHeight = (height * 0.096f).coerceIn(82f, 106f)
-        val commandButtonHeight = if (width >= 1440) 21f else 19f
+        val commandHeight = commandDeckLayout.scrollHeight.toFloat()
+        val commandButtonHeight = commandDeckLayout.buttonHeight.toFloat()
         val commandColumns = 3
         val commandCellWidth = (commandWidth / commandColumns) - 2f
-        val commandActorWidth = commandCellWidth - 18f
+        val commandActorWidth = commandCellWidth - commandDeckLayout.actorInset.toFloat()
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
@@ -737,11 +738,11 @@ internal class GameScreen(
             buttonTable.add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
-                    pad(4f)
+                    pad(commandDeckLayout.groupPad.toFloat())
                     add(
                         Table().apply {
                             background = assets.panelDrawable(commandGroupHeaderTone(group.first))
-                            pad(2f, 6f, 2f, 6f)
+                            pad(2f, commandDeckLayout.headerPadX.toFloat(), 2f, commandDeckLayout.headerPadX.toFloat())
                             add(Table().apply { background = assets.panelDrawable(commandGroupAccentTone(group.first)) }).width(2f).expandY().fillY().padRight(4f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
@@ -837,7 +838,7 @@ internal class GameScreen(
                                                 disabled = actor.isDisabled,
                                                 checked = actor.isChecked
                                             )
-                                        ).size(10f, 10f).left().padRight(4f)
+                                        ).size(if (commandDeckLayout.buttonHeight <= 17) 9f else 10f, if (commandDeckLayout.buttonHeight <= 17) 9f else 10f).left().padRight(3f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
                                         add(
                                             Table().apply {
@@ -2554,6 +2555,14 @@ internal data class BottomHudLayout(
     val commandWidth: Int
 )
 
+internal data class CommandDeckLayout(
+    val scrollHeight: Int,
+    val buttonHeight: Int,
+    val groupPad: Int,
+    val headerPadX: Int,
+    val actorInset: Int
+)
+
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
 
@@ -2574,6 +2583,18 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
         commandWidth = commandWidth
+    )
+}
+
+internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): CommandDeckLayout {
+    val compact = screenWidth < 1360
+    val scrollHeight = if (compact) (screenHeight * 0.086f).coerceIn(72f, 92f) else (screenHeight * 0.096f).coerceIn(82f, 106f)
+    return CommandDeckLayout(
+        scrollHeight = scrollHeight.toInt(),
+        buttonHeight = if (compact) 17 else 21,
+        groupPad = if (compact) 3 else 4,
+        headerPadX = if (compact) 4 else 6,
+        actorInset = if (compact) 14 else 18
     )
 }
 
