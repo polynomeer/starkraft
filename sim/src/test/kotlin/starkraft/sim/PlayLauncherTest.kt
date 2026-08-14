@@ -16,6 +16,7 @@ import starkraft.sim.client.parseInitialSnapshotTimeoutMs
 import starkraft.sim.client.parsePlayPreset
 import starkraft.sim.client.presetFilePath
 import starkraft.sim.client.defaultPlayPaths
+import starkraft.sim.client.hasCompleteInitialSnapshot
 import starkraft.sim.client.readPlayScenario
 import starkraft.sim.client.resetPlayFiles
 import starkraft.sim.client.savePlayPreset
@@ -182,6 +183,27 @@ class PlayLauncherTest {
         val process = ProcessBuilder("bash", "-lc", "exit 0").start()
         process.waitFor(200, TimeUnit.MILLISECONDS)
         assertTrue(!waitForInitialSnapshot(process, snapshotPath, timeoutMs = 200L, pollMs = 5L))
+    }
+
+    @Test
+    fun `waitForInitialSnapshot ignores partial ndjson until newline arrives`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        Files.createFile(snapshotPath)
+        Files.writeString(snapshotPath, "{\"recordType\":\"snapshot\"")
+        val process = ProcessBuilder("bash", "-lc", "sleep 1").start()
+        val writer = Thread {
+            Thread.sleep(60L)
+            Files.writeString(snapshotPath, "}\n", java.nio.file.StandardOpenOption.APPEND)
+        }
+        writer.start()
+        try {
+            assertTrue(!hasCompleteInitialSnapshot(snapshotPath))
+            assertTrue(waitForInitialSnapshot(process, snapshotPath, timeoutMs = 300L, pollMs = 5L))
+        } finally {
+            writer.join(200L)
+            process.destroy()
+            process.waitFor(200, TimeUnit.MILLISECONDS)
+        }
     }
 
     @Test

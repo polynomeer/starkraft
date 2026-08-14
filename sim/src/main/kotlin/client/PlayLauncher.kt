@@ -177,15 +177,20 @@ internal fun waitForInitialSnapshot(
 ): Boolean {
     val deadline = System.currentTimeMillis() + timeoutMs.coerceAtLeast(pollMs)
     while (System.currentTimeMillis() <= deadline) {
-        if (Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)) {
+        if (hasCompleteInitialSnapshot(snapshotPath)) {
             return true
         }
         if (!simProcess.isAlive) {
-            return Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)
+            return hasCompleteInitialSnapshot(snapshotPath)
         }
         Thread.sleep(pollMs.coerceAtLeast(1L))
     }
-    return Files.exists(snapshotPath) && runCatching { Files.size(snapshotPath) > 0L }.getOrDefault(false)
+    return hasCompleteInitialSnapshot(snapshotPath)
+}
+
+internal fun hasCompleteInitialSnapshot(snapshotPath: Path): Boolean {
+    if (!Files.exists(snapshotPath)) return false
+    return runCatching { Files.readString(snapshotPath).contains('\n') }.getOrDefault(false)
 }
 
 fun main(args: Array<String>) {
