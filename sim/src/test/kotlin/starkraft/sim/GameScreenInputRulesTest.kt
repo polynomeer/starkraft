@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import com.badlogic.gdx.Input
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
+import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
 
 class GameScreenInputRulesTest {
@@ -41,6 +43,16 @@ class GameScreenInputRulesTest {
         assertTrue(overlayBlocksWorldInput(pauseVisible = true, helpVisible = false))
         assertTrue(overlayBlocksWorldInput(pauseVisible = false, helpVisible = true))
         assertFalse(overlayBlocksWorldInput(pauseVisible = false, helpVisible = false))
+    }
+
+    @Test
+    fun `overlay only allows close hotkeys`() {
+        assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.ESCAPE, pauseVisible = true, helpVisible = false))
+        assertFalse(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.M, pauseVisible = true, helpVisible = false))
+        assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.ESCAPE, pauseVisible = false, helpVisible = true))
+        assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.F1, pauseVisible = false, helpVisible = true))
+        assertFalse(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.SPACE, pauseVisible = false, helpVisible = true))
+        assertTrue(shouldHandleHotkeyWhileOverlayVisible(Input.Keys.M, pauseVisible = false, helpVisible = false))
     }
 
     @Test

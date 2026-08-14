@@ -2425,6 +2425,9 @@ internal class GameScreen(
         }
 
         override fun keyDown(keycode: Int): Boolean {
+            if (!shouldHandleHotkeyWhileOverlayVisible(keycode, runtime.pauseOverlayVisible, runtime.helpOverlayVisible)) {
+                return true
+            }
             when (keycode) {
                 Input.Keys.ESCAPE -> {
                     when (
@@ -2525,6 +2528,13 @@ internal enum class EscapeAction {
 
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
+
+internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {
+    if (!pauseVisible && !helpVisible) return true
+    if (keycode == Input.Keys.ESCAPE) return true
+    if (helpVisible && keycode == Input.Keys.F1) return true
+    return false
+}
 
 internal fun resolveEscapeAction(
     pauseVisible: Boolean,
