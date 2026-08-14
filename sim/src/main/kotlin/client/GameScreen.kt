@@ -366,6 +366,7 @@ internal class GameScreen(
             background = null
             pad(1f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            val initialCenterLayout = computeCenterPanelLayout(1280)
             add(
                 Table().apply {
                     add(centerHeaderLabel).left()
@@ -408,7 +409,7 @@ internal class GameScreen(
                                 }
                             ).expand().fill().padTop(3f)
                         }
-                    ).size(62f, 62f).top().left().padRight(4f)
+                    ).size(initialCenterLayout.portraitSize.toFloat(), initialCenterLayout.portraitSize.toFloat()).top().left().padRight(4f)
                     add(
                         Table().apply {
                             add(
@@ -433,7 +434,7 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(122f).height(7f).left().padTop(1f).row()
+                            ).width(initialCenterLayout.healthBarWidth.toFloat()).height(7f).left().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
@@ -475,14 +476,14 @@ internal class GameScreen(
                             add(
                                 selectionPager.apply {
                                     clearChildren()
-                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(18f).height(18f).padRight(2f)
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat()).padRight(2f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
                                             pad(1f, 4f, 1f, 4f)
                                             add(selectionPageLabel).left()
                                         }
-                                    ).width(54f).left().padRight(2f)
+                                    ).width(initialCenterLayout.pagerLabelWidth.toFloat()).left().padRight(2f)
                                     add(controlGroupButtons).minWidth(56f).right().padRight(2f)
                                     add(
                                         Table().apply {
@@ -490,8 +491,8 @@ internal class GameScreen(
                                             pad(1f, 4f, 1f, 4f)
                                             add(controlGroupsLabel).right()
                                         }
-                                    ).width(66f).right().padRight(2f)
-                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(18f).height(18f)
+                                    ).width(initialCenterLayout.groupSummaryWidth.toFloat()).right().padRight(2f)
+                                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat())
                                 }
                             ).expandX().fillX()
                         }
@@ -621,6 +622,7 @@ internal class GameScreen(
         val minimapBounds = gdxMiniMapBounds(width, height)
         val bottomHudLayout = computeBottomHudLayout(width, height)
         val commandDeckLayout = computeCommandDeckLayout(width, height)
+        val centerPanelLayout = computeCenterPanelLayout(width)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
         val centerWidth = bottomHudLayout.centerWidth.toFloat()
@@ -660,6 +662,7 @@ internal class GameScreen(
         centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
         commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
         commandScroll.setSize(commandWidth - 8f, commandHeight)
+        portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         selectionLabel.setText(buildSelectionHeadline())
@@ -1393,6 +1396,7 @@ internal class GameScreen(
     private fun rebuildSelectionGrid() {
         selectionGrid.clearChildren()
         val snapshot = runtime.snapshot ?: return
+        val centerPanelLayout = computeCenterPanelLayout(Gdx.graphics.width)
         val selectedEntities = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         val pageSize = 8
         val pageCount = ((selectedEntities.size + pageSize - 1) / pageSize).coerceAtLeast(1)
@@ -1411,14 +1415,14 @@ internal class GameScreen(
         }
         selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
         selected.forEachIndexed { index, entity ->
-            selectionGrid.add(buildSelectionSlot(entity)).size(40f, 40f)
+            selectionGrid.add(buildSelectionSlot(entity, centerPanelLayout)).size(centerPanelLayout.rosterSlotSize.toFloat(), centerPanelLayout.rosterSlotSize.toFloat())
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
             }
         }
     }
 
-    private fun buildSelectionSlot(entity: EntitySnapshot): Table {
+    private fun buildSelectionSlot(entity: EntitySnapshot, layout: CenterPanelLayout): Table {
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
         val damaged = runtime.isDamageFlashActive(entity.id)
@@ -1488,7 +1492,7 @@ internal class GameScreen(
                             pad(2f, 1f, 0.5f, 1f)
                             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
                         }
-                    ).expandX().fillX().height(18f).row()
+                    ).expandX().fillX().height(if (layout.rosterSlotSize <= 34) 15f else 18f).row()
                     add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged)).center().padTop(1f).row()
                     add(
                         Table().apply {
@@ -1526,10 +1530,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
-                            ).width(24f * hpRatio.coerceIn(0f, 1f)).height(4f).left()
+                            ).width((if (layout.rosterSlotSize <= 34) 20f else 24f) * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(24f).height(4f).padTop(2f)
+                    ).width(if (layout.rosterSlotSize <= 34) 20f else 24f).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
@@ -2563,6 +2567,15 @@ internal data class CommandDeckLayout(
     val actorInset: Int
 )
 
+internal data class CenterPanelLayout(
+    val portraitSize: Int,
+    val rosterSlotSize: Int,
+    val pagerButtonSize: Int,
+    val pagerLabelWidth: Int,
+    val groupSummaryWidth: Int,
+    val healthBarWidth: Int
+)
+
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
 
@@ -2595,6 +2608,18 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
         groupPad = if (compact) 3 else 4,
         headerPadX = if (compact) 4 else 6,
         actorInset = if (compact) 14 else 18
+    )
+}
+
+internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
+    val compact = screenWidth < 1360
+    return CenterPanelLayout(
+        portraitSize = if (compact) 54 else 62,
+        rosterSlotSize = if (compact) 34 else 40,
+        pagerButtonSize = if (compact) 16 else 18,
+        pagerLabelWidth = if (compact) 48 else 54,
+        groupSummaryWidth = if (compact) 58 else 66,
+        healthBarWidth = if (compact) 108 else 122
     )
 }
 

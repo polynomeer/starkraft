@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
+import starkraft.sim.client.computeCenterPanelLayout
 import starkraft.sim.client.computeCommandDeckLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
@@ -39,6 +40,17 @@ class GameScreenInputRulesTest {
         assertTrue(compact.scrollHeight < wide.scrollHeight, "small screens should use shorter command deck")
         assertTrue(compact.buttonHeight < wide.buttonHeight, "small screens should use shorter command buttons")
         assertTrue(compact.actorInset < wide.actorInset, "small screens should reduce command button chrome")
+    }
+
+    @Test
+    fun `center panel compacts on smaller resolutions`() {
+        val compact = computeCenterPanelLayout(1280)
+        val wide = computeCenterPanelLayout(1920)
+
+        assertTrue(compact.portraitSize < wide.portraitSize, "small screens should use smaller portrait")
+        assertTrue(compact.rosterSlotSize < wide.rosterSlotSize, "small screens should use smaller roster slots")
+        assertTrue(compact.pagerButtonSize < wide.pagerButtonSize, "small screens should use smaller pager buttons")
+        assertTrue(compact.healthBarWidth < wide.healthBarWidth, "small screens should use narrower health bars")
     }
 
     @Test
