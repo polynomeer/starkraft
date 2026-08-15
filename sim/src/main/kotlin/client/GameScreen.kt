@@ -112,6 +112,12 @@ internal class GameScreen(
     private var bannerPulseUntilMillis = 0L
     private var lastBannerSignature = ""
     private var lastCommandPanelSignature = ""
+    private var lastCenterStatusStripSignature = ""
+    private var lastQueueStatusStripSignature = ""
+    private var lastHealthBarSignature = ""
+    private var lastSelectionGridSignature = ""
+    private var lastSelectionPagerSignature = ""
+    private var lastControlGroupButtonsSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
@@ -677,9 +683,19 @@ internal class GameScreen(
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
-        rebuildCenterStatusStrip()
+        val centerStatusBits = buildCenterStatusBits()
+        val centerStatusStripSignature = buildStatusStripSignature(centerStatusBits, "RDY")
+        if (centerStatusStripSignature != lastCenterStatusStripSignature) {
+            lastCenterStatusStripSignature = centerStatusStripSignature
+            rebuildCenterStatusStrip(centerStatusBits)
+        }
         queueStatusLabel.setText(buildQueueStatusLine())
-        rebuildQueueStatusStrip()
+        val queueStatusBits = buildQueueStatusBits()
+        val queueStatusStripSignature = buildStatusStripSignature(queueStatusBits, "IDLE")
+        if (queueStatusStripSignature != lastQueueStatusStripSignature) {
+            lastQueueStatusStripSignature = queueStatusStripSignature
+            rebuildQueueStatusStrip(queueStatusBits)
+        }
         queueHeaderLabel.setText(buildQueueHeaderLine())
         selectionLabel.color = currentSelectionHeadlineTone()
         selectionMetaLabel.color = currentSelectionMetaTone()
@@ -691,8 +707,16 @@ internal class GameScreen(
         factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
         healthLabel.setText(buildHealthLine())
-        updateHealthBar()
-        rebuildSelectionGrid()
+        val healthBarSignature = buildHealthBarSignature()
+        if (healthBarSignature != lastHealthBarSignature) {
+            lastHealthBarSignature = healthBarSignature
+            updateHealthBar()
+        }
+        val selectionGridSignature = buildSelectionGridSignature(snapshot, centerPanelLayout)
+        if (selectionGridSignature != lastSelectionGridSignature) {
+            lastSelectionGridSignature = selectionGridSignature
+            rebuildSelectionGrid()
+        }
         hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
         footerLabel.setText("LMB select  RMB order  drag box select")
         statusHeader.setText("Battlefield")
@@ -732,7 +756,11 @@ internal class GameScreen(
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
         syncSelectionPage(snapshot)
-        updateSelectionPager(snapshot)
+        val selectionPagerSignature = buildSelectionPagerSignature(snapshot)
+        if (selectionPagerSignature != lastSelectionPagerSignature) {
+            lastSelectionPagerSignature = selectionPagerSignature
+            updateSelectionPager(snapshot)
+        }
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         val overlayPulse = overlayHeaderPulse()
@@ -1221,10 +1249,9 @@ internal class GameScreen(
         return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
     }
 
-    private fun rebuildCenterStatusStrip() {
+    private fun rebuildCenterStatusStrip(bits: List<StatusChip>) {
         centerStatusStrip.clearChildren()
         centerStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
-        val bits = buildCenterStatusBits()
         if (bits.isEmpty()) {
             centerStatusStrip.add(buildStatusChip("RDY", Color(0.20f, 0.40f, 0.46f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.92f)))
             return
@@ -1242,6 +1269,21 @@ internal class GameScreen(
         val background: Color,
         val accent: Color
     )
+
+    private fun buildStatusStripSignature(bits: List<StatusChip>, emptyLabel: String): String =
+        if (bits.isEmpty()) {
+            emptyLabel
+        } else {
+            bits.joinToString("|") { chip ->
+                buildString {
+                    append(chip.label)
+                    append('@')
+                    append(chip.background.toIntBits())
+                    append(':')
+                    append(chip.accent.toIntBits())
+                }
+            }
+        }
 
     private fun buildCenterStatusBits(): List<StatusChip> {
         val snapshot = runtime.snapshot ?: return emptyList()
@@ -1292,10 +1334,9 @@ internal class GameScreen(
             else -> "Drag select  RMB order  MMB pan"
         }
 
-    private fun rebuildQueueStatusStrip() {
+    private fun rebuildQueueStatusStrip(bits: List<StatusChip>) {
         queueStatusStrip.clearChildren()
         queueStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
-        val bits = buildQueueStatusBits()
         if (bits.isEmpty()) {
             queueStatusStrip.add(buildStatusChip("IDLE", Color(0.10f, 0.14f, 0.18f, 0.86f), Color(0.50f, 0.58f, 0.66f, 0.86f)))
             return
@@ -1457,6 +1498,22 @@ internal class GameScreen(
         healthBarBack.add().expandX().fillX()
     }
 
+    private fun buildHealthBarSignature(): String {
+        val snapshot = runtime.snapshot
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        val takingDamage = selected.any { runtime.isDamageFlashActive(it.id) }
+        val impactKind = selected.firstNotNullOfOrNull { runtime.damageImpactKind(it.id) }
+        val totalHp = selected.sumOf { it.hp }
+        val totalMaxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
+        return listOf(
+            selected.size,
+            totalHp,
+            totalMaxHp,
+            takingDamage,
+            impactKind?.name ?: "-"
+        ).joinToString("|")
+    }
+
     private fun rebuildSelectionGrid() {
         selectionGrid.clearChildren()
         val snapshot = runtime.snapshot ?: return
@@ -1482,6 +1539,42 @@ internal class GameScreen(
             selectionGrid.add(buildSelectionSlot(entity, centerPanelLayout)).size(centerPanelLayout.rosterSlotSize.toFloat(), centerPanelLayout.rosterSlotSize.toFloat())
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
+            }
+        }
+    }
+
+    private fun buildSelectionGridSignature(snapshot: ClientSnapshot?, centerPanelLayout: CenterPanelLayout): String {
+        val safeSnapshot = snapshot ?: return "empty"
+        val selectedEntities = safeSnapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        val pageSize = 8
+        val pageCount = ((selectedEntities.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+        val page = selectionPage.coerceIn(0, pageCount - 1)
+        val pageStart = page * pageSize
+        val selected = selectedEntities.drop(pageStart).take(pageSize)
+        return buildString {
+            append(page)
+            append('|')
+            append(centerPanelLayout.rosterSlotSize)
+            append('|')
+            append(focusedSelectionId ?: -1)
+            append('|')
+            selected.forEach { entity ->
+                append(entity.id)
+                append(':')
+                append(entity.hp)
+                append('/')
+                append(entity.maxHp)
+                append(':')
+                append(entity.weaponId ?: "-")
+                append(':')
+                append(entity.footprintWidth ?: -1)
+                append(':')
+                append(runtime.isDamageFlashActive(entity.id))
+                append(':')
+                append(runtime.damageImpactKind(entity.id)?.name ?: "-")
+                append(':')
+                append(slotPulseUntilMillis[entity.id] ?: 0L)
+                append(';')
             }
         }
     }
@@ -1852,7 +1945,23 @@ internal class GameScreen(
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
         selectionPageLabel.setText(if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
         controlGroupsLabel.setText(runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
-        rebuildControlGroupButtons()
+        val controlGroupButtonsSignature = buildControlGroupButtonsSignature()
+        if (controlGroupButtonsSignature != lastControlGroupButtonsSignature) {
+            lastControlGroupButtonsSignature = controlGroupButtonsSignature
+            rebuildControlGroupButtons()
+        }
+    }
+
+    private fun buildSelectionPagerSignature(snapshot: ClientSnapshot?): String {
+        val selectedCount = snapshot?.entities?.count { it.id in runtime.session.state.selectedIds } ?: 0
+        val pageSize = 8
+        val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
+        return listOf(
+            selectedCount,
+            selectionPage.coerceIn(0, pageCount - 1),
+            pageCount,
+            runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle"
+        ).joinToString("|")
     }
 
     private fun shiftSelectionPage(delta: Int) {
@@ -1882,6 +1991,9 @@ internal class GameScreen(
             ).height(18f)
         }
     }
+
+    private fun buildControlGroupButtonsSignature(): String =
+        runtime.controlGroupSizes().joinToString("|") { (group, count) -> "$group:$count" }
 
     private fun updateScreenFade(delta: Float) {
         if (screenFadeAlpha <= 0f) {
