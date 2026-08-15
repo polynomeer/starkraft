@@ -8,6 +8,7 @@ import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
 import starkraft.sim.client.computeCenterPanelLayout
 import starkraft.sim.client.computeCommandDeckLayout
+import starkraft.sim.client.computeSelectionSlotVisualLayout
 import starkraft.sim.client.computeTopBarLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
@@ -62,6 +63,18 @@ class GameScreenInputRulesTest {
         assertTrue(compact.selectionWidth < wide.selectionWidth, "small screens should use smaller selection card")
         assertTrue(compact.modeWidth < wide.modeWidth, "small screens should use smaller mode card")
         assertTrue(compact.statusWidth < wide.statusWidth, "small screens should use smaller status card")
+    }
+
+    @Test
+    fun `selection slot visuals compact with smaller slot size`() {
+        val compact = computeSelectionSlotVisualLayout(34)
+        val wide = computeSelectionSlotVisualLayout(40)
+
+        assertTrue(compact.topBarHeight < wide.topBarHeight, "compact slots should use thinner chrome bars")
+        assertTrue(compact.titleHeight < wide.titleHeight, "compact slots should use shorter title rows")
+        assertTrue(compact.hpBarWidth < wide.hpBarWidth, "compact slots should use shorter hp bars")
+        assertTrue(compact.glyphScale < wide.glyphScale, "compact slots should use smaller glyphs")
+        assertTrue(compact.markerSize < wide.markerSize, "compact slots should use smaller markers")
     }
 
     @Test

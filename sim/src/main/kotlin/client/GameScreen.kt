@@ -1431,6 +1431,7 @@ internal class GameScreen(
     }
 
     private fun buildSelectionSlot(entity: EntitySnapshot, layout: CenterPanelLayout): Table {
+        val visualLayout = computeSelectionSlotVisualLayout(layout.rosterSlotSize)
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
         val damaged = runtime.isDamageFlashActive(entity.id)
@@ -1493,15 +1494,15 @@ internal class GameScreen(
                                     else Color(1f, 1f, 1f, 0.08f)
                                 )
                         }
-                    ).height(2f).expandX().fillX().padBottom(2f).row()
+                    ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(2f).row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
                             pad(2f, 1f, 0.5f, 1f)
                             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
                         }
-                    ).expandX().fillX().height(if (layout.rosterSlotSize <= 34) 15f else 18f).row()
-                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged)).center().padTop(1f).row()
+                    ).expandX().fillX().height(visualLayout.titleHeight).row()
+                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged, visualLayout)).center().padTop(1f).row()
                     add(
                         Table().apply {
                             add(
@@ -1512,7 +1513,7 @@ internal class GameScreen(
                                             else Color(1f, 1f, 1f, 0.08f)
                                         )
                                 }
-                            ).size(7f, 1.5f)
+                            ).size(6f * visualLayout.glyphScale, visualLayout.topBarHeight)
                             add().expandX().fillX()
                             add(
                                 Table().apply {
@@ -1523,7 +1524,7 @@ internal class GameScreen(
                                         else Color(1f, 1f, 1f, 0.06f)
                                     )
                                 }
-                            ).size(5f, 5f)
+                            ).size(visualLayout.markerSize, visualLayout.markerSize)
                         }
                     ).expandX().fillX().padTop(1f).row()
                     add(
@@ -1538,10 +1539,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
-                            ).width((if (layout.rosterSlotSize <= 34) 20f else 24f) * hpRatio.coerceIn(0f, 1f)).height(4f).left()
+                            ).width(visualLayout.hpBarWidth * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(if (layout.rosterSlotSize <= 34) 20f else 24f).height(4f).padTop(2f)
+                    ).width(visualLayout.hpBarWidth).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
@@ -1578,12 +1579,13 @@ internal class GameScreen(
         }
     }
 
-    private fun buildSelectionSlotGlyph(entity: EntitySnapshot, badgeTone: Color, focused: Boolean, damaged: Boolean): Table {
+    private fun buildSelectionSlotGlyph(entity: EntitySnapshot, badgeTone: Color, focused: Boolean, damaged: Boolean, layout: SelectionSlotVisualLayout): Table {
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
         val shellTone =
             if (focused) badgeTone.cpy().lerp(Color.WHITE, 0.22f)
             else if (damaged) badgeTone.cpy().lerp(Color.SCARLET, 0.25f)
             else badgeTone
+        val unit = layout.glyphScale
         return Table().apply {
             pad(0f)
             when {
@@ -1592,7 +1594,7 @@ internal class GameScreen(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(12f, 2f).colspan(3).row()
+                    ).size(12f * unit, 2f * unit).colspan(3).row()
                     repeat(2) { row ->
                         repeat(3) { col ->
                             add(
@@ -1603,7 +1605,7 @@ internal class GameScreen(
                                             else shellTone.cpy().mul(0.82f, 0.82f, 0.82f, 1f)
                                         )
                                 }
-                            ).size(3f, 3f).pad(0.5f)
+                            ).size(3f * unit, 3f * unit).pad(0.5f * unit)
                         }
                         row()
                     }
@@ -1614,29 +1616,29 @@ internal class GameScreen(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(8f, 2f).colspan(3).row()
-                    add().size(2f, 2f)
+                    ).size(8f * unit, 2f * unit).colspan(3).row()
+                    add().size(2f * unit, 2f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.12f))
                         }
-                    ).size(4f, 5f).pad(0.5f)
-                    add().size(2f, 2f).row()
+                    ).size(4f * unit, 5f * unit).pad(0.5f * unit)
+                    add().size(2f * unit, 2f * unit).row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(3f, 2f).padRight(0.5f)
+                    ).size(3f * unit, 2f * unit).padRight(0.5f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(3f, 2f)
+                    ).size(3f * unit, 2f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(3f, 2f).padLeft(0.5f)
+                    ).size(3f * unit, 2f * unit).padLeft(0.5f * unit)
                 }
 
                 entity.weaponId != null -> {
@@ -1644,17 +1646,17 @@ internal class GameScreen(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(3f, 6f).padRight(0.5f)
+                    ).size(3f * unit, 6f * unit).padRight(0.5f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.14f))
                         }
-                    ).size(6f, 2f).padTop(2f)
+                    ).size(6f * unit, 2f * unit).padTop(2f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(2f, 2f).padLeft(0.5f)
+                    ).size(2f * unit, 2f * unit).padLeft(0.5f * unit)
                 }
 
                 else -> {
@@ -1662,17 +1664,17 @@ internal class GameScreen(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(4f, 4f).padRight(0.5f)
+                    ).size(4f * unit, 4f * unit).padRight(0.5f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone.cpy().lerp(Color.WHITE, 0.12f))
                         }
-                    ).size(4f, 6f)
+                    ).size(4f * unit, 6f * unit)
                     add(
                         Table().apply {
                             background = assets.panelDrawable(shellTone)
                         }
-                    ).size(4f, 4f).padLeft(0.5f)
+                    ).size(4f * unit, 4f * unit).padLeft(0.5f * unit)
                 }
             }
         }
@@ -2590,6 +2592,14 @@ internal data class TopBarLayout(
     val statusWidth: Int
 )
 
+internal data class SelectionSlotVisualLayout(
+    val topBarHeight: Float,
+    val titleHeight: Float,
+    val hpBarWidth: Float,
+    val glyphScale: Float,
+    val markerSize: Float
+)
+
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
 
@@ -2643,6 +2653,17 @@ internal fun computeTopBarLayout(screenWidth: Int): TopBarLayout {
         selectionWidth = if (compact) 96 else 112,
         modeWidth = if (compact) 90 else 104,
         statusWidth = if (compact) 50 else 56
+    )
+}
+
+internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlotVisualLayout {
+    val compact = rosterSlotSize <= 34
+    return SelectionSlotVisualLayout(
+        topBarHeight = if (compact) 1.5f else 2f,
+        titleHeight = if (compact) 15f else 18f,
+        hpBarWidth = if (compact) 20f else 24f,
+        glyphScale = if (compact) 0.84f else 1f,
+        markerSize = if (compact) 4f else 5f
     )
 }
 
