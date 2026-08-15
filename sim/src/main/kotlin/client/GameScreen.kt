@@ -111,6 +111,7 @@ internal class GameScreen(
     private var lastOverlaySignature = ""
     private var bannerPulseUntilMillis = 0L
     private var lastBannerSignature = ""
+    private var lastCommandPanelSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
@@ -742,7 +743,23 @@ internal class GameScreen(
         actionBanner.isVisible = showActionBanner
         actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone().cpy().lerp(Color(0.24f, 0.30f, 0.18f, 0.82f), bannerPulse * 0.24f)) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
-        bottomHud.invalidateHierarchy()
+        val commandPanelSignature = buildCommandPanelSignature(groupedButtons, snapshot, commandDeckLayout, commandWidth, commandButtonHeight)
+        if (commandPanelSignature != lastCommandPanelSignature) {
+            lastCommandPanelSignature = commandPanelSignature
+            rebuildCommandPanel(groupedButtons, snapshot, commandDeckLayout, commandColumns, commandCellWidth, commandActorWidth, commandButtonHeight)
+            bottomHud.invalidateHierarchy()
+        }
+    }
+
+    private fun rebuildCommandPanel(
+        groupedButtons: List<Pair<String, List<ClientCommandButton>>>,
+        snapshot: ClientSnapshot?,
+        commandDeckLayout: CommandDeckLayout,
+        commandColumns: Int,
+        commandCellWidth: Float,
+        commandActorWidth: Float,
+        commandButtonHeight: Float
+    ) {
         buttonTable.clearChildren()
         groupedButtons.forEachIndexed { groupIndex, group ->
             if (group.second.isEmpty()) return@forEachIndexed
@@ -884,6 +901,45 @@ internal class GameScreen(
             buttonTable.add(Label("dbg: e=${snapshot.entities.size} r=${snapshot.resourceNodes.size}", assets.mutedLabelStyle)).colspan(commandColumns).left().padTop(6f).row()
         }
     }
+
+    private fun buildCommandPanelSignature(
+        groupedButtons: List<Pair<String, List<ClientCommandButton>>>,
+        snapshot: ClientSnapshot?,
+        commandDeckLayout: CommandDeckLayout,
+        commandWidth: Float,
+        commandButtonHeight: Float
+    ): String =
+        buildString {
+            append(runtime.overlayModeLabel())
+            append('|')
+            append(runtime.debugVisible)
+            append('|')
+            append(commandDeckLayout.scrollHeight)
+            append('|')
+            append(commandDeckLayout.buttonHeight)
+            append('|')
+            append(commandWidth.toInt())
+            append('|')
+            append(commandButtonHeight.toInt())
+            append('|')
+            append(snapshot?.entities?.size ?: -1)
+            append('|')
+            append(snapshot?.resourceNodes?.size ?: -1)
+            groupedButtons.forEach { (groupName, buttons) ->
+                append('|')
+                append(groupName)
+                buttons.forEach { button ->
+                    append(';')
+                    append(button.actionId)
+                    append(':')
+                    append(runtime.isActionEnabled(button.actionId))
+                    append(':')
+                    append(runtime.isActionActive(button.actionId))
+                    append(':')
+                    append(commandPulseUntilMillis[button.actionId]?.let { it > System.currentTimeMillis() } == true)
+                }
+            }
+        }
 
     private fun buildStatusSummaryLines(): List<String> {
         val lines = runtime.currentHudLines()
