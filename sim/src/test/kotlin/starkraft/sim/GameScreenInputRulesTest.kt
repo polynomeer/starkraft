@@ -8,6 +8,7 @@ import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
 import starkraft.sim.client.computeCenterPanelLayout
 import starkraft.sim.client.computeCommandDeckLayout
+import starkraft.sim.client.computeTopBarLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
@@ -51,6 +52,16 @@ class GameScreenInputRulesTest {
         assertTrue(compact.rosterSlotSize < wide.rosterSlotSize, "small screens should use smaller roster slots")
         assertTrue(compact.pagerButtonSize < wide.pagerButtonSize, "small screens should use smaller pager buttons")
         assertTrue(compact.healthBarWidth < wide.healthBarWidth, "small screens should use narrower health bars")
+    }
+
+    @Test
+    fun `top bar compacts on smaller resolutions`() {
+        val compact = computeTopBarLayout(1280)
+        val wide = computeTopBarLayout(1920)
+
+        assertTrue(compact.selectionWidth < wide.selectionWidth, "small screens should use smaller selection card")
+        assertTrue(compact.modeWidth < wide.modeWidth, "small screens should use smaller mode card")
+        assertTrue(compact.statusWidth < wide.statusWidth, "small screens should use smaller status card")
     }
 
     @Test

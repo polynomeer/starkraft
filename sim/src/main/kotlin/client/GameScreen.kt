@@ -116,6 +116,9 @@ internal class GameScreen(
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
+    private lateinit var topSelectionCell: Cell<*>
+    private lateinit var topModeCell: Cell<*>
+    private lateinit var topStatusCell: Cell<*>
     private lateinit var leftHudSpacerCell: Cell<*>
     private lateinit var centerHudCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
@@ -211,6 +214,7 @@ internal class GameScreen(
     }
 
     private fun buildHud() {
+        val initialTopBarLayout = computeTopBarLayout(1280)
         val root =
             Table().apply {
                 setFillParent(true)
@@ -234,7 +238,7 @@ internal class GameScreen(
                     ).left().expandX().fillX()
                 }
             ).left().expandX().fillX()
-            add(
+            topSelectionCell = add(
                 topSelectionShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
@@ -246,8 +250,8 @@ internal class GameScreen(
                         }
                     ).expandX().fillX()
                 }
-            ).width(112f).center().padLeft(2f).padRight(2f)
-            add(
+            ).width(initialTopBarLayout.selectionWidth.toFloat()).center().padLeft(2f).padRight(2f)
+            topModeCell = add(
                 topModeShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
                     pad(1f)
@@ -259,8 +263,8 @@ internal class GameScreen(
                         }
                     ).expandX().fillX()
                 }
-            ).width(104f).center().padRight(2f)
-            add(
+            ).width(initialTopBarLayout.modeWidth.toFloat()).center().padRight(2f)
+            topStatusCell = add(
                 topStatusShell.apply {
                     background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
                     pad(1f)
@@ -272,7 +276,7 @@ internal class GameScreen(
                         }
                     ).expandX().fillX()
                 }
-            ).width(56f).right()
+            ).width(initialTopBarLayout.statusWidth.toFloat()).right()
         }
 
         minimapFrame.apply {
@@ -623,6 +627,7 @@ internal class GameScreen(
         val bottomHudLayout = computeBottomHudLayout(width, height)
         val commandDeckLayout = computeCommandDeckLayout(width, height)
         val centerPanelLayout = computeCenterPanelLayout(width)
+        val topBarLayout = computeTopBarLayout(width)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
         val centerWidth = bottomHudLayout.centerWidth.toFloat()
@@ -635,6 +640,9 @@ internal class GameScreen(
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
+        topSelectionCell.width(topBarLayout.selectionWidth.toFloat())
+        topModeCell.width(topBarLayout.modeWidth.toFloat())
+        topStatusCell.width(topBarLayout.statusWidth.toFloat())
         leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
         centerHudCell.width(centerWidth)
         commandHudCell.width(commandWidth)
@@ -2576,6 +2584,12 @@ internal data class CenterPanelLayout(
     val healthBarWidth: Int
 )
 
+internal data class TopBarLayout(
+    val selectionWidth: Int,
+    val modeWidth: Int,
+    val statusWidth: Int
+)
+
 internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean): Boolean =
     pauseVisible || helpVisible
 
@@ -2620,6 +2634,15 @@ internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
         pagerLabelWidth = if (compact) 48 else 54,
         groupSummaryWidth = if (compact) 58 else 66,
         healthBarWidth = if (compact) 108 else 122
+    )
+}
+
+internal fun computeTopBarLayout(screenWidth: Int): TopBarLayout {
+    val compact = screenWidth < 1360
+    return TopBarLayout(
+        selectionWidth = if (compact) 96 else 112,
+        modeWidth = if (compact) 90 else 104,
+        statusWidth = if (compact) 50 else 56
     )
 }
 
