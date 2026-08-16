@@ -682,33 +682,50 @@ internal class GameScreen(
         portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
-        selectionLabel.setText(buildSelectionHeadline())
-        selectionMetaLabel.setText(buildSelectionMetaLine())
-        centerStatusLabel.setText(buildCenterStatusLine())
+        val selectionHeadline = buildSelectionHeadline()
+        val selectionMetaLine = buildSelectionMetaLine()
+        val centerStatusLine = buildCenterStatusLine()
+        val queueStatusLine = buildQueueStatusLine()
+        val queueHeaderLine = buildQueueHeaderLine()
+        val selectionRosterLine = buildSelectionRosterLine()
+        val factionOverviewLine = buildFactionOverviewLine()
+        val portraitText = buildPortraitText()
+        val healthLine = buildHealthLine()
+        val topEconomyLine = buildTopEconomyLine()
+        val topSelectionLine = buildTopSelectionLine()
+        val topModeLine = buildTopModeLine()
+        val statusBadgeLine = buildStatusBadgeLine()
+        val actionBannerText = buildActionBannerLine()
+        val commandHintText = buildCommandHintLine()
+        val centerFooterLine = buildCenterFooterLine()
+        val statusSummaryText = buildStatusSummaryLines(topEconomyLine).joinToString("\n")
+        selectionLabel.setText(selectionHeadline)
+        selectionMetaLabel.setText(selectionMetaLine)
+        centerStatusLabel.setText(centerStatusLine)
         val centerStatusBits = buildCenterStatusBits()
         val centerStatusStripSignature = buildStatusStripSignature(centerStatusBits, "RDY")
         if (centerStatusStripSignature != lastCenterStatusStripSignature) {
             lastCenterStatusStripSignature = centerStatusStripSignature
             rebuildCenterStatusStrip(centerStatusBits)
         }
-        queueStatusLabel.setText(buildQueueStatusLine())
+        queueStatusLabel.setText(queueStatusLine)
         val queueStatusBits = buildQueueStatusBits()
         val queueStatusStripSignature = buildStatusStripSignature(queueStatusBits, "IDLE")
         if (queueStatusStripSignature != lastQueueStatusStripSignature) {
             lastQueueStatusStripSignature = queueStatusStripSignature
             rebuildQueueStatusStrip(queueStatusBits)
         }
-        queueHeaderLabel.setText(buildQueueHeaderLine())
+        queueHeaderLabel.setText(queueHeaderLine)
         selectionLabel.color = currentSelectionHeadlineTone()
         selectionMetaLabel.color = currentSelectionMetaTone()
-        centerStatusLabel.color = currentCenterStatusTone()
-        queueHeaderLabel.color = currentQueueHeaderTone()
-        queueStatusLabel.color = currentQueueStatusTone()
-        selectionRosterLabel.setText(buildSelectionRosterLine())
+        centerStatusLabel.color = currentCenterStatusTone(centerStatusLine)
+        queueHeaderLabel.color = currentQueueHeaderTone(queueHeaderLine)
+        queueStatusLabel.color = currentQueueStatusTone(queueHeaderLine)
+        selectionRosterLabel.setText(selectionRosterLine)
         selectionRosterLabel.color = currentRosterTone()
-        factionOverviewLabel.setText(buildFactionOverviewLine())
-        portraitLabel.setText(buildPortraitText())
-        healthLabel.setText(buildHealthLine())
+        factionOverviewLabel.setText(factionOverviewLine)
+        portraitLabel.setText(portraitText)
+        healthLabel.setText(healthLine)
         val healthBarSignature = buildHealthBarSignature()
         if (healthBarSignature != lastHealthBarSignature) {
             lastHealthBarSignature = healthBarSignature
@@ -719,32 +736,30 @@ internal class GameScreen(
             lastSelectionGridSignature = selectionGridSignature
             rebuildSelectionGrid()
         }
-        hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
+        hudLinesLabel.setText(statusSummaryText)
         footerLabel.setText("LMB select  RMB order  drag box select")
         statusHeader.setText("Battlefield")
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
         commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
         commandHeaderLabel.color = currentCommandHeaderTone(groupedButtons)
-        economyLabel.setText(buildTopEconomyLine())
+        economyLabel.setText(topEconomyLine)
         economyLabel.color = currentTopEconomyTone()
-        topSelectionLabel.setText(buildTopSelectionLine())
+        topSelectionLabel.setText(topSelectionLine)
         topSelectionLabel.color = currentTopSelectionTone()
-        modeLabel.setText(buildTopModeLine())
+        modeLabel.setText(topModeLine)
         modeLabel.color = currentTopModeTone()
-        statusBadgeLabel.setText(buildStatusBadgeLine())
+        statusBadgeLabel.setText(statusBadgeLine)
         statusBadgeLabel.color = currentStatusBadgeTone()
-        val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
         actionBannerLabel.color = currentActionBannerTextTone()
-        val commandHintText = buildCommandHintLine()
         commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
         attackWarningLabel.setText(buildAttackWarningText())
         val showAttackWarning = runtime.attackWarningLine() != null
         attackWarningTable.isVisible = showAttackWarning
-        centerFooterLabel.setText(buildCenterFooterLine())
-        syncSelectionPage(snapshot)
+        centerFooterLabel.setText(centerFooterLine)
+        syncSelectionPage(snapshot, actionBannerText, commandHintText, statusBadgeLine)
         val selectionPagerSignature = buildSelectionPagerSignature(snapshot)
         if (selectionPagerSignature != lastSelectionPagerSignature) {
             lastSelectionPagerSignature = selectionPagerSignature
@@ -1012,7 +1027,7 @@ internal class GameScreen(
             }
         }
 
-    private fun buildStatusSummaryLines(): List<String> {
+    private fun buildStatusSummaryLines(topEconomyLine: String = buildTopEconomyLine()): List<String> {
         val lines = runtime.currentHudLines()
         val preferredPrefixes =
             listOf(
@@ -1031,7 +1046,7 @@ internal class GameScreen(
         for (prefix in preferredPrefixes) {
             lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
         }
-        if (runtime.session.state.viewedFaction != null && buildTopEconomyLine().contains("vis 0")) {
+        if (runtime.session.state.viewedFaction != null && topEconomyLine.contains("vis 0")) {
             picked.add(0, "warning: no vision, press 1/2/3")
         }
         if (picked.isEmpty()) {
@@ -1872,8 +1887,8 @@ internal class GameScreen(
         }
     }
 
-    private fun syncSelectionPage(snapshot: ClientSnapshot?) {
-        val bannerSignature = "${buildActionBannerLine()}|${buildCommandHintLine()}"
+    private fun syncSelectionPage(snapshot: ClientSnapshot?, actionBannerText: String, commandHintText: String, statusBadgeLine: String) {
+        val bannerSignature = "$actionBannerText|$commandHintText"
         if (bannerSignature != lastBannerSignature) {
             lastBannerSignature = bannerSignature
             bannerPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
@@ -1888,7 +1903,7 @@ internal class GameScreen(
             lastTopModeSignature = topModeSignature
             topModePulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
         }
-        val topStatusSignature = "${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}|${buildStatusBadgeLine()}"
+        val topStatusSignature = "${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}|$statusBadgeLine"
         if (topStatusSignature != lastTopStatusSignature) {
             lastTopStatusSignature = topStatusSignature
             topStatusPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
@@ -2335,15 +2350,15 @@ internal class GameScreen(
             else -> Color(0.84f, 0.88f, 0.92f, 0.94f)
         }
 
-    private fun currentCenterStatusTone(): Color =
+    private fun currentCenterStatusTone(centerStatusLine: String = buildCenterStatusLine()): Color =
         when {
             runtime.session.state.selectedIds.isEmpty() -> Color(0.60f, 0.70f, 0.76f, 0.92f)
-            buildCenterStatusLine() == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
+            centerStatusLine == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
             else -> Color(0.90f, 0.94f, 0.98f, 0.94f)
         }
 
-    private fun currentQueueHeaderTone(): Color =
-        when (buildQueueHeaderLine()) {
+    private fun currentQueueHeaderTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
+        when (queueHeaderLine) {
             "PRODUCTION" -> Color(1.00f, 0.92f, 0.62f, 0.96f)
             "RESEARCH" -> Color(0.78f, 0.96f, 1.00f, 0.96f)
             "CONSTRUCT" -> Color(0.74f, 1.00f, 0.82f, 0.96f)
@@ -2385,24 +2400,24 @@ internal class GameScreen(
         return if (cycle < 0.5f) cycle * 2f else (1f - cycle) * 2f
     }
 
-    private fun currentQueueStatusTone(): Color =
-        when (buildQueueHeaderLine()) {
+    private fun currentQueueStatusTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
+        when (queueHeaderLine) {
             "PRODUCTION" -> Color(1.00f, 0.94f, 0.72f, 0.94f)
             "RESEARCH" -> Color(0.86f, 0.96f, 1.00f, 0.94f)
             "CONSTRUCT" -> Color(0.84f, 1.00f, 0.90f, 0.94f)
             else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
         }
 
-    private fun currentQueueCardTone(): Color =
-        when (buildQueueHeaderLine()) {
+    private fun currentQueueCardTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
+        when (queueHeaderLine) {
             "PRODUCTION" -> Color(0.18f, 0.14f, 0.08f, 0.74f)
             "RESEARCH" -> Color(0.10f, 0.14f, 0.20f, 0.74f)
             "CONSTRUCT" -> Color(0.10f, 0.17f, 0.12f, 0.74f)
             else -> Color(0.08f, 0.12f, 0.16f, 0.62f)
         }
 
-    private fun currentQueueHeaderBackgroundTone(): Color =
-        when (buildQueueHeaderLine()) {
+    private fun currentQueueHeaderBackgroundTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
+        when (queueHeaderLine) {
             "PRODUCTION" -> Color(0.40f, 0.30f, 0.10f, 0.84f)
             "RESEARCH" -> Color(0.20f, 0.30f, 0.42f, 0.84f)
             "CONSTRUCT" -> Color(0.20f, 0.34f, 0.22f, 0.84f)
