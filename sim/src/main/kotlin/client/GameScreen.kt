@@ -663,7 +663,7 @@ internal class GameScreen(
         hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
         centerFooterLabel.setWrap(true)
-        minimapTitle.setText("Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
+        setLabelTextIfChanged(minimapTitle, "Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
         minimapTitle.color = currentMinimapTitleTone()
         minimapHint.color = currentMinimapHintTone()
         selectionLabel.setWidth(centerWidth)
@@ -699,33 +699,33 @@ internal class GameScreen(
         val commandHintText = buildCommandHintLine()
         val centerFooterLine = buildCenterFooterLine()
         val statusSummaryText = buildStatusSummaryLines(topEconomyLine).joinToString("\n")
-        selectionLabel.setText(selectionHeadline)
-        selectionMetaLabel.setText(selectionMetaLine)
-        centerStatusLabel.setText(centerStatusLine)
+        setLabelTextIfChanged(selectionLabel, selectionHeadline)
+        setLabelTextIfChanged(selectionMetaLabel, selectionMetaLine)
+        setLabelTextIfChanged(centerStatusLabel, centerStatusLine)
         val centerStatusBits = buildCenterStatusBits()
         val centerStatusStripSignature = buildStatusStripSignature(centerStatusBits, "RDY")
         if (centerStatusStripSignature != lastCenterStatusStripSignature) {
             lastCenterStatusStripSignature = centerStatusStripSignature
             rebuildCenterStatusStrip(centerStatusBits)
         }
-        queueStatusLabel.setText(queueStatusLine)
+        setLabelTextIfChanged(queueStatusLabel, queueStatusLine)
         val queueStatusBits = buildQueueStatusBits()
         val queueStatusStripSignature = buildStatusStripSignature(queueStatusBits, "IDLE")
         if (queueStatusStripSignature != lastQueueStatusStripSignature) {
             lastQueueStatusStripSignature = queueStatusStripSignature
             rebuildQueueStatusStrip(queueStatusBits)
         }
-        queueHeaderLabel.setText(queueHeaderLine)
+        setLabelTextIfChanged(queueHeaderLabel, queueHeaderLine)
         selectionLabel.color = currentSelectionHeadlineTone()
         selectionMetaLabel.color = currentSelectionMetaTone()
         centerStatusLabel.color = currentCenterStatusTone(centerStatusLine)
         queueHeaderLabel.color = currentQueueHeaderTone(queueHeaderLine)
         queueStatusLabel.color = currentQueueStatusTone(queueHeaderLine)
-        selectionRosterLabel.setText(selectionRosterLine)
+        setLabelTextIfChanged(selectionRosterLabel, selectionRosterLine)
         selectionRosterLabel.color = currentRosterTone()
-        factionOverviewLabel.setText(factionOverviewLine)
-        portraitLabel.setText(portraitText)
-        healthLabel.setText(healthLine)
+        setLabelTextIfChanged(factionOverviewLabel, factionOverviewLine)
+        setLabelTextIfChanged(portraitLabel, portraitText)
+        setLabelTextIfChanged(healthLabel, healthLine)
         val healthBarSignature = buildHealthBarSignature()
         if (healthBarSignature != lastHealthBarSignature) {
             lastHealthBarSignature = healthBarSignature
@@ -736,29 +736,29 @@ internal class GameScreen(
             lastSelectionGridSignature = selectionGridSignature
             rebuildSelectionGrid()
         }
-        hudLinesLabel.setText(statusSummaryText)
-        footerLabel.setText("LMB select  RMB order  drag box select")
-        statusHeader.setText("Battlefield")
-        centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
+        setLabelTextIfChanged(hudLinesLabel, statusSummaryText)
+        setLabelTextIfChanged(footerLabel, "LMB select  RMB order  drag box select")
+        setLabelTextIfChanged(statusHeader, "Battlefield")
+        setLabelTextIfChanged(centerHeaderLabel, if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
-        commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
+        setLabelTextIfChanged(commandHeaderLabel, buildCommandHeader(groupedButtons))
         commandHeaderLabel.color = currentCommandHeaderTone(groupedButtons)
-        economyLabel.setText(topEconomyLine)
+        setLabelTextIfChanged(economyLabel, topEconomyLine)
         economyLabel.color = currentTopEconomyTone()
-        topSelectionLabel.setText(topSelectionLine)
+        setLabelTextIfChanged(topSelectionLabel, topSelectionLine)
         topSelectionLabel.color = currentTopSelectionTone()
-        modeLabel.setText(topModeLine)
+        setLabelTextIfChanged(modeLabel, topModeLine)
         modeLabel.color = currentTopModeTone()
-        statusBadgeLabel.setText(statusBadgeLine)
+        setLabelTextIfChanged(statusBadgeLabel, statusBadgeLine)
         statusBadgeLabel.color = currentStatusBadgeTone()
-        actionBannerLabel.setText(actionBannerText)
+        setLabelTextIfChanged(actionBannerLabel, actionBannerText)
         actionBannerLabel.color = currentActionBannerTextTone()
-        commandHintLabel.setText(commandHintText)
+        setLabelTextIfChanged(commandHintLabel, commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
-        attackWarningLabel.setText(buildAttackWarningText())
+        setLabelTextIfChanged(attackWarningLabel, buildAttackWarningText())
         val showAttackWarning = runtime.attackWarningLine() != null
         attackWarningTable.isVisible = showAttackWarning
-        centerFooterLabel.setText(centerFooterLine)
+        setLabelTextIfChanged(centerFooterLabel, centerFooterLine)
         syncSelectionPage(snapshot, actionBannerText, commandHintText, statusBadgeLine)
         val selectionPagerSignature = buildSelectionPagerSignature(snapshot)
         if (selectionPagerSignature != lastSelectionPagerSignature) {
@@ -767,7 +767,7 @@ internal class GameScreen(
         }
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
-        helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
+        setLabelTextIfChanged(helpLabel, buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
         val hudChromeSignature = buildHudChromeSignature(showActionBanner, showAttackWarning)
@@ -2001,12 +2001,18 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        selectionPageLabel.setText(if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
-        controlGroupsLabel.setText(runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
+        setLabelTextIfChanged(selectionPageLabel, if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
+        setLabelTextIfChanged(controlGroupsLabel, runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
         val controlGroupButtonsSignature = buildControlGroupButtonsSignature()
         if (controlGroupButtonsSignature != lastControlGroupButtonsSignature) {
             lastControlGroupButtonsSignature = controlGroupButtonsSignature
             rebuildControlGroupButtons()
+        }
+    }
+
+    private fun setLabelTextIfChanged(label: Label, text: String) {
+        if (!label.textEquals(text)) {
+            label.setText(text)
         }
     }
 
