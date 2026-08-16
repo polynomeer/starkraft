@@ -120,6 +120,7 @@ internal class GameScreen(
     private var lastSelectionPagerSignature = ""
     private var lastControlGroupButtonsSignature = ""
     private var lastHudChromeSignature = ""
+    private var lastHudLayoutSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
@@ -649,38 +650,14 @@ internal class GameScreen(
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
-        topSelectionCell.width(topBarLayout.selectionWidth.toFloat())
-        topModeCell.width(topBarLayout.modeWidth.toFloat())
-        topStatusCell.width(topBarLayout.statusWidth.toFloat())
-        leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
-        centerHudCell.width(centerWidth)
-        commandHudCell.width(commandWidth)
-        selectionLabel.setWrap(true)
-        selectionMetaLabel.setWrap(true)
-        factionOverviewLabel.setWrap(true)
-        queueStatusLabel.setWrap(true)
-        selectionRosterLabel.setWrap(true)
-        hudLinesLabel.setWrap(true)
-        footerLabel.setWrap(true)
-        centerFooterLabel.setWrap(true)
+        val hudLayoutSignature = buildHudLayoutSignature(width, height, topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight)
+        if (hudLayoutSignature != lastHudLayoutSignature) {
+            lastHudLayoutSignature = hudLayoutSignature
+            applyHudLayout(topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight, centerWidth, commandWidth, commandHeight, unifiedPanelHeight, hudShellHeight)
+        }
         setLabelTextIfChanged(minimapTitle, "Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
         minimapTitle.color = currentMinimapTitleTone()
         minimapHint.color = currentMinimapHintTone()
-        selectionLabel.setWidth(centerWidth)
-        selectionMetaLabel.setWidth(centerWidth)
-        queueStatusLabel.setWidth(centerWidth)
-        selectionRosterLabel.setWidth(centerWidth)
-        hudLinesLabel.setWidth(minimapWidth)
-        factionOverviewLabel.setWidth(minimapWidth)
-        footerLabel.setWidth(minimapWidth)
-        centerFooterLabel.setWidth(centerWidth)
-        minimapHint.setWidth(minimapWidth - 20f)
-        minimapFrame.setSize(minimapWidth, minimapHeight)
-        centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
-        commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
-        commandScroll.setSize(commandWidth - 8f, commandHeight)
-        portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
-        bottomHud.setHeight(hudShellHeight)
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         val selectionHeadline = buildSelectionHeadline()
         val selectionMetaLine = buildSelectionMetaLine()
@@ -835,6 +812,76 @@ internal class GameScreen(
         if (value <= 0f) return 0f
         val clamped = value.coerceIn(0f, 1f)
         return ((clamped * steps).roundToInt() / steps.toFloat()).coerceIn(0f, 1f)
+    }
+
+    private fun buildHudLayoutSignature(
+        width: Int,
+        height: Int,
+        topBarLayout: TopBarLayout,
+        bottomHudLayout: BottomHudLayout,
+        commandDeckLayout: CommandDeckLayout,
+        centerPanelLayout: CenterPanelLayout,
+        minimapWidth: Float,
+        minimapHeight: Float
+    ): String =
+        listOf(
+            width,
+            height,
+            topBarLayout.selectionWidth,
+            topBarLayout.modeWidth,
+            topBarLayout.statusWidth,
+            bottomHudLayout.leftSlotWidth,
+            bottomHudLayout.centerWidth,
+            bottomHudLayout.commandWidth,
+            commandDeckLayout.scrollHeight,
+            centerPanelLayout.portraitSize,
+            minimapWidth.toInt(),
+            minimapHeight.toInt(),
+            computeBottomHudHeight(width, height)
+        ).joinToString("|")
+
+    private fun applyHudLayout(
+        topBarLayout: TopBarLayout,
+        bottomHudLayout: BottomHudLayout,
+        commandDeckLayout: CommandDeckLayout,
+        centerPanelLayout: CenterPanelLayout,
+        minimapWidth: Float,
+        minimapHeight: Float,
+        centerWidth: Float,
+        commandWidth: Float,
+        commandHeight: Float,
+        unifiedPanelHeight: Float,
+        hudShellHeight: Float
+    ) {
+        topSelectionCell.width(topBarLayout.selectionWidth.toFloat())
+        topModeCell.width(topBarLayout.modeWidth.toFloat())
+        topStatusCell.width(topBarLayout.statusWidth.toFloat())
+        leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
+        centerHudCell.width(centerWidth)
+        commandHudCell.width(commandWidth)
+        selectionLabel.setWrap(true)
+        selectionMetaLabel.setWrap(true)
+        factionOverviewLabel.setWrap(true)
+        queueStatusLabel.setWrap(true)
+        selectionRosterLabel.setWrap(true)
+        hudLinesLabel.setWrap(true)
+        footerLabel.setWrap(true)
+        centerFooterLabel.setWrap(true)
+        selectionLabel.setWidth(centerWidth)
+        selectionMetaLabel.setWidth(centerWidth)
+        queueStatusLabel.setWidth(centerWidth)
+        selectionRosterLabel.setWidth(centerWidth)
+        hudLinesLabel.setWidth(minimapWidth)
+        factionOverviewLabel.setWidth(minimapWidth)
+        footerLabel.setWidth(minimapWidth)
+        centerFooterLabel.setWidth(centerWidth)
+        minimapHint.setWidth(minimapWidth - 20f)
+        minimapFrame.setSize(minimapWidth, minimapHeight)
+        centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
+        commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
+        commandScroll.setSize(commandWidth - 8f, commandHeight)
+        portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
+        bottomHud.setHeight(hudShellHeight)
     }
 
     private fun rebuildCommandPanel(
