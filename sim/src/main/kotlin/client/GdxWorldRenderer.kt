@@ -289,27 +289,40 @@ internal class GdxWorldRenderer(
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
-                shape.color = Color(0.10f, 0.18f, 0.16f, 0.92f)
-                shape.circle(sx + 1.5f, sy + 1.5f, 10f)
-                shape.color = Color(0.24f, 0.94f, 0.70f, 0.12f + (pulse * 0.10f))
-                shape.circle(sx, sy, 12f + (pulse * 2f))
-                shape.color = Color(0.26f, 0.82f, 0.60f, 0.95f)
-                shape.circle(sx, sy, 9f)
-                shape.color = Color(0.64f, 1.00f, 0.86f, 0.32f)
-                shape.circle(sx - 2f, sy - 2f, 4f)
-                shape.rect(sx - 2.5f, sy - 9f, 5f, 4f)
+                val core = resolveResourceCoreColor(node.kind)
+                val glow = resolveResourceGlowColor(node.kind)
+                shape.color = Color(0.06f, 0.12f, 0.10f, 0.88f)
+                shape.circle(sx + 1.5f, sy + 1.2f, 10.5f)
+                shape.color = glow.cpy().apply { a = 0.12f + (pulse * 0.10f) }
+                shape.circle(sx, sy, 13f + (pulse * 2.2f))
+                shape.color = Color(0.12f, 0.24f, 0.18f, 0.96f)
+                shape.rect(sx - 6.5f, sy - 8.5f, 13f, 5f)
+                shape.color = core
+                shape.circle(sx, sy, 7.8f)
+                shape.circle(sx - 4.8f, sy - 1.2f, 3.8f)
+                shape.circle(sx + 4.8f, sy - 0.6f, 3.4f)
+                shape.color = Color(0.74f, 1.00f, 0.88f, 0.24f + (pulse * 0.10f))
+                shape.circle(sx - 1.8f, sy - 2.1f, 3.4f)
+                shape.circle(sx + 2.6f, sy - 1.8f, 2.2f)
+                shape.color = Color(0.56f, 1.00f, 0.84f, 0.18f)
+                shape.rect(sx - 1f, sy - 10f, 2f, 4f)
             } else {
-                shape.color = Color(0.16f, 0.13f, 0.08f, 0.90f)
-                shape.circle(sx + 1.5f, sy + 1.5f, 9f)
-                shape.color = neutralColor
-                shape.rect(sx - 7f, sy - 5f, 6f, 5f)
-                shape.rect(sx - 1f, sy - 8f, 7f, 6f)
-                shape.rect(sx - 6f, sy + 1f, 8f, 5f)
-                shape.color = Color(1f, 0.95f, 0.72f, 0.12f + (pulse * 0.12f))
-                shape.rect(sx - 5f, sy - 4f, 3f, 2f)
-                shape.rect(sx, sy - 6f, 3f, 2f)
-                shape.color = Color(1f, 0.98f, 0.80f, 0.16f + (pulse * 0.12f))
-                shape.rect(sx - 2f, sy + 2f, 4f, 2f)
+                val core = resolveResourceCoreColor(node.kind)
+                val glow = resolveResourceGlowColor(node.kind)
+                shape.color = Color(0.12f, 0.10f, 0.06f, 0.88f)
+                shape.circle(sx + 1.3f, sy + 1.3f, 9.5f)
+                shape.color = glow.cpy().apply { a = 0.10f + (pulse * 0.10f) }
+                shape.circle(sx - 3.5f, sy + 1f, 5.8f)
+                shape.circle(sx + 4.4f, sy - 1.5f, 6.2f)
+                shape.color = core
+                shape.rect(sx - 8f, sy - 5f, 4f, 8f)
+                shape.rect(sx - 3f, sy - 8f, 5f, 11f)
+                shape.rect(sx + 3f, sy - 6f, 4f, 9f)
+                shape.rect(sx - 5f, sy + 1f, 4f, 5f)
+                shape.color = Color(1f, 0.97f, 0.78f, 0.18f + (pulse * 0.10f))
+                shape.rect(sx - 6.5f, sy - 2.5f, 1.8f, 6.5f)
+                shape.rect(sx - 1.3f, sy - 5.8f, 1.8f, 8.8f)
+                shape.rect(sx + 4.3f, sy - 3.8f, 1.6f, 6.8f)
             }
         }
     }
@@ -575,13 +588,24 @@ internal class GdxWorldRenderer(
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(startX, startY)) continue
             if (entity.id == leadSelectedId) {
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.18f + (pulse * 0.08f))
-                shape.circle(startX, startY, 12f + (pulse * 2.2f))
-                shape.color = Color(0.82f, 1.00f, 0.84f, 0.14f + (pulse * 0.06f))
-                shape.circle(startX, startY, 17f + (pulse * 3.4f))
+                val radius = 14f + (pulse * 1.8f)
+                shape.color = Color(0.84f, 1.00f, 0.86f, 0.30f + (pulse * 0.12f))
+                shape.rect(startX - 1f, startY - radius, 2f, 5f)
+                shape.rect(startX - 1f, startY + radius - 5f, 2f, 5f)
+                shape.rect(startX - radius, startY - 1f, 5f, 2f)
+                shape.rect(startX + radius - 5f, startY - 1f, 5f, 2f)
+                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.20f + (pulse * 0.08f))
+                shape.rect(startX - 0.75f, startY - (radius + 5f), 1.5f, 3.5f)
+                shape.rect(startX - 0.75f, startY + radius + 1.5f, 1.5f, 3.5f)
+                shape.rect(startX - (radius + 5f), startY - 0.75f, 3.5f, 1.5f)
+                shape.rect(startX + radius + 1.5f, startY - 0.75f, 3.5f, 1.5f)
             } else {
-                shape.color = selectionColor.cpy().apply { a = 0.12f }
-                shape.circle(startX, startY, 7f)
+                val radius = 9f
+                shape.color = Color(0.76f, 1.00f, 0.78f, 0.18f)
+                shape.rect(startX - 0.75f, startY - radius, 1.5f, 3f)
+                shape.rect(startX - 0.75f, startY + radius - 3f, 1.5f, 3f)
+                shape.rect(startX - radius, startY - 0.75f, 3f, 1.5f)
+                shape.rect(startX + radius - 3f, startY - 0.75f, 3f, 1.5f)
             }
         }
     }
@@ -2266,6 +2290,18 @@ internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, facti
         else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
     }
 
+internal fun resolveResourceCoreColor(kind: String): Color =
+    when {
+        kind.equals("gas", ignoreCase = true) -> Color(0.26f, 0.82f, 0.60f, 1f)
+        else -> Color(0.86f, 0.74f, 0.34f, 1f)
+    }
+
+internal fun resolveResourceGlowColor(kind: String): Color =
+    when {
+        kind.equals("gas", ignoreCase = true) -> Color(0.58f, 1.00f, 0.84f, 1f)
+        else -> Color(1.00f, 0.95f, 0.72f, 1f)
+    }
+
 internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
     when {
         isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
@@ -2426,6 +2462,18 @@ internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, facti
         isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
         typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
         else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
+    }
+
+internal fun resolveResourceCoreColor(kind: String): Color =
+    when {
+        kind.equals("gas", ignoreCase = true) -> Color(0.26f, 0.82f, 0.60f, 1f)
+        else -> Color(0.86f, 0.74f, 0.34f, 1f)
+    }
+
+internal fun resolveResourceGlowColor(kind: String): Color =
+    when {
+        kind.equals("gas", ignoreCase = true) -> Color(0.58f, 1.00f, 0.84f, 1f)
+        else -> Color(1.00f, 0.95f, 0.72f, 1f)
     }
 
 internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =

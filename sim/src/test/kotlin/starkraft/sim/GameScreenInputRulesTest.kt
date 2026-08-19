@@ -29,6 +29,8 @@ import starkraft.sim.client.resolveEffectSmokeColor
 import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.resolveQueueHeaderLine
+import starkraft.sim.client.resolveResourceCoreColor
+import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveSilhouetteBodyColor
 import starkraft.sim.client.resolveSilhouetteStripeColor
 import starkraft.sim.client.resolveSilhouetteTrimColor
@@ -261,6 +263,19 @@ class GameScreenInputRulesTest {
         assertTrue(workerTrim.b > zergBody.b, "worker trim should stay cooler than zerg flesh tones")
         assertTrue(structureStripe.g > faction.g, "structure stripe should brighten faction lane panels")
         assertTrue(gasRoof.g > gasRoof.r, "gas depot roof should skew greener than generic structures")
+    }
+
+    @Test
+    fun `resource palettes separate minerals and gas`() {
+        val mineralCore = resolveResourceCoreColor("minerals")
+        val gasCore = resolveResourceCoreColor("gas")
+        val mineralGlow = resolveResourceGlowColor("minerals")
+        val gasGlow = resolveResourceGlowColor("gas")
+
+        assertTrue(mineralCore.r > gasCore.r, "minerals should stay warmer than gas")
+        assertTrue(gasCore.g > mineralCore.g, "gas should read greener than minerals")
+        assertTrue(mineralGlow.r > gasGlow.r, "mineral glows should stay brighter on red channel")
+        assertTrue(gasGlow.g > mineralGlow.g, "gas glows should emphasize green channel")
     }
 
     @Test
