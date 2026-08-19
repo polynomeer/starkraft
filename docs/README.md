@@ -50,6 +50,10 @@
   - 전장 가독성과 시각 자산 방향
 - `audio-direction-brief.md`
   - 정보 전달 중심 오디오 방향
+- `glossary.md`
+  - 공통 용어 정의
+- `document-maintenance-policy.md`
+  - 문서 갱신 책임과 유지 규칙
 - `testing-strategy.md`
   - 단위/통합/결정론/성능/소크 테스트 전략
 - `server-ops-runbook.md`
@@ -107,6 +111,10 @@
   - `art-direction-brief.md`
   - `audio-direction-brief.md`
   - `ui-ux-spec.md`
+- 문서 기준을 정리할 때:
+  - `glossary.md`
+  - `document-maintenance-policy.md`
+  - `contribution-guide.md`
 
 ## 기존 문서와의 관계
 
