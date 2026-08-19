@@ -46,6 +46,10 @@
   - 결정론 불일치 조사 절차
 - `playtest-report-template.md`
   - 플레이테스트 결과 기록 템플릿
+- `art-direction-brief.md`
+  - 전장 가독성과 시각 자산 방향
+- `audio-direction-brief.md`
+  - 정보 전달 중심 오디오 방향
 - `testing-strategy.md`
   - 단위/통합/결정론/성능/소크 테스트 전략
 - `server-ops-runbook.md`
@@ -99,6 +103,10 @@
   - `benchmark-report-template.md`
   - `desync-debugging-guide.md`
   - `testing-strategy.md`
+- 시각/오디오 방향을 정리할 때:
+  - `art-direction-brief.md`
+  - `audio-direction-brief.md`
+  - `ui-ux-spec.md`
 
 ## 기존 문서와의 관계
 
