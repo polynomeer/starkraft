@@ -734,6 +734,25 @@ internal class GdxWorldRenderer(
                     drawChevronTrail(shape, startX, startY, targetX, targetY, pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.68f))
                 }
             }
+            if (entity.id == leadSelectedId && isAttackOrder(entity)) {
+                nearestHostile(snapshot, entity)?.let { hostile ->
+                    val hostileX = runtime.camera.worldToScreenX(hostile.x)
+                    val hostileY = runtime.camera.worldToScreenY(hostile.y)
+                    if (isOnScreen(hostileX, hostileY)) {
+                        val pulse = ambientPulse(520L)
+                        shape.color = Color(0.82f, 1.00f, 0.74f, 0.12f + (pulse * 0.08f))
+                        shape.rectLine(startX, startY, hostileX, hostileY, 1.8f)
+                        shape.color = Color(0.78f, 1.00f, 0.68f, 0.34f + (pulse * 0.18f))
+                        shape.circle(hostileX, hostileY, 10f + (pulse * 2.4f))
+                        shape.rectLine(hostileX - 8f, hostileY, hostileX - 3f, hostileY, 1.4f)
+                        shape.rectLine(hostileX + 3f, hostileY, hostileX + 8f, hostileY, 1.4f)
+                        shape.rectLine(hostileX, hostileY - 8f, hostileX, hostileY - 3f, 1.4f)
+                        shape.rectLine(hostileX, hostileY + 3f, hostileX, hostileY + 8f, 1.4f)
+                        shape.color = Color(0.92f, 1.00f, 0.84f, 0.86f)
+                        shape.circle(hostileX, hostileY, 2.2f)
+                    }
+                }
+            }
         }
     }
 
@@ -2145,6 +2164,10 @@ internal class GdxWorldRenderer(
             entity.activeOrder.equals("attack", ignoreCase = true) || entity.activeOrder.equals("attackMove", ignoreCase = true) -> GroundPingKind.ATTACK
             else -> GroundPingKind.MOVE
         }
+
+    private fun isAttackOrder(entity: EntitySnapshot): Boolean =
+        entity.activeOrder.equals("attack", ignoreCase = true) ||
+            entity.activeOrder.equals("attackMove", ignoreCase = true)
 
     private fun distanceSq(ax: Float, ay: Float, bx: Float, by: Float): Float {
         val dx = ax - bx

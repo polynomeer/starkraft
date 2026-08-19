@@ -16,6 +16,8 @@ import starkraft.sim.client.computeWorldViewportHeightForLayout
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.formatQueueStatusLine
+import starkraft.sim.client.formatSelectionPageLabel
+import starkraft.sim.client.formatControlGroupDeckLine
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
@@ -177,6 +179,14 @@ class GameScreenInputRulesTest {
                 constructionRemainingTicks = null
             )
         )
+    }
+
+    @Test
+    fun `selection pager helpers stay compact`() {
+        assertEquals("Pg 0/0 · 0", formatSelectionPageLabel(selectedCount = 0, pageIndex = 0, pageCount = 1))
+        assertEquals("Pg 2/3 · 14", formatSelectionPageLabel(selectedCount = 14, pageIndex = 1, pageCount = 3))
+        assertEquals("Groups idle", formatControlGroupDeckLine(emptyList()))
+        assertEquals("4:8  5:2  6:1", formatControlGroupDeckLine(listOf(4 to 8, 5 to 2, 6 to 1, 7 to 9)))
     }
 
     @Test

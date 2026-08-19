@@ -2094,8 +2094,8 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        setLabelTextIfChanged(selectionPageLabel, if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
-        setLabelTextIfChanged(controlGroupsLabel, runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
+        setLabelTextIfChanged(selectionPageLabel, formatSelectionPageLabel(selectedCount, selectionPage, pageCount))
+        setLabelTextIfChanged(controlGroupsLabel, formatControlGroupDeckLine(runtime.controlGroupSizes()))
         val controlGroupButtonsSignature = buildControlGroupButtonsSignature()
         if (controlGroupButtonsSignature != lastControlGroupButtonsSignature) {
             lastControlGroupButtonsSignature = controlGroupButtonsSignature
@@ -2129,7 +2129,7 @@ internal class GameScreen(
             selectedCount,
             selectionPage.coerceIn(0, pageCount - 1),
             pageCount,
-            runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle"
+            formatControlGroupDeckLine(runtime.controlGroupSizes())
         ).joinToString("|")
     }
 
@@ -3076,6 +3076,20 @@ internal fun buildMinimapHintLine(commandArmed: Boolean): String =
         "armed: world click confirm"
     } else {
         "minimap drag camera"
+    }
+
+internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCount: Int): String =
+    if (selectedCount <= 0) {
+        "Pg 0/0 · 0"
+    } else {
+        "Pg ${pageIndex + 1}/$pageCount · $selectedCount"
+    }
+
+internal fun formatControlGroupDeckLine(groups: List<Pair<Int, Int>>): String =
+    if (groups.isEmpty()) {
+        "Groups idle"
+    } else {
+        groups.take(3).joinToString("  ") { (group, count) -> "$group:$count" }
     }
 
 internal fun resolveQueueHeaderLine(hasProduction: Boolean, hasResearch: Boolean, underConstruction: Boolean): String =
