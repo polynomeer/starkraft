@@ -738,41 +738,41 @@ internal class GdxWorldRenderer(
                     val goalY = runtime.camera.worldToScreenY(entity.pathGoalY.toFloat() + 0.5f)
                     val pathKind = orderMarkerKind(entity)
                     val tone = pingTone(pathKind)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.12f)
-                    shape.rectLine(startX, startY, goalX, goalY, 1.6f)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.26f)
-                    shape.circle(goalX, goalY, 9f)
+                    drawRouteBeads(shape, startX, startY, goalX, goalY, tone)
+                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.14f)
+                    shape.circle(goalX, goalY, 11f)
                     shape.color = tone.cpy().mul(1f, 1f, 1f, 0.92f)
-                    shape.circle(goalX, goalY, 2.6f)
-                    drawChevronTrail(shape, startX, startY, goalX, goalY, tone.cpy().mul(1f, 1f, 1f, 0.56f))
+                    shape.circle(goalX, goalY, 2.8f)
+                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.28f)
+                    shape.circle(goalX, goalY, 6f)
                 }
             }
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
                 val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
-                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.14f)
-                shape.rectLine(startX, startY, rallyX, rallyY, 2f)
-                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.24f)
-                shape.circle(rallyX, rallyY, 11f)
-                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.94f)
-                shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
-                shape.rect(rallyX - 9f, rallyY - 1f, 18f, 2f)
-                shape.rect(rallyX - 1f, rallyY - 9f, 2f, 18f)
-                drawChevronTrail(shape, startX, startY, rallyX, rallyY, pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.64f))
+                val tone = pingTone(GroundPingKind.MOVE)
+                drawRouteBeads(shape, startX, startY, rallyX, rallyY, tone)
+                shape.color = tone.cpy().mul(1f, 1f, 1f, 0.24f)
+                shape.circle(rallyX, rallyY, 12f)
+                shape.color = tone.cpy().mul(1f, 1f, 1f, 0.94f)
+                shape.rect(rallyX - 2f, rallyY - 2f, 4f, 4f)
+                shape.rect(rallyX - 7f, rallyY - 0.75f, 14f, 1.5f)
+                shape.rect(rallyX - 0.75f, rallyY - 7f, 1.5f, 14f)
             }
             if (entity.buildTargetId != null) {
                 entitiesById[entity.buildTargetId]?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
-                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.16f)
-                    shape.rectLine(startX, startY, targetX, targetY, 2.2f)
-                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.22f)
+                    val tone = pingTone(GroundPingKind.BUILD)
+                    drawRouteBeads(shape, startX, startY, targetX, targetY, tone)
+                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.22f)
                     shape.circle(targetX, targetY, 10f)
-                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.92f)
-                    shape.circle(targetX, targetY, 3.5f)
+                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.92f)
+                    shape.circle(targetX, targetY, 3.2f)
                     shape.rect(targetX - 8f, targetY - 8f, 16f, 2f)
                     shape.rect(targetX - 8f, targetY + 6f, 16f, 2f)
-                    drawChevronTrail(shape, startX, startY, targetX, targetY, pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.68f))
+                    shape.rect(targetX - 8f, targetY - 8f, 2f, 16f)
+                    shape.rect(targetX + 6f, targetY - 8f, 2f, 16f)
                 }
             }
             if (entity.id == leadSelectedId && isAttackOrder(entity)) {
@@ -2167,6 +2167,27 @@ internal class GdxWorldRenderer(
         val lateral = kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * (0.7f + (severity * 1.9f))
         val vertical = kotlin.math.cos(phase * Math.PI * 2.0).toFloat() * (0.2f + (severity * 0.9f))
         return lateral to vertical
+    }
+
+    private fun drawRouteBeads(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, tone: Color) {
+        val dx = endX - startX
+        val dy = endY - startY
+        val length = kotlin.math.sqrt((dx * dx) + (dy * dy))
+        if (length < 18f) return
+        val nx = dx / length
+        val ny = dy / length
+        val count = (length / 34f).toInt().coerceIn(1, 4)
+        for (i in 1..count) {
+            val t = i / (count + 1f)
+            val px = startX + (dx * t)
+            val py = startY + (dy * t)
+            val alpha = 0.08f + (0.08f * t)
+            val size = 1.6f + (0.8f * t)
+            shape.color = tone.cpy().mul(1f, 1f, 1f, alpha)
+            shape.circle(px, py, 4.6f * t.coerceAtLeast(0.65f))
+            shape.color = tone.cpy().mul(1f, 1f, 1f, 0.24f + (0.10f * t))
+            shape.rectLine(px - (nx * size), py - (ny * size), px + (nx * size), py + (ny * size), 1.2f)
+        }
     }
 
     private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
