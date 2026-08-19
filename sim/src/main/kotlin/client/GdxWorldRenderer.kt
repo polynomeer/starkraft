@@ -1303,26 +1303,26 @@ internal class GdxWorldRenderer(
     }
 
     private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {
-        val legendTop = top + 5f
-        val startX = left + width - 49f
-        shape.color = Color(0.04f, 0.07f, 0.09f, 0.30f)
-        shape.rect(startX - 4f, legendTop - 3f, 52f, 10f)
-        shape.color = Color(0.64f, 0.88f, 0.98f, 0.72f)
-        shape.rect(startX, legendTop + 1f, 3f, 3f)
-        shape.color = completionProductionSparkColor.cpy().apply { a = 0.74f }
-        shape.rect(startX + 9f, legendTop, 4f, 5f)
-        shape.color = completionResearchSparkColor.cpy().apply { a = 0.74f }
-        shape.rect(startX + 18f, legendTop + 1f, 3f, 3f)
-        shape.rect(startX + 17f, legendTop + 2f, 5f, 1f)
-        shape.color = completionBuildSparkColor.cpy().apply { a = 0.74f }
-        shape.rect(startX + 27f, legendTop + 1f, 3f, 3f)
-        shape.rect(startX + 28f, legendTop - 1f, 1.5f, 7f)
-        shape.color = Color(0.98f, 0.48f, 0.30f, 0.72f)
-        shape.rect(startX + 36f, legendTop + 1f, 3f, 3f)
-        shape.rect(startX + 34f, legendTop + 2f, 7f, 1f)
-        shape.rect(startX + 37f, legendTop - 1f, 1.5f, 7f)
-        shape.color = Color(0.98f, 0.86f, 0.48f, 0.72f)
-        shape.circle(startX + 46f, legendTop + 2.5f, 2f)
+        val legendTop = top + 4f
+        val startX = left + width - 35f
+        shape.color = Color(0.04f, 0.07f, 0.09f, 0.22f)
+        shape.rect(startX - 3f, legendTop - 2f, 37f, 8f)
+        shape.color = Color(0.64f, 0.88f, 0.98f, 0.64f)
+        shape.rect(startX, legendTop + 1f, 2f, 2f)
+        shape.color = completionProductionSparkColor.cpy().apply { a = 0.68f }
+        shape.rect(startX + 6f, legendTop, 3f, 4f)
+        shape.color = completionResearchSparkColor.cpy().apply { a = 0.68f }
+        shape.rect(startX + 13f, legendTop + 1f, 2f, 2f)
+        shape.rect(startX + 12f, legendTop + 1.5f, 4f, 1f)
+        shape.color = completionBuildSparkColor.cpy().apply { a = 0.68f }
+        shape.rect(startX + 19f, legendTop + 1f, 2f, 2f)
+        shape.rect(startX + 19.5f, legendTop - 0.5f, 1f, 5f)
+        shape.color = Color(0.98f, 0.48f, 0.30f, 0.68f)
+        shape.rect(startX + 24f, legendTop + 1f, 2f, 2f)
+        shape.rect(startX + 23f, legendTop + 1.5f, 4f, 1f)
+        shape.rect(startX + 24.5f, legendTop - 0.5f, 1f, 5f)
+        shape.color = Color(0.98f, 0.86f, 0.48f, 0.68f)
+        shape.circle(startX + 31f, legendTop + 2f, 1.6f)
     }
 
     private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {

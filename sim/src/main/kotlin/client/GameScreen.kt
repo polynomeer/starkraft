@@ -1276,11 +1276,7 @@ internal class GameScreen(
 
     private fun buildFactionOverviewLine(): String {
         val snapshot = runtime.snapshot ?: return "No data"
-        if (snapshot.factions.isEmpty()) return "No factions"
-        return snapshot.factions.joinToString("\n") { faction ->
-            val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
-            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  V${faction.visibleTiles}$viewed"
-        }
+        return formatFactionOverviewLine(snapshot.factions, runtime.session.state.viewedFaction)
     }
 
     private fun wrapHudPanel(content: Table, tone: Color): Table =
@@ -3117,6 +3113,23 @@ internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight:
     val bottomHudTop = screenHeight - computeBottomHudHeight(screenWidth, screenHeight)
     val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
     return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
+}
+
+internal fun formatFactionOverviewLine(factions: List<FactionSnapshot>, viewedFaction: Int?): String {
+    if (factions.isEmpty()) return "No factions"
+    return factions.joinToString("  |  ") { faction ->
+        buildString {
+            append("F")
+            append(faction.faction)
+            if (viewedFaction == faction.faction) append("*")
+            append(" ")
+            append(faction.minerals)
+            append("/")
+            append(faction.gas)
+            append(" v")
+            append(faction.visibleTiles)
+        }
+    }
 }
 
 internal fun formatCommandHeaderLine(

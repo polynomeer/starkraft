@@ -16,8 +16,10 @@ import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
+import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.formatCommandButtonText
 import starkraft.sim.client.formatCommandHeaderLine
+import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
@@ -215,6 +217,21 @@ class GameScreenInputRulesTest {
         assertEquals("Pg 2/3 · 14", formatSelectionPageLabel(selectedCount = 14, pageIndex = 1, pageCount = 3))
         assertEquals("Groups idle", formatControlGroupDeckLine(emptyList()))
         assertEquals("4:8  5:2  6:1", formatControlGroupDeckLine(listOf(4 to 8, 5 to 2, 6 to 1, 7 to 9)))
+    }
+
+    @Test
+    fun `faction overview line stays compact`() {
+        assertEquals(
+            "F1* 275/0 v42  |  F2 180/24 v31",
+            formatFactionOverviewLine(
+                factions = listOf(
+                    FactionSnapshot(faction = 1, minerals = 275, gas = 0, visibleTiles = 42),
+                    FactionSnapshot(faction = 2, minerals = 180, gas = 24, visibleTiles = 31)
+                ),
+                viewedFaction = 1
+            )
+        )
+        assertEquals("No factions", formatFactionOverviewLine(emptyList(), viewedFaction = null))
     }
 
     @Test
