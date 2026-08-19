@@ -1575,47 +1575,25 @@ internal class GameScreen(
 
     private fun buildQueueStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
         val lead = context?.lead ?: return "Idle"
-        val parts = buildList {
-            if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
-                add(
-                    buildString {
-                        append("P ")
-                        append(lead.activeProductionType ?: "queue")
-                        if (lead.productionQueueSize > 0) append(" x${lead.productionQueueSize}")
-                        if (lead.activeProductionRemainingTicks > 0) append(" ${lead.activeProductionRemainingTicks}t")
-                    }
-                )
-            }
-            if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
-                add(
-                    buildString {
-                        append("R ")
-                        append(lead.activeResearchTech ?: "queue")
-                        if (lead.researchQueueSize > 0) append(" x${lead.researchQueueSize}")
-                        if (lead.activeResearchRemainingTicks > 0) append(" ${lead.activeResearchRemainingTicks}t")
-                    }
-                )
-            }
-            if (lead.underConstruction) {
-                add(
-                    buildString {
-                        append("B")
-                        lead.constructionRemainingTicks?.let { append(" ${it}t") }
-                    }
-                )
-            }
-        }
-        return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
+        return formatQueueStatusLine(
+            productionType = lead.activeProductionType,
+            productionQueueSize = lead.productionQueueSize,
+            productionRemainingTicks = lead.activeProductionRemainingTicks,
+            researchTech = lead.activeResearchTech,
+            researchQueueSize = lead.researchQueueSize,
+            researchRemainingTicks = lead.activeResearchRemainingTicks,
+            underConstruction = lead.underConstruction,
+            constructionRemainingTicks = lead.constructionRemainingTicks
+        )
     }
 
     private fun buildQueueHeaderLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
         val lead = context?.lead ?: return "QUEUE"
-        return when {
-            lead.activeResearchTech != null || lead.researchQueueSize > 0 -> "RESEARCH"
-            lead.activeProductionType != null || lead.productionQueueSize > 0 -> "PRODUCTION"
-            lead.underConstruction -> "CONSTRUCT"
-            else -> "QUEUE"
-        }
+        return resolveQueueHeaderLine(
+            hasProduction = lead.activeProductionType != null || lead.productionQueueSize > 0,
+            hasResearch = lead.activeResearchTech != null || lead.researchQueueSize > 0,
+            underConstruction = lead.underConstruction
+        )
     }
 
     private fun updateHealthBar() {
@@ -3099,6 +3077,58 @@ internal fun buildMinimapHintLine(commandArmed: Boolean): String =
     } else {
         "minimap drag camera"
     }
+
+internal fun resolveQueueHeaderLine(hasProduction: Boolean, hasResearch: Boolean, underConstruction: Boolean): String =
+    when {
+        hasProduction && hasResearch -> "PIPELINE"
+        hasResearch -> "RESEARCH"
+        hasProduction -> "PRODUCTION"
+        underConstruction -> "CONSTRUCT"
+        else -> "QUEUE"
+    }
+
+internal fun formatQueueStatusLine(
+    productionType: String?,
+    productionQueueSize: Int,
+    productionRemainingTicks: Int,
+    researchTech: String?,
+    researchQueueSize: Int,
+    researchRemainingTicks: Int,
+    underConstruction: Boolean,
+    constructionRemainingTicks: Int?
+): String {
+    val parts = buildList {
+        if (productionQueueSize > 0 || productionType != null) {
+            add(
+                buildString {
+                    append("Train ")
+                    append(productionType ?: "queue")
+                    if (productionQueueSize > 0) append(" x$productionQueueSize")
+                    if (productionRemainingTicks > 0) append(" · ${productionRemainingTicks}t")
+                }
+            )
+        }
+        if (researchQueueSize > 0 || researchTech != null) {
+            add(
+                buildString {
+                    append("Tech ")
+                    append(researchTech ?: "queue")
+                    if (researchQueueSize > 0) append(" x$researchQueueSize")
+                    if (researchRemainingTicks > 0) append(" · ${researchRemainingTicks}t")
+                }
+            )
+        }
+        if (underConstruction) {
+            add(
+                buildString {
+                    append("Build")
+                    constructionRemainingTicks?.takeIf { it > 0 }?.let { append(" · ${it}t") }
+                }
+            )
+        }
+    }
+    return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
+}
 
 internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {
     if (!pauseVisible && !helpVisible) return true

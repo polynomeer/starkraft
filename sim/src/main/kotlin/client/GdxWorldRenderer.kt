@@ -950,9 +950,18 @@ internal class GdxWorldRenderer(
                     val attackDir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
                     val hitX = screenX - directionDx(attackDir, 10f)
                     val hitY = screenY - directionDy(attackDir, 10f)
+                    val warnX = screenX - directionDx(attackDir, 14f)
+                    val warnY = screenY - directionDy(attackDir, 14f)
+                    val flankX = directionDy(attackDir, 4.5f)
+                    val flankY = -directionDx(attackDir, 4.5f)
                     val meleeHit = isMeleeAttacker(attacker)
                     shape.color = if (meleeHit) selectionColor.cpy().apply { a = 0.86f } else pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.82f)
                     shape.rectLine(hitX, hitY, screenX, screenY, 2.2f)
+                    shape.color = if (meleeHit) Color(0.90f, 1.00f, 0.78f, 0.84f) else Color(1.00f, 0.82f, 0.58f, 0.88f)
+                    shape.rectLine(warnX - flankX, warnY - flankY, warnX, warnY, 1.8f)
+                    shape.rectLine(warnX + flankX, warnY + flankY, warnX, warnY, 1.8f)
+                    shape.color = if (meleeHit) Color(0.82f, 1.00f, 0.72f, 0.36f) else Color(1.00f, 0.68f, 0.42f, 0.32f)
+                    shape.circle(warnX, warnY, if (meleeHit) 3.8f else 3.4f)
                     if (meleeHit) {
                         shape.rectLine(hitX + directionDy(attackDir, 6f), hitY - directionDx(attackDir, 6f), hitX - directionDy(attackDir, 6f), hitY + directionDx(attackDir, 6f), 2.2f)
                         shape.color = selectionColor.cpy().apply { a = 0.48f }

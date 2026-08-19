@@ -15,9 +15,11 @@ import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
+import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
+import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -136,6 +138,45 @@ class GameScreenInputRulesTest {
     fun `minimap hint reflects armed mode`() {
         assertEquals("minimap drag camera", buildMinimapHintLine(commandArmed = false))
         assertEquals("armed: world click confirm", buildMinimapHintLine(commandArmed = true))
+    }
+
+    @Test
+    fun `queue header reflects mixed pipeline states`() {
+        assertEquals("QUEUE", resolveQueueHeaderLine(hasProduction = false, hasResearch = false, underConstruction = false))
+        assertEquals("PRODUCTION", resolveQueueHeaderLine(hasProduction = true, hasResearch = false, underConstruction = false))
+        assertEquals("RESEARCH", resolveQueueHeaderLine(hasProduction = false, hasResearch = true, underConstruction = false))
+        assertEquals("PIPELINE", resolveQueueHeaderLine(hasProduction = true, hasResearch = true, underConstruction = false))
+        assertEquals("CONSTRUCT", resolveQueueHeaderLine(hasProduction = false, hasResearch = false, underConstruction = true))
+    }
+
+    @Test
+    fun `queue status line formats compact readable summaries`() {
+        assertEquals(
+            "Train Marine x2 · 18t  |  Tech Stim x1 · 30t  |  Build · 12t",
+            formatQueueStatusLine(
+                productionType = "Marine",
+                productionQueueSize = 2,
+                productionRemainingTicks = 18,
+                researchTech = "Stim",
+                researchQueueSize = 1,
+                researchRemainingTicks = 30,
+                underConstruction = true,
+                constructionRemainingTicks = 12
+            )
+        )
+        assertEquals(
+            "Idle",
+            formatQueueStatusLine(
+                productionType = null,
+                productionQueueSize = 0,
+                productionRemainingTicks = 0,
+                researchTech = null,
+                researchQueueSize = 0,
+                researchRemainingTicks = 0,
+                underConstruction = false,
+                constructionRemainingTicks = null
+            )
+        )
     }
 
     @Test
