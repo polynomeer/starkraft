@@ -974,8 +974,10 @@ internal class GameScreen(
                     ).colspan(commandColumns).left().padBottom(4f).row()
                     group.second.forEachIndexed { index, button ->
                         val activePulse = uiPulse()
+                        val buttonLabel = commandButtonText(button)
+                        val hotkeyLabel = commandButtonHotkey(button)
                         val actor = makeButton(
-                            commandButtonLabel(button),
+                            buttonLabel,
                             runtime.actionHint(button.actionId),
                             commandButtonStyle(button.actionId)
                         ) {
@@ -1064,19 +1066,46 @@ internal class GameScreen(
                                                 checked = actor.isChecked
                                             )
                                         ).size(if (commandDeckLayout.buttonHeight <= 17) 9f else 10f, if (commandDeckLayout.buttonHeight <= 17) 9f else 10f).left().padRight(3f)
-                                        add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
-                                        add(
-                                            Table().apply {
-                                                background =
-                                                    assets.panelDrawable(
-                                                        when {
-                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
-                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.66f)
-                                                            else -> Color(1f, 1f, 1f, 0.09f)
+                                        add(actor).width(commandActorWidth - if (hotkeyLabel != null) 18f else 8f).height(commandButtonHeight).left().expandX().fillX()
+                                        if (hotkeyLabel != null) {
+                                            add(
+                                                Table().apply {
+                                                    background =
+                                                        assets.panelDrawable(
+                                                            when {
+                                                                actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.34f)
+                                                                actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.76f)
+                                                                else -> commandHotkeyTone(button.actionId)
+                                                            }
+                                                        )
+                                                    pad(1f, 3f, 1f, 3f)
+                                                    add(
+                                                        Label(hotkeyLabel, assets.mutedLabelStyle).apply {
+                                                            setFontScale(0.76f)
+                                                            color =
+                                                                when {
+                                                                    actor.isDisabled -> Color(0.72f, 0.76f, 0.80f, 0.62f)
+                                                                    actor.isChecked -> Color(0.14f, 0.12f, 0.08f, 0.94f)
+                                                                    else -> Color(0.92f, 0.96f, 1.00f, 0.96f)
+                                                                }
                                                         }
-                                                    )
-                                            }
-                                        ).size(4f, 4f).padLeft(3f)
+                                                    ).center()
+                                                }
+                                            ).minWidth(15f).height(commandButtonHeight - 2f).padLeft(3f)
+                                        } else {
+                                            add(
+                                                Table().apply {
+                                                    background =
+                                                        assets.panelDrawable(
+                                                            when {
+                                                                actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
+                                                                actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.44f)
+                                                                else -> Color(1f, 1f, 1f, 0.08f)
+                                                            }
+                                                        )
+                                                }
+                                            ).size(3f, 3f).padLeft(3f)
+                                        }
                                     }
                                 ).expand().fill()
                             }
@@ -2630,54 +2659,20 @@ internal class GameScreen(
             else -> assets.subtleButtonStyle()
         }
 
-    private fun commandButtonLabel(button: ClientCommandButton): String {
-        val baseLabel =
-            when (button.actionId) {
-                "attackMove" -> "Attack"
-                "centerSelection" -> "Ctr"
-                "viewF1" -> "F1"
-                "viewF2" -> "F2"
-                "observer" -> "Obs"
-                "pause" -> "Pse"
-                "help" -> "Hlp"
-                "debug" -> "Dbg"
-                "build:Depot" -> "Depot"
-                "build:ResourceDepot" -> "Exp"
-                "build:GasDepot" -> "Gas"
-                "cancelBuild" -> "Stop B"
-                "cancelTrain" -> "Stop T"
-                "cancelResearch" -> "Stop R"
-                "patrol" -> "Pat"
-                "move" -> "Move"
-                "hold" -> "Hold"
-                else -> button.label
-            }
-        val hotkey =
-            when (button.actionId) {
-                "move" -> "M"
-                "attackMove" -> "A"
-                "patrol" -> "P"
-                "hold" -> "H"
-                "clear" -> "E"
-                "centerSelection" -> "Hm"
-                "viewF1" -> "1"
-                "viewF2" -> "2"
-                "observer" -> "3"
-                "pause" -> "Sp"
-                "help" -> "F1"
-                "debug" -> "Tb"
-                "selectViewedFaction" -> "F2"
-                "selectType" -> "F3"
-                "selectRole" -> "F4"
-                "selectAll" -> "F11"
-                "selectIdleWorkers" -> "F12"
-                "build:Depot" -> "B"
-                "build:ResourceDepot" -> "R"
-                "build:GasDepot" -> "G"
-                else -> null
-            }
-        return if (hotkey == null) baseLabel else "$baseLabel $hotkey"
-    }
+    private fun commandButtonText(button: ClientCommandButton): String =
+        formatCommandButtonText(button.actionId, button.label)
+
+    private fun commandButtonHotkey(button: ClientCommandButton): String? =
+        resolveCommandButtonHotkey(button.actionId)
+
+    private fun commandHotkeyTone(actionId: String): Color =
+        when {
+            actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.72f)
+            actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
+            actionId == "move" || actionId == "hold" || actionId == "patrol" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.68f)
+            actionId.startsWith("train:") || actionId.startsWith("research:") -> Color(0.66f, 0.80f, 1.00f, 0.68f)
+            else -> Color(0.34f, 0.42f, 0.48f, 0.68f)
+        }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
         val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
@@ -3096,6 +3091,54 @@ internal fun formatCommandHeaderLine(
         base
     }
 }
+
+internal fun formatCommandButtonText(actionId: String, fallbackLabel: String): String =
+    when (actionId) {
+        "attackMove" -> "Attack"
+        "centerSelection" -> "Center"
+        "viewF1" -> "F1 View"
+        "viewF2" -> "F2 View"
+        "observer" -> "Observer"
+        "pause" -> "Pause"
+        "help" -> "Help"
+        "debug" -> "Debug"
+        "build:Depot" -> "Depot"
+        "build:ResourceDepot" -> "Expand"
+        "build:GasDepot" -> "Refine"
+        "cancelBuild" -> "Cancel B"
+        "cancelTrain" -> "Cancel T"
+        "cancelResearch" -> "Cancel R"
+        "patrol" -> "Patrol"
+        "move" -> "Move"
+        "hold" -> "Hold"
+        "clear" -> "Clear"
+        else -> fallbackLabel
+    }
+
+internal fun resolveCommandButtonHotkey(actionId: String): String? =
+    when (actionId) {
+        "move" -> "M"
+        "attackMove" -> "A"
+        "patrol" -> "P"
+        "hold" -> "H"
+        "clear" -> "Esc"
+        "centerSelection" -> "Hm"
+        "viewF1" -> "1"
+        "viewF2" -> "2"
+        "observer" -> "3"
+        "pause" -> "Sp"
+        "help" -> "F1"
+        "debug" -> "Tb"
+        "selectViewedFaction" -> "F2"
+        "selectType" -> "F3"
+        "selectRole" -> "F4"
+        "selectAll" -> "F11"
+        "selectIdleWorkers" -> "F12"
+        "build:Depot" -> "B"
+        "build:ResourceDepot" -> "R"
+        "build:GasDepot" -> "G"
+        else -> null
+    }
 
 internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): String =
     when {

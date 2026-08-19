@@ -15,6 +15,7 @@ import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
+import starkraft.sim.client.formatCommandButtonText
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
@@ -22,6 +23,7 @@ import starkraft.sim.client.formatControlGroupDeckLine
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
+import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
@@ -208,6 +210,16 @@ class GameScreenInputRulesTest {
         assertEquals("Orders · DEFAULT", formatCommandHeaderLine("default", productionCount = 6, productionPage = 0))
         assertEquals("Orders · DEFAULT · 2/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 1))
         assertEquals("Orders · DEFAULT · 3/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 9))
+    }
+
+    @Test
+    fun `command button labels stay compact and readable`() {
+        assertEquals("Attack", formatCommandButtonText("attackMove", "Attack Move"))
+        assertEquals("Expand", formatCommandButtonText("build:ResourceDepot", "Build ResourceDepot"))
+        assertEquals("Cancel T", formatCommandButtonText("cancelTrain", "Cancel Train"))
+        assertEquals("A", resolveCommandButtonHotkey("attackMove"))
+        assertEquals("Esc", resolveCommandButtonHotkey("clear"))
+        assertEquals("F1", resolveCommandButtonHotkey("help"))
     }
 
     @Test
