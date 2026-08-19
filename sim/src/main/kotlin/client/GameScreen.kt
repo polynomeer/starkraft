@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
@@ -656,8 +657,8 @@ internal class GameScreen(
             applyHudLayout(topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight, centerWidth, commandWidth, commandHeight, unifiedPanelHeight, hudShellHeight)
         }
         setLabelTextIfChanged(minimapTitle, "Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
-        minimapTitle.color = currentMinimapTitleTone()
-        minimapHint.color = currentMinimapHintTone()
+        setActorColorIfChanged(minimapTitle, currentMinimapTitleTone())
+        setActorColorIfChanged(minimapHint, currentMinimapHintTone())
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         val selectionHeadline = buildSelectionHeadline()
         val selectionMetaLine = buildSelectionMetaLine()
@@ -693,13 +694,13 @@ internal class GameScreen(
             rebuildQueueStatusStrip(queueStatusBits)
         }
         setLabelTextIfChanged(queueHeaderLabel, queueHeaderLine)
-        selectionLabel.color = currentSelectionHeadlineTone()
-        selectionMetaLabel.color = currentSelectionMetaTone()
-        centerStatusLabel.color = currentCenterStatusTone(centerStatusLine)
-        queueHeaderLabel.color = currentQueueHeaderTone(queueHeaderLine)
-        queueStatusLabel.color = currentQueueStatusTone(queueHeaderLine)
+        setActorColorIfChanged(selectionLabel, currentSelectionHeadlineTone())
+        setActorColorIfChanged(selectionMetaLabel, currentSelectionMetaTone())
+        setActorColorIfChanged(centerStatusLabel, currentCenterStatusTone(centerStatusLine))
+        setActorColorIfChanged(queueHeaderLabel, currentQueueHeaderTone(queueHeaderLine))
+        setActorColorIfChanged(queueStatusLabel, currentQueueStatusTone(queueHeaderLine))
         setLabelTextIfChanged(selectionRosterLabel, selectionRosterLine)
-        selectionRosterLabel.color = currentRosterTone()
+        setActorColorIfChanged(selectionRosterLabel, currentRosterTone())
         setLabelTextIfChanged(factionOverviewLabel, factionOverviewLine)
         setLabelTextIfChanged(portraitLabel, portraitText)
         setLabelTextIfChanged(healthLabel, healthLine)
@@ -719,22 +720,22 @@ internal class GameScreen(
         setLabelTextIfChanged(centerHeaderLabel, if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
         setLabelTextIfChanged(commandHeaderLabel, buildCommandHeader(groupedButtons))
-        commandHeaderLabel.color = currentCommandHeaderTone(groupedButtons)
+        setActorColorIfChanged(commandHeaderLabel, currentCommandHeaderTone(groupedButtons))
         setLabelTextIfChanged(economyLabel, topEconomyLine)
-        economyLabel.color = currentTopEconomyTone()
+        setActorColorIfChanged(economyLabel, currentTopEconomyTone())
         setLabelTextIfChanged(topSelectionLabel, topSelectionLine)
-        topSelectionLabel.color = currentTopSelectionTone()
+        setActorColorIfChanged(topSelectionLabel, currentTopSelectionTone())
         setLabelTextIfChanged(modeLabel, topModeLine)
-        modeLabel.color = currentTopModeTone()
+        setActorColorIfChanged(modeLabel, currentTopModeTone())
         setLabelTextIfChanged(statusBadgeLabel, statusBadgeLine)
-        statusBadgeLabel.color = currentStatusBadgeTone()
+        setActorColorIfChanged(statusBadgeLabel, currentStatusBadgeTone())
         setLabelTextIfChanged(actionBannerLabel, actionBannerText)
-        actionBannerLabel.color = currentActionBannerTextTone()
+        setActorColorIfChanged(actionBannerLabel, currentActionBannerTextTone())
         setLabelTextIfChanged(commandHintLabel, commandHintText)
-        commandHintLabel.color = currentCommandHintTextTone()
+        setActorColorIfChanged(commandHintLabel, currentCommandHintTextTone())
         setLabelTextIfChanged(attackWarningLabel, buildAttackWarningText())
         val showAttackWarning = runtime.attackWarningLine() != null
-        attackWarningTable.isVisible = showAttackWarning
+        setActorVisibleIfChanged(attackWarningTable, showAttackWarning)
         setLabelTextIfChanged(centerFooterLabel, centerFooterLine)
         syncSelectionPage(snapshot, actionBannerText, commandHintText, statusBadgeLine)
         val selectionPagerSignature = buildSelectionPagerSignature(snapshot)
@@ -742,11 +743,11 @@ internal class GameScreen(
             lastSelectionPagerSignature = selectionPagerSignature
             updateSelectionPager(snapshot)
         }
-        pauseOverlay.isVisible = runtime.pauseOverlayVisible
-        helpOverlay.isVisible = runtime.helpOverlayVisible
+        setActorVisibleIfChanged(pauseOverlay, runtime.pauseOverlayVisible)
+        setActorVisibleIfChanged(helpOverlay, runtime.helpOverlayVisible)
         setLabelTextIfChanged(helpLabel, buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
-        actionBanner.isVisible = showActionBanner
+        setActorVisibleIfChanged(actionBanner, showActionBanner)
         val hudChromeSignature = buildHudChromeSignature(showActionBanner, showAttackWarning)
         if (hudChromeSignature != lastHudChromeSignature) {
             lastHudChromeSignature = hudChromeSignature
@@ -805,7 +806,7 @@ internal class GameScreen(
         helpHeaderCard.background = assets.panelDrawable(helpHeaderCardColor(overlayPulse))
         actionBanner.background = if (showActionBanner) assets.panelDrawable(actionBannerColor(bannerPulse)) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
-        attackWarningTable.isVisible = showAttackWarning
+        setActorVisibleIfChanged(attackWarningTable, showAttackWarning)
     }
 
     private fun quantizePulse(value: Float, steps: Int = 6): Float {
@@ -2060,6 +2061,18 @@ internal class GameScreen(
     private fun setLabelTextIfChanged(label: Label, text: String) {
         if (!label.textEquals(text)) {
             label.setText(text)
+        }
+    }
+
+    private fun setActorColorIfChanged(actor: Actor, color: Color) {
+        if (actor.color.toIntBits() != color.toIntBits()) {
+            actor.color = color
+        }
+    }
+
+    private fun setActorVisibleIfChanged(actor: Actor, visible: Boolean) {
+        if (actor.isVisible != visible) {
+            actor.isVisible = visible
         }
     }
 
