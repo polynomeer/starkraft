@@ -1342,15 +1342,17 @@ internal fun buildPresetOverlayLines(
 internal fun buildHelpOverlayLines(open: Boolean): List<String> {
     if (!open) return emptyList()
     return listOf(
-        "help: f1 close  tab scenario menu  f10 preset menu",
-        "help: left select  shift+left add/remove  right command  ctrl+right attackMove",
+        "help: f1 close  esc back/cancel  tab debug  space pause",
+        "help: left select  shift+left add  drag box select  middle drag pan",
+        "help: right move/harvest  ctrl+right attack  m/a/p arm ground orders",
+        "help: armed mode accepts left/right click  esc cancels current order",
+        "help: minimap left-drag move camera  1/2 faction  3 observer  0 reset camera",
         "help: f2 select viewed faction  f3 select selected type  f4 archetype",
         "help: f11 select all units",
         "help: f12 select idle workers",
         "help: f select damaged units",
         "help: v select combat units",
         "help: n select producer buildings",
-        "help: 1/2 view faction  3 observer  0 reset camera",
         "help: home center camera on selection",
         "help: end center camera on viewed faction",
         "help: z select training buildings  c select research buildings",

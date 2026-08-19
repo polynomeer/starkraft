@@ -31,6 +31,7 @@ internal class GameScreen(
         const val HUD_SELECTION_PULSE_DURATION_MS = 260L
         const val COMMAND_CLICK_PULSE_DURATION_MS = 180L
         const val SLOT_CLICK_PULSE_DURATION_MS = 180L
+        const val IMPACT_FLASH_DECAY_PER_SECOND = 2.8f
     }
 
     private val worldRenderer = GdxWorldRenderer(assets)
@@ -96,6 +97,7 @@ internal class GameScreen(
     private val pauseHeaderCard = Table()
     private val helpOverlay = Table()
     private val helpHeaderCard = Table()
+    private val impactFlash = Table()
     private val screenFade = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
     private val footerLabel = Label("", assets.mutedLabelStyle)
@@ -125,6 +127,8 @@ internal class GameScreen(
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
+    private var impactFlashAlpha = 0f
+    private val impactFlashTone = Color(1f, 1f, 1f, 0f)
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
     private lateinit var topSelectionCell: Cell<*>
@@ -177,6 +181,7 @@ internal class GameScreen(
         refreshHud()
         if (runtime.consumeAttackAlertSound()) {
             playSoundVariant(assets.alertSound, 0.7f, 0.98f, 1.04f)
+            triggerImpactFlash(Color(1.00f, 0.42f, 0.22f, 1f), 0.13f)
         }
         when (runtime.consumeCommandSoundKind()) {
             CommandSoundKind.MOVE -> playSoundVariant("cmd-move", assets.moveSound, 0.48f, 0.98f, 1.05f, 30L)
@@ -186,26 +191,50 @@ internal class GameScreen(
             null -> Unit
         }
         when (runtime.consumeCombatSoundKind()) {
-            CombatSoundKind.MARINE_RANGED -> playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
-            CombatSoundKind.ZERGLING_MELEE -> playSoundVariant(assets.zerglingCombatSound, 0.46f, 0.93f, 1.03f)
-            CombatSoundKind.MELEE -> playSoundVariant(assets.meleeCombatSound, 0.44f, 0.95f, 1.04f)
-            CombatSoundKind.RANGED -> playSoundVariant(assets.rangedCombatSound, 0.42f, 0.97f, 1.05f)
+            CombatSoundKind.MARINE_RANGED -> {
+                playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
+                triggerImpactFlash(Color(0.98f, 0.80f, 0.42f, 1f), 0.045f)
+            }
+            CombatSoundKind.ZERGLING_MELEE -> {
+                playSoundVariant(assets.zerglingCombatSound, 0.46f, 0.93f, 1.03f)
+                triggerImpactFlash(Color(0.62f, 1.00f, 0.54f, 1f), 0.050f)
+            }
+            CombatSoundKind.MELEE -> {
+                playSoundVariant(assets.meleeCombatSound, 0.44f, 0.95f, 1.04f)
+                triggerImpactFlash(Color(1.00f, 0.72f, 0.48f, 1f), 0.042f)
+            }
+            CombatSoundKind.RANGED -> {
+                playSoundVariant(assets.rangedCombatSound, 0.42f, 0.97f, 1.05f)
+                triggerImpactFlash(Color(0.86f, 0.92f, 1.00f, 1f), 0.036f)
+            }
             null -> Unit
         }
         when (runtime.consumeDeathSoundKind()) {
-            DeathSoundKind.UNIT -> playSoundVariant("death-unit", assets.deathSound, 0.56f, 0.94f, 1.03f, 55L)
-            DeathSoundKind.MARINE -> playSoundVariant("death-marine", assets.marineDeathSound, 0.58f, 0.95f, 1.04f, 55L)
-            DeathSoundKind.ZERGLING -> playSoundVariant("death-zergling", assets.zerglingDeathSound, 0.56f, 0.92f, 1.01f, 45L)
+            DeathSoundKind.UNIT -> {
+                playSoundVariant("death-unit", assets.deathSound, 0.56f, 0.94f, 1.03f, 55L)
+                triggerImpactFlash(Color(1.00f, 0.52f, 0.42f, 1f), 0.070f)
+            }
+            DeathSoundKind.MARINE -> {
+                playSoundVariant("death-marine", assets.marineDeathSound, 0.58f, 0.95f, 1.04f, 55L)
+                triggerImpactFlash(Color(1.00f, 0.56f, 0.46f, 1f), 0.076f)
+            }
+            DeathSoundKind.ZERGLING -> {
+                playSoundVariant("death-zergling", assets.zerglingDeathSound, 0.56f, 0.92f, 1.01f, 45L)
+                triggerImpactFlash(Color(0.68f, 1.00f, 0.56f, 1f), 0.076f)
+            }
             DeathSoundKind.STRUCTURE -> {
                 playSoundVariant("death-structure-main", assets.structureDeathSound, 0.60f, 0.92f, 1.00f, 80L)
                 playSoundVariant("death-structure-tail", assets.structureDeathTailSound, 0.38f, 0.88f, 0.96f, 120L)
+                triggerImpactFlash(Color(1.00f, 0.66f, 0.34f, 1f), 0.110f)
             }
             null -> Unit
         }
         if (runtime.consumeCompletionAlertSound()) {
             playSoundVariant(assets.completeSound, 0.55f, 0.98f, 1.04f)
+            triggerImpactFlash(Color(0.60f, 0.98f, 0.76f, 1f), 0.060f)
         }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, worldViewportHeight, dragSelection)
+        updateImpactFlash(delta)
         updateScreenFade(delta)
         stage.act(delta)
         stage.draw()
@@ -534,6 +563,15 @@ internal class GameScreen(
             add().expandX().fillX()
             commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
+
+        impactFlash.apply {
+            setFillParent(true)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            isVisible = false
+            background = assets.panelDrawable(Color.WHITE)
+            color.set(impactFlashTone)
+        }
+        stage.addActor(impactFlash)
 
         root.top()
         root.add(wrapTopStrip(topBar)).expandX().fillX().pad(6f, 18f, 0f, 18f).row()
@@ -2136,6 +2174,25 @@ internal class GameScreen(
         screenFadeAlpha = (screenFadeAlpha - (delta * 1.8f)).coerceAtLeast(0f)
         screenFade.isVisible = screenFadeAlpha > 0f
         screenFade.color.a = screenFadeAlpha
+    }
+
+    private fun triggerImpactFlash(tone: Color, alpha: Float) {
+        if (alpha <= 0f) return
+        impactFlashTone.set(tone.r, tone.g, tone.b, 1f)
+        impactFlash.color.set(impactFlashTone)
+        impactFlashAlpha = maxOf(impactFlashAlpha, alpha.coerceIn(0f, 0.18f))
+        impactFlash.isVisible = impactFlashAlpha > 0f
+        impactFlash.color.a = impactFlashAlpha
+    }
+
+    private fun updateImpactFlash(delta: Float) {
+        if (impactFlashAlpha <= 0f) {
+            impactFlash.isVisible = false
+            return
+        }
+        impactFlashAlpha = (impactFlashAlpha - (delta * IMPACT_FLASH_DECAY_PER_SECOND)).coerceAtLeast(0f)
+        impactFlash.isVisible = impactFlashAlpha > 0f
+        impactFlash.color.set(impactFlashTone.r, impactFlashTone.g, impactFlashTone.b, impactFlashAlpha)
     }
 
     private fun resolveFocusedEntity(snapshot: ClientSnapshot, selected: List<EntitySnapshot>): EntitySnapshot? =
