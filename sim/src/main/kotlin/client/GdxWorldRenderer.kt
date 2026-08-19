@@ -2458,9 +2458,9 @@ internal data class GdxMiniMapBounds(
 internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
     GdxMiniMapBounds(
         left = 16f,
-        top = screenHeight - minOf(160, screenHeight / 6).toFloat() - 16f,
-        width = minOf(192, screenWidth / 6).toFloat(),
-        height = minOf(160, screenHeight / 6).toFloat()
+        top = screenHeight - minOf(144, screenHeight / 7).toFloat() - 14f,
+        width = minOf(176, screenWidth / 7).toFloat(),
+        height = minOf(144, screenHeight / 7).toFloat()
     )
 
 internal fun gdxMiniMapWorldPosition(

@@ -48,7 +48,7 @@ class GameScreenInputRulesTest {
 
         assertTrue(compact.centerWidth < 266, "1280 layout should shrink center panel")
         assertTrue(compact.commandWidth < 278, "1280 layout should shrink command panel")
-        assertTrue(compact.leftSlotWidth <= 228, "1280 layout should keep minimap lane compact")
+        assertTrue(compact.leftSlotWidth <= 184, "1280 layout should keep minimap lane compact")
         assertTrue(compact.centerWidth >= compact.commandWidth, "1280 layout should prioritize center selection deck")
         assertTrue(wide.centerWidth >= compact.centerWidth, "wider layout should not shrink center panel further")
         assertTrue(wide.commandWidth >= compact.commandWidth, "wider layout should not shrink command panel further")
@@ -117,11 +117,11 @@ class GameScreenInputRulesTest {
         val hdMinimap = gdxMiniMapBounds(1920, 1080)
         val compactMinimap = gdxMiniMapBounds(1280, 720)
 
-        assertTrue(hdMinimap.width <= 192f, "desktop minimap should cap width")
-        assertTrue(hdMinimap.height <= 160f, "desktop minimap should cap height")
-        assertTrue(compactMinimap.width <= 192f, "compact minimap should stay narrow")
-        assertTrue(compactMinimap.height <= 160f, "compact minimap should stay short")
-        assertTrue(computeBottomHudHeight(1920, 1080) <= 160, "bottom hud should not exceed compact shell target")
+        assertTrue(hdMinimap.width <= 176f, "desktop minimap should cap width")
+        assertTrue(hdMinimap.height <= 144f, "desktop minimap should cap height")
+        assertTrue(compactMinimap.width <= 176f, "compact minimap should stay narrow")
+        assertTrue(compactMinimap.height <= 144f, "compact minimap should stay short")
+        assertTrue(computeBottomHudHeight(1920, 1080) <= 144, "bottom hud should not exceed compact shell target")
     }
 
     @Test

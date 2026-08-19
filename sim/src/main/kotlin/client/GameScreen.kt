@@ -559,12 +559,12 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = null
-            pad(0f, 14f, 6f, 14f)
-            leftHudSpacerCell = add().width(208f).bottom()
+            pad(0f, 12f, 4f, 12f)
+            leftHudSpacerCell = add().width(188f).bottom()
             centerLeftGapCell = add().expandX().fillX().bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padLeft(4f).padRight(4f)
+            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.84f))).width(252f).bottom().padLeft(3f).padRight(3f)
             centerRightGapCell = add().expandX().fillX().bottom()
-            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
+            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.84f))).width(224f).right().bottom()
         }
 
         impactFlash.apply {
@@ -586,7 +586,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapFrame).padLeft(16f).padBottom(10f)
+            add(minimapFrame).padLeft(14f).padBottom(8f)
         }
         stage.addActor(leftHudColumn)
 
@@ -916,9 +916,9 @@ internal class GameScreen(
         topModeCell.width(topBarLayout.modeWidth.toFloat())
         topStatusCell.width(topBarLayout.statusWidth.toFloat())
         leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
-        centerLeftGapCell.minWidth(6f)
+        centerLeftGapCell.minWidth(4f)
         centerHudCell.width(centerWidth)
-        centerRightGapCell.minWidth(6f)
+        centerRightGapCell.minWidth(4f)
         commandHudCell.width(commandWidth)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
@@ -944,11 +944,11 @@ internal class GameScreen(
         modeLabel.setWidth(topBarLayout.modeWidth.toFloat() - 8f)
         statusBadgeLabel.setWidth(topBarLayout.statusWidth.toFloat() - 8f)
         commandHintLabel.setWidth(commandWidth - 38f)
-        minimapHint.setWidth(minimapWidth - 20f)
+        minimapHint.setWidth(minimapWidth - 16f)
         minimapFrame.setSize(minimapWidth, minimapHeight)
-        centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
-        commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
-        commandScroll.setSize(commandWidth - 8f, commandHeight)
+        centerCard.setSize(centerWidth, unifiedPanelHeight - 4f)
+        commandCard.setSize(commandWidth, unifiedPanelHeight - 4f)
+        commandScroll.setSize(commandWidth - 6f, commandHeight)
         portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
     }
@@ -3050,17 +3050,17 @@ internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean
 
 internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
     val minimapHeight = gdxMiniMapBounds(screenWidth, screenHeight).height
-    val centerHeight = (screenHeight * 0.132f).coerceIn(108f, 140f)
-    val commandHeight = (screenHeight * 0.082f).coerceIn(68f, 90f)
-    val commandShellHeight = (commandHeight + 24f).coerceIn(94f, 114f)
+    val centerHeight = (screenHeight * 0.118f).coerceIn(98f, 126f)
+    val commandHeight = (screenHeight * 0.072f).coerceIn(58f, 78f)
+    val commandShellHeight = (commandHeight + 18f).coerceIn(82f, 100f)
     return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
 }
 
 internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
-    val leftSlotWidth = (minimapWidth + 10).coerceAtLeast(150)
-    val centerWidth = (screenWidth * 0.164f).coerceIn(214f, 268f).toInt()
-    val commandWidth = (screenWidth * 0.146f).coerceIn(196f, 236f).toInt()
+    val leftSlotWidth = (minimapWidth + 8).coerceAtLeast(138)
+    val centerWidth = (screenWidth * 0.156f).coerceIn(202f, 252f).toInt()
+    val commandWidth = (screenWidth * 0.138f).coerceIn(184f, 224f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
@@ -3070,46 +3070,46 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
 
 internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): CommandDeckLayout {
     val compact = screenWidth < 1360
-    val scrollHeight = if (compact) (screenHeight * 0.076f).coerceIn(62f, 78f) else (screenHeight * 0.084f).coerceIn(68f, 90f)
+    val scrollHeight = if (compact) (screenHeight * 0.068f).coerceIn(54f, 70f) else (screenHeight * 0.074f).coerceIn(58f, 80f)
     return CommandDeckLayout(
         scrollHeight = scrollHeight.toInt(),
-        buttonHeight = if (compact) 16 else 18,
-        groupPad = if (compact) 2 else 3,
-        headerPadX = if (compact) 4 else 6,
-        actorInset = if (compact) 12 else 14
+        buttonHeight = if (compact) 15 else 17,
+        groupPad = if (compact) 1 else 2,
+        headerPadX = if (compact) 3 else 5,
+        actorInset = if (compact) 11 else 13
     )
 }
 
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1360
     return CenterPanelLayout(
-        portraitSize = if (compact) 46 else 52,
-        rosterSlotSize = if (compact) 30 else 34,
-        pagerButtonSize = if (compact) 16 else 18,
-        pagerLabelWidth = if (compact) 46 else 50,
-        groupSummaryWidth = if (compact) 50 else 58,
-        healthBarWidth = if (compact) 90 else 100
+        portraitSize = if (compact) 42 else 48,
+        rosterSlotSize = if (compact) 28 else 32,
+        pagerButtonSize = if (compact) 15 else 17,
+        pagerLabelWidth = if (compact) 42 else 46,
+        groupSummaryWidth = if (compact) 46 else 54,
+        healthBarWidth = if (compact) 82 else 92
     )
 }
 
 internal fun computeTopBarLayout(screenWidth: Int): TopBarLayout {
     val compact = screenWidth < 1360
     return TopBarLayout(
-        selectionWidth = if (compact) 96 else 112,
-        modeWidth = if (compact) 90 else 104,
-        statusWidth = if (compact) 50 else 56
+        selectionWidth = if (compact) 92 else 106,
+        modeWidth = if (compact) 84 else 98,
+        statusWidth = if (compact) 46 else 52
     )
 }
 
 internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlotVisualLayout {
     val compact = rosterSlotSize <= 32
     return SelectionSlotVisualLayout(
-        topBarHeight = if (compact) 1.25f else 1.75f,
-        titleHeight = if (compact) 13f else 16f,
-        hpBarWidth = if (compact) 18f else 22f,
-        hpBarHeight = if (compact) 3f else 4f,
-        glyphScale = if (compact) 0.78f else 0.92f,
-        markerSize = if (compact) 3.5f else 4.5f
+        topBarHeight = if (compact) 1.1f else 1.55f,
+        titleHeight = if (compact) 12f else 15f,
+        hpBarWidth = if (compact) 16f else 20f,
+        hpBarHeight = if (compact) 3f else 3.5f,
+        glyphScale = if (compact) 0.72f else 0.86f,
+        markerSize = if (compact) 3.2f else 4.1f
     )
 }
 
