@@ -1761,11 +1761,11 @@ internal class GdxWorldRenderer(
         val recoilBack = attackRecovery * 1.4f
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, (lead * 0.9f) - (recoilBack * 0.45f))
         val y = screenY + bobY + directionDy(entity.dir, (lead * 0.5f) - (recoilBack * 0.30f))
-        val body = Color(0.17f, 0.19f, 0.22f, 1f)
-        val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
-        val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
-        val shadowRadius = if (selected) 9f else 7f
         val typeName = entity.typeId.orEmpty()
+        val body = resolveSilhouetteBodyColor(typeName, isStructure = false, factionColor = factionColor)
+        val teamStripe = resolveSilhouetteStripeColor(typeName, isStructure = false, factionColor = factionColor)
+        val trim = resolveSilhouetteTrimColor(typeName, isStructure = false, factionColor = factionColor)
+        val shadowRadius = if (selected) 9f else 7f
         shape.color = Color(0f, 0f, 0f, 0.34f)
         val shadowX = x + 1.5f - directionDx(entity.dir, lead * 0.45f)
         val shadowY = screenY + 1.5f - directionDy(entity.dir, lead * 0.25f)
@@ -1965,8 +1965,10 @@ internal class GdxWorldRenderer(
         val settleDrop = collapseSeverity * 1.4f
         val left = runtime.camera.worldToScreenX(tileX.toFloat()) + collapseWobble
         val top = runtime.camera.worldToScreenY(tileY.toFloat()) + settleDrop
-        val shell = Color(0.18f, 0.20f, 0.22f, 1f)
-        val roof = Color(0.24f, 0.27f, 0.30f, 1f)
+        val shell = resolveSilhouetteBodyColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val roof = resolveStructureRoofColor(entity.typeId, factionColor)
+        val trim = resolveSilhouetteTrimColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val panelAccent = resolveSilhouetteStripeColor(entity.typeId, isStructure = true, factionColor = factionColor)
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
         val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
         val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
@@ -1986,10 +1988,10 @@ internal class GdxWorldRenderer(
             when {
                 isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
                 isResourceDepot -> Color(0.92f, 0.78f, 0.36f, 0.95f)
-                else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
+                else -> panelAccent
             }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
-        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
+        shape.color = trim.cpy().apply { a = 0.42f }
         shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
         shape.color = Color(0.82f, 0.88f, 0.92f, 0.10f)
         shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
@@ -2264,6 +2266,41 @@ internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, facti
         else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
     }
 
+internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.24f, 0.18f, 0.16f, 1f), 0.72f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.16f, 0.22f, 0.24f, 1f), 0.70f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.24f, 1f), 0.74f)
+        else -> factionColor.cpy().lerp(Color(0.17f, 0.19f, 0.22f, 1f), 0.74f)
+    }
+
+internal fun resolveSilhouetteStripeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), 0.14f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), 0.12f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), 0.10f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), 0.10f)
+        else -> factionColor.cpy().lerp(Color.WHITE, 0.08f)
+    }
+
+internal fun resolveSilhouetteTrimColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.30f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.24f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.22f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.26f)
+        else -> factionColor.cpy().lerp(Color.WHITE, 0.30f)
+    }
+
+internal fun resolveStructureRoofColor(typeId: String, factionColor: Color): Color =
+    when {
+        typeId.contains("GasDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.30f, 0.28f, 1f), 0.78f)
+        typeId.contains("ResourceDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.28f, 0.26f, 0.22f, 1f), 0.78f)
+        typeId.contains("Depot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.26f, 0.28f, 0.32f, 1f), 0.78f)
+        else -> factionColor.cpy().lerp(Color(0.24f, 0.27f, 0.30f, 1f), 0.78f)
+    }
+
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
 
     private fun directionDy(dir: Float, scale: Float): Float = kotlin.math.sin(dir) * scale
@@ -2389,4 +2426,39 @@ internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, facti
         isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
         typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
         else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
+    }
+
+internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.24f, 0.18f, 0.16f, 1f), 0.72f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.16f, 0.22f, 0.24f, 1f), 0.70f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.24f, 1f), 0.74f)
+        else -> factionColor.cpy().lerp(Color(0.17f, 0.19f, 0.22f, 1f), 0.74f)
+    }
+
+internal fun resolveSilhouetteStripeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), 0.14f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), 0.12f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), 0.10f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), 0.10f)
+        else -> factionColor.cpy().lerp(Color.WHITE, 0.08f)
+    }
+
+internal fun resolveSilhouetteTrimColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.30f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.24f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.22f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.26f)
+        else -> factionColor.cpy().lerp(Color.WHITE, 0.30f)
+    }
+
+internal fun resolveStructureRoofColor(typeId: String, factionColor: Color): Color =
+    when {
+        typeId.contains("GasDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.30f, 0.28f, 1f), 0.78f)
+        typeId.contains("ResourceDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.28f, 0.26f, 0.22f, 1f), 0.78f)
+        typeId.contains("Depot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.26f, 0.28f, 0.32f, 1f), 0.78f)
+        else -> factionColor.cpy().lerp(Color(0.24f, 0.27f, 0.30f, 1f), 0.78f)
     }

@@ -29,6 +29,10 @@ import starkraft.sim.client.resolveEffectSmokeColor
 import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.resolveQueueHeaderLine
+import starkraft.sim.client.resolveSilhouetteBodyColor
+import starkraft.sim.client.resolveSilhouetteStripeColor
+import starkraft.sim.client.resolveSilhouetteTrimColor
+import starkraft.sim.client.resolveStructureRoofColor
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -241,6 +245,22 @@ class GameScreenInputRulesTest {
         assertTrue(zergAccent.g < marineAccent.g, "zerg accents should read harsher than marine accents")
         assertTrue(structureDebris.r > zergSmoke.r, "structure debris should stay warmer than zerg smoke")
         assertTrue(zergSmoke.a == 1f, "palette helpers should return opaque base colors")
+    }
+
+    @Test
+    fun `silhouette palettes differentiate units and structures`() {
+        val faction = Color(0.30f, 0.60f, 1.00f, 1f)
+
+        val marineBody = resolveSilhouetteBodyColor("Marine", isStructure = false, factionColor = faction)
+        val zergBody = resolveSilhouetteBodyColor("Zergling", isStructure = false, factionColor = faction)
+        val workerTrim = resolveSilhouetteTrimColor("Worker", isStructure = false, factionColor = faction)
+        val structureStripe = resolveSilhouetteStripeColor("Depot", isStructure = true, factionColor = faction)
+        val gasRoof = resolveStructureRoofColor("GasDepot", faction)
+
+        assertTrue(zergBody.r > marineBody.r, "zerg body should read warmer than marine armor")
+        assertTrue(workerTrim.b > zergBody.b, "worker trim should stay cooler than zerg flesh tones")
+        assertTrue(structureStripe.g > faction.g, "structure stripe should brighten faction lane panels")
+        assertTrue(gasRoof.g > gasRoof.r, "gas depot roof should skew greener than generic structures")
     }
 
     @Test
