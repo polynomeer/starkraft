@@ -1150,8 +1150,16 @@ internal class GdxWorldRenderer(
         for (node in snapshot.resourceNodes) {
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
             val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
-            shape.color = if (node.kind == "gas") Color(0.28f, 0.88f, 0.64f, 0.95f) else Color(0.90f, 0.81f, 0.42f, 0.95f)
-            shape.rect(nodeX - 0.75f, nodeY - 0.75f, 2.5f, 2.5f)
+            shape.color = if (node.kind == "gas") Color(0.26f, 0.92f, 0.68f, 0.96f) else Color(0.96f, 0.84f, 0.46f, 0.96f)
+            if (node.kind == "gas") {
+                shape.circle(nodeX, nodeY, 1.6f)
+                shape.color = Color(0.62f, 1.00f, 0.86f, 0.34f)
+                shape.circle(nodeX, nodeY, 2.6f)
+            } else {
+                shape.rect(nodeX - 1.2f, nodeY - 1.2f, 2.4f, 2.4f)
+                shape.color = Color(1.00f, 0.94f, 0.68f, 0.30f)
+                shape.rect(nodeX - 2f, nodeY - 0.5f, 4f, 1f)
+            }
         }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
@@ -1161,9 +1169,13 @@ internal class GdxWorldRenderer(
             val damaged = runtime.isDamageFlashActive(entity.id)
             val impactKind = runtime.damageImpactKind(entity.id)
             val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
+            val isStructure = entity.footprintWidth != null && entity.footprintHeight != null
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
-            val size = if (selected) 5f else 4f
-            shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+            when {
+                isStructure -> shape.rect(x - 2.8f, y - 2.8f, 5.6f, 5.6f)
+                entity.weaponId != null -> shape.rect(x - 2.2f, y - 2.2f, 4.4f, 4.4f)
+                else -> shape.circle(x, y, if (selected) 2.6f else 2.1f)
+            }
             if (damaged) {
                 shape.color =
                     if (meleeImpact) Color(0.86f, 1.00f, 0.62f, if (visible) 0.88f else 0.30f)
@@ -1219,14 +1231,14 @@ internal class GdxWorldRenderer(
                         else -> selectionColor.cpy().apply { a = if (visible) 0.90f else 0.36f }
                     }
                 shape.color = selectedTone
-                shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
-                shape.rect(x - 4.5f, y - 4.5f, 1f, 4f)
-                shape.rect(x + 0.5f, y - 4.5f, 4f, 1f)
-                shape.rect(x + 3.5f, y - 4.5f, 1f, 4f)
-                shape.rect(x - 4.5f, y + 3.5f, 4f, 1f)
-                shape.rect(x - 4.5f, y + 0.5f, 1f, 4f)
-                shape.rect(x + 0.5f, y + 3.5f, 4f, 1f)
-                shape.rect(x + 3.5f, y + 0.5f, 1f, 4f)
+                shape.rect(x - 4.8f, y - 4.8f, 3.5f, 0.9f)
+                shape.rect(x - 4.8f, y - 4.8f, 0.9f, 3.5f)
+                shape.rect(x + 1.3f, y - 4.8f, 3.5f, 0.9f)
+                shape.rect(x + 3.9f, y - 4.8f, 0.9f, 3.5f)
+                shape.rect(x - 4.8f, y + 3.9f, 3.5f, 0.9f)
+                shape.rect(x - 4.8f, y + 1.3f, 0.9f, 3.5f)
+                shape.rect(x + 1.3f, y + 3.9f, 3.5f, 0.9f)
+                shape.rect(x + 3.9f, y + 1.3f, 0.9f, 3.5f)
                 if (damaged) {
                     shape.color =
                         if (meleeImpact) Color(0.94f, 1.00f, 0.72f, if (visible) 0.88f else 0.34f)
@@ -1321,12 +1333,12 @@ internal class GdxWorldRenderer(
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         val pulse = ambientPulse(1050L)
-        shape.color = Color(0.82f, 0.96f, 1.00f, 0.07f + (pulse * 0.05f))
+        shape.color = Color(0.72f, 0.96f, 0.82f, 0.08f + (pulse * 0.05f))
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = Color(0.92f, 0.98f, 1f, 0.66f + (pulse * 0.14f))
-        shape.rect(viewportLeft - 0.8f, viewportTop - 0.8f, viewportWidth + 1.6f, viewportHeight + 1.6f)
+        shape.color = Color(0.90f, 1.00f, 0.86f, 0.84f + (pulse * 0.10f))
+        shape.rect(viewportLeft - 0.6f, viewportTop - 0.6f, viewportWidth + 1.2f, viewportHeight + 1.2f)
         val corner = minOf(9f, viewportWidth * 0.28f, viewportHeight * 0.28f).coerceAtLeast(4f)
-        shape.color = selectionColor
+        shape.color = Color(0.68f, 1.00f, 0.62f, 0.96f)
         shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
         shape.line(viewportLeft, viewportTop, viewportLeft, viewportTop + corner)
         shape.line(viewportLeft + viewportWidth, viewportTop, viewportLeft + viewportWidth - corner, viewportTop)
