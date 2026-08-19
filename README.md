@@ -43,6 +43,17 @@ Out of scope for this module:
 
 핵심 산출물 문서는 `/Users/hammac/Projects/starkraft/docs/README.md`에 정리되어 있다.
 
+문서 탐색 기준:
+
+| 목적 | 먼저 볼 문서 |
+| --- | --- |
+| 제품 방향 이해 | `/Users/hammac/Projects/starkraft/docs/product-vision.md` |
+| 게임 규칙 이해 | `/Users/hammac/Projects/starkraft/docs/game-design-document.md` |
+| sim 구조 이해 | `/Users/hammac/Projects/starkraft/docs/simulation-architecture.md` |
+| 네트워크/프로토콜 이해 | `/Users/hammac/Projects/starkraft/docs/protocol-spec.md` |
+| 클라이언트 UX 기준 확인 | `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md` |
+| 운영/릴리스 절차 확인 | `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md` |
+
 제품/계획 문서:
 - `/Users/hammac/Projects/starkraft/docs/product-vision.md`
 - `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`

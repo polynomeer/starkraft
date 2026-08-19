@@ -59,6 +59,20 @@
 - `server-ops-runbook.md`
   - 서버 실행, 헬스체크, 장애 대응, 운영 점검
 
+## 문서 매트릭스
+
+| 영역 | 핵심 문서 | 보조 문서 |
+| --- | --- | --- |
+| 제품 방향 | `product-vision.md` | `feature-backlog.md`, `milestone-plan.md` |
+| 게임 규칙 | `game-design-document.md` | `balance-spec.md`, `ai-behavior-spec.md` |
+| 시뮬레이션 구조 | `simulation-architecture.md` | `architecture-overview.md`, `testing-strategy.md` |
+| 데이터/맵 | `data-schema-spec.md` | `map-format-spec.md` |
+| 네트워크/프로토콜 | `protocol-spec.md` | `security-validation-spec.md`, `replay-format-spec.md` |
+| 클라이언트 UX | `ui-ux-spec.md` | `input-mapping-spec.md`, `art-direction-brief.md`, `audio-direction-brief.md` |
+| 운영/릴리스 | `server-ops-runbook.md` | `release-artifact-spec.md`, `replay-validation-checklist.md` |
+| 품질/분석 | `testing-strategy.md` | `benchmark-report-template.md`, `desync-debugging-guide.md`, `playtest-report-template.md` |
+| 협업 규칙 | `contribution-guide.md` | `document-maintenance-policy.md`, `glossary.md` |
+
 ## 추천 읽기 순서
 
 ### 제품 방향부터 볼 때
