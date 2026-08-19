@@ -12,6 +12,10 @@
   - 단계별 완성 기준과 검증 자산 매핑
 - `balance-spec.md`
   - 수치 밸런스 관리 원칙과 변경 절차
+- `data-schema-spec.md`
+  - 유닛/건물/기술/시각 데이터 구조와 검증 원칙
+- `map-format-spec.md`
+  - 맵 데이터 구조와 유효성 규칙
 - `architecture-overview.md`
   - 저장소 모듈 책임과 상위 레벨 데이터 흐름
 - `simulation-architecture.md`
@@ -26,6 +30,8 @@
   - 그래픽 클라이언트의 HUD/패널/피드백 기준
 - `input-mapping-spec.md`
   - 입력 체계와 단축키 원칙
+- `ai-behavior-spec.md`
+  - 봇/AI 계층과 행동 우선순위
 - `release-artifact-spec.md`
   - 릴리스 산출물과 manifest/checksum 기준
 - `replay-validation-checklist.md`
@@ -59,6 +65,10 @@
   - `game-design-document.md`
   - `simulation-architecture.md`
   - `testing-strategy.md`
+- 데이터/콘텐츠 구조를 바꿀 때:
+  - `data-schema-spec.md`
+  - `map-format-spec.md`
+  - `balance-spec.md`
 - 네트워크/프로토콜을 바꿀 때:
   - `protocol-spec.md`
   - `replay-format-spec.md`
