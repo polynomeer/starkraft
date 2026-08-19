@@ -40,6 +40,12 @@
   - 릴리스 산출물과 manifest/checksum 기준
 - `replay-validation-checklist.md`
   - replay 검증용 운영 체크리스트
+- `benchmark-report-template.md`
+  - 성능 측정 결과 기록 템플릿
+- `desync-debugging-guide.md`
+  - 결정론 불일치 조사 절차
+- `playtest-report-template.md`
+  - 플레이테스트 결과 기록 템플릿
 - `testing-strategy.md`
   - 단위/통합/결정론/성능/소크 테스트 전략
 - `server-ops-runbook.md`
@@ -89,6 +95,10 @@
   - `release-artifact-spec.md`
   - `replay-validation-checklist.md`
   - `server-ops-runbook.md`
+- 성능/결정론 이슈를 분석할 때:
+  - `benchmark-report-template.md`
+  - `desync-debugging-guide.md`
+  - `testing-strategy.md`
 
 ## 기존 문서와의 관계
 
