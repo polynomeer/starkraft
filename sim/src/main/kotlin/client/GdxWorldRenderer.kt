@@ -2366,6 +2366,15 @@ internal fun resolveResourceGlowColor(kind: String): Color =
         else -> Color(1.00f, 0.95f, 0.72f, 1f)
     }
 
+internal fun resolveFallbackTeamTintStrength(typeId: String, isStructure: Boolean): Float =
+    when {
+        isStructure -> 0.08f
+        typeId.contains("Worker", ignoreCase = true) -> 0.06f
+        typeId.contains("Marine", ignoreCase = true) -> 0.05f
+        typeId.contains("Zergling", ignoreCase = true) -> 0.04f
+        else -> 0.05f
+    }
+
 internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
     when {
         isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
@@ -2377,20 +2386,20 @@ internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, fa
 
 internal fun resolveSilhouetteStripeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
     when {
-        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), 0.14f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), 0.12f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), 0.10f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), 0.10f)
-        else -> factionColor.cpy().lerp(Color.WHITE, 0.08f)
+        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), resolveFallbackTeamTintStrength(typeId, true))
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), resolveFallbackTeamTintStrength(typeId, false))
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), resolveFallbackTeamTintStrength(typeId, false))
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), resolveFallbackTeamTintStrength(typeId, false))
+        else -> factionColor.cpy().lerp(Color.WHITE, resolveFallbackTeamTintStrength(typeId, false))
     }
 
 internal fun resolveSilhouetteTrimColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
     when {
-        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.30f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.24f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.22f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.26f)
-        else -> factionColor.cpy().lerp(Color.WHITE, 0.30f)
+        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.18f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.14f)
+        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.13f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.15f)
+        else -> factionColor.cpy().lerp(Color.WHITE, 0.16f)
     }
 
 internal fun resolveStructureRoofColor(typeId: String, factionColor: Color): Color =
@@ -2496,6 +2505,15 @@ internal fun gdxMiniMapWorldPosition(
     val worldY = (((screenY - bounds.top) / bounds.height) * snapshot.mapHeight).coerceIn(0f, snapshot.mapHeight.toFloat())
     return worldX to worldY
 }
+
+internal fun resolveFallbackTeamTintStrength(typeId: String, isStructure: Boolean): Float =
+    when {
+        isStructure -> 0.08f
+        typeId.contains("Worker", ignoreCase = true) -> 0.06f
+        typeId.contains("Marine", ignoreCase = true) -> 0.05f
+        typeId.contains("Zergling", ignoreCase = true) -> 0.04f
+        else -> 0.05f
+    }
 
 internal fun resolveEffectAccentColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
     when {

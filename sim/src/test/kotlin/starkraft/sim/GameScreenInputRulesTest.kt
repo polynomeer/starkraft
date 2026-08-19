@@ -33,6 +33,7 @@ import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
+import starkraft.sim.client.resolveFallbackTeamTintStrength
 import starkraft.sim.client.resolveSilhouetteBodyColor
 import starkraft.sim.client.resolveSilhouetteStripeColor
 import starkraft.sim.client.resolveSilhouetteTrimColor
@@ -280,6 +281,14 @@ class GameScreenInputRulesTest {
         assertTrue(workerTrim.b > zergBody.b, "worker trim should stay cooler than zerg flesh tones")
         assertTrue(structureStripe.g > faction.g, "structure stripe should brighten faction lane panels")
         assertTrue(gasRoof.g > gasRoof.r, "gas depot roof should skew greener than generic structures")
+    }
+
+    @Test
+    fun `fallback tint strengths stay close to sprite manifests`() {
+        assertEquals(0.06f, resolveFallbackTeamTintStrength("Worker", isStructure = false))
+        assertEquals(0.05f, resolveFallbackTeamTintStrength("Marine", isStructure = false))
+        assertEquals(0.04f, resolveFallbackTeamTintStrength("Zergling", isStructure = false))
+        assertEquals(0.08f, resolveFallbackTeamTintStrength("Depot", isStructure = true))
     }
 
     @Test
