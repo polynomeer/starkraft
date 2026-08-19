@@ -773,7 +773,7 @@ internal class GameScreen(
             )
         )
         setLabelTextIfChanged(statusHeader, "Battlefield")
-        setLabelTextIfChanged(centerHeaderLabel, if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
+        setLabelTextIfChanged(centerHeaderLabel, buildCenterHeaderLine(selectionFrame))
         val groupedButtons = commandGroups(runtime.buttonModels())
         setLabelTextIfChanged(commandHeaderLabel, buildCommandHeader(groupedButtons))
         setActorColorIfChanged(commandHeaderLabel, currentCommandHeaderTone(groupedButtons))
@@ -1175,9 +1175,14 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Awaiting"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "$faction · ${snapshot.entities.size} up"
+            "${faction.uppercase()} READY · ${snapshot.entities.size} UNITS"
         } else {
-            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
+            val lead = snapshot.entities.firstOrNull { it.id == runtime.session.state.selectedIds.first() }
+            if (runtime.session.state.selectedIds.size == 1 && lead != null) {
+                "${lead.typeId ?: "Unit"} #${lead.id}"
+            } else {
+                "${runtime.session.state.selectedIds.size} UNIT GROUP"
+            }
         }
     }
 
@@ -1223,7 +1228,7 @@ internal class GameScreen(
     private fun buildSelectionRosterLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
         val selected = context?.selected.orEmpty()
         if (selected.isEmpty()) {
-            return "No card"
+            return "No active roster"
         }
         val counts =
             selected
@@ -1232,8 +1237,8 @@ internal class GameScreen(
                 .entries
                 .sortedByDescending { it.value }
                 .take(4)
-                .joinToString("   ") { "${it.key}:${it.value}" }
-        return "Ros $counts"
+                .joinToString("  ") { "${it.key} x${it.value}" }
+        return counts
     }
 
     private fun buildFactionOverviewLine(): String {
@@ -1396,24 +1401,32 @@ internal class GameScreen(
         val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
         productionPage = productionPage.coerceIn(0, pageCount - 1)
         return if (productionGroup.size > 6) {
-            "Cmd ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
+            "Orders · ${runtime.overlayModeLabel().uppercase()} · ${productionPage + 1}/$pageCount"
         } else {
-            "Cmd ${runtime.overlayModeLabel()}"
+            "Orders · ${runtime.overlayModeLabel().uppercase()}"
         }
     }
+
+    private fun buildCenterHeaderLine(context: SelectionFrameContext?): String =
+        when {
+            context == null -> "Selected"
+            context.selected.isEmpty() -> "Selected"
+            context.selected.size == 1 -> "Focus"
+            else -> "Squad"
+        }
 
     private fun buildCenterStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
         val lead = context?.lead ?: return "No status"
         val statusBits = buildList {
-            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("O ${it.lowercase().take(6)}") }
-            if (lead.orderQueueSize > 0) add("Q${lead.orderQueueSize}")
-            if (lead.pathRemainingNodes > 0) add("P${lead.pathRemainingNodes}")
-            lead.activeProductionType?.let { add("P ${it.take(6)}") }
-            lead.activeResearchTech?.let { add("R ${it.take(6)}") }
-            if (lead.underConstruction) add("B")
-            lead.harvestPhase?.let { add("H ${it.lowercase().take(6)}") }
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add(it.lowercase().take(8)) }
+            if (lead.orderQueueSize > 0) add("queue ${lead.orderQueueSize}")
+            if (lead.pathRemainingNodes > 0) add("path ${lead.pathRemainingNodes}")
+            lead.activeProductionType?.let { add("train ${it.take(8)}") }
+            lead.activeResearchTech?.let { add("tech ${it.take(8)}") }
+            if (lead.underConstruction) add("construct")
+            lead.harvestPhase?.let { add("harvest ${it.lowercase().take(8)}") }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
-                add("C ${(lead.harvestCargoKind ?: "res").take(3)}:${lead.harvestCargoAmount}")
+                add("${(lead.harvestCargoKind ?: "res").take(3)} ${lead.harvestCargoAmount}")
             }
         }
         return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
@@ -2263,7 +2276,7 @@ internal class GameScreen(
         val combat = selectionContext.selected.count { it.weaponId != null }
         val workers = selectionContext.selected.count { it.archetype == "worker" }
         val structures = selectionContext.selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "${selectionContext.selected.size} sel · c$combat · w$workers · s$structures"
+        return "${selectionContext.selected.size} units · $combat combat · $workers workers · $structures structures"
     }
 
     private fun buildTopEconomyLine(): String {
