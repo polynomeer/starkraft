@@ -727,6 +727,9 @@ internal class GdxClientRuntime(
                 if (hold != null) session.append(hold)
                 groundMode = null
                 buildModeTypeId = null
+                if (hasSelection) {
+                    showNotice("holding position")
+                }
             }
             actionId == "cancelBuild" || actionId == "cancelTrain" || actionId == "cancelResearch" -> {
                 snapshot?.let { buildCancelIntent(it, session.state.selectedIds, actionId, requestIds) }?.let(session::append)

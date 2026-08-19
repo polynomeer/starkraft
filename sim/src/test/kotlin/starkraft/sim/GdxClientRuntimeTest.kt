@@ -179,6 +179,16 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `hold action with selection shows confirmation notice`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.executeAction(actionId = "hold", viewWidth = 1280, viewHeight = 720)
+
+        assertEquals("notice: holding position", runtime.noticeLine())
+    }
+
+    @Test
     fun `build action without selection does not arm build mode`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
