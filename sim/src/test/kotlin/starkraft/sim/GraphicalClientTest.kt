@@ -1507,7 +1507,7 @@ class GraphicalClientTest {
     @Test
     fun `builds selected entity status labels`() {
         assertEquals(
-            "build 6",
+            "B 6",
             buildEntityStatusLabel(
                 EntitySnapshot(
                     id = 12,
@@ -1526,7 +1526,7 @@ class GraphicalClientTest {
             )
         )
         assertEquals(
-            "train Marine 8",
+            "T Marine 8",
             buildEntityStatusLabel(
                 EntitySnapshot(
                     id = 13,
@@ -1545,7 +1545,7 @@ class GraphicalClientTest {
             )
         )
         assertEquals(
-            "research AdvancedTraining 5",
+            "R AdvancedTraining 5",
             buildEntityStatusLabel(
                 EntitySnapshot(
                     id = 14,
@@ -1962,8 +1962,8 @@ class GraphicalClientTest {
         assertEquals(100, depot?.mineralCost)
         assertEquals(0, depot?.gasCost)
         assertEquals("Depot", label?.title)
-        assertEquals("cost=100/0", label?.cost)
-        assertEquals("size=2x2 clr=1", label?.size)
+        assertEquals("M100 G0", label?.cost)
+        assertEquals("2x2 C1", label?.size)
         assertEquals(true, label?.valid)
     }
 

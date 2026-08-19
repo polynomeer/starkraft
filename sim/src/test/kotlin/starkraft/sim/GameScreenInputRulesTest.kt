@@ -13,6 +13,8 @@ import starkraft.sim.client.computeTopBarLayout
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
+import starkraft.sim.client.buildHudFooterLine
+import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEscapeAction
@@ -121,6 +123,19 @@ class GameScreenInputRulesTest {
         assertTrue(overlayBlocksWorldInput(pauseVisible = true, helpVisible = false))
         assertTrue(overlayBlocksWorldInput(pauseVisible = false, helpVisible = true))
         assertFalse(overlayBlocksWorldInput(pauseVisible = false, helpVisible = false))
+    }
+
+    @Test
+    fun `hud footer line reflects selection and armed mode`() {
+        assertEquals("LMB select  RMB move  drag box select", buildHudFooterLine(hasSelection = false, commandArmed = false))
+        assertEquals("LMB reselect  RMB order  drag box add", buildHudFooterLine(hasSelection = true, commandArmed = false))
+        assertEquals("LMB/RMB confirm  Esc cancel  MMB pan", buildHudFooterLine(hasSelection = true, commandArmed = true))
+    }
+
+    @Test
+    fun `minimap hint reflects armed mode`() {
+        assertEquals("minimap drag camera", buildMinimapHintLine(commandArmed = false))
+        assertEquals("armed: world click confirm", buildMinimapHintLine(commandArmed = true))
     }
 
     @Test

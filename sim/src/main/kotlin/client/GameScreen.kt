@@ -706,6 +706,7 @@ internal class GameScreen(
         }
         setLabelTextIfChanged(minimapTitle, "Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
         setActorColorIfChanged(minimapTitle, currentMinimapTitleTone())
+        setLabelTextIfChanged(minimapHint, buildMinimapHintLine(runtime.isGameplayCommandArmed()))
         setActorColorIfChanged(minimapHint, currentMinimapHintTone())
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         val selectionHeadline = buildSelectionHeadline()
@@ -764,7 +765,13 @@ internal class GameScreen(
             rebuildSelectionGrid()
         }
         setLabelTextIfChanged(hudLinesLabel, statusSummaryText)
-        setLabelTextIfChanged(footerLabel, "LMB select  RMB order  drag box select")
+        setLabelTextIfChanged(
+            footerLabel,
+            buildHudFooterLine(
+                hasSelection = runtime.session.state.selectedIds.isNotEmpty(),
+                commandArmed = runtime.isGameplayCommandArmed()
+            )
+        )
         setLabelTextIfChanged(statusHeader, "Battlefield")
         setLabelTextIfChanged(centerHeaderLabel, if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
@@ -3065,6 +3072,20 @@ internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight:
     val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
     return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
 }
+
+internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): String =
+    when {
+        commandArmed -> "LMB/RMB confirm  Esc cancel  MMB pan"
+        hasSelection -> "LMB reselect  RMB order  drag box add"
+        else -> "LMB select  RMB move  drag box select"
+    }
+
+internal fun buildMinimapHintLine(commandArmed: Boolean): String =
+    if (commandArmed) {
+        "armed: world click confirm"
+    } else {
+        "minimap drag camera"
+    }
 
 internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {
     if (!pauseVisible && !helpVisible) return true
