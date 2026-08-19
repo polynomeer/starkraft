@@ -81,3 +81,14 @@ replay는 경기 재현, 결정론 검증, 회귀 분석의 기준 산출물이�
 - 서버 authoritative 매치는 서버가 replay를 기록한다.
 - 수동 테스트 replay도 seed와 version을 기록한다.
 - golden replay는 CI에서 재검증 가능한 위치에 유지한다.
+
+## 관련 코드
+
+- `sim/src/main/kotlin`
+  - replay 생성과 재실행 로직
+- `server/pkg/authoritative`
+  - server-side replay writer
+- `tools/src/main/kotlin`
+  - replay meta/stats/verify CLI
+- `shared-protocol`
+  - replay가 참조하는 protocol/version 기준

@@ -106,3 +106,18 @@
 - `/Users/hammac/Projects/starkraft/server/README.md`
 - `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
 - `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
+
+## 관련 코드
+
+- `server/cmd/server`
+  - 서버 엔트리포인트와 환경 변수 파싱
+- `server/pkg/authoritative`
+  - handshake, room, replay, validation
+- `client/cmd/client`
+  - 수동 클라이언트 실행 경로
+- `client/cmd/bot`
+  - 봇 클라이언트 실행 경로
+- `scripts/play_stack_local.sh`
+  - 로컬 통합 플레이
+- `scripts/e2e_server_bots_smoke.sh`
+  - 통합 smoke

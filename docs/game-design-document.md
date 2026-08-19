@@ -126,3 +126,12 @@
 
 세부 수치 밸런스는 향후 별도 데이터 시트 또는 `balance-spec` 문서로 분리하는 것이 바람직하다.  
 이 문서는 규칙 구조를 우선 정의한다.
+
+## 관련 코드
+
+- `sim/src/main/resources/data`
+  - 유닛/건물/기술 데이터
+- `sim/src/main/kotlin/ecs`
+  - 실제 게임 규칙 구현
+- `COMMAND_CONTRACT.md`
+  - 명령 계층 계약

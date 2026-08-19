@@ -25,6 +25,39 @@
 - `server-ops-runbook.md`
   - 서버 실행, 헬스체크, 장애 대응, 운영 점검
 
+## 추천 읽기 순서
+
+### 제품 방향부터 볼 때
+
+1. `product-vision.md`
+2. `feature-backlog.md`
+3. `milestone-plan.md`
+4. `game-design-document.md`
+
+### 구현 구조부터 볼 때
+
+1. `architecture-overview.md`
+2. `simulation-architecture.md`
+3. `protocol-spec.md`
+4. `replay-format-spec.md`
+5. `testing-strategy.md`
+6. `server-ops-runbook.md`
+
+## 빠른 참조
+
+- 게임 규칙을 바꿀 때:
+  - `game-design-document.md`
+  - `simulation-architecture.md`
+  - `testing-strategy.md`
+- 네트워크/프로토콜을 바꿀 때:
+  - `protocol-spec.md`
+  - `replay-format-spec.md`
+  - `server-ops-runbook.md`
+- 제품 우선순위를 조정할 때:
+  - `product-vision.md`
+  - `feature-backlog.md`
+  - `milestone-plan.md`
+
 ## 기존 문서와의 관계
 
 - 루트 `README.md`

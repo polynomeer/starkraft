@@ -135,3 +135,16 @@
 3. tick당 할당이 증가하지 않는가
 4. replay 재실행으로 재현 가능한가
 5. 테스트 또는 golden hash를 추가했는가
+
+## 관련 코드
+
+- `sim/src/main/kotlin/ecs`
+  - world, component maps, core systems
+- `sim/src/main/kotlin/ecs/path`
+  - pathfinding
+- `sim/src/main/kotlin/ecs/spatial`
+  - spatial hash
+- `sim/src/main/kotlin/client`
+  - snapshot 소비, 로컬 플레이 클라이언트
+- `sim/src/test/kotlin/starkraft/sim`
+  - 결정론, replay, 이동/전투/클라이언트 테스트

@@ -101,3 +101,16 @@
 2. 네트워크 클라이언트와 그래픽 클라이언트 통합 경로 정리
 3. 리플레이/스냅샷 계약을 장기 호환 포맷으로 고정
 4. 장시간 세션 기준 성능/메모리 하드닝
+
+## 관련 코드
+
+- `sim/src/main/kotlin`
+  - 결정론 시뮬레이션과 로컬 플레이 파이프라인
+- `server/pkg/authoritative`
+  - 권위 서버, room, handshake, replay
+- `client/pkg/headless`
+  - Go 클라이언트 연결/스트림 처리
+- `shared-protocol/schema`
+  - JSON schema 기준점
+- `tools/src/main/kotlin`
+  - replay/map/data 유틸리티

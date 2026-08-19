@@ -43,7 +43,12 @@ Out of scope for this module:
 
 핵심 산출물 문서는 `/Users/hammac/Projects/starkraft/docs/README.md`에 정리되어 있다.
 
-우선 읽을 문서:
+제품/계획 문서:
+- `/Users/hammac/Projects/starkraft/docs/product-vision.md`
+- `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`
+- `/Users/hammac/Projects/starkraft/docs/milestone-plan.md`
+
+구조/구현 문서:
 - `/Users/hammac/Projects/starkraft/docs/architecture-overview.md`
 - `/Users/hammac/Projects/starkraft/docs/simulation-architecture.md`
 - `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`

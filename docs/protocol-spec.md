@@ -125,3 +125,18 @@
 3. Kotlin models/tests
 4. Go models/tests
 5. 호환성 문서
+
+## 관련 코드
+
+- `shared-protocol/schema/rts-protocol-v1.schema.json`
+  - 프로토콜 schema 기준점
+- `shared-protocol/golden`
+  - golden envelope 예시
+- `sim/src/main/kotlin/starkraft/sim/protocol`
+  - Kotlin protocol models
+- `server/pkg/protocol`
+  - Go server protocol models/tests
+- `client/pkg/protocol`
+  - Go client protocol models/tests
+- `server/pkg/authoritative/server.go`
+  - handshake/validation enforcement

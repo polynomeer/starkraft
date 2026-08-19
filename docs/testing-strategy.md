@@ -124,3 +124,18 @@
 - replay verify
 - local stack smoke
 - sim graphical play smoke
+
+## 관련 코드와 명령
+
+- `sim/src/test/kotlin/starkraft/sim`
+  - 시뮬레이션/결정론/그래픽 클라이언트 테스트
+- `server/pkg/authoritative/*_test.go`
+  - handshake, room, validation 통합 테스트
+- `client/pkg/**/*_test.go`
+  - 클라이언트 protocol/stream 테스트
+- `scripts/smoke_run.sh`
+  - 기본 smoke
+- `scripts/e2e_server_bots_smoke.sh`
+  - 서버 + 봇 + replay smoke
+- `scripts/play_sim_smoke.sh`
+  - sim play 파이프라인 smoke
