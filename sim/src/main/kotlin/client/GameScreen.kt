@@ -1281,28 +1281,66 @@ internal class GameScreen(
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = null
-            add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.76f }) }).height(1f).expandX().fillX().row()
             add(
                 Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.14f).apply { a *= 0.84f }) }).width(16f).height(2f).left().padRight(2f)
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.76f }) }).height(1f).expandX().fillX()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.20f).apply { a *= 0.82f }) }).width(11f).height(2f).right().padLeft(2f)
+                }
+            ).expandX().fillX().row()
+            add(
+                Table().apply {
                     add(
                         Table().apply {
-                            background = null
-                            pad(3f, 5f, 5f, 5f)
+                            background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f).apply { a *= 0.72f })
+                            padTop(4f)
+                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.20f).apply { a *= 0.88f }) }).width(2f).height(12f).top().row()
+                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.06f).apply { a *= 0.60f }) }).width(1f).expandY().fillY().padTop(4f)
+                        }
+                    ).width(6f).expandY().fillY()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.08f).apply { a *= 0.24f })
+                            pad(3f, 5f, 4f, 5f)
                             add(content).expand().fill()
                         }
                     ).expand().fill()
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
+                    add(
+                        Table().apply {
+                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f).apply { a *= 0.72f })
+                            padTop(6f)
+                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.24f).apply { a *= 0.92f }) }).width(2f).height(18f).top().row()
+                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.10f).apply { a *= 0.58f }) }).width(1f).expandY().fillY().padTop(5f)
+                        }
+                    ).width(6f).expandY().fillY()
                 }
             ).expand().fill().row()
-            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f).apply { a *= 0.72f }) }).height(1f).expandX().fillX()
+            add(
+                Table().apply {
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.10f).apply { a *= 0.72f }) }).width(12f).height(3f).left().padRight(2f)
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f).apply { a *= 0.72f }) }).height(1f).expandX().fillX()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.06f).apply { a *= 0.48f }) }).width(22f).height(2f).right().padLeft(2f)
+                }
+            ).expandX().fillX().row()
+            add(
+                Table().apply {
+                    add().expandX().fillX()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.18f).apply { a *= 0.76f }) }).width(26f).height(6f).padRight(8f)
+                }
+            ).expandX().fillX()
         }
 
     private fun wrapTopStrip(content: Table): Table =
         Table().apply {
             background = null
             add(content).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX().padTop(2f)
+            add(
+                Table().apply {
+                    add(Table().apply { background = assets.panelDrawable(Color(0.30f, 0.58f, 0.66f, 0.42f)) }).width(18f).height(2f).padRight(2f)
+                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX()
+                    add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.18f, 0.22f, 0.48f)) }).width(12f).height(2f).padLeft(2f)
+                }
+            ).expandX().fillX().padTop(2f)
         }
 
     private fun buildCommandGlyph(actionId: String, disabled: Boolean, checked: Boolean): Table {
@@ -1355,29 +1393,29 @@ internal class GameScreen(
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
-            pad(1f, 1f, 2f, 1f)
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.74f))
+            pad(1f, 1f, 3f, 1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.22f))
-                    pad(1f, 1f, 2f, 1f)
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.28f))
+                    pad(1f, 1f, 3f, 1f)
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.66f))
+                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.72f))
                                 }
-                            ).size(12f, 3f).left().padBottom(1f).row()
+                            ).size(16f, 3f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
                                 }
-                            ).width(6f).height(2f).left().padBottom(1f).row()
+                            ).width(8f).height(2f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
                                 }
-                            ).width(3f).height(6f).left().padBottom(1f).row()
+                            ).width(3f).height(8f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
@@ -1385,7 +1423,7 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(20f).height(2f).right().row()
+                                    ).width(24f).height(2f).right().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.78f))
@@ -1415,9 +1453,9 @@ internal class GameScreen(
                                         Table().apply {
                                             background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(6f).height(2f).right().padTop(1f)
+                                    ).width(10f).height(2f).right().padTop(1f)
                                 }
-                            ).right().padTop(1f)
+                            ).right().padTop(2f)
                         }
                     ).expand().fill()
                 }
