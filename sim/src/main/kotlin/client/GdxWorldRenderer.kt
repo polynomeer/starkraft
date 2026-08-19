@@ -1809,14 +1809,20 @@ internal class GdxWorldRenderer(
                 val toolSwing = stride * 1.4f
                 val bodyLean = (sway * 1.2f) + (damageTilt * 0.55f)
                 shape.color = body
-                shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.5f)
+                shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.1f)
+                shape.rect(x - 3.8f + (bodyLean * 0.15f), y - 5.4f, 7.2f, 5.1f)
                 shape.color = teamStripe
-                shape.rect(x - 5f, y - 2f + (toolSwing * 0.15f), 10f, 4f)
+                shape.rect(x - 5.3f, y - 2f + (toolSwing * 0.15f), 10.6f, 4.1f)
+                shape.rect(x - 2.2f + (bodyLean * 0.2f), y - 4.7f, 4.4f, 2.8f)
                 shape.color = trim
                 shape.circle(x + bodyLean * 0.4f, y, 2.8f)
                 shape.rectLine(x - 4f - bodyLean, y + 4f + toolSwing, x + 4f + bodyLean, y + 4f - toolSwing, 1.2f)
+                shape.rectLine(x - 2.8f, y - 3.2f, x - 5.2f - bodyLean, y + 1.8f + toolSwing, 1.1f)
+                shape.rectLine(x + 2.8f, y - 3.1f, x + 5.0f + bodyLean, y + 1.6f - toolSwing, 1.1f)
                 shape.rect(x - 6.2f - bodyLean, y - 0.7f + toolSwing, 1.6f, 1.4f)
                 shape.rect(x + 4.6f + bodyLean, y - 0.7f - toolSwing, 1.6f, 1.4f)
+                shape.rectLine(x - 1.9f, y - 5.2f, x - 2.8f + stride, y - 8.4f, 1.2f)
+                shape.rectLine(x + 1.9f, y - 5.2f, x + 2.8f - stride, y - 8.4f, 1.2f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
                 shape.rectLine(
                     x + directionDx(entity.dir, 0.8f),
@@ -1834,14 +1840,11 @@ internal class GdxWorldRenderer(
                 val attackLunge = lunge + aimBias - (attackRecovery * 0.9f)
                 val crouch = attackReady * 1.8f
                 shape.color = body
-                shape.rect(
-                    x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f),
-                    y - 3.2f + settle * 0.25f + crouch,
-                    13f,
-                    6.4f
-                )
+                shape.rect(x - 6.8f + directionDx(entity.dir, attackLunge * 0.4f), y - 2.6f + settle * 0.25f + crouch, 13.6f, 4.8f)
+                shape.rectLine(x - 1.2f, y - 1.4f + crouch, x - 8.4f - (lunge * 0.35f), y - 4.8f + crouch, 1.8f)
+                shape.rectLine(x - 1.0f, y - 0.6f + crouch, x - 7.6f - (lunge * 0.45f), y + 1.4f + crouch, 1.4f)
                 shape.color = teamStripe
-                shape.rect(x - 5.2f + directionDx(entity.dir, attackLunge * 0.5f), y - 2.2f + crouch, 10.4f, 4.4f)
+                shape.rect(x - 5.6f + directionDx(entity.dir, attackLunge * 0.5f), y - 1.9f + crouch, 11.2f, 3.2f)
                 shape.color = trim
                 shape.rectLine(
                     x - 5f,
@@ -1864,6 +1867,8 @@ internal class GdxWorldRenderer(
                     y + 3.8f + attackLunge + crouch,
                     1f
                 )
+                shape.rectLine(x - 3.2f, y - 1.8f + crouch, x - 5.1f - clawSpread, y - 6.8f + crouch, 1f)
+                shape.rectLine(x + 2.8f, y - 1.8f + crouch, x + 4.9f + clawSpread, y - 6.8f + crouch, 1f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
                 shape.rectLine(
                     x,
@@ -1878,12 +1883,17 @@ internal class GdxWorldRenderer(
                 val torsoLean = (sway * 0.55f) + (damageTilt * 0.40f)
                 val aimLean = torsoLean + (aimBias * 0.45f) - (attackRecovery * 0.60f)
                 shape.color = body
-                shape.rect(x - 3.8f + aimLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
-                shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
+                shape.rect(x - 3.7f + aimLean, y - 5.8f + settle * 0.18f, 7.4f, 11.3f)
+                shape.rect(x - 6.8f, y - 0.8f + (march * 0.7f), 13.6f, 2.4f)
+                shape.rect(x - 5.4f + aimLean, y + 2.6f, 10.8f, 2.1f)
                 shape.color = teamStripe
-                shape.rect(x - 2.6f + aimLean, y - 5.8f, 5.2f, 11.6f)
+                shape.rect(x - 2.4f + aimLean, y - 4.9f, 4.8f, 9.8f)
+                shape.rect(x - 1.8f + aimLean, y + 5.1f, 3.6f, 2f)
                 shape.color = trim
-                shape.rect(x - 1.5f + aimLean, y - 6.8f, 3f, 2.8f)
+                shape.rect(x - 2.4f + aimLean, y - 7.4f, 4.8f, 2.4f)
+                shape.rect(x - 3.8f + aimLean, y + 6.8f, 7.6f, 1.4f)
+                shape.rectLine(x - 4.8f + aimLean, y + 0.8f, x - 6.2f, y - 4.8f + march, 1.1f)
+                shape.rectLine(x + 4.8f + aimLean, y + 0.8f, x + 6.2f, y - 4.8f - march, 1.1f)
                 shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(
@@ -2004,6 +2014,8 @@ internal class GdxWorldRenderer(
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
+        shape.color = Color(0f, 0f, 0f, 0.18f)
+        shape.rect(left + (width * 0.08f), top + (height * 0.62f), width * 0.84f, height * 0.08f)
         shape.color = Color(0.82f, 0.88f, 0.94f, 0.08f)
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
         shape.color = Color(0f, 0f, 0f, 0.16f)
@@ -2021,6 +2033,9 @@ internal class GdxWorldRenderer(
         shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
         shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
+        shape.color = Color(0.04f, 0.06f, 0.08f, 0.22f)
+        shape.rect(left + 2f, top + 2f, 3f, height - 4f)
+        shape.rect(left + width - 5f, top + 2f, 3f, height - 4f)
         if (isDepot) {
             shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
@@ -2029,6 +2044,8 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.84f, 0.74f, 0.36f, 0.24f)
             shape.rect(left + width * 0.18f, top + height * 0.30f, width * 0.18f, height * 0.26f)
             shape.rect(left + width * 0.62f, top + height * 0.30f, width * 0.18f, height * 0.18f)
+            shape.color = Color(0.18f, 0.20f, 0.22f, 0.48f)
+            shape.rect(left + width * 0.36f, top + 5f, width * 0.28f, height * 0.22f)
         }
         if (isResourceDepot) {
             shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
@@ -2039,6 +2056,8 @@ internal class GdxWorldRenderer(
             shape.color = Color(1.00f, 0.90f, 0.56f, 0.24f)
             shape.rect(left + width * 0.38f, top + height * 0.24f, width * 0.24f, height * 0.22f)
             shape.rect(left + width * 0.22f, top + height * 0.46f, width * 0.56f, height * 0.10f)
+            shape.color = Color(0.22f, 0.18f, 0.10f, 0.42f)
+            shape.rect(left + width * 0.30f, top + 5f, width * 0.40f, height * 0.18f)
         }
         if (isGasDepot) {
             shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
@@ -2048,6 +2067,10 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.64f, 1.00f, 0.86f, 0.22f)
             shape.rect(left + width * 0.42f, top + height * 0.18f, width * 0.16f, height * 0.16f)
             shape.rect(left + width * 0.28f, top + height * 0.62f, width * 0.44f, height * 0.08f)
+            shape.color = Color(0.10f, 0.16f, 0.14f, 0.46f)
+            shape.rect(left + width * 0.36f, top + 4f, width * 0.28f, height * 0.16f)
+            shape.rect(left + width * 0.18f, top + height * 0.34f, width * 0.12f, height * 0.24f)
+            shape.rect(left + width * 0.70f, top + height * 0.34f, width * 0.12f, height * 0.24f)
         }
         if (entity.supportsResearch == true) {
             shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
