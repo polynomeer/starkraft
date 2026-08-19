@@ -15,6 +15,7 @@ import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
+import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
@@ -199,6 +200,13 @@ class GameScreenInputRulesTest {
         assertEquals("Pg 2/3 · 14", formatSelectionPageLabel(selectedCount = 14, pageIndex = 1, pageCount = 3))
         assertEquals("Groups idle", formatControlGroupDeckLine(emptyList()))
         assertEquals("4:8  5:2  6:1", formatControlGroupDeckLine(listOf(4 to 8, 5 to 2, 6 to 1, 7 to 9)))
+    }
+
+    @Test
+    fun `command header shows true production paging`() {
+        assertEquals("Orders · DEFAULT", formatCommandHeaderLine("default", productionCount = 6, productionPage = 0))
+        assertEquals("Orders · DEFAULT · 2/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 1))
+        assertEquals("Orders · DEFAULT · 3/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 9))
     }
 
     @Test

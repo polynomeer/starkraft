@@ -469,7 +469,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 4f, 1f, 4f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
@@ -492,7 +492,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 5f, 1f, 5f)
+                                    pad(1f, 4f, 1f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.68f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
@@ -500,14 +500,14 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.38f))
-                                    pad(2f, 3f, 2f, 3f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
-                                    pad(2f, 3f, 2f, 3f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
@@ -521,7 +521,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 4f, 1f, 4f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.64f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
@@ -1396,14 +1396,19 @@ internal class GameScreen(
         }
 
     private fun buildCommandHeader(groups: List<Pair<String, List<ClientCommandButton>>>): String {
-        val productionGroup = groups.firstOrNull { it.first == "Production" }?.second.orEmpty()
-        val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
-        productionPage = productionPage.coerceIn(0, pageCount - 1)
-        return if (productionGroup.size > 6) {
-            "Orders · ${runtime.overlayModeLabel().uppercase()} · ${productionPage + 1}/$pageCount"
-        } else {
-            "Orders · ${runtime.overlayModeLabel().uppercase()}"
-        }
+        val productionCount =
+            runtime.buttonModels().count {
+                it.actionId.startsWith("build:") ||
+                    it.actionId.startsWith("train:") ||
+                    it.actionId.startsWith("research:") ||
+                    it.actionId.startsWith("cancel")
+            }
+        val hasProduction = groups.any { it.first == "Production" && it.second.isNotEmpty() }
+        return formatCommandHeaderLine(
+            overlayModeLabel = runtime.overlayModeLabel(),
+            productionCount = if (hasProduction) productionCount else 0,
+            productionPage = productionPage
+        )
     }
 
     private fun buildCenterHeaderLine(context: SelectionFrameContext?): String =
@@ -3063,6 +3068,22 @@ internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight:
     val bottomHudTop = screenHeight - computeBottomHudHeight(screenWidth, screenHeight)
     val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
     return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
+}
+
+internal fun formatCommandHeaderLine(
+    overlayModeLabel: String,
+    productionCount: Int,
+    productionPage: Int,
+    productionPageSize: Int = 6
+): String {
+    val pageCount = ((productionCount + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
+    val normalizedPage = productionPage.coerceIn(0, pageCount - 1)
+    val base = "Orders · ${overlayModeLabel.uppercase()}"
+    return if (productionCount > productionPageSize) {
+        "$base · ${normalizedPage + 1}/$pageCount"
+    } else {
+        base
+    }
 }
 
 internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): String =
