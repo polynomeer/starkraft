@@ -533,6 +533,14 @@ internal class GdxWorldRenderer(
         teamColor: Color? = null
     ) {
         val tint = sprite.tint ?: Color.WHITE
+        val shadowAlpha =
+            when {
+                width >= 36f || height >= 36f -> 0.18f
+                width >= 20f || height >= 20f -> 0.14f
+                else -> 0.10f
+            }
+        batch.color = Color(0f, 0f, 0f, shadowAlpha)
+        batch.draw(sprite.region, x + 1.8f, y + 2.4f, width, height)
         batch.color =
             if (teamColor != null && sprite.teamTintStrength > 0f) {
                 tint.cpy().lerp(teamColor, sprite.teamTintStrength)
