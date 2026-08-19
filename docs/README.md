@@ -26,6 +26,10 @@
   - 그래픽 클라이언트의 HUD/패널/피드백 기준
 - `input-mapping-spec.md`
   - 입력 체계와 단축키 원칙
+- `release-artifact-spec.md`
+  - 릴리스 산출물과 manifest/checksum 기준
+- `replay-validation-checklist.md`
+  - replay 검증용 운영 체크리스트
 - `testing-strategy.md`
   - 단위/통합/결정론/성능/소크 테스트 전략
 - `server-ops-runbook.md`
@@ -63,6 +67,10 @@
   - `product-vision.md`
   - `feature-backlog.md`
   - `milestone-plan.md`
+- 릴리스/검증 절차를 정리할 때:
+  - `release-artifact-spec.md`
+  - `replay-validation-checklist.md`
+  - `server-ops-runbook.md`
 
 ## 기존 문서와의 관계
 
