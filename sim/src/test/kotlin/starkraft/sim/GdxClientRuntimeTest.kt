@@ -26,6 +26,7 @@ import starkraft.sim.client.GdxClientRuntime
 import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.PlayControlState
 import starkraft.sim.client.PlayScenario
+import starkraft.sim.client.gdxMiniMapBounds
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.abs
@@ -265,8 +266,9 @@ class GdxClientRuntimeTest {
     @Test
     fun `minimap click recenters the camera`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
+        val bounds = gdxMiniMapBounds(1280, 720)
 
-        val centered = runtime.centerFromMinimap(screenX = 50f, screenY = 560f, viewWidth = 1280, viewHeight = 720)
+        val centered = runtime.centerFromMinimap(screenX = bounds.left + 34f, screenY = bounds.top + 32f, viewWidth = 1280, viewHeight = 720)
         repeat(20) { runtime.tick() }
 
         assertTrue(centered)
@@ -287,8 +289,9 @@ class GdxClientRuntimeTest {
     @Test
     fun `minimap drag recenter applies immediately`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
+        val bounds = gdxMiniMapBounds(1280, 720)
 
-        val centered = runtime.dragCenterFromMinimap(screenX = 50f, screenY = 560f, viewWidth = 1280, viewHeight = 720)
+        val centered = runtime.dragCenterFromMinimap(screenX = bounds.left + 34f, screenY = bounds.top + 32f, viewWidth = 1280, viewHeight = 720)
 
         assertTrue(centered)
         assertNotEquals(0f, runtime.camera.panX)

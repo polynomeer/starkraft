@@ -2316,10 +2316,10 @@ internal data class GdxMiniMapBounds(
 
 internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
     GdxMiniMapBounds(
-        left = 20f,
-        top = screenHeight - minOf(184, screenHeight / 5).toFloat() - 20f,
-        width = minOf(220, screenWidth / 5).toFloat(),
-        height = minOf(184, screenHeight / 5).toFloat()
+        left = 16f,
+        top = screenHeight - minOf(160, screenHeight / 6).toFloat() - 16f,
+        width = minOf(192, screenWidth / 6).toFloat(),
+        height = minOf(160, screenHeight / 6).toFloat()
     )
 
 internal fun gdxMiniMapWorldPosition(

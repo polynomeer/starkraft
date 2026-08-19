@@ -97,6 +97,18 @@ class GameScreenInputRulesTest {
     }
 
     @Test
+    fun `minimap and bottom hud stay compact on desktop layouts`() {
+        val hdMinimap = gdxMiniMapBounds(1920, 1080)
+        val compactMinimap = gdxMiniMapBounds(1280, 720)
+
+        assertTrue(hdMinimap.width <= 192f, "desktop minimap should cap width")
+        assertTrue(hdMinimap.height <= 160f, "desktop minimap should cap height")
+        assertTrue(compactMinimap.width <= 192f, "compact minimap should stay narrow")
+        assertTrue(compactMinimap.height <= 160f, "compact minimap should stay short")
+        assertTrue(computeBottomHudHeight(1920, 1080) <= 160, "bottom hud should not exceed compact shell target")
+    }
+
+    @Test
     fun `drag issues selection box when command is not armed`() {
         assertTrue(
             shouldIssueSelectionBox(

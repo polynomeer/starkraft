@@ -557,9 +557,9 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = null
-            pad(0f, 18f, 8f, 18f)
+            pad(0f, 14f, 6f, 14f)
             leftHudSpacerCell = add().width(208f).bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
+            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(8f)
             add().expandX().fillX()
             commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
@@ -583,7 +583,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapFrame).padLeft(20f).padBottom(12f)
+            add(minimapFrame).padLeft(16f).padBottom(10f)
         }
         stage.addActor(leftHudColumn)
 
@@ -696,7 +696,6 @@ internal class GameScreen(
         val commandColumns = 3
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - commandDeckLayout.actorInset.toFloat()
-        val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
         val hudLayoutSignature = buildHudLayoutSignature(width, height, topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight)
@@ -939,7 +938,7 @@ internal class GameScreen(
         topSelectionLabel.setWidth(topBarLayout.selectionWidth.toFloat() - 8f)
         modeLabel.setWidth(topBarLayout.modeWidth.toFloat() - 8f)
         statusBadgeLabel.setWidth(topBarLayout.statusWidth.toFloat() - 8f)
-        commandHintLabel.setWidth(commandWidth - 30f)
+        commandHintLabel.setWidth(commandWidth - 38f)
         minimapHint.setWidth(minimapWidth - 20f)
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
@@ -2317,8 +2316,8 @@ internal class GameScreen(
                 runtime.groundMode == ClientGroundCommandMode.MOVE -> "Move order  LMB/RMB confirm"
                 runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "Attack order  LMB/RMB confirm"
                 runtime.groundMode == ClientGroundCommandMode.PATROL -> "Patrol route  LMB/RMB confirm"
-                runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB attack  M move"
-                else -> "Select units to unlock orders"
+                runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB atk  M move"
+                else -> "Select units for orders"
             }
 
     private fun currentActionBannerTone(): Color =
@@ -2501,12 +2500,14 @@ internal class GameScreen(
                 .removeSuffix(" view")
                 .replace("faction ", "f")
                 .replace("selection", "sel")
+                .replace("attack", "atk")
+                .replace("command", "cmd")
                 .replace("current ", "")
                 .replace("camera ", "")
                 .replace("scenario ", "")
                 .replace("preset", "pst")
                 .trim()
-        return if (cleaned.length <= 24) cleaned else cleaned.take(21).trimEnd() + "..."
+        return if (cleaned.length <= 20) cleaned else cleaned.take(17).trimEnd() + "..."
     }
 
     private fun compactNotice(raw: String): String {
@@ -2996,17 +2997,17 @@ internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean
 
 internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
     val minimapHeight = gdxMiniMapBounds(screenWidth, screenHeight).height
-    val centerHeight = (screenHeight * 0.146f).coerceIn(120f, 152f)
-    val commandHeight = (screenHeight * 0.096f).coerceIn(82f, 106f)
-    val commandShellHeight = (commandHeight + 28f).coerceIn(108f, 134f)
+    val centerHeight = (screenHeight * 0.132f).coerceIn(108f, 140f)
+    val commandHeight = (screenHeight * 0.082f).coerceIn(68f, 90f)
+    val commandShellHeight = (commandHeight + 24f).coerceIn(94f, 114f)
     return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
 }
 
 internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
-    val leftSlotWidth = (minimapWidth + 8).coerceAtLeast(156)
-    val centerWidth = (screenWidth * 0.162f).coerceIn(212f, 272f).toInt()
-    val commandWidth = (screenWidth * 0.170f).coerceIn(220f, 286f).toInt()
+    val leftSlotWidth = (minimapWidth + 6).coerceAtLeast(146)
+    val centerWidth = (screenWidth * 0.152f).coerceIn(196f, 248f).toInt()
+    val commandWidth = (screenWidth * 0.158f).coerceIn(208f, 264f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
@@ -3016,25 +3017,25 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
 
 internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): CommandDeckLayout {
     val compact = screenWidth < 1360
-    val scrollHeight = if (compact) (screenHeight * 0.086f).coerceIn(72f, 92f) else (screenHeight * 0.096f).coerceIn(82f, 106f)
+    val scrollHeight = if (compact) (screenHeight * 0.076f).coerceIn(62f, 78f) else (screenHeight * 0.084f).coerceIn(68f, 90f)
     return CommandDeckLayout(
         scrollHeight = scrollHeight.toInt(),
-        buttonHeight = if (compact) 17 else 21,
-        groupPad = if (compact) 3 else 4,
+        buttonHeight = if (compact) 16 else 18,
+        groupPad = if (compact) 2 else 3,
         headerPadX = if (compact) 4 else 6,
-        actorInset = if (compact) 14 else 18
+        actorInset = if (compact) 12 else 14
     )
 }
 
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1360
     return CenterPanelLayout(
-        portraitSize = if (compact) 54 else 62,
-        rosterSlotSize = if (compact) 34 else 40,
+        portraitSize = if (compact) 48 else 56,
+        rosterSlotSize = if (compact) 32 else 36,
         pagerButtonSize = if (compact) 16 else 18,
-        pagerLabelWidth = if (compact) 48 else 54,
-        groupSummaryWidth = if (compact) 58 else 66,
-        healthBarWidth = if (compact) 108 else 122
+        pagerLabelWidth = if (compact) 46 else 50,
+        groupSummaryWidth = if (compact) 50 else 58,
+        healthBarWidth = if (compact) 96 else 108
     )
 }
 
