@@ -39,6 +39,19 @@ Out of scope for this module:
 - full online multiplayer
 - non-headless rendering engine integration
 
+## Documentation
+
+핵심 산출물 문서는 `/Users/hammac/Projects/starkraft/docs/README.md`에 정리되어 있다.
+
+우선 읽을 문서:
+- `/Users/hammac/Projects/starkraft/docs/architecture-overview.md`
+- `/Users/hammac/Projects/starkraft/docs/simulation-architecture.md`
+- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/game-design-document.md`
+- `/Users/hammac/Projects/starkraft/docs/testing-strategy.md`
+- `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
+
 ## Architecture / Dev Roadmap
 
 This project is a headless, fixed-tick RTS simulation. The roadmap below is ordered to keep the runtime deterministic and stable while layering systems.
