@@ -10,6 +10,8 @@
   - 남은 작업의 우선순위와 상태
 - `milestone-plan.md`
   - 단계별 완성 기준과 검증 자산 매핑
+- `balance-spec.md`
+  - 수치 밸런스 관리 원칙과 변경 절차
 - `architecture-overview.md`
   - 저장소 모듈 책임과 상위 레벨 데이터 흐름
 - `simulation-architecture.md`
@@ -20,6 +22,10 @@
   - replay 파일 구조, 검증 규칙, 활용 흐름
 - `game-design-document.md`
   - 게임 규칙, 핵심 루프, 유닛/건물/자원/승리 조건
+- `ui-ux-spec.md`
+  - 그래픽 클라이언트의 HUD/패널/피드백 기준
+- `input-mapping-spec.md`
+  - 입력 체계와 단축키 원칙
 - `testing-strategy.md`
   - 단위/통합/결정론/성능/소크 테스트 전략
 - `server-ops-runbook.md`
