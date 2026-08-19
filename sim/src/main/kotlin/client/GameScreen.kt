@@ -2463,31 +2463,31 @@ internal class GameScreen(
         }
 
     private fun commandHintCardColor(pulse: Float): Color =
-        currentCommandHintCardTone().cpy().lerp(Color(0.22f, 0.30f, 0.22f, 0.82f), pulse * 0.22f)
+        currentCommandHintCardTone().cpy().lerp(Color(0.20f, 0.28f, 0.20f, 0.74f), pulse * 0.20f)
 
     private fun topSelectionShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), pulse * 0.20f)
+        Color(0.08f, 0.13f, 0.17f, 0.44f).lerp(Color(0.16f, 0.22f, 0.18f, 0.56f), pulse * 0.18f)
 
     private fun topSelectionCardColor(pulse: Float): Color =
-        Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), pulse * 0.28f)
+        Color(0.10f, 0.16f, 0.20f, 0.58f).lerp(Color(0.22f, 0.30f, 0.20f, 0.70f), pulse * 0.24f)
 
     private fun topModeShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.16f, 0.22f, 0.18f, 0.68f), pulse * 0.20f)
+        Color(0.08f, 0.13f, 0.17f, 0.44f).lerp(Color(0.14f, 0.20f, 0.18f, 0.56f), pulse * 0.18f)
 
     private fun topModeCardColor(pulse: Float): Color =
-        Color(0.10f, 0.18f, 0.16f, 0.72f).lerp(Color(0.24f, 0.34f, 0.22f, 0.82f), pulse * 0.28f)
+        Color(0.10f, 0.18f, 0.16f, 0.58f).lerp(Color(0.22f, 0.30f, 0.20f, 0.70f), pulse * 0.24f)
 
     private fun topStatusShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.60f).lerp(Color(0.24f, 0.18f, 0.14f, 0.70f), pulse * 0.22f)
+        Color(0.08f, 0.13f, 0.17f, 0.46f).lerp(Color(0.22f, 0.18f, 0.14f, 0.58f), pulse * 0.20f)
 
     private fun topStatusCardColor(pulse: Float): Color =
-        Color(0.16f, 0.23f, 0.29f, 0.74f).lerp(Color(0.38f, 0.26f, 0.18f, 0.84f), pulse * 0.30f)
+        Color(0.14f, 0.21f, 0.27f, 0.60f).lerp(Color(0.32f, 0.24f, 0.18f, 0.72f), pulse * 0.26f)
 
     private fun selectionHeadlineCardColor(pulse: Float): Color =
-        currentSelectionHeadlineCardTone().cpy().lerp(Color(0.74f, 1.00f, 0.82f, 0.86f), pulse * 0.34f)
+        currentSelectionHeadlineCardTone().cpy().lerp(Color(0.70f, 0.96f, 0.80f, 0.76f), pulse * 0.28f)
 
     private fun portraitFrameColor(pulse: Float): Color =
-        Color(0.16f, 0.20f, 0.18f, 0.80f).lerp(Color(0.28f, 0.36f, 0.22f, 0.86f), pulse * 0.28f)
+        Color(0.14f, 0.18f, 0.17f, 0.66f).lerp(Color(0.24f, 0.32f, 0.22f, 0.74f), pulse * 0.24f)
 
     private fun pauseHeaderCardColor(pulse: Float): Color =
         currentPauseHeaderTone().cpy().lerp(Color(0.38f, 0.30f, 0.20f, 0.94f), pulse * 0.26f)
@@ -2514,10 +2514,10 @@ internal class GameScreen(
 
     private fun currentCommandHintCardTone(): Color =
         when {
-            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.86f)
-            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.86f)
-            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.84f)
-            else -> Color(0.12f, 0.16f, 0.18f, 0.82f)
+            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.74f)
+            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.74f)
+            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.72f)
+            else -> Color(0.12f, 0.16f, 0.18f, 0.70f)
         }
 
     private fun currentCommandHintTextTone(): Color =
@@ -2530,10 +2530,10 @@ internal class GameScreen(
 
     private fun currentSelectionHeadlineCardTone(): Color =
         when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.90f)
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.74f)
             runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(0.18f, 0.24f, 0.12f, 0.92f)
-            else -> Color(0.12f, 0.20f, 0.24f, 0.92f)
+                Color(0.18f, 0.24f, 0.12f, 0.76f)
+            else -> Color(0.12f, 0.20f, 0.24f, 0.76f)
         }
 
     private fun currentSelectionHeadlineTone(): Color =
