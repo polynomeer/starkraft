@@ -62,6 +62,7 @@ internal class GdxWorldRenderer(
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, worldViewportHeight: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
+        val nearestHostileCache = mutableMapOf<Int, EntitySnapshot?>()
         val shape = assets.shapeRenderer
         screenCamera.setToOrtho(true, width.toFloat(), height.toFloat())
         screenCamera.update()
@@ -75,14 +76,14 @@ internal class GdxWorldRenderer(
         drawTerrain(shape, runtime)
         shape.end()
 
-        renderWorldSprites(runtime)
+        renderWorldSprites(runtime, snapshot, nearestHostileCache)
 
         shape.begin(ShapeRenderer.ShapeType.Filled)
         drawResources(shape, runtime)
         drawFog(shape, runtime)
-        drawEntities(shape, runtime)
-        drawActivityMarkers(shape, runtime)
-        drawOrderMarkers(shape, runtime)
+        drawEntities(shape, runtime, snapshot, nearestHostileCache)
+        drawActivityMarkers(shape, runtime, snapshot, nearestHostileCache)
+        drawOrderMarkers(shape, runtime, snapshot, nearestHostileCache)
         drawGroundPing(shape, runtime)
         drawSelectionClickPulse(shape, runtime)
         drawDeathRemains(shape, runtime)
@@ -119,14 +120,17 @@ internal class GdxWorldRenderer(
         return
     }
 
-    private fun renderWorldSprites(runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
+    private fun renderWorldSprites(
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ) {
         val batch = assets.batch
         batch.projectionMatrix = screenCamera.combined
         batch.begin()
         drawTerrainSprites(batch, runtime)
         drawResourceSprites(batch, runtime)
-        drawEntitySprites(batch, runtime, snapshot)
+        drawEntitySprites(batch, runtime, snapshot, nearestHostileCache)
         batch.color = Color.WHITE
         batch.end()
     }
@@ -326,12 +330,17 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawEntitySprites(batch: SpriteBatch, runtime: GdxClientRuntime, snapshot: ClientSnapshot) {
+    private fun drawEntitySprites(
+        batch: SpriteBatch,
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ) {
         val viewedFaction = runtime.session.state.viewedFaction
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
             val sprite = assets.spriteAssets.entity(entity) ?: continue
-            val recoil = damageRecoilOffset(runtime, snapshot, entity)
+            val recoil = damageRecoilOffset(runtime, snapshot, entity, nearestHostileCache)
             val criticalShake = criticalShakeOffset(entity)
             val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first
             val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
@@ -367,13 +376,17 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawEntities(shape: ShapeRenderer, runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
+    private fun drawEntities(
+        shape: ShapeRenderer,
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ) {
         val viewedFaction = runtime.session.state.viewedFaction
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
             val hasSprite = assets.spriteAssets.entity(entity) != null
-            val recoil = damageRecoilOffset(runtime, snapshot, entity)
+            val recoil = damageRecoilOffset(runtime, snapshot, entity, nearestHostileCache)
             val criticalShake = criticalShakeOffset(entity)
             val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first
             val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
@@ -682,8 +695,12 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawOrderMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
+    private fun drawOrderMarkers(
+        shape: ShapeRenderer,
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ) {
         val entitiesById = snapshot.entities.associateBy { it.id }
         val leadSelectedId = runtime.session.state.selectedIds.firstOrNull()
         for (entity in snapshot.entities) {
@@ -735,7 +752,7 @@ internal class GdxWorldRenderer(
                 }
             }
             if (entity.id == leadSelectedId && isAttackOrder(entity)) {
-                nearestHostile(snapshot, entity)?.let { hostile ->
+                nearestHostile(snapshot, entity, nearestHostileCache)?.let { hostile ->
                     val hostileX = runtime.camera.worldToScreenX(hostile.x)
                     val hostileY = runtime.camera.worldToScreenY(hostile.y)
                     if (isOnScreen(hostileX, hostileY)) {
@@ -756,15 +773,19 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawActivityMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
+    private fun drawActivityMarkers(
+        shape: ShapeRenderer,
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ) {
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
             val screenX = runtime.camera.worldToScreenX(entity.x)
             val screenY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(screenX, screenY)) continue
             if (entity.weaponCooldownTicks > 0 && entity.weaponId != null) {
-                val hostile = nearestHostile(snapshot, entity)
+                val hostile = nearestHostile(snapshot, entity, nearestHostileCache)
                 val cooldownRatio = (entity.weaponCooldownTicks.coerceAtMost(20) / 20f)
                 val isMelee = isMeleeWeapon(entity)
                 shape.color = if (isMelee) Color(0.70f, 0.98f, 0.60f, 0.18f) else Color(0.98f, 0.54f, 0.22f, 0.18f)
@@ -965,7 +986,7 @@ internal class GdxWorldRenderer(
                 }
             }
             if (runtime.isDamageFlashActive(entity.id)) {
-                nearestHostile(snapshot, entity)?.let { attacker ->
+                nearestHostile(snapshot, entity, nearestHostileCache)?.let { attacker ->
                     val attackDir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
                     val hitX = screenX - directionDx(attackDir, 10f)
                     val hitY = screenY - directionDy(attackDir, 10f)
@@ -2106,9 +2127,14 @@ internal class GdxWorldRenderer(
         return base * severity
     }
 
-    private fun damageRecoilOffset(runtime: GdxClientRuntime, snapshot: ClientSnapshot, entity: EntitySnapshot): Pair<Float, Float> {
+    private fun damageRecoilOffset(
+        runtime: GdxClientRuntime,
+        snapshot: ClientSnapshot,
+        entity: EntitySnapshot,
+        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
+    ): Pair<Float, Float> {
         if (!runtime.isDamageFlashActive(entity.id)) return 0f to 0f
-        val attacker = nearestHostile(snapshot, entity) ?: return 0f to 0f
+        val attacker = nearestHostile(snapshot, entity, nearestHostileCache) ?: return 0f to 0f
         val dir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
         val scale = if (entity.footprintWidth != null && entity.footprintHeight != null) 1.6f else 2.8f
         return directionDx(dir, scale) to directionDy(dir, scale)
@@ -2146,11 +2172,17 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun nearestHostile(snapshot: ClientSnapshot, entity: EntitySnapshot): EntitySnapshot? =
-        snapshot.entities
-            .asSequence()
-            .filter { it.faction > 0 && it.faction != entity.faction }
-            .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
+    private fun nearestHostile(
+        snapshot: ClientSnapshot,
+        entity: EntitySnapshot,
+        cache: MutableMap<Int, EntitySnapshot?>
+    ): EntitySnapshot? =
+        cache.getOrPut(entity.id) {
+            snapshot.entities
+                .asSequence()
+                .filter { it.faction > 0 && it.faction != entity.faction }
+                .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
+        }
 
     private fun isMeleeAttacker(entity: EntitySnapshot): Boolean = isMeleeWeapon(entity)
 
