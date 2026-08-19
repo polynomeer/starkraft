@@ -2,6 +2,15 @@
 
 Authoritative multiplayer host.
 
+## Related docs
+
+- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
+- `/Users/hammac/Projects/starkraft/docs/security-validation-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
+- `/Users/hammac/Projects/starkraft/docs/release-artifact-spec.md`
+
 ## Status
 
 Implemented and wired for local play/smoke:

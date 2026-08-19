@@ -2,6 +2,13 @@
 
 Versioned wire protocol definitions.
 
+## Related docs
+
+- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/architecture-overview.md`
+- `/Users/hammac/Projects/starkraft/docs/security-validation-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/release-artifact-spec.md`
+
 ## Current scope
 
 - JSON schema v1 envelope: `shared-protocol/schema/rts-protocol-v1.schema.json`

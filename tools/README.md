@@ -2,6 +2,14 @@
 
 Offline utility CLIs for replay/map/data workflows.
 
+## Related docs
+
+- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
+- `/Users/hammac/Projects/starkraft/docs/map-format-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/data-schema-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/benchmark-report-template.md`
+
 ## Run
 
 - `./gradlew :tools:run --args="replay meta <path> [--json]"`

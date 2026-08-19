@@ -2,6 +2,14 @@
 
 Headless websocket client tools.
 
+## Related docs
+
+- `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/input-mapping-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`
+- `/Users/hammac/Projects/starkraft/docs/playtest-report-template.md`
+
 ## Current scope
 
 - websocket handshake + protocol envelope messaging

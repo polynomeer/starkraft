@@ -57,6 +57,12 @@ Out of scope for this module:
 - `/Users/hammac/Projects/starkraft/docs/testing-strategy.md`
 - `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
 
+운영/확장 문서:
+- `/Users/hammac/Projects/starkraft/docs/security-validation-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/release-artifact-spec.md`
+- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
+- `/Users/hammac/Projects/starkraft/docs/contribution-guide.md`
+
 ## Architecture / Dev Roadmap
 
 This project is a headless, fixed-tick RTS simulation. The roadmap below is ordered to keep the runtime deterministic and stable while layering systems.
