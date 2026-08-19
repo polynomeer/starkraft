@@ -32,6 +32,10 @@
   - 입력 체계와 단축키 원칙
 - `ai-behavior-spec.md`
   - 봇/AI 계층과 행동 우선순위
+- `security-validation-spec.md`
+  - 권위 서버 입력 검증과 보안 경계
+- `contribution-guide.md`
+  - 저장소 기여 절차와 검증 기준
 - `release-artifact-spec.md`
   - 릴리스 산출물과 manifest/checksum 기준
 - `replay-validation-checklist.md`
@@ -73,6 +77,10 @@
   - `protocol-spec.md`
   - `replay-format-spec.md`
   - `server-ops-runbook.md`
+- 서버 검증/운영 규칙을 바꿀 때:
+  - `security-validation-spec.md`
+  - `server-ops-runbook.md`
+  - `protocol-spec.md`
 - 제품 우선순위를 조정할 때:
   - `product-vision.md`
   - `feature-backlog.md`
