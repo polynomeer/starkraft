@@ -134,6 +134,12 @@ internal class GameScreen(
     private lateinit var centerHudCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
 
+    private data class SelectionFrameContext(
+        val snapshot: ClientSnapshot,
+        val selected: List<EntitySnapshot>,
+        val lead: EntitySnapshot?
+    )
+
     init {
         statusHeader.setFontScale(0.94f)
         centerHeaderLabel.setFontScale(0.94f)
@@ -661,16 +667,17 @@ internal class GameScreen(
         setActorColorIfChanged(minimapHint, currentMinimapHintTone())
         buttonTable.defaults().pad(0f, 0f, 3f, 3f)
         val selectionHeadline = buildSelectionHeadline()
-        val selectionMetaLine = buildSelectionMetaLine()
-        val centerStatusLine = buildCenterStatusLine()
-        val queueStatusLine = buildQueueStatusLine()
-        val queueHeaderLine = buildQueueHeaderLine()
-        val selectionRosterLine = buildSelectionRosterLine()
+        val selectionFrame = snapshot?.let(::buildSelectionFrameContext)
+        val selectionMetaLine = buildSelectionMetaLine(selectionFrame)
+        val centerStatusLine = buildCenterStatusLine(selectionFrame)
+        val queueStatusLine = buildQueueStatusLine(selectionFrame)
+        val queueHeaderLine = buildQueueHeaderLine(selectionFrame)
+        val selectionRosterLine = buildSelectionRosterLine(selectionFrame)
         val factionOverviewLine = buildFactionOverviewLine()
-        val portraitText = buildPortraitText()
-        val healthLine = buildHealthLine()
+        val portraitText = buildPortraitText(selectionFrame)
+        val healthLine = buildHealthLine(selectionFrame)
         val topEconomyLine = buildTopEconomyLine()
-        val topSelectionLine = buildTopSelectionLine()
+        val topSelectionLine = buildTopSelectionLine(selectionFrame)
         val topModeLine = buildTopModeLine()
         val statusBadgeLine = buildStatusBadgeLine()
         val actionBannerText = buildActionBannerLine()
@@ -680,14 +687,14 @@ internal class GameScreen(
         setLabelTextIfChanged(selectionLabel, selectionHeadline)
         setLabelTextIfChanged(selectionMetaLabel, selectionMetaLine)
         setLabelTextIfChanged(centerStatusLabel, centerStatusLine)
-        val centerStatusBits = buildCenterStatusBits()
+        val centerStatusBits = buildCenterStatusBits(selectionFrame)
         val centerStatusStripSignature = buildStatusStripSignature(centerStatusBits, "RDY")
         if (centerStatusStripSignature != lastCenterStatusStripSignature) {
             lastCenterStatusStripSignature = centerStatusStripSignature
             rebuildCenterStatusStrip(centerStatusBits)
         }
         setLabelTextIfChanged(queueStatusLabel, queueStatusLine)
-        val queueStatusBits = buildQueueStatusBits()
+        val queueStatusBits = buildQueueStatusBits(selectionFrame)
         val queueStatusStripSignature = buildStatusStripSignature(queueStatusBits, "IDLE")
         if (queueStatusStripSignature != lastQueueStatusStripSignature) {
             lastQueueStatusStripSignature = queueStatusStripSignature
@@ -1117,17 +1124,22 @@ internal class GameScreen(
         }
     }
 
-    private fun buildPortraitText(): String {
-        val snapshot = runtime.snapshot ?: return "NO\nDATA"
+    private fun buildSelectionFrameContext(snapshot: ClientSnapshot): SelectionFrameContext {
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) {
+        val lead = if (selected.isEmpty()) null else resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return SelectionFrameContext(snapshot, selected, lead)
+    }
+
+    private fun buildPortraitText(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val selectionContext = context ?: return "NO\nDATA"
+        if (selectionContext.selected.isEmpty()) {
             return runtime.session.state.viewedFaction?.let { "F$it\nVIEW" } ?: "OBS\nVIEW"
         }
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
-        return if (selected.size == 1) {
+        val lead = selectionContext.lead ?: return "NO\nDATA"
+        return if (selectionContext.selected.size == 1) {
             "${compactPortraitType(lead.typeId)}\n${compactPortraitRole(lead.archetype)}"
         } else {
-            "${selected.size} UN\n${compactPortraitType(lead.typeId)}"
+            "${selectionContext.selected.size} UN\n${compactPortraitType(lead.typeId)}"
         }
     }
 
@@ -1143,18 +1155,16 @@ internal class GameScreen(
             .uppercase()
             .take(12)
 
-    private fun buildHealthLine(): String {
-        val snapshot = runtime.snapshot ?: return "HP -"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+    private fun buildHealthLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val selected = context?.selected.orEmpty()
         if (selected.isEmpty()) return "HP -"
         val hp = selected.sumOf { it.hp }
         val maxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
         return "HP $hp/$maxHp"
     }
 
-    private fun buildSelectionRosterLine(): String {
-        val snapshot = runtime.snapshot ?: return "No ros"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+    private fun buildSelectionRosterLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val selected = context?.selected.orEmpty()
         if (selected.isEmpty()) {
             return "No card"
         }
@@ -1335,11 +1345,8 @@ internal class GameScreen(
         }
     }
 
-    private fun buildCenterStatusLine(): String {
-        val snapshot = runtime.snapshot ?: return "No status"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "No status"
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+    private fun buildCenterStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val lead = context?.lead ?: return "No status"
         val statusBits = buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("O ${it.lowercase().take(6)}") }
             if (lead.orderQueueSize > 0) add("Q${lead.orderQueueSize}")
@@ -1391,11 +1398,8 @@ internal class GameScreen(
             }
         }
 
-    private fun buildCenterStatusBits(): List<StatusChip> {
-        val snapshot = runtime.snapshot ?: return emptyList()
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return emptyList()
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+    private fun buildCenterStatusBits(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): List<StatusChip> {
+        val lead = context?.lead ?: return emptyList()
         return buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
                 add(StatusChip("O ${it.lowercase().take(4)}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
@@ -1455,11 +1459,8 @@ internal class GameScreen(
         }
     }
 
-    private fun buildQueueStatusBits(): List<StatusChip> {
-        val snapshot = runtime.snapshot ?: return emptyList()
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return emptyList()
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+    private fun buildQueueStatusBits(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): List<StatusChip> {
+        val lead = context?.lead ?: return emptyList()
         return buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
@@ -1500,11 +1501,8 @@ internal class GameScreen(
         }.take(6)
     }
 
-    private fun buildQueueStatusLine(): String {
-        val snapshot = runtime.snapshot ?: return "No queue"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "Idle"
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+    private fun buildQueueStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val lead = context?.lead ?: return "Idle"
         val parts = buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
@@ -1538,11 +1536,8 @@ internal class GameScreen(
         return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
     }
 
-    private fun buildQueueHeaderLine(): String {
-        val snapshot = runtime.snapshot ?: return "QUEUE"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "QUEUE"
-        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+    private fun buildQueueHeaderLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val lead = context?.lead ?: return "QUEUE"
         return when {
             lead.activeResearchTech != null || lead.researchQueueSize > 0 -> "RESEARCH"
             lead.activeProductionType != null || lead.productionQueueSize > 0 -> "PRODUCTION"
@@ -2182,16 +2177,15 @@ internal class GameScreen(
     private fun computeWorldViewportHeight(screenWidth: Int, screenHeight: Int): Int =
         computeWorldViewportHeightForLayout(screenWidth, screenHeight)
 
-    private fun buildSelectionMetaLine(): String {
-        val snapshot = runtime.snapshot ?: return "No live snapshot"
-        if (runtime.session.state.selectedIds.isEmpty()) {
-            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
+    private fun buildSelectionMetaLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val selectionContext = context ?: return "No live snapshot"
+        if (selectionContext.selected.isEmpty()) {
+            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${selectionContext.snapshot.entities.size}"
         }
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        val combat = selected.count { it.weaponId != null }
-        val workers = selected.count { it.archetype == "worker" }
-        val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "${selected.size} sel · c$combat · w$workers · s$structures"
+        val combat = selectionContext.selected.count { it.weaponId != null }
+        val workers = selectionContext.selected.count { it.archetype == "worker" }
+        val structures = selectionContext.selected.count { it.footprintWidth != null && it.footprintHeight != null }
+        return "${selectionContext.selected.size} sel · c$combat · w$workers · s$structures"
     }
 
     private fun buildTopEconomyLine(): String {
@@ -2211,15 +2205,13 @@ internal class GameScreen(
         return "${mode.uppercase()}  ${viewed.uppercase()}"
     }
 
-    private fun buildTopSelectionLine(): String {
-        val snapshot = runtime.snapshot ?: return "No sel"
-        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) return "No sel"
-        val lead = selected.first()
-        return if (selected.size == 1) {
+    private fun buildTopSelectionLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
+        val selectionContext = context ?: return "No sel"
+        val lead = selectionContext.lead ?: return "No sel"
+        return if (selectionContext.selected.size == 1) {
             "${lead.typeId} ${lead.hp}/${lead.maxHp}"
         } else {
-            "${selected.size}x ${lead.typeId}"
+            "${selectionContext.selected.size}x ${lead.typeId}"
         }
     }
 
