@@ -143,6 +143,42 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `move action with selection arms move mode and feedback`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.executeAction(actionId = "move", viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(starkraft.sim.client.ClientGroundCommandMode.MOVE, runtime.groundMode)
+        assertEquals(CommandSoundKind.MOVE, runtime.consumeCommandSoundKind())
+        assertEquals("notice: move armed", runtime.noticeLine())
+    }
+
+    @Test
+    fun `attack action with selection arms attack mode and feedback`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.executeAction(actionId = "attackMove", viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(starkraft.sim.client.ClientGroundCommandMode.ATTACK_MOVE, runtime.groundMode)
+        assertEquals(CommandSoundKind.ATTACK, runtime.consumeCommandSoundKind())
+        assertEquals("notice: attack armed", runtime.noticeLine())
+    }
+
+    @Test
+    fun `build action with selection arms build mode and feedback`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.executeAction(actionId = "build:Depot", viewWidth = 1280, viewHeight = 720)
+
+        assertEquals("Depot", runtime.buildModeTypeId)
+        assertEquals(CommandSoundKind.BUILD, runtime.consumeCommandSoundKind())
+        assertEquals("notice: place Depot", runtime.noticeLine())
+    }
+
+    @Test
     fun `build action without selection does not arm build mode`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 

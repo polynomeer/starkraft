@@ -697,6 +697,8 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.MOVE
                 buildModeTypeId = null
+                pendingCommandSoundKind = CommandSoundKind.MOVE
+                showNotice("move armed")
             }
             actionId == "attackMove" -> {
                 if (!hasSelection) {
@@ -706,6 +708,8 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.ATTACK_MOVE
                 buildModeTypeId = null
+                pendingCommandSoundKind = CommandSoundKind.ATTACK
+                showNotice("attack armed")
             }
             actionId == "patrol" -> {
                 if (!hasSelection) {
@@ -715,6 +719,8 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.PATROL
                 buildModeTypeId = null
+                pendingCommandSoundKind = CommandSoundKind.MOVE
+                showNotice("patrol armed")
             }
             actionId == "hold" -> {
                 val hold = snapshot?.let { buildHoldIntent(it, session.state.selectedIds, requestIds) }
@@ -763,6 +769,8 @@ internal class GdxClientRuntime(
                 }
                 buildModeTypeId = actionId.removePrefix("build:")
                 groundMode = null
+                pendingCommandSoundKind = CommandSoundKind.BUILD
+                showNotice("place ${buildModeTypeId ?: "build"}")
             }
             actionId.startsWith("train:") -> {
                 val typeId = actionId.removePrefix("train:")

@@ -1439,8 +1439,10 @@ internal class GameScreen(
     private fun buildCenterFooterLine(): String =
         when {
             runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
-            runtime.groundMode != null -> "LMB/RMB confirm  Esc cancel"
-            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
+            runtime.groundMode == ClientGroundCommandMode.MOVE -> "LMB/RMB move  Esc cancel"
+            runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "LMB/RMB attack  Esc cancel"
+            runtime.groundMode == ClientGroundCommandMode.PATROL -> "LMB/RMB patrol  Esc cancel"
+            runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB attack  Shift add"
             else -> "Drag select  RMB order  MMB pan"
         }
 
@@ -2244,10 +2246,12 @@ internal class GameScreen(
     private fun buildCommandHintLine(): String =
         runtime.hoverHintLine()?.let(::compactHint)
             ?: when {
-                runtime.buildModeTypeId != null -> "Build armed"
-                runtime.groundMode != null -> "Order armed"
-                runtime.session.state.selectedIds.isNotEmpty() -> "Cmd ready"
-                else -> "Select to unlock orders"
+                runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  LMB/RMB confirm"
+                runtime.groundMode == ClientGroundCommandMode.MOVE -> "Move order  LMB/RMB confirm"
+                runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "Attack order  LMB/RMB confirm"
+                runtime.groundMode == ClientGroundCommandMode.PATROL -> "Patrol route  LMB/RMB confirm"
+                runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB attack  M move"
+                else -> "Select units to unlock orders"
             }
 
     private fun currentActionBannerTone(): Color =
