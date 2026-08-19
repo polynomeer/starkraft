@@ -39,8 +39,10 @@ class GameScreenInputRulesTest {
         assertTrue(compact.centerWidth < 266, "1280 layout should shrink center panel")
         assertTrue(compact.commandWidth < 278, "1280 layout should shrink command panel")
         assertTrue(compact.leftSlotWidth <= 228, "1280 layout should keep minimap lane compact")
+        assertTrue(compact.centerWidth >= compact.commandWidth, "1280 layout should prioritize center selection deck")
         assertTrue(wide.centerWidth >= compact.centerWidth, "wider layout should not shrink center panel further")
         assertTrue(wide.commandWidth >= compact.commandWidth, "wider layout should not shrink command panel further")
+        assertTrue(wide.centerWidth >= wide.commandWidth, "desktop layout should keep center deck wider than command deck")
     }
 
     @Test

@@ -135,7 +135,9 @@ internal class GameScreen(
     private lateinit var topModeCell: Cell<*>
     private lateinit var topStatusCell: Cell<*>
     private lateinit var leftHudSpacerCell: Cell<*>
+    private lateinit var centerLeftGapCell: Cell<*>
     private lateinit var centerHudCell: Cell<*>
+    private lateinit var centerRightGapCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
 
     private data class SelectionFrameContext(
@@ -559,8 +561,9 @@ internal class GameScreen(
             background = null
             pad(0f, 14f, 6f, 14f)
             leftHudSpacerCell = add().width(208f).bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(8f)
-            add().expandX().fillX()
+            centerLeftGapCell = add().expandX().fillX().bottom()
+            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padLeft(4f).padRight(4f)
+            centerRightGapCell = add().expandX().fillX().bottom()
             commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
 
@@ -913,7 +916,9 @@ internal class GameScreen(
         topModeCell.width(topBarLayout.modeWidth.toFloat())
         topStatusCell.width(topBarLayout.statusWidth.toFloat())
         leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
+        centerLeftGapCell.minWidth(6f)
         centerHudCell.width(centerWidth)
+        centerRightGapCell.minWidth(6f)
         commandHudCell.width(commandWidth)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
@@ -3053,9 +3058,9 @@ internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
 
 internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
-    val leftSlotWidth = (minimapWidth + 6).coerceAtLeast(146)
-    val centerWidth = (screenWidth * 0.152f).coerceIn(196f, 248f).toInt()
-    val commandWidth = (screenWidth * 0.158f).coerceIn(208f, 264f).toInt()
+    val leftSlotWidth = (minimapWidth + 10).coerceAtLeast(150)
+    val centerWidth = (screenWidth * 0.164f).coerceIn(214f, 268f).toInt()
+    val commandWidth = (screenWidth * 0.146f).coerceIn(196f, 236f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
