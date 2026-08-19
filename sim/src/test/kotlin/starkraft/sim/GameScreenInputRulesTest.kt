@@ -74,12 +74,13 @@ class GameScreenInputRulesTest {
 
     @Test
     fun `selection slot visuals compact with smaller slot size`() {
-        val compact = computeSelectionSlotVisualLayout(34)
+        val compact = computeSelectionSlotVisualLayout(30)
         val wide = computeSelectionSlotVisualLayout(40)
 
         assertTrue(compact.topBarHeight < wide.topBarHeight, "compact slots should use thinner chrome bars")
         assertTrue(compact.titleHeight < wide.titleHeight, "compact slots should use shorter title rows")
         assertTrue(compact.hpBarWidth < wide.hpBarWidth, "compact slots should use shorter hp bars")
+        assertTrue(compact.hpBarHeight < wide.hpBarHeight, "compact slots should use thinner hp bars")
         assertTrue(compact.glyphScale < wide.glyphScale, "compact slots should use smaller glyphs")
         assertTrue(compact.markerSize < wide.markerSize, "compact slots should use smaller markers")
     }

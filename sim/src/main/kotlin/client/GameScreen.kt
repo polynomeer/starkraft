@@ -1683,13 +1683,13 @@ internal class GameScreen(
             selectionGrid.add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.74f))
-                    pad(4f, 8f, 4f, 8f)
+                    pad(3f, 6f, 3f, 6f)
                     add(Label("No slots", assets.mutedLabelStyle)).left()
                 }
             ).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
+        selectionGrid.defaults().pad(0f, 1.5f, 1.5f, 0f)
         selected.forEachIndexed { index, entity ->
             selectionGrid.add(buildSelectionSlot(entity, centerPanelLayout)).size(centerPanelLayout.rosterSlotSize.toFloat(), centerPanelLayout.rosterSlotSize.toFloat())
             if ((index + 1) % 4 == 0) {
@@ -1769,6 +1769,11 @@ internal class GameScreen(
                 else -> Color(0.84f, 0.30f, 0.25f, 1f)
             }
         val shortName = buildSelectionSlotCode(entity)
+        val titleLabel =
+            Label(shortName, assets.titleLabelStyle).apply {
+                setFontScale(if (layout.rosterSlotSize <= 32) 0.78f else 0.86f)
+                setAlignment(Align.center)
+            }
         return Table().apply {
             background =
                 assets.panelDrawable(
@@ -1778,7 +1783,7 @@ internal class GameScreen(
                     else Color(0.08f, 0.12f, 0.16f, 0.92f)
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(1f)
+            pad(if (layout.rosterSlotSize <= 32) 0.5f else 1f)
             add(
                 Table().apply {
                     background =
@@ -1788,7 +1793,11 @@ internal class GameScreen(
                             else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
                             else tone
                         )
-                    pad(if (focused) 2f else 1.5f)
+                    pad(if (layout.rosterSlotSize <= 32) {
+                        if (focused) 1.5f else 1f
+                    } else {
+                        if (focused) 2f else 1.5f
+                    })
                     add(
                         Table().apply {
                             background =
@@ -1798,15 +1807,15 @@ internal class GameScreen(
                                     else Color(1f, 1f, 1f, 0.08f)
                                 )
                         }
-                    ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(2f).row()
+                    ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(if (layout.rosterSlotSize <= 32) 1f else 2f).row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
-                            pad(2f, 1f, 0.5f, 1f)
-                            add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
+                            pad(if (layout.rosterSlotSize <= 32) 1f else 2f, 1f, 0.5f, 1f)
+                            add(titleLabel).center().expandX().fillX()
                         }
                     ).expandX().fillX().height(visualLayout.titleHeight).row()
-                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged, visualLayout)).center().padTop(1f).row()
+                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged, visualLayout)).center().padTop(if (layout.rosterSlotSize <= 32) 0.5f else 1f).row()
                     add(
                         Table().apply {
                             add(
@@ -1830,7 +1839,7 @@ internal class GameScreen(
                                 }
                             ).size(visualLayout.markerSize, visualLayout.markerSize)
                         }
-                    ).expandX().fillX().padTop(1f).row()
+                    ).expandX().fillX().padTop(if (layout.rosterSlotSize <= 32) 0.5f else 1f).row()
                     add(
                         Table().apply {
                             background =
@@ -1843,10 +1852,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
-                            ).width(visualLayout.hpBarWidth * hpRatio.coerceIn(0f, 1f)).height(4f).left()
+                            ).width(visualLayout.hpBarWidth * hpRatio.coerceIn(0f, 1f)).height(visualLayout.hpBarHeight).left()
                             add().expandX().fillX()
                         }
-                    ).width(visualLayout.hpBarWidth).height(4f).padTop(2f)
+                    ).width(visualLayout.hpBarWidth).height(visualLayout.hpBarHeight).padTop(if (layout.rosterSlotSize <= 32) 1f else 2f)
                 }
             ).expand().fill()
             addListener(
@@ -2993,6 +3002,7 @@ internal data class SelectionSlotVisualLayout(
     val topBarHeight: Float,
     val titleHeight: Float,
     val hpBarWidth: Float,
+    val hpBarHeight: Float,
     val glyphScale: Float,
     val markerSize: Float
 )
@@ -3035,12 +3045,12 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1360
     return CenterPanelLayout(
-        portraitSize = if (compact) 48 else 56,
-        rosterSlotSize = if (compact) 32 else 36,
+        portraitSize = if (compact) 46 else 52,
+        rosterSlotSize = if (compact) 30 else 34,
         pagerButtonSize = if (compact) 16 else 18,
         pagerLabelWidth = if (compact) 46 else 50,
         groupSummaryWidth = if (compact) 50 else 58,
-        healthBarWidth = if (compact) 96 else 108
+        healthBarWidth = if (compact) 90 else 100
     )
 }
 
@@ -3054,13 +3064,14 @@ internal fun computeTopBarLayout(screenWidth: Int): TopBarLayout {
 }
 
 internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlotVisualLayout {
-    val compact = rosterSlotSize <= 34
+    val compact = rosterSlotSize <= 32
     return SelectionSlotVisualLayout(
-        topBarHeight = if (compact) 1.5f else 2f,
-        titleHeight = if (compact) 15f else 18f,
-        hpBarWidth = if (compact) 20f else 24f,
-        glyphScale = if (compact) 0.84f else 1f,
-        markerSize = if (compact) 4f else 5f
+        topBarHeight = if (compact) 1.25f else 1.75f,
+        titleHeight = if (compact) 13f else 16f,
+        hpBarWidth = if (compact) 18f else 22f,
+        hpBarHeight = if (compact) 3f else 4f,
+        glyphScale = if (compact) 0.78f else 0.92f,
+        markerSize = if (compact) 3.5f else 4.5f
     )
 }
 
