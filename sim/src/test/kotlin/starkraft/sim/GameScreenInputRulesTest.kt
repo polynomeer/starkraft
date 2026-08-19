@@ -1,5 +1,6 @@
 package starkraft.sim
 
+import com.badlogic.gdx.graphics.Color
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -22,6 +23,9 @@ import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
+import starkraft.sim.client.resolveEffectAccentColor
+import starkraft.sim.client.resolveEffectDebrisColor
+import starkraft.sim.client.resolveEffectSmokeColor
 import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.resolveQueueHeaderLine
@@ -222,6 +226,21 @@ class GameScreenInputRulesTest {
         assertEquals("A", resolveCommandButtonHotkey("attackMove"))
         assertEquals("Esc", resolveCommandButtonHotkey("clear"))
         assertEquals("F1", resolveCommandButtonHotkey("help"))
+    }
+
+    @Test
+    fun `effect palettes stay coherent across unit classes`() {
+        val faction = Color(0.30f, 0.60f, 1.00f, 1f)
+
+        val marineAccent = resolveEffectAccentColor("Marine", isStructure = false, factionColor = faction)
+        val zergAccent = resolveEffectAccentColor("Zergling", isStructure = false, factionColor = faction)
+        val structureDebris = resolveEffectDebrisColor("Depot", isStructure = true, factionColor = faction)
+        val zergSmoke = resolveEffectSmokeColor("Zergling", isStructure = false, factionColor = faction)
+
+        assertTrue(marineAccent.r > faction.r, "marine accents should warm the base faction tone")
+        assertTrue(zergAccent.g < marineAccent.g, "zerg accents should read harsher than marine accents")
+        assertTrue(structureDebris.r > zergSmoke.r, "structure debris should stay warmer than zerg smoke")
+        assertTrue(zergSmoke.a == 1f, "palette helpers should return opaque base colors")
     }
 
     @Test

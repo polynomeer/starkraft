@@ -1507,6 +1507,7 @@ internal class GdxWorldRenderer(
         val bursts = runtime.activeDeathBursts()
         if (bursts.isEmpty()) return
         val now = System.currentTimeMillis()
+        val viewedFaction = runtime.session.state.viewedFaction
         for (burst in bursts) {
             val x = runtime.camera.worldToScreenX(burst.x)
             val y = runtime.camera.worldToScreenY(burst.y)
@@ -1515,17 +1516,19 @@ internal class GdxWorldRenderer(
             val fade = (1f - progress).coerceIn(0f, 1f)
             val core = if (burst.isStructure) 8f + (progress * 14f) else 5f + (progress * 9f)
             val outer = if (burst.isStructure) 16f + (progress * 28f) else 11f + (progress * 18f)
-            shape.color = Color(1.00f, 0.58f, 0.28f, 0.22f * fade)
+            val accent = resolveEffectAccentColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction))
+            val ember = resolveEffectEmberColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction))
+            shape.color = accent.cpy().lerp(Color.WHITE, 0.08f).apply { a = 0.22f * fade }
             shape.circle(x, y, outer)
-            shape.color = Color(1.00f, 0.78f, 0.40f, 0.40f * fade)
+            shape.color = ember.cpy().apply { a = 0.40f * fade }
             shape.circle(x, y, core)
-            shape.color = Color(1.00f, 0.92f, 0.72f, 0.62f * fade)
+            shape.color = ember.cpy().lerp(Color.WHITE, 0.36f).apply { a = 0.62f * fade }
             shape.circle(x, y, core * 0.42f)
             shape.color = Color(0.22f, 0.24f, 0.22f, 0.20f * fade)
             shape.circle(x + (progress * 6f), y - (progress * 10f), outer * 0.82f)
             shape.circle(x - (progress * 8f), y - (progress * 6f), outer * 0.64f)
             val shard = if (burst.isStructure) 18f else 12f
-            shape.color = Color(1.00f, 0.76f, 0.44f, 0.50f * fade)
+            shape.color = ember.cpy().lerp(Color.WHITE, 0.18f).apply { a = 0.50f * fade }
             shape.rectLine(x - shard, y, x - (shard * 0.35f), y, 2.2f)
             shape.rectLine(x + shard, y, x + (shard * 0.35f), y, 2.2f)
             shape.rectLine(x, y - shard, x, y - (shard * 0.35f), 2.2f)
@@ -1534,19 +1537,13 @@ internal class GdxWorldRenderer(
             shape.rectLine(x + (shard * 0.72f), y - (shard * 0.72f), x + (shard * 0.22f), y - (shard * 0.22f), 1.6f)
             shape.rectLine(x - (shard * 0.72f), y + (shard * 0.72f), x - (shard * 0.22f), y + (shard * 0.22f), 1.6f)
             shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
-            val debrisColor =
-                when {
-                    burst.typeId.contains("Zergling", ignoreCase = true) -> Color(0.74f, 0.46f, 0.34f, 0.44f * fade)
-                    burst.isStructure -> Color(0.52f, 0.50f, 0.44f, 0.42f * fade)
-                    else -> Color(0.68f, 0.66f, 0.60f, 0.44f * fade)
-                }
-            shape.color = debrisColor
+            shape.color = resolveEffectDebrisColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction)).apply { a *= fade }
             shape.rect(x - (shard * 0.46f), y + (shard * 0.16f), 5f, 3f)
             shape.rect(x + (shard * 0.22f), y - (shard * 0.34f), 4f, 3f)
             if (burst.isStructure) {
                 shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
                 shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
-                shape.color = Color(0.72f, 0.66f, 0.52f, 0.36f * fade)
+                shape.color = ember.cpy().lerp(Color(0.44f, 0.40f, 0.28f, 1f), 0.42f).apply { a = 0.36f * fade }
                 val collapseTilt = (((burst.entityId % 7) - 3) / 3f).coerceIn(-1f, 1f)
                 shape.rectLine(
                     x - (shard * 1.18f),
@@ -1581,6 +1578,7 @@ internal class GdxWorldRenderer(
         val remains = runtime.activeDeathRemains()
         if (remains.isEmpty()) return
         val now = System.currentTimeMillis()
+        val viewedFaction = runtime.session.state.viewedFaction
         for (remain in remains) {
             val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
             val settle = (1f - progress).coerceIn(0f, 1f)
@@ -1607,58 +1605,53 @@ internal class GdxWorldRenderer(
             val hotAlpha = (progress * progress).coerceIn(0f, 1f)
             val smokeDrift = if (remain.isStructure) settle * 1.8f else settle * 0.8f
             val smokeRise = if (remain.isStructure) settle * 6f else settle * 3f
+            val accent = resolveEffectAccentColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
+            val ember = resolveEffectEmberColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
+            val debrisTone = resolveEffectDebrisColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
             if (remain.isStructure) {
-                shape.color = Color(1.00f, 0.62f, 0.32f, 0.08f * hotAlpha)
+                shape.color = accent.cpy().lerp(Color.WHITE, 0.12f).apply { a = 0.08f * hotAlpha }
                 shape.circle(x, y, 14f + ((1f - progress) * 10f))
-                shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
+                shape.color = debrisTone.cpy().lerp(Color(0.18f, 0.18f, 0.18f, 1f), 0.42f).apply { a = alpha }
                 shape.rect(x - 12f, y - 12f, 24f, 24f)
-                shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
+                shape.color = debrisTone.cpy().apply { a = alpha * 0.9f }
                 shape.rect(x - 8f - spread, y - 9f, 7f, 5f)
                 shape.rect(x + 1f + spread, y - 6f, 8f, 6f)
                 shape.rect(x - 3f, y + 2f + (settle * 0.8f), 9f, 4f)
-                shape.color = Color(0.22f, 0.20f, 0.18f, alpha * 0.86f)
+                shape.color = debrisTone.cpy().lerp(Color(0.20f, 0.18f, 0.16f, 1f), 0.34f).apply { a = alpha * 0.86f }
                 shape.rect(x - 14f - (spread * 0.6f), y + 10f, 5f, 4f)
                 shape.rect(x + 8f + (spread * 0.5f), y + 6f, 4f, 5f)
                 shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
                 shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
                 shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
                 shape.circle(x - 8f, y + 6f, 5f + ((1f - progress) * 4f))
-                shape.color = Color(0.24f, 0.22f, 0.18f, alpha * 0.78f)
+                shape.color = ember.cpy().lerp(debrisTone, 0.72f).apply { a = alpha * 0.78f }
                 shape.rect(x - 17f - spread, y + 5f, 7f, 4f)
                 shape.rect(x + 10f + spread, y - 10f, 6f, 5f)
             } else {
-                val debris =
-                    when {
-                        zerglingRemain -> Color(0.34f, 0.24f, 0.20f, alpha)
-                        else -> Color(0.28f, 0.30f, 0.30f, alpha)
-                    }
-                shape.color = debris
+                shape.color = debrisTone.cpy().apply { a = alpha }
                 shape.rect(x - 6f - (spread * 0.4f), y - 2f, 5f, 3f)
                 shape.rect(x + 1f + (spread * 0.5f), y - 4f, 4f, 3f)
                 shape.rect(x - 1f, y + 1f + (settle * 0.3f), 3f, 2f)
                 if (marineRemain) {
-                    shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
+                    shape.color = debrisTone.cpy().lerp(Color(0.36f, 0.38f, 0.42f, 1f), 0.18f).apply { a = alpha * 0.92f }
                     shape.rect(x - 3f, y - 6f + (settle * 0.4f), 6f, 2f)
                     shape.rect(x - 9f - spread, y - 1f, 3f, 2f)
-                    shape.color = Color(0.20f, 0.22f, 0.24f, alpha * 0.52f)
+                    shape.color = accent.cpy().lerp(Color(0.20f, 0.22f, 0.24f, 1f), 0.74f).apply { a = alpha * 0.52f }
                     shape.circle(x + 4f + (spread * 0.3f), y + 4f, 4f + ((1f - progress) * 2f))
                 }
                 if (zerglingRemain) {
-                    shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
+                    shape.color = debrisTone.cpy().lerp(Color(0.46f, 0.30f, 0.22f, 1f), 0.26f).apply { a = alpha * 0.88f }
                     shape.rect(x - 8f - spread, y + 1f, 5f, 2f)
                     shape.rect(x + 4f + spread, y - 1f, 4f, 2f)
                     shape.rect(x - 2f, y - 6f + (settle * 0.5f), 4f, 2f)
-                    shape.color = Color(0.30f, 0.20f, 0.18f, alpha * 0.42f)
+                    shape.color = accent.cpy().lerp(Color(0.30f, 0.20f, 0.18f, 1f), 0.78f).apply { a = alpha * 0.42f }
                     shape.circle(x - 2f - (spread * 0.2f), y + 5f, 3.6f + ((1f - progress) * 2f))
                     shape.circle(x + 5f + (spread * 0.4f), y + 2f, 2.8f + ((1f - progress) * 1.8f))
                 }
             }
-            val smokeColor =
-                when {
-                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * (0.52f + ((1f - progress) * 0.30f)))
-                    zerglingRemain -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
-                    else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
-                }
+            val smokeColor = resolveEffectSmokeColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction)).apply {
+                a = alpha * if (remain.isStructure) 0.66f + ((1f - progress) * 0.18f) else 0.46f + ((1f - progress) * 0.12f)
+            }
             shape.color = smokeColor
             shape.circle(x + 3f + smokeDrift, y + 6f + smokeRise, 7f + ((1f - progress) * 5f))
             shape.circle(x - 5f - (smokeDrift * 0.6f), y + 3f + (smokeRise * 0.7f), 5f + ((1f - progress) * 3f))
@@ -2240,6 +2233,37 @@ internal class GdxWorldRenderer(
             CombatSoundKind.RANGED, null -> impactSparkColor
         }
 
+internal fun resolveEffectAccentColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.74f, 0.34f, 1f), 0.54f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.96f, 0.54f, 0.28f, 1f), 0.62f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.70f, 0.36f, 1f), 0.42f)
+        else -> factionColor.cpy().lerp(Color(0.92f, 0.66f, 0.34f, 1f), 0.46f)
+    }
+
+internal fun resolveEffectEmberColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.88f, 0.56f, 1f), 0.62f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.78f, 0.48f, 1f), 0.56f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.84f, 0.56f, 1f), 0.48f)
+        else -> factionColor.cpy().lerp(Color(0.96f, 0.82f, 0.52f, 1f), 0.50f)
+    }
+
+internal fun resolveEffectDebrisColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.46f, 0.42f, 0.36f, 1f), 0.72f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.42f, 0.28f, 0.22f, 1f), 0.74f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.38f, 0.40f, 0.42f, 1f), 0.68f)
+        else -> factionColor.cpy().lerp(Color(0.34f, 0.34f, 0.34f, 1f), 0.70f)
+    }
+
+internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
+        else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
+    }
+
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
 
     private fun directionDy(dir: Float, scale: Float): Float = kotlin.math.sin(dir) * scale
@@ -2335,3 +2359,34 @@ internal fun gdxMiniMapWorldPosition(
     val worldY = (((screenY - bounds.top) / bounds.height) * snapshot.mapHeight).coerceIn(0f, snapshot.mapHeight.toFloat())
     return worldX to worldY
 }
+
+internal fun resolveEffectAccentColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.74f, 0.34f, 1f), 0.54f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.96f, 0.54f, 0.28f, 1f), 0.62f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.70f, 0.36f, 1f), 0.42f)
+        else -> factionColor.cpy().lerp(Color(0.92f, 0.66f, 0.34f, 1f), 0.46f)
+    }
+
+internal fun resolveEffectEmberColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.88f, 0.56f, 1f), 0.62f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.78f, 0.48f, 1f), 0.56f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.84f, 0.56f, 1f), 0.48f)
+        else -> factionColor.cpy().lerp(Color(0.96f, 0.82f, 0.52f, 1f), 0.50f)
+    }
+
+internal fun resolveEffectDebrisColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.46f, 0.42f, 0.36f, 1f), 0.72f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.42f, 0.28f, 0.22f, 1f), 0.74f)
+        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.38f, 0.40f, 0.42f, 1f), 0.68f)
+        else -> factionColor.cpy().lerp(Color(0.34f, 0.34f, 0.34f, 1f), 0.70f)
+    }
+
+internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
+    when {
+        isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
+        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
+        else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
+    }
