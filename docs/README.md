@@ -4,6 +4,12 @@
 
 ## 문서 목록
 
+- `product-vision.md`
+  - 제품 목표, 비목표, 핵심 가치, 성공 지표
+- `feature-backlog.md`
+  - 남은 작업의 우선순위와 상태
+- `milestone-plan.md`
+  - 단계별 완성 기준과 검증 자산 매핑
 - `architecture-overview.md`
   - 저장소 모듈 책임과 상위 레벨 데이터 흐름
 - `simulation-architecture.md`
