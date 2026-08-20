@@ -30,6 +30,7 @@ import starkraft.sim.client.resolveEffectDebrisColor
 import starkraft.sim.client.resolveEffectSmokeColor
 import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.resolveCommandButtonHotkey
+import starkraft.sim.client.shouldRenderCompletionOverlay
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
@@ -289,6 +290,13 @@ class GameScreenInputRulesTest {
         assertEquals(0.05f, resolveFallbackTeamTintStrength("Marine", isStructure = false))
         assertEquals(0.04f, resolveFallbackTeamTintStrength("Zergling", isStructure = false))
         assertEquals(0.08f, resolveFallbackTeamTintStrength("Depot", isStructure = true))
+    }
+
+    @Test
+    fun `completion overlay yields to damage overlay`() {
+        assertFalse(shouldRenderCompletionOverlay(damageActive = true, completionActive = true))
+        assertTrue(shouldRenderCompletionOverlay(damageActive = false, completionActive = true))
+        assertFalse(shouldRenderCompletionOverlay(damageActive = false, completionActive = false))
     }
 
     @Test
