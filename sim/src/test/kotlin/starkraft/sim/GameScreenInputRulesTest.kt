@@ -9,6 +9,7 @@ import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
 import starkraft.sim.client.computeCenterPanelLayout
 import starkraft.sim.client.computeCommandDeckLayout
+import starkraft.sim.client.computeCommandHintRowHeight
 import starkraft.sim.client.computeSelectionSlotVisualLayout
 import starkraft.sim.client.computeTopBarLayout
 import starkraft.sim.client.EscapeAction
@@ -32,6 +33,7 @@ import starkraft.sim.client.resolveEscapeAction
 import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.shouldRenderCompletionOverlay
 import starkraft.sim.client.resolveQueueHeaderLine
+import starkraft.sim.client.compactCommandHint
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveFallbackTeamTintStrength
@@ -67,6 +69,14 @@ class GameScreenInputRulesTest {
         assertTrue(compact.scrollHeight < wide.scrollHeight, "small screens should use shorter command deck")
         assertTrue(compact.buttonHeight < wide.buttonHeight, "small screens should use shorter command buttons")
         assertTrue(compact.actorInset < wide.actorInset, "small screens should reduce command button chrome")
+    }
+
+    @Test
+    fun `command hint row stays fixed and compact`() {
+        assertEquals(20, computeCommandHintRowHeight(1280))
+        assertEquals(22, computeCommandHintRowHeight(1920))
+        assertEquals("f2", compactCommandHint("Switch to faction 2 view"))
+        assertEquals("prod queue sel", compactCommandHint("production queue current selection"))
     }
 
     @Test

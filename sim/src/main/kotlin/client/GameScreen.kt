@@ -139,6 +139,7 @@ internal class GameScreen(
     private lateinit var centerHudCell: Cell<*>
     private lateinit var centerRightGapCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
+    private lateinit var commandHintCell: Cell<*>
 
     private data class SelectionFrameContext(
         val snapshot: ClientSnapshot,
@@ -160,6 +161,7 @@ internal class GameScreen(
         modeLabel.setEllipsis(true)
         statusBadgeLabel.setEllipsis(true)
         commandHintLabel.setEllipsis(true)
+        commandHintLabel.setAlignment(Align.left)
         selectionMetaLabel.setFontScale(0.84f)
         factionOverviewLabel.setFontScale(0.84f)
         selectionRosterLabel.setFontScale(0.84f)
@@ -378,7 +380,7 @@ internal class GameScreen(
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
-            add(
+            commandHintCell = add(
                 commandHintCard.apply {
                     pad(2f, 2f, 0f, 2f)
                     add(
@@ -396,7 +398,8 @@ internal class GameScreen(
                         }
                     ).expandX().fillX()
                 }
-            ).expandX().fillX().padTop(3f).row()
+            ).expandX().fillX().padTop(3f).height(20f)
+            row()
             add(actionBanner).left().expandX().fillX().padTop(3f).row()
         }
         buttonTable.top().left()
@@ -948,6 +951,7 @@ internal class GameScreen(
         minimapFrame.setSize(minimapWidth, minimapHeight)
         centerCard.setSize(centerWidth, unifiedPanelHeight - 4f)
         commandCard.setSize(commandWidth, unifiedPanelHeight - 4f)
+        commandHintCell.height(computeCommandHintRowHeight(Gdx.graphics.width).toFloat())
         commandScroll.setSize(commandWidth - 6f, commandHeight)
         portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
@@ -1301,7 +1305,7 @@ internal class GameScreen(
                     ).width(4f).expandY().fillY()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.08f).apply { a *= 0.18f })
+                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.08f).apply { a *= 0.08f })
                             pad(2f, 4f, 3f, 4f)
                             add(content).expand().fill()
                         }
@@ -2392,7 +2396,7 @@ internal class GameScreen(
         }
 
     private fun buildCommandHintLine(): String =
-        runtime.hoverHintLine()?.let(::compactHint)
+        runtime.hoverHintLine()?.let(::compactCommandHint)
             ?: when {
                 runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  LMB/RMB confirm"
                 runtime.groundMode == ClientGroundCommandMode.MOVE -> "Move order  LMB/RMB confirm"
@@ -2575,22 +2579,8 @@ internal class GameScreen(
             else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
         }
 
-    private fun compactHint(raw: String): String {
-        val cleaned =
-            raw
-                .removePrefix("Switch to ")
-                .removeSuffix(" view")
-                .replace("faction ", "f")
-                .replace("selection", "sel")
-                .replace("attack", "atk")
-                .replace("command", "cmd")
-                .replace("current ", "")
-                .replace("camera ", "")
-                .replace("scenario ", "")
-                .replace("preset", "pst")
-                .trim()
-        return if (cleaned.length <= 20) cleaned else cleaned.take(17).trimEnd() + "..."
-    }
+    private fun compactHint(raw: String): String =
+        starkraft.sim.client.compactCommandHint(raw)
 
     private fun compactNotice(raw: String): String {
         val cleaned =
@@ -3076,6 +3066,9 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
     )
 }
 
+internal fun computeCommandHintRowHeight(screenWidth: Int): Int =
+    if (screenWidth < 1360) 20 else 22
+
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1360
     return CenterPanelLayout(
@@ -3170,6 +3163,27 @@ internal fun formatCommandButtonText(actionId: String, fallbackLabel: String): S
         "clear" -> "Clear"
         else -> fallbackLabel
     }
+
+internal fun compactCommandHint(raw: String): String {
+    val cleaned =
+        raw
+            .removePrefix("Switch to ")
+            .removeSuffix(" view")
+            .replace("faction ", "f")
+            .replace("selection", "sel")
+            .replace("attack", "atk")
+            .replace("command", "cmd")
+            .replace("current ", "")
+            .replace("camera ", "")
+            .replace("scenario ", "")
+            .replace("preset", "pst")
+            .replace("production", "prod")
+            .replace("research", "tech")
+            .replace("resource", "res")
+            .replace("toggle ", "")
+            .trim()
+    return if (cleaned.length <= 16) cleaned else cleaned.take(13).trimEnd() + "..."
+}
 
 internal fun resolveCommandButtonHotkey(actionId: String): String? =
     when (actionId) {
