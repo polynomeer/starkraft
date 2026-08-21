@@ -1344,8 +1344,8 @@ internal fun buildHelpOverlayLines(open: Boolean): List<String> {
     return listOf(
         "help: f1 close  esc back/cancel  tab debug  space pause",
         "help: left select  shift+left add  drag box select  middle drag pan",
-        "help: right move/harvest  ctrl+right attack  m/a/p arm ground orders",
-        "help: armed mode accepts left/right click on world or minimap  esc cancels current order",
+        "help: right move/harvest  ctrl+right attack  shift queues  m/a/p arm ground orders",
+        "help: armed mode accepts left/right click on world or minimap  shift queues  esc cancels current order",
         "help: minimap left-drag move camera  minimap click orders/center  1/2 faction  3 observer  0 reset camera",
         "help: f2 select viewed faction  f3 select selected type  f4 archetype",
         "help: f11 select all units",

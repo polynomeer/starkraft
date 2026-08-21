@@ -149,13 +149,13 @@ internal fun resolveCommandButtonHotkey(actionId: String): String? =
 
 internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): String =
     when {
-        commandArmed -> "LMB/RMB confirm  Esc cancel  MMB pan"
-        hasSelection -> "LMB reselect  RMB order  drag box add"
+        commandArmed -> "LMB/RMB confirm  Shift queue  Esc cancel"
+        hasSelection -> "LMB reselect  RMB order  Shift queue  drag box add"
         else -> "LMB select  RMB move  drag box select"
     }
 
 internal fun buildMinimapHintLine(commandArmed: Boolean): String =
-    if (commandArmed) "armed: minimap/world click confirm" else "minimap drag camera"
+    if (commandArmed) "armed: minimap/world click confirm + shift queue" else "minimap drag camera"
 
 internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCount: Int): String =
     if (selectedCount <= 0) "Pg 0/0 · 0" else "Pg ${pageIndex + 1}/$pageCount · $selectedCount"

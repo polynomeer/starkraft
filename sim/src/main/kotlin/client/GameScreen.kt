@@ -2622,8 +2622,9 @@ internal class GameScreen(
                     val clickX = screenX.toFloat()
                     val clickY = screenY.toFloat()
                     val minimapHit = gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY)
+                    val shiftPressed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
                     if (minimapHit) {
-                        if (runtime.issueMinimapLeftClick(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height) &&
+                        if (runtime.issueMinimapLeftClick(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height, queuedCommand = shiftPressed) &&
                             !runtime.isGameplayCommandArmed()
                         ) {
                             minimapDragging = true
@@ -2646,6 +2647,7 @@ internal class GameScreen(
                 Input.Buttons.RIGHT -> {
                     val clickX = screenX.toFloat()
                     val clickY = screenY.toFloat()
+                    val shiftPressed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
                     if (gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY)) {
                         rightClickHandled =
                             runtime.issueMinimapRightClick(
@@ -2653,7 +2655,8 @@ internal class GameScreen(
                                 clickY,
                                 Gdx.graphics.width,
                                 Gdx.graphics.height,
-                                Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)
+                                Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT),
+                                queuedCommand = shiftPressed
                             )
                         return true
                     }
@@ -2661,7 +2664,12 @@ internal class GameScreen(
                         rightClickHandled = false
                         return true
                     }
-                    runtime.issueRightClick(clickX, clickY, Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                    runtime.issueRightClick(
+                        clickX,
+                        clickY,
+                        Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT),
+                        queuedCommand = shiftPressed
+                    )
                     rightClickHandled = true
                     return true
                 }
@@ -2724,11 +2732,12 @@ internal class GameScreen(
                 return true
             }
             if (button != Input.Buttons.LEFT || !dragging) return false
-            val additive = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
+            val shiftPressed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
+            val additive = !armedLeftPress && shiftPressed
             if (shouldIssueSelectionBox(armedLeftPress, startX, startY, screenX.toFloat(), screenY.toFloat())) {
                 runtime.issueSelectionBox(startX, startY, screenX.toFloat(), screenY.toFloat(), additive)
             } else {
-                runtime.issueLeftClick(screenX.toFloat(), screenY.toFloat(), additive)
+                runtime.issueLeftClick(screenX.toFloat(), screenY.toFloat(), additive, queuedCommand = armedLeftPress && shiftPressed)
             }
             resetPointerState()
             return true

@@ -86,6 +86,28 @@ class ClientControllerContractTest {
         assertEquals(6f, record.y)
     }
 
+    @Test
+    fun `queued command intent marks record for order chaining`() {
+        val intent =
+            buildClientIntent(
+                snapshot = contractSnapshot(),
+                selectedIds = linkedSetOf(4),
+                viewedFaction = 1,
+                worldX = 10f,
+                worldY = 9f,
+                leftClick = false,
+                rightClick = true,
+                attackMoveModifier = false,
+                queuedCommand = true,
+                forcedGroundCommandType = ClientGroundCommandMode.MOVE.commandType,
+                additiveSelection = false,
+                requestIds = ClientCommandIds("test")
+            )
+
+        assertTrue(intent is ClientIntent.Command)
+        assertTrue((intent as ClientIntent.Command).record.queued)
+    }
+
     private fun contractSnapshot(): ClientSnapshot =
         ClientSnapshot(
             tick = 7,

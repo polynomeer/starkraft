@@ -153,31 +153,32 @@ private data class ReplayEvent(
     val armor: Int? = null,
     val mineralCost: Int? = null,
     val gasCost: Int? = null,
-    val buildTicks: Int? = null
+    val buildTicks: Int? = null,
+    val queued: Boolean = false
 ) {
     fun toCommand(): Command {
         return when (type) {
-            "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f)
+            "move" -> Command.Move(tick, units, x ?: 0f, y ?: 0f, queued = queued)
             "moveFaction" -> Command.MoveFaction(tick, faction ?: 0, x ?: 0f, y ?: 0f)
             "moveType" -> Command.MoveType(tick, typeId ?: "", x ?: 0f, y ?: 0f)
             "moveArchetype" -> Command.MoveArchetype(tick, archetype ?: "", x ?: 0f, y ?: 0f)
-            "patrol" -> Command.Patrol(tick, units, x ?: 0f, y ?: 0f)
+            "patrol" -> Command.Patrol(tick, units, x ?: 0f, y ?: 0f, queued = queued)
             "patrolFaction" -> Command.PatrolFaction(tick, faction ?: 0, x ?: 0f, y ?: 0f)
             "patrolType" -> Command.PatrolType(tick, typeId ?: "", x ?: 0f, y ?: 0f)
             "patrolArchetype" -> Command.PatrolArchetype(tick, archetype ?: "", x ?: 0f, y ?: 0f)
-            "attackMove" -> Command.AttackMove(tick, units, x ?: 0f, y ?: 0f)
+            "attackMove" -> Command.AttackMove(tick, units, x ?: 0f, y ?: 0f, queued = queued)
             "attackMoveFaction" -> Command.AttackMoveFaction(tick, faction ?: 0, x ?: 0f, y ?: 0f)
             "attackMoveType" -> Command.AttackMoveType(tick, typeId ?: "", x ?: 0f, y ?: 0f)
             "attackMoveArchetype" -> Command.AttackMoveArchetype(tick, archetype ?: "", x ?: 0f, y ?: 0f)
-            "hold" -> Command.Hold(tick, units)
+            "hold" -> Command.Hold(tick, units, queued = queued)
             "holdFaction" -> Command.HoldFaction(tick, faction ?: 0)
             "holdType" -> Command.HoldType(tick, typeId ?: "")
             "holdArchetype" -> Command.HoldArchetype(tick, archetype ?: "")
-            "attack" -> Command.Attack(tick, units, target ?: 0)
+            "attack" -> Command.Attack(tick, units, target ?: 0, queued = queued)
             "attackFaction" -> Command.AttackFaction(tick, faction ?: 0, target ?: 0)
             "attackType" -> Command.AttackType(tick, typeId ?: "", target ?: 0)
             "attackArchetype" -> Command.AttackArchetype(tick, archetype ?: "", target ?: 0)
-            "harvest" -> Command.Harvest(tick, units, target ?: 0)
+            "harvest" -> Command.Harvest(tick, units, target ?: 0, queued = queued)
             "harvestFaction" -> Command.HarvestFaction(tick, faction ?: 0, target ?: 0)
             "harvestType" -> Command.HarvestType(tick, typeId ?: "", target ?: 0)
             "harvestArchetype" -> Command.HarvestArchetype(tick, archetype ?: "", target ?: 0)
@@ -233,27 +234,27 @@ private data class ReplayEvent(
     companion object {
         fun fromCommand(cmd: Command): ReplayEvent {
             return when (cmd) {
-                is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null)
+                is Command.Move -> ReplayEvent("move", cmd.tick, cmd.units, cmd.x, cmd.y, null, queued = cmd.queued)
                 is Command.MoveFaction -> ReplayEvent("moveFaction", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction)
                 is Command.MoveType -> ReplayEvent("moveType", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, cmd.typeId)
                 is Command.MoveArchetype -> ReplayEvent("moveArchetype", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, null, cmd.archetype)
-                is Command.Patrol -> ReplayEvent("patrol", cmd.tick, cmd.units, cmd.x, cmd.y, null)
+                is Command.Patrol -> ReplayEvent("patrol", cmd.tick, cmd.units, cmd.x, cmd.y, null, queued = cmd.queued)
                 is Command.PatrolFaction -> ReplayEvent("patrolFaction", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction)
                 is Command.PatrolType -> ReplayEvent("patrolType", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, cmd.typeId)
                 is Command.PatrolArchetype -> ReplayEvent("patrolArchetype", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, null, cmd.archetype)
-                is Command.AttackMove -> ReplayEvent("attackMove", cmd.tick, cmd.units, cmd.x, cmd.y, null)
+                is Command.AttackMove -> ReplayEvent("attackMove", cmd.tick, cmd.units, cmd.x, cmd.y, null, queued = cmd.queued)
                 is Command.AttackMoveFaction -> ReplayEvent("attackMoveFaction", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, cmd.faction)
                 is Command.AttackMoveType -> ReplayEvent("attackMoveType", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, cmd.typeId)
                 is Command.AttackMoveArchetype -> ReplayEvent("attackMoveArchetype", cmd.tick, intArrayOf(), cmd.x, cmd.y, null, null, null, cmd.archetype)
-                is Command.Hold -> ReplayEvent("hold", cmd.tick, cmd.units)
+                is Command.Hold -> ReplayEvent("hold", cmd.tick, cmd.units, queued = cmd.queued)
                 is Command.HoldFaction -> ReplayEvent("holdFaction", cmd.tick, faction = cmd.faction)
                 is Command.HoldType -> ReplayEvent("holdType", cmd.tick, typeId = cmd.typeId)
                 is Command.HoldArchetype -> ReplayEvent("holdArchetype", cmd.tick, archetype = cmd.archetype)
-                is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target)
+                is Command.Attack -> ReplayEvent("attack", cmd.tick, cmd.units, null, null, cmd.target, queued = cmd.queued)
                 is Command.AttackFaction -> ReplayEvent("attackFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.AttackType -> ReplayEvent("attackType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
                 is Command.AttackArchetype -> ReplayEvent("attackArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)
-                is Command.Harvest -> ReplayEvent("harvest", cmd.tick, cmd.units, null, null, cmd.target)
+                is Command.Harvest -> ReplayEvent("harvest", cmd.tick, cmd.units, null, null, cmd.target, queued = cmd.queued)
                 is Command.HarvestFaction -> ReplayEvent("harvestFaction", cmd.tick, intArrayOf(), null, null, cmd.target, cmd.faction)
                 is Command.HarvestType -> ReplayEvent("harvestType", cmd.tick, intArrayOf(), null, null, cmd.target, null, cmd.typeId)
                 is Command.HarvestArchetype -> ReplayEvent("harvestArchetype", cmd.tick, intArrayOf(), null, null, cmd.target, null, null, cmd.archetype)

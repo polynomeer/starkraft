@@ -32,6 +32,7 @@ internal fun buildClientIntent(
     leftClick: Boolean,
     rightClick: Boolean,
     attackMoveModifier: Boolean,
+    queuedCommand: Boolean = false,
     forcedGroundCommandType: String? = null,
     additiveSelection: Boolean,
     requestIds: ClientCommandIds
@@ -53,7 +54,8 @@ internal fun buildClientIntent(
                 requestId = requestIds.nextRequestId(),
                 units = selectedIds.toIntArray(),
                 x = worldX,
-                y = worldY
+                y = worldY,
+                queued = queuedCommand
             )
         )
     }
@@ -71,7 +73,8 @@ internal fun buildClientIntent(
                 commandType = "attack",
                 requestId = requestIds.nextRequestId(),
                 units = selectedIds.toIntArray(),
-                target = enemy.id
+                target = enemy.id,
+                queued = queuedCommand
             )
         )
     }
@@ -84,7 +87,8 @@ internal fun buildClientIntent(
                 commandType = "harvest",
                 requestId = requestIds.nextRequestId(),
                 units = selectedIds.toIntArray(),
-                target = node.id
+                target = node.id,
+                queued = queuedCommand
             )
         )
     }
@@ -96,7 +100,8 @@ internal fun buildClientIntent(
             requestId = requestIds.nextRequestId(),
             units = selectedIds.toIntArray(),
             x = worldX,
-            y = worldY
+            y = worldY,
+            queued = queuedCommand
         )
     )
 }
@@ -104,7 +109,8 @@ internal fun buildClientIntent(
 internal fun buildHoldIntent(
     snapshot: ClientSnapshot,
     selectedIds: Set<Int>,
-    requestIds: ClientCommandIds
+    requestIds: ClientCommandIds,
+    queuedCommand: Boolean = false
 ): ClientIntent.Command? {
     if (selectedIds.isEmpty()) return null
     return ClientIntent.Command(
@@ -112,7 +118,8 @@ internal fun buildHoldIntent(
             tick = snapshot.tick + 1,
             commandType = "hold",
             requestId = requestIds.nextRequestId(),
-            units = selectedIds.toIntArray()
+            units = selectedIds.toIntArray(),
+            queued = queuedCommand
         )
     )
 }

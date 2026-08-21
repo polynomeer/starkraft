@@ -189,7 +189,7 @@ internal class GdxClientRuntime(
         return lines
     }
 
-    fun issueLeftClick(screenX: Float, screenY: Float, additiveSelection: Boolean) {
+    fun issueLeftClick(screenX: Float, screenY: Float, additiveSelection: Boolean, queuedCommand: Boolean = false) {
         val snapshot = session.state.snapshot ?: return
         if ((buildModeTypeId != null || groundMode != null) && session.state.selectedIds.isNotEmpty()) {
             if (buildModeTypeId != null) {
@@ -198,7 +198,7 @@ internal class GdxClientRuntime(
             }
             val worldX = camera.screenToWorldX(screenX)
             val worldY = camera.screenToWorldY(screenY)
-            issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier = false)
+            issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier = false, queuedCommand = queuedCommand)
             return
         }
         val beforeSelection = session.state.selectedIds.toSet()
@@ -263,7 +263,7 @@ internal class GdxClientRuntime(
         recentSelectionClickPulseUntilMillis = System.currentTimeMillis() + SELECTION_CLICK_PULSE_DURATION_MS
     }
 
-    fun issueRightClick(screenX: Float, screenY: Float, attackMoveModifier: Boolean) {
+    fun issueRightClick(screenX: Float, screenY: Float, attackMoveModifier: Boolean, queuedCommand: Boolean = false) {
         val snapshot = session.state.snapshot ?: return
         val worldX = camera.screenToWorldX(screenX)
         val worldY = camera.screenToWorldY(screenY)
@@ -271,10 +271,10 @@ internal class GdxClientRuntime(
             placeBuildingAt(screenX, screenY)
             return
         }
-        issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier)
+        issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier, queuedCommand = queuedCommand)
     }
 
-    fun issueMinimapLeftClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int): Boolean {
+    fun issueMinimapLeftClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int, queuedCommand: Boolean = false): Boolean {
         val snapshot = session.state.snapshot ?: return false
         if (buildModeTypeId != null) {
             pendingCommandSoundKind = CommandSoundKind.INVALID
@@ -283,12 +283,12 @@ internal class GdxClientRuntime(
         }
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
         if (groundMode != null && session.state.selectedIds.isNotEmpty()) {
-            return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier = false, markMinimap = true)
+            return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier = false, queuedCommand = queuedCommand, markMinimap = true)
         }
         return dragCenterFromMinimap(screenX, screenY, viewWidth, viewHeight)
     }
 
-    fun issueMinimapRightClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int, attackMoveModifier: Boolean): Boolean {
+    fun issueMinimapRightClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int, attackMoveModifier: Boolean, queuedCommand: Boolean = false): Boolean {
         val snapshot = session.state.snapshot ?: return false
         if (buildModeTypeId != null) {
             pendingCommandSoundKind = CommandSoundKind.INVALID
@@ -296,7 +296,7 @@ internal class GdxClientRuntime(
             return false
         }
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
-        return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier, markMinimap = true)
+        return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier, queuedCommand = queuedCommand, markMinimap = true)
     }
 
     private fun issueGroundCommandAtWorld(
@@ -304,6 +304,7 @@ internal class GdxClientRuntime(
         worldX: Float,
         worldY: Float,
         attackMoveModifier: Boolean,
+        queuedCommand: Boolean = false,
         markMinimap: Boolean = false
     ): Boolean {
         if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && isFriendlyEntityAt(snapshot, worldX, worldY)) {
@@ -320,6 +321,7 @@ internal class GdxClientRuntime(
                 leftClick = false,
                 rightClick = true,
                 attackMoveModifier = attackMoveModifier,
+                queuedCommand = queuedCommand,
                 forcedGroundCommandType = groundMode?.commandType,
                 additiveSelection = false,
                 requestIds = requestIds

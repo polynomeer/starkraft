@@ -23,6 +23,7 @@ class AppCliTest {
     @Test
     fun `interactive gdx requests replace queued orders`() {
         assertTrue(shouldReplaceInteractiveOrders("gdx-17"))
+        assertFalse(shouldReplaceInteractiveOrders("gdx-17", queued = true))
         assertFalse(shouldReplaceInteractiveOrders(null))
         assertFalse(shouldReplaceInteractiveOrders("script-17"))
     }

@@ -1133,8 +1133,8 @@ private fun hasFlag(args: Array<String>, flag: String): Boolean =
 internal fun shouldIssueBootstrapOrders(args: Array<String>, replayPath: String?): Boolean =
     replayPath == null && !hasFlag(args, "--noBootstrapOrders")
 
-internal fun shouldReplaceInteractiveOrders(requestId: String?): Boolean =
-    requestId?.startsWith("gdx-") == true
+internal fun shouldReplaceInteractiveOrders(requestId: String?, queued: Boolean = false): Boolean =
+    !queued && requestId?.startsWith("gdx-") == true
 
 private fun isOptionToken(token: String): Boolean {
     if (!token.startsWith("-")) return false
@@ -4659,8 +4659,8 @@ fun issue(
             snapshotOutPath
         )
     }
-    fun replaceInteractiveQueue(ids: IntArray) {
-        if (!shouldReplaceInteractiveOrders(requestId)) return
+    fun replaceInteractiveQueue(ids: IntArray, queued: Boolean = false) {
+        if (!shouldReplaceInteractiveOrders(requestId, queued)) return
         ids.forEach { id ->
             val actual = resolveLabelId(id, labelIdMap)
             world.orders[actual]?.items?.clear()
@@ -4676,7 +4676,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
                 }
             } else {
-                replaceInteractiveQueue(cmd.units)
+                replaceInteractiveQueue(cmd.units, queued = cmd.queued)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.Move(cmd.x, cmd.y))
@@ -4729,7 +4729,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Patrol(tr.x, tr.y, cmd.x, cmd.y))
                 }
             } else {
-                replaceInteractiveQueue(cmd.units)
+                replaceInteractiveQueue(cmd.units, queued = cmd.queued)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     val tr = world.transforms[actual] ?: return@forEach
@@ -4785,7 +4785,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.AttackMove(cmd.x, cmd.y))
                 }
             } else {
-                replaceInteractiveQueue(cmd.units)
+                replaceInteractiveQueue(cmd.units, queued = cmd.queued)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.AttackMove(cmd.x, cmd.y))
@@ -4837,6 +4837,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Hold)
                 }
             } else {
+                replaceInteractiveQueue(cmd.units, queued = cmd.queued)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.Hold)
@@ -4890,6 +4891,7 @@ fun issue(
                     world.orders[actual]?.items?.addLast(Order.Attack(target))
                 }
             } else {
+                replaceInteractiveQueue(cmd.units, queued = cmd.queued)
                 cmd.units.forEach { id ->
                     val actual = resolveLabelId(id, labelIdMap)
                     world.orders[actual]?.items?.addLast(Order.Attack(target))
@@ -4939,6 +4941,7 @@ fun issue(
             val target = resolveLabelId(cmd.target, labelIdMap)
             val applied = collectDirectTargets(cmd.units, world, labelIdMap)
             emitOrderAppliedRecord(cmd.tick, "harvest", applied, target, null, null, snapshotOutPath, streamSequence)
+            replaceInteractiveQueue(cmd.units, queued = cmd.queued)
             assignHarvesters(applied, target, world)
             emitOrderQueueRecord(cmd.tick, "harvest", applied, world, snapshotOutPath, streamSequence)
             emitCommandAck(true, appliedUnits = applied.size)

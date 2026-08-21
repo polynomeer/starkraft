@@ -31,6 +31,7 @@ object InputJson {
         val tick: Int,
         val commandType: String,
         val requestId: String? = null,
+        val queued: Boolean = false,
         val units: IntArray = intArrayOf(),
         val faction: Int? = null,
         val typeId: String? = null,
@@ -119,27 +120,27 @@ object InputJson {
 
         private fun toCommand(record: InputCommandRecord): starkraft.sim.net.Command =
             when (record.commandType) {
-                "move" -> Command.Move(record.tick, record.units, record.x ?: error("move x is required"), record.y ?: error("move y is required"))
+                "move" -> Command.Move(record.tick, record.units, record.x ?: error("move x is required"), record.y ?: error("move y is required"), queued = record.queued)
                 "moveFaction" -> Command.MoveFaction(record.tick, record.faction ?: error("moveFaction faction is required"), record.x ?: error("moveFaction x is required"), record.y ?: error("moveFaction y is required"))
                 "moveType" -> Command.MoveType(record.tick, record.typeId ?: error("moveType typeId is required"), record.x ?: error("moveType x is required"), record.y ?: error("moveType y is required"))
                 "moveArchetype" -> Command.MoveArchetype(record.tick, record.archetype ?: error("moveArchetype archetype is required"), record.x ?: error("moveArchetype x is required"), record.y ?: error("moveArchetype y is required"))
-                "patrol" -> Command.Patrol(record.tick, record.units, record.x ?: error("patrol x is required"), record.y ?: error("patrol y is required"))
+                "patrol" -> Command.Patrol(record.tick, record.units, record.x ?: error("patrol x is required"), record.y ?: error("patrol y is required"), queued = record.queued)
                 "patrolFaction" -> Command.PatrolFaction(record.tick, record.faction ?: error("patrolFaction faction is required"), record.x ?: error("patrolFaction x is required"), record.y ?: error("patrolFaction y is required"))
                 "patrolType" -> Command.PatrolType(record.tick, record.typeId ?: error("patrolType typeId is required"), record.x ?: error("patrolType x is required"), record.y ?: error("patrolType y is required"))
                 "patrolArchetype" -> Command.PatrolArchetype(record.tick, record.archetype ?: error("patrolArchetype archetype is required"), record.x ?: error("patrolArchetype x is required"), record.y ?: error("patrolArchetype y is required"))
-                "attackMove" -> Command.AttackMove(record.tick, record.units, record.x ?: error("attackMove x is required"), record.y ?: error("attackMove y is required"))
+                "attackMove" -> Command.AttackMove(record.tick, record.units, record.x ?: error("attackMove x is required"), record.y ?: error("attackMove y is required"), queued = record.queued)
                 "attackMoveFaction" -> Command.AttackMoveFaction(record.tick, record.faction ?: error("attackMoveFaction faction is required"), record.x ?: error("attackMoveFaction x is required"), record.y ?: error("attackMoveFaction y is required"))
                 "attackMoveType" -> Command.AttackMoveType(record.tick, record.typeId ?: error("attackMoveType typeId is required"), record.x ?: error("attackMoveType x is required"), record.y ?: error("attackMoveType y is required"))
                 "attackMoveArchetype" -> Command.AttackMoveArchetype(record.tick, record.archetype ?: error("attackMoveArchetype archetype is required"), record.x ?: error("attackMoveArchetype x is required"), record.y ?: error("attackMoveArchetype y is required"))
-                "hold" -> Command.Hold(record.tick, record.units)
+                "hold" -> Command.Hold(record.tick, record.units, queued = record.queued)
                 "holdFaction" -> Command.HoldFaction(record.tick, record.faction ?: error("holdFaction faction is required"))
                 "holdType" -> Command.HoldType(record.tick, record.typeId ?: error("holdType typeId is required"))
                 "holdArchetype" -> Command.HoldArchetype(record.tick, record.archetype ?: error("holdArchetype archetype is required"))
-                "attack" -> Command.Attack(record.tick, record.units, resolveEntityRef(record.target, record.targetLabel, ::labelId, "attack target"))
+                "attack" -> Command.Attack(record.tick, record.units, resolveEntityRef(record.target, record.targetLabel, ::labelId, "attack target"), queued = record.queued)
                 "attackFaction" -> Command.AttackFaction(record.tick, record.faction ?: error("attackFaction faction is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "attackFaction target"))
                 "attackType" -> Command.AttackType(record.tick, record.typeId ?: error("attackType typeId is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "attackType target"))
                 "attackArchetype" -> Command.AttackArchetype(record.tick, record.archetype ?: error("attackArchetype archetype is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "attackArchetype target"))
-                "harvest" -> Command.Harvest(record.tick, record.units, resolveEntityRef(record.target, record.targetLabel, ::labelId, "harvest target"))
+                "harvest" -> Command.Harvest(record.tick, record.units, resolveEntityRef(record.target, record.targetLabel, ::labelId, "harvest target"), queued = record.queued)
                 "harvestFaction" -> Command.HarvestFaction(record.tick, record.faction ?: error("harvestFaction faction is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "harvestFaction target"))
                 "harvestType" -> Command.HarvestType(record.tick, record.typeId ?: error("harvestType typeId is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "harvestType target"))
                 "harvestArchetype" -> Command.HarvestArchetype(record.tick, record.archetype ?: error("harvestArchetype archetype is required"), resolveEntityRef(record.target, record.targetLabel, ::labelId, "harvestArchetype target"))

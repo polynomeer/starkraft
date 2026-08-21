@@ -238,14 +238,14 @@ class GameScreenInputRulesTest {
     @Test
     fun `hud footer line reflects selection and armed mode`() {
         assertEquals("LMB select  RMB move  drag box select", buildHudFooterLine(hasSelection = false, commandArmed = false))
-        assertEquals("LMB reselect  RMB order  drag box add", buildHudFooterLine(hasSelection = true, commandArmed = false))
-        assertEquals("LMB/RMB confirm  Esc cancel  MMB pan", buildHudFooterLine(hasSelection = true, commandArmed = true))
+        assertEquals("LMB reselect  RMB order  Shift queue  drag box add", buildHudFooterLine(hasSelection = true, commandArmed = false))
+        assertEquals("LMB/RMB confirm  Shift queue  Esc cancel", buildHudFooterLine(hasSelection = true, commandArmed = true))
     }
 
     @Test
     fun `minimap hint reflects armed mode`() {
         assertEquals("minimap drag camera", buildMinimapHintLine(commandArmed = false))
-        assertEquals("armed: minimap/world click confirm", buildMinimapHintLine(commandArmed = true))
+        assertEquals("armed: minimap/world click confirm + shift queue", buildMinimapHintLine(commandArmed = true))
     }
 
     @Test

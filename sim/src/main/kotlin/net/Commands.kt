@@ -5,27 +5,27 @@ import starkraft.sim.ecs.EntityId
 sealed interface Command {
     val tick: Int
 
-    data class Move(override val tick: Int, val units: IntArray, val x: Float, val y: Float) : Command
+    data class Move(override val tick: Int, val units: IntArray, val x: Float, val y: Float, val queued: Boolean = false) : Command
     data class MoveFaction(override val tick: Int, val faction: Int, val x: Float, val y: Float) : Command
     data class MoveType(override val tick: Int, val typeId: String, val x: Float, val y: Float) : Command
     data class MoveArchetype(override val tick: Int, val archetype: String, val x: Float, val y: Float) : Command
-    data class Patrol(override val tick: Int, val units: IntArray, val x: Float, val y: Float) : Command
+    data class Patrol(override val tick: Int, val units: IntArray, val x: Float, val y: Float, val queued: Boolean = false) : Command
     data class PatrolFaction(override val tick: Int, val faction: Int, val x: Float, val y: Float) : Command
     data class PatrolType(override val tick: Int, val typeId: String, val x: Float, val y: Float) : Command
     data class PatrolArchetype(override val tick: Int, val archetype: String, val x: Float, val y: Float) : Command
-    data class AttackMove(override val tick: Int, val units: IntArray, val x: Float, val y: Float) : Command
+    data class AttackMove(override val tick: Int, val units: IntArray, val x: Float, val y: Float, val queued: Boolean = false) : Command
     data class AttackMoveFaction(override val tick: Int, val faction: Int, val x: Float, val y: Float) : Command
     data class AttackMoveType(override val tick: Int, val typeId: String, val x: Float, val y: Float) : Command
     data class AttackMoveArchetype(override val tick: Int, val archetype: String, val x: Float, val y: Float) : Command
-    data class Hold(override val tick: Int, val units: IntArray) : Command
+    data class Hold(override val tick: Int, val units: IntArray, val queued: Boolean = false) : Command
     data class HoldFaction(override val tick: Int, val faction: Int) : Command
     data class HoldType(override val tick: Int, val typeId: String) : Command
     data class HoldArchetype(override val tick: Int, val archetype: String) : Command
-    data class Attack(override val tick: Int, val units: IntArray, val target: EntityId) : Command
+    data class Attack(override val tick: Int, val units: IntArray, val target: EntityId, val queued: Boolean = false) : Command
     data class AttackFaction(override val tick: Int, val faction: Int, val target: EntityId) : Command
     data class AttackType(override val tick: Int, val typeId: String, val target: EntityId) : Command
     data class AttackArchetype(override val tick: Int, val archetype: String, val target: EntityId) : Command
-    data class Harvest(override val tick: Int, val units: IntArray, val target: EntityId) : Command
+    data class Harvest(override val tick: Int, val units: IntArray, val target: EntityId, val queued: Boolean = false) : Command
     data class HarvestFaction(override val tick: Int, val faction: Int, val target: EntityId) : Command
     data class HarvestType(override val tick: Int, val typeId: String, val target: EntityId) : Command
     data class HarvestArchetype(override val tick: Int, val archetype: String, val target: EntityId) : Command

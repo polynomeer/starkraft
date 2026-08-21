@@ -628,6 +628,23 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `queued right click writes queued command record`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        runtime.session.state.selectedIds.add(4)
+
+        runtime.issueRightClick(screenX = 160f, screenY = 160f, attackMoveModifier = false, queuedCommand = true)
+
+        val record: InputJson.InputCommandRecord =
+            json.decodeFromString(
+                InputJson.InputCommandRecord.serializer(),
+                Files.readAllLines(tempDir.resolve("client-input.ndjson")).last()
+            )
+
+        assertEquals("move", record.commandType)
+        assertTrue(record.queued)
+    }
+
+    @Test
     fun `attack mode left click issues attack and sound`(@TempDir tempDir: Path) {
         val runtime =
             runtime(
