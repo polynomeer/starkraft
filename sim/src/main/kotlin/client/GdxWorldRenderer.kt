@@ -58,9 +58,19 @@ internal class GdxWorldRenderer(
     private val terrainDust = Color(0.22f, 0.19f, 0.13f, 1f)
     private val terrainMetal = Color(0.15f, 0.18f, 0.21f, 1f)
     private val mapFrameColor = Color(0.20f, 0.38f, 0.42f, 0.82f)
+    private val scratchColorA = Color()
+    private val scratchColorB = Color()
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, worldViewportHeight: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
+        val visibleRange =
+            computeVisibleTileRange(
+                camera = runtime.camera,
+                screenWidth = width,
+                screenHeight = worldViewportHeight,
+                mapWidth = snapshot.mapWidth,
+                mapHeight = snapshot.mapHeight
+            )
         val shape = assets.shapeRenderer
         screenCamera.setToOrtho(true, width.toFloat(), height.toFloat())
         screenCamera.update()
@@ -71,7 +81,7 @@ internal class GdxWorldRenderer(
 
         beginWorldScissor(width, height, worldViewportHeight)
         shape.begin(ShapeRenderer.ShapeType.Filled)
-        drawTerrain(shape, runtime)
+        drawTerrain(shape, runtime, visibleRange)
         drawResources(shape, runtime)
         drawFog(shape, runtime)
         drawEntities(shape, runtime)
@@ -86,8 +96,8 @@ internal class GdxWorldRenderer(
         shape.end()
 
         shape.begin(ShapeRenderer.ShapeType.Line)
-        drawGrid(shape, runtime)
-        drawTerrainEdges(shape, runtime)
+        drawGrid(shape, runtime, visibleRange, worldViewportHeight)
+        drawTerrainEdges(shape, runtime, visibleRange)
         drawWorldFrame(shape, runtime)
         drawSelectionBrackets(shape, runtime)
         drawSelectionOverlays(shape, runtime)
@@ -99,7 +109,7 @@ internal class GdxWorldRenderer(
         shape.end()
 
         shape.begin(ShapeRenderer.ShapeType.Line)
-        drawMiniMapViewport(shape, runtime, width, height)
+        drawMiniMapViewport(shape, runtime, width, worldViewportHeight)
         shape.end()
 
         drawLabels(runtime, width, height)
@@ -113,12 +123,15 @@ internal class GdxWorldRenderer(
         return
     }
 
-    private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+    private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime, visibleRange: VisibleTileRange) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState
         val tileSize = runtime.camera.tileSize
-        for (x in 0 until snapshot.mapWidth) {
-            for (y in 0 until snapshot.mapHeight) {
+        val renderDetail = shouldRenderDetailedTerrainForTileSize(tileSize)
+        val topBandHeight = (tileSize * 0.22f).coerceAtLeast(2f)
+        val bottomBandY = tileSize * 0.68f
+        for (x in visibleRange.startX until visibleRange.endXExclusive) {
+            for (y in visibleRange.startY until visibleRange.endYExclusive) {
                 val sx = runtime.camera.worldToScreenX(x.toFloat())
                 val sy = runtime.camera.worldToScreenY(y.toFloat())
                 val macroPatch = ((x / 10) + (y / 8)) % 3
@@ -130,30 +143,33 @@ internal class GdxWorldRenderer(
                         ridgeBand < 3 -> terrainRidge
                         macroPatch == 0 -> terrainA
                         macroPatch == 1 && terrainDrift != 0 -> terrainB
-                        terrainDrift == 0 -> terrainA.cpy().lerp(terrainDust, 0.18f)
+                        terrainDrift == 0 -> scratchColorA.set(terrainA).lerp(terrainDust, 0.18f)
                         else -> terrainB
                     }
                 shape.color = base
                 shape.rect(sx, sy, tileSize, tileSize)
-                shape.color = base.cpy().lerp(Color.WHITE, 0.08f)
-                shape.rect(sx + 1f, sy + 1f, tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
-                shape.color = base.cpy().lerp(Color.BLACK, 0.18f)
-                shape.rect(sx + 1f, sy + (tileSize * 0.68f), tileSize - 2f, (tileSize * 0.22f).coerceAtLeast(2f))
-                if ((x / 3 + y / 2) % 4 == 0) {
-                    shape.color = base.cpy().lerp(Color.BLACK, 0.24f).apply { a = 0.18f }
-                    shape.rect(sx + (tileSize * 0.58f), sy + 2f, 2f, tileSize - 4f)
-                }
-                if (((x / 5) + (y / 7)) % 6 == 0) {
-                    shape.color = base.cpy().lerp(Color.WHITE, 0.10f).apply { a = 0.12f }
-                    shape.rect(sx + 2f, sy + (tileSize * 0.48f), tileSize - 5f, 2f)
-                }
-                if ((x + y) % 5 == 0) {
-                    shape.color = base.cpy().lerp(Color.WHITE, 0.14f).apply { a = 0.18f }
-                    shape.rect(sx + 2f, sy + 2f, 2f, 2f)
+                if (renderDetail) {
+                    shape.color = scratchColorA.set(base).lerp(Color.WHITE, 0.08f)
+                    shape.rect(sx + 1f, sy + 1f, tileSize - 2f, topBandHeight)
+                    shape.color = scratchColorA.set(base).lerp(Color.BLACK, 0.18f)
+                    shape.rect(sx + 1f, sy + bottomBandY, tileSize - 2f, topBandHeight)
+                    if ((x / 3 + y / 2) % 4 == 0) {
+                        shape.color = scratchColorA.set(base).lerp(Color.BLACK, 0.24f).also { it.a = 0.18f }
+                        shape.rect(sx + (tileSize * 0.58f), sy + 2f, 2f, tileSize - 4f)
+                    }
+                    if (((x / 5) + (y / 7)) % 6 == 0) {
+                        shape.color = scratchColorA.set(base).lerp(Color.WHITE, 0.10f).also { it.a = 0.12f }
+                        shape.rect(sx + 2f, sy + (tileSize * 0.48f), tileSize - 5f, 2f)
+                    }
+                    if ((x + y) % 5 == 0) {
+                        shape.color = scratchColorA.set(base).lerp(Color.WHITE, 0.14f).also { it.a = 0.18f }
+                        shape.rect(sx + 2f, sy + 2f, 2f, 2f)
+                    }
                 }
             }
         }
         mapState?.blockedTiles?.forEach { (x, y) ->
+            if (!visibleRange.contains(x, y)) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             shape.color = terrainMetal
@@ -162,6 +178,7 @@ internal class GdxWorldRenderer(
             shape.rect(sx + 2f, sy + 2f, runtime.camera.tileSize - 4f, runtime.camera.tileSize - 4f)
         }
         mapState?.staticOccupancyTiles?.forEach { (x, y) ->
+            if (!visibleRange.contains(x, y)) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             shape.color = Color(0.37f, 0.24f, 0.14f, 0.84f)
@@ -171,37 +188,41 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawGrid(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+    private fun drawGrid(shape: ShapeRenderer, runtime: GdxClientRuntime, visibleRange: VisibleTileRange, worldViewportHeight: Int) {
         val snapshot = runtime.snapshot ?: return
         shape.color = Color(0.18f, 0.22f, 0.18f, 0.22f)
-        for (x in 0..snapshot.mapWidth) {
+        val worldRight = runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat())
+        val worldBottom = runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())
+        val lineBottom = minOf(worldBottom, worldViewportHeight.toFloat())
+        for (x in visibleRange.startX..visibleRange.endXExclusive) {
             val px = runtime.camera.worldToScreenX(x.toFloat())
-            shape.line(px, 0f, px, runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat()))
+            shape.line(px, 0f, px, lineBottom)
         }
-        for (y in 0..snapshot.mapHeight) {
+        for (y in visibleRange.startY..visibleRange.endYExclusive) {
             val py = runtime.camera.worldToScreenY(y.toFloat())
-            shape.line(0f, py, runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat()), py)
+            shape.line(0f, py, worldRight, py)
         }
     }
 
-    private fun drawTerrainEdges(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+    private fun drawTerrainEdges(shape: ShapeRenderer, runtime: GdxClientRuntime, visibleRange: VisibleTileRange) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState ?: return
         shape.color = Color(0.34f, 0.40f, 0.42f, 0.42f)
         mapState.blockedTiles.forEach { (x, y) ->
+            if (!visibleRange.contains(x, y)) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             val tile = runtime.camera.tileSize
             shape.rect(sx, sy, tile, tile)
         }
         shape.color = Color(0.58f, 0.42f, 0.22f, 0.34f)
-        for (x in 40..56) {
+        for (x in maxOf(40, visibleRange.startX)..minOf(56, visibleRange.endXExclusive - 1)) {
             val topY = runtime.camera.worldToScreenY(40f)
             val bottomY = runtime.camera.worldToScreenY(57f)
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             shape.line(sx, topY, sx, bottomY)
         }
-        for (y in 40..56) {
+        for (y in maxOf(40, visibleRange.startY)..minOf(56, visibleRange.endYExclusive - 1)) {
             val leftX = runtime.camera.worldToScreenX(40f)
             val rightX = runtime.camera.worldToScreenX(57f)
             val sy = runtime.camera.worldToScreenY(y.toFloat())
@@ -855,28 +876,40 @@ internal class GdxWorldRenderer(
         val exploredTiles = viewedFaction?.let { runtime.session.state.visionState?.exploredTiles(it) }
         val tileWidth = boundsWidth / snapshot.mapWidth
         val tileHeight = boundsHeight / snapshot.mapHeight
-        for (x in 0 until snapshot.mapWidth) {
-            for (y in 0 until snapshot.mapHeight) {
+        val sampleStep = resolveMiniMapSampleStep(snapshot.mapWidth, snapshot.mapHeight)
+        val sampleWidth = tileWidth * sampleStep
+        val sampleHeight = tileHeight * sampleStep
+        for (x in 0 until snapshot.mapWidth step sampleStep) {
+            for (y in 0 until snapshot.mapHeight step sampleStep) {
                 val macroPatch = ((x / 10) + (y / 8)) % 3
                 val ridgeBand = ((x * 3) + (y * 2)) % 17
                 val terrainDrift = ((x / 14) - (y / 11)) % 4
                 shape.color =
                     when {
-                        x in 40..56 && y in 40..56 -> terrainDust.cpy().lerp(Color.BLACK, 0.15f)
-                        ridgeBand < 3 -> terrainRidge.cpy().lerp(Color.BLACK, 0.10f)
-                        macroPatch == 0 -> terrainA.cpy().lerp(Color.BLACK, 0.10f)
-                        terrainDrift == 0 -> terrainA.cpy().lerp(terrainDust, 0.16f).lerp(Color.BLACK, 0.08f)
-                        else -> terrainB.cpy().lerp(Color.BLACK, 0.10f)
+                        x in 40..56 && y in 40..56 -> scratchColorA.set(terrainDust).lerp(Color.BLACK, 0.15f)
+                        ridgeBand < 3 -> scratchColorA.set(terrainRidge).lerp(Color.BLACK, 0.10f)
+                        macroPatch == 0 -> scratchColorA.set(terrainA).lerp(Color.BLACK, 0.10f)
+                        terrainDrift == 0 -> scratchColorA.set(terrainA).lerp(terrainDust, 0.16f).lerp(Color.BLACK, 0.08f)
+                        else -> scratchColorA.set(terrainB).lerp(Color.BLACK, 0.10f)
                     }
-                shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
+                shape.rect(left + (x * tileWidth), top + (y * tileHeight), sampleWidth + 0.4f, sampleHeight + 0.4f)
             }
         }
         if (visibleTiles != null) {
-            for (x in 0 until snapshot.mapWidth) {
-                for (y in 0 until snapshot.mapHeight) {
-                    if ((x to y) in visibleTiles) continue
-                    shape.color = if (exploredTiles != null && (x to y) in exploredTiles) minimapFogColor else minimapShroudColor
-                    shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
+            for (x in 0 until snapshot.mapWidth step sampleStep) {
+                for (y in 0 until snapshot.mapHeight step sampleStep) {
+                    val hasVisibleTile =
+                        (x until minOf(x + sampleStep, snapshot.mapWidth)).any { sx ->
+                            (y until minOf(y + sampleStep, snapshot.mapHeight)).any { sy -> (sx to sy) in visibleTiles }
+                        }
+                    if (hasVisibleTile) continue
+                    val explored =
+                        exploredTiles != null &&
+                            (x until minOf(x + sampleStep, snapshot.mapWidth)).any { sx ->
+                                (y until minOf(y + sampleStep, snapshot.mapHeight)).any { sy -> (sx to sy) in exploredTiles }
+                            }
+                    shape.color = if (explored) minimapFogColor else minimapShroudColor
+                    shape.rect(left + (x * tileWidth), top + (y * tileHeight), sampleWidth + 0.4f, sampleHeight + 0.4f)
                 }
             }
         }
@@ -1042,9 +1075,9 @@ internal class GdxWorldRenderer(
         shape.circle(startX + 46f, legendTop + 2.5f, 2f)
     }
 
-    private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
+    private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, worldViewportHeight: Int) {
         val snapshot = runtime.snapshot ?: return
-        val bounds = gdxMiniMapBounds(width, height)
+        val bounds = gdxMiniMapBounds(width, Gdx.graphics.height)
         val boundsWidth = bounds.width
         val boundsHeight = bounds.height
         val left = bounds.left
@@ -1052,7 +1085,7 @@ internal class GdxWorldRenderer(
         val leftWorld = runtime.camera.screenToWorldX(0f).coerceIn(0f, snapshot.mapWidth.toFloat())
         val rightWorld = runtime.camera.screenToWorldX(width.toFloat()).coerceIn(0f, snapshot.mapWidth.toFloat())
         val topWorld = runtime.camera.screenToWorldY(0f).coerceIn(0f, snapshot.mapHeight.toFloat())
-        val bottomWorld = runtime.camera.screenToWorldY(height.toFloat()).coerceIn(0f, snapshot.mapHeight.toFloat())
+        val bottomWorld = runtime.camera.screenToWorldY(worldViewportHeight.toFloat()).coerceIn(0f, snapshot.mapHeight.toFloat())
         val viewportLeft = left + (leftWorld / snapshot.mapWidth) * boundsWidth
         val viewportTop = top + (topWorld / snapshot.mapHeight) * boundsHeight
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
