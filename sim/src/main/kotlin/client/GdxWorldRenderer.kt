@@ -41,24 +41,40 @@ internal class GdxWorldRenderer(
     private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.12f
     private val fogColor = colors.fog.cpy()
     private val shroudColor = colors.shroud.cpy()
-    private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
-    private val minimapShroudColor = Color(0.04f, 0.08f, 0.10f, 0.26f)
-    private val impactFlashColor = Color(1.00f, 0.46f, 0.28f, 0.34f)
-    private val impactSparkColor = Color(1.00f, 0.86f, 0.54f, 0.92f)
-    private val meleeImpactFlashColor = Color(0.84f, 1.00f, 0.66f, 0.30f)
-    private val meleeImpactSparkColor = Color(0.92f, 1.00f, 0.78f, 0.94f)
-    private val completionBuildFlashColor = Color(0.58f, 0.96f, 0.72f, 0.26f)
-    private val completionBuildSparkColor = Color(0.74f, 1.00f, 0.82f, 0.92f)
-    private val completionProductionFlashColor = Color(1.00f, 0.84f, 0.42f, 0.26f)
-    private val completionProductionSparkColor = Color(1.00f, 0.92f, 0.62f, 0.92f)
-    private val completionResearchFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
-    private val completionResearchSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
+    private val minimapFogColor = colors.fog.cpy().also { it.a = 0.14f }
+    private val minimapShroudColor = colors.shroud.cpy().also { it.a = 0.26f }
+    private val impactFlashColor = colors.danger.cpy().also { it.a = 0.34f }
+    private val impactSparkColor = colors.warning.cpy().also { it.a = 0.92f }
+    private val meleeImpactFlashColor = colors.selectionSoft.cpy().also { it.a = 0.30f }
+    private val meleeImpactSparkColor = colors.selection.cpy().also { it.a = 0.94f }
+    private val completionBuildFlashColor = colors.build.cpy().also { it.a = 0.26f }
+    private val completionBuildSparkColor = colors.build.cpy().lerp(colors.selectionSoft, 0.34f).also { it.a = 0.92f }
+    private val completionProductionFlashColor = colors.production.cpy().also { it.a = 0.26f }
+    private val completionProductionSparkColor = colors.production.cpy().lerp(colors.warningSoft, 0.34f).also { it.a = 0.92f }
+    private val completionResearchFlashColor = colors.research.cpy().also { it.a = 0.26f }
+    private val completionResearchSparkColor = colors.research.cpy().lerp(colors.commandSoft, 0.34f).also { it.a = 0.92f }
     private val terrainA = colors.terrainA.cpy()
     private val terrainB = colors.terrainB.cpy()
     private val terrainRidge = colors.terrainRidge.cpy()
     private val terrainDust = colors.terrainDust.cpy()
     private val terrainMetal = colors.terrainMetal.cpy()
     private val mapFrameColor = colors.borderDefault.cpy().also { it.a = 0.82f }
+    private val minimapShellColor = colors.panelStrong.cpy().also { it.a = 0.78f }
+    private val minimapTrimColor = colors.borderDefault.cpy().lerp(colors.command, 0.18f).also { it.a = 0.82f }
+    private val minimapInsetColor = colors.panelAlt.cpy().also { it.a = 0.88f }
+    private val minimapPathColor = colors.command.cpy().also { it.a = 0.70f }
+    private val minimapLegendBgColor = colors.panelSoft.cpy().also { it.a = 0.30f }
+    private val minimapDamageColor = colors.danger.cpy().also { it.a = 0.72f }
+    private val minimapHarvestColor = colors.production.cpy().also { it.a = 0.72f }
+    private val minimapViewportFillColor = colors.commandSoft.cpy().also { it.a = 0.07f }
+    private val minimapViewportFrameColor = colors.selectionSoft.cpy().also { it.a = 0.66f }
+    private val buildPreviewValidFillColor = colors.build.cpy().also { it.a = 0.18f }
+    private val buildPreviewValidFrameColor = colors.build.cpy().lerp(colors.selectionSoft, 0.42f).also { it.a = 0.92f }
+    private val buildPreviewValidAccentColor = colors.selection.cpy().also { it.a = 0.34f }
+    private val buildPreviewInvalidFillColor = colors.danger.cpy().also { it.a = 0.18f }
+    private val buildPreviewInvalidFrameColor = colors.warning.cpy().also { it.a = 0.94f }
+    private val buildPreviewInvalidAccentColor = colors.danger.cpy().also { it.a = 0.32f }
+    private val buildPreviewInvalidCrossColor = colors.warning.cpy().also { it.a = 0.22f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -860,17 +876,17 @@ internal class GdxWorldRenderer(
         val boundsHeight = bounds.height
         val left = bounds.left
         val top = bounds.top
-        shape.color = Color(0.10f, 0.18f, 0.20f, 0.78f)
+        shape.color = minimapShellColor
         shape.rect(left - 2f, top - 2f, boundsWidth + 4f, 2f)
         shape.rect(left - 2f, top + boundsHeight, boundsWidth + 4f, 2f)
         shape.rect(left - 2f, top, 2f, boundsHeight)
         shape.rect(left + boundsWidth, top, 2f, boundsHeight)
-        shape.color = Color(0.18f, 0.28f, 0.30f, 0.82f)
+        shape.color = minimapTrimColor
         shape.rect(left + 6f, top - 8f, 26f, 3f)
         shape.rect(left + 36f, top - 8f, 8f, 3f)
         shape.rect(left + boundsWidth - 20f, top - 8f, 14f, 3f)
         shape.rect(left + boundsWidth - 8f, top + boundsHeight - 22f, 3f, 14f)
-        shape.color = Color(0.05f, 0.09f, 0.10f, 0.88f)
+        shape.color = minimapInsetColor
         shape.rect(left, top, boundsWidth, boundsHeight)
         val viewedFaction = runtime.session.state.viewedFaction
         val visibleTiles = viewedFaction?.let { runtime.session.state.visionState?.visibleTiles(it) }
@@ -915,13 +931,14 @@ internal class GdxWorldRenderer(
             }
         }
         runtime.session.state.mapState?.blockedTiles?.forEach { (x, y) ->
-            shape.color = Color(0.30f, 0.34f, 0.38f, 0.95f)
+            shape.color = terrainMetal
             shape.rect(left + (x * tileWidth), top + (y * tileHeight), tileWidth + 0.4f, tileHeight + 0.4f)
         }
         for (node in snapshot.resourceNodes) {
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
             val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
-            shape.color = if (node.kind == "gas") Color(0.28f, 0.88f, 0.64f, 0.95f) else Color(0.90f, 0.81f, 0.42f, 0.95f)
+            shape.color =
+                if (node.kind == "gas") completionBuildSparkColor else completionProductionSparkColor
             shape.rect(nodeX - 0.75f, nodeY - 0.75f, 2.5f, 2.5f)
         }
         for (entity in snapshot.entities) {
@@ -960,7 +977,7 @@ internal class GdxWorldRenderer(
                 }
             }
             if (entity.pathRemainingNodes > 0) {
-                shape.color = Color(0.64f, 0.88f, 0.98f, if (visible) 0.70f else 0.28f)
+                shape.color = minimapPathColor.cpy().apply { a = if (visible) 0.70f else 0.28f }
                 shape.rect(x - 0.8f, y + 3.5f, 1.6f, 2.4f)
                 shape.rect(x + 3.5f, y + 3.5f, 1.6f, 1.6f)
             }
@@ -977,8 +994,8 @@ internal class GdxWorldRenderer(
             if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
                 shape.color =
                     when (entity.harvestCargoKind) {
-                        "gas" -> Color(0.56f, 0.98f, 0.82f, if (visible) 0.82f else 0.36f)
-                        else -> Color(0.98f, 0.86f, 0.48f, if (visible) 0.82f else 0.36f)
+                        "gas" -> completionBuildSparkColor.cpy().apply { a = if (visible) 0.82f else 0.36f }
+                        else -> completionProductionSparkColor.cpy().apply { a = if (visible) 0.82f else 0.36f }
                     }
                 shape.rect(x - 1.2f, y - 5.4f, 2.4f, 2.4f)
             }
@@ -1056,9 +1073,9 @@ internal class GdxWorldRenderer(
     private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {
         val legendTop = top + 5f
         val startX = left + width - 49f
-        shape.color = Color(0.04f, 0.07f, 0.09f, 0.30f)
+        shape.color = minimapLegendBgColor
         shape.rect(startX - 4f, legendTop - 3f, 52f, 10f)
-        shape.color = Color(0.64f, 0.88f, 0.98f, 0.72f)
+        shape.color = minimapPathColor
         shape.rect(startX, legendTop + 1f, 3f, 3f)
         shape.color = completionProductionSparkColor.cpy().apply { a = 0.74f }
         shape.rect(startX + 9f, legendTop, 4f, 5f)
@@ -1068,11 +1085,11 @@ internal class GdxWorldRenderer(
         shape.color = completionBuildSparkColor.cpy().apply { a = 0.74f }
         shape.rect(startX + 27f, legendTop + 1f, 3f, 3f)
         shape.rect(startX + 28f, legendTop - 1f, 1.5f, 7f)
-        shape.color = Color(0.98f, 0.48f, 0.30f, 0.72f)
+        shape.color = minimapDamageColor
         shape.rect(startX + 36f, legendTop + 1f, 3f, 3f)
         shape.rect(startX + 34f, legendTop + 2f, 7f, 1f)
         shape.rect(startX + 37f, legendTop - 1f, 1.5f, 7f)
-        shape.color = Color(0.98f, 0.86f, 0.48f, 0.72f)
+        shape.color = minimapHarvestColor
         shape.circle(startX + 46f, legendTop + 2.5f, 2f)
     }
 
@@ -1092,9 +1109,9 @@ internal class GdxWorldRenderer(
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         val pulse = ambientPulse(1050L)
-        shape.color = Color(0.82f, 0.96f, 1.00f, 0.07f + (pulse * 0.05f))
+        shape.color = scratchColorA.set(minimapViewportFillColor).also { it.a = 0.07f + (pulse * 0.05f) }
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = Color(0.92f, 0.98f, 1f, 0.66f + (pulse * 0.14f))
+        shape.color = scratchColorA.set(minimapViewportFrameColor).also { it.a = 0.66f + (pulse * 0.14f) }
         shape.rect(viewportLeft - 0.8f, viewportTop - 0.8f, viewportWidth + 1.6f, viewportHeight + 1.6f)
         val corner = minOf(9f, viewportWidth * 0.28f, viewportHeight * 0.28f).coerceAtLeast(4f)
         shape.color = selectionColor
@@ -1131,9 +1148,9 @@ internal class GdxWorldRenderer(
         val width = spec.width * runtime.camera.tileSize
         val height = spec.height * runtime.camera.tileSize
         val tileSize = runtime.camera.tileSize
-        val fillColor = if (valid) Color(0.34f, 0.98f, 0.58f, 0.18f) else Color(1.00f, 0.34f, 0.34f, 0.18f)
-        val frameColor = if (valid) Color(0.76f, 1.00f, 0.84f, 0.92f) else Color(1.00f, 0.72f, 0.72f, 0.94f)
-        val accentColor = if (valid) Color(0.50f, 1.00f, 0.70f, 0.34f) else Color(1.00f, 0.48f, 0.48f, 0.32f)
+        val fillColor = if (valid) buildPreviewValidFillColor else buildPreviewInvalidFillColor
+        val frameColor = if (valid) buildPreviewValidFrameColor else buildPreviewInvalidFrameColor
+        val accentColor = if (valid) buildPreviewValidAccentColor else buildPreviewInvalidAccentColor
         for (dx in 0 until spec.width) {
             for (dy in 0 until spec.height) {
                 val cellX = left + (dx * tileSize)
@@ -1143,7 +1160,7 @@ internal class GdxWorldRenderer(
                 shape.color = accentColor
                 shape.rect(cellX + 2f, cellY + 2f, tileSize - 4f, 2f)
                 if (!valid) {
-                    shape.color = Color(1.00f, 0.78f, 0.78f, 0.22f)
+                    shape.color = buildPreviewInvalidCrossColor
                     shape.rectLine(cellX + 2f, cellY + 2f, cellX + tileSize - 2f, cellY + tileSize - 2f, 1.4f)
                     shape.rectLine(cellX + 2f, cellY + tileSize - 2f, cellX + tileSize - 2f, cellY + 2f, 1.4f)
                 }
