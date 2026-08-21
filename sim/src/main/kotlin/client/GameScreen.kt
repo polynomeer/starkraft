@@ -716,18 +716,18 @@ internal class GameScreen(
         commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
         val bannerPulse = bannerPulse()
-        commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone().cpy().lerp(Color(0.22f, 0.30f, 0.22f, 0.82f), bannerPulse * 0.22f))
+        commandHintCard.background = assets.panelDrawable(currentCommandHintPulseTone(bannerPulse))
         val selectionPulse = selectionHudPulse()
-        topSelectionShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), selectionPulse * 0.20f))
-        topSelectionCard.background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), selectionPulse * 0.28f))
+        topSelectionShell.background = assets.panelDrawable(currentTopSelectionShellTone(selectionPulse))
+        topSelectionCard.background = assets.panelDrawable(currentTopSelectionCardTone(selectionPulse))
         val topModePulse = topModePulse()
-        topModeShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.16f, 0.22f, 0.18f, 0.68f), topModePulse * 0.20f))
-        topModeCard.background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f).lerp(Color(0.24f, 0.34f, 0.22f, 0.82f), topModePulse * 0.28f))
+        topModeShell.background = assets.panelDrawable(currentTopModeShellTone(topModePulse))
+        topModeCard.background = assets.panelDrawable(currentTopModeCardTone(topModePulse))
         val topStatusPulse = topStatusPulse()
-        topStatusShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f).lerp(Color(0.24f, 0.18f, 0.14f, 0.70f), topStatusPulse * 0.22f))
-        topStatusCard.background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f).lerp(Color(0.38f, 0.26f, 0.18f, 0.84f), topStatusPulse * 0.30f))
-        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone().cpy().lerp(Color(0.74f, 1.00f, 0.82f, 0.86f), selectionPulse * 0.34f))
-        portraitFrame.background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f).lerp(Color(0.28f, 0.36f, 0.22f, 0.86f), selectionPulse * 0.28f))
+        topStatusShell.background = assets.panelDrawable(currentTopStatusShellTone(topStatusPulse))
+        topStatusCard.background = assets.panelDrawable(currentTopStatusCardTone(topStatusPulse))
+        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlinePulseTone(selectionPulse))
+        portraitFrame.background = assets.panelDrawable(currentPortraitFrameTone(selectionPulse))
         attackWarningLabel.setText(buildAttackWarningText())
         attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
@@ -737,12 +737,12 @@ internal class GameScreen(
         pauseOverlay.isVisible = runtime.pauseOverlayVisible
         helpOverlay.isVisible = runtime.helpOverlayVisible
         val overlayPulse = overlayHeaderPulse()
-        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderTone().cpy().lerp(Color(0.38f, 0.30f, 0.20f, 0.94f), overlayPulse * 0.26f))
-        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderTone().cpy().lerp(Color(0.26f, 0.34f, 0.22f, 0.90f), overlayPulse * 0.22f))
+        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderPulseTone(overlayPulse))
+        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderPulseTone(overlayPulse))
         helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
         val showActionBanner = actionBannerText.isNotBlank()
         actionBanner.isVisible = showActionBanner
-        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone().cpy().lerp(Color(0.24f, 0.30f, 0.18f, 0.82f), bannerPulse * 0.24f)) else null
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerPulseTone(bannerPulse)) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
         val commandPanelSignature = buildCommandPanelSignature(groupedButtons, snapshot, commandDeckLayout, commandWidth, commandButtonHeight)
         if (commandPanelSignature != lastCommandPanelSignature) {
@@ -2044,6 +2044,11 @@ internal class GameScreen(
             }
         }
 
+    private fun currentActionBannerPulseTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            currentActionBannerTone().lerp(panel.cpy().lerp(build, 0.16f).also { it.a = 0.82f }, pulse * 0.24f)
+        }
+
     private fun currentActionBannerTextTone(): Color =
         with(assets.theme.colors) {
             when {
@@ -2108,6 +2113,11 @@ internal class GameScreen(
             }
         }
 
+    private fun currentPauseHeaderPulseTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            currentPauseHeaderTone().lerp(panelStrong.cpy().lerp(warning, 0.26f).also { it.a = 0.94f }, pulse * 0.26f)
+        }
+
     private fun currentHelpHeaderTone(): Color =
         with(assets.theme.colors) {
             when {
@@ -2115,6 +2125,11 @@ internal class GameScreen(
                 runtime.groundMode != null -> panelStrong.cpy().lerp(selection, 0.22f).also { it.a = 0.92f }
                 else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
             }
+        }
+
+    private fun currentHelpHeaderPulseTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            currentHelpHeaderTone().lerp(panelStrong.cpy().lerp(selection, 0.24f).also { it.a = 0.90f }, pulse * 0.22f)
         }
 
     private fun currentCommandHintCardTone(): Color =
@@ -2125,6 +2140,11 @@ internal class GameScreen(
                 runtime.session.state.selectedIds.isNotEmpty() -> panel.cpy().lerp(command, 0.16f).also { it.a = 0.84f }
                 else -> panelSoft.cpy().also { it.a = 0.82f }
             }
+        }
+
+    private fun currentCommandHintPulseTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            currentCommandHintCardTone().lerp(panel.cpy().lerp(build, 0.14f).also { it.a = 0.82f }, pulse * 0.22f)
         }
 
     private fun currentCommandHintTextTone(): Color =
@@ -2145,6 +2165,46 @@ internal class GameScreen(
                     panel.cpy().lerp(production, 0.14f).also { it.a = 0.92f }
                 else -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.92f }
             }
+        }
+
+    private fun currentSelectionHeadlinePulseTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            currentSelectionHeadlineCardTone().lerp(panel.cpy().lerp(selectionSoft, 0.26f).also { it.a = 0.86f }, pulse * 0.34f)
+        }
+
+    private fun currentTopSelectionShellTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panelStrong.cpy().also { it.a = 0.58f }.lerp(panelStrong.cpy().lerp(selection, 0.10f).also { it.a = 0.68f }, pulse * 0.20f)
+        }
+
+    private fun currentTopSelectionCardTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panelSoft.cpy().also { it.a = 0.72f }.lerp(panel.cpy().lerp(selection, 0.18f).also { it.a = 0.82f }, pulse * 0.28f)
+        }
+
+    private fun currentTopModeShellTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panelStrong.cpy().also { it.a = 0.58f }.lerp(panelStrong.cpy().lerp(build, 0.08f).also { it.a = 0.68f }, pulse * 0.20f)
+        }
+
+    private fun currentTopModeCardTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panel.cpy().lerp(selection, 0.14f).also { it.a = 0.72f }.lerp(panel.cpy().lerp(build, 0.18f).also { it.a = 0.82f }, pulse * 0.28f)
+        }
+
+    private fun currentTopStatusShellTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panelStrong.cpy().also { it.a = 0.60f }.lerp(panelStrong.cpy().lerp(danger, 0.14f).also { it.a = 0.70f }, pulse * 0.22f)
+        }
+
+    private fun currentTopStatusCardTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panel.cpy().lerp(command, 0.18f).also { it.a = 0.74f }.lerp(panel.cpy().lerp(warning, 0.24f).also { it.a = 0.84f }, pulse * 0.30f)
+        }
+
+    private fun currentPortraitFrameTone(pulse: Float): Color =
+        with(assets.theme.colors) {
+            panel.cpy().lerp(build, 0.08f).also { it.a = 0.80f }.lerp(panel.cpy().lerp(selection, 0.18f).also { it.a = 0.86f }, pulse * 0.28f)
         }
 
     private fun currentSelectionHeadlineTone(): Color =
