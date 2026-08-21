@@ -155,7 +155,7 @@ internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): S
     }
 
 internal fun buildMinimapHintLine(commandArmed: Boolean): String =
-    if (commandArmed) "armed: world click confirm" else "minimap drag camera"
+    if (commandArmed) "armed: minimap/world click confirm" else "minimap drag camera"
 
 internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCount: Int): String =
     if (selectedCount <= 0) "Pg 0/0 · 0" else "Pg ${pageIndex + 1}/$pageCount · $selectedCount"

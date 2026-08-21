@@ -245,7 +245,7 @@ class GameScreenInputRulesTest {
     @Test
     fun `minimap hint reflects armed mode`() {
         assertEquals("minimap drag camera", buildMinimapHintLine(commandArmed = false))
-        assertEquals("armed: world click confirm", buildMinimapHintLine(commandArmed = true))
+        assertEquals("armed: minimap/world click confirm", buildMinimapHintLine(commandArmed = true))
     }
 
     @Test

@@ -27,6 +27,7 @@ import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.PlayControlState
 import starkraft.sim.client.PlayScenario
 import starkraft.sim.client.gdxMiniMapBounds
+import starkraft.sim.net.InputJson
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.abs
@@ -298,6 +299,61 @@ class GdxClientRuntimeTest {
         assertNotEquals(0f, runtime.camera.panY)
         assertNotNull(runtime.currentMinimapConfirm())
         assertTrue(runtime.currentMinimapConfirm()!!.subtle)
+    }
+
+    @Test
+    fun `minimap left click issues armed move command`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        val bounds = gdxMiniMapBounds(1280, 720)
+        runtime.session.state.selectedIds.add(4)
+        runtime.groundMode = starkraft.sim.client.ClientGroundCommandMode.MOVE
+
+        val issued =
+            runtime.issueMinimapLeftClick(
+                screenX = bounds.left + (bounds.width * 0.75f),
+                screenY = bounds.top + (bounds.height * 0.25f),
+                viewWidth = 1280,
+                viewHeight = 720
+            )
+
+        val record: InputJson.InputCommandRecord =
+            json.decodeFromString(
+                InputJson.InputCommandRecord.serializer(),
+                Files.readAllLines(tempDir.resolve("client-input.ndjson")).last()
+            )
+
+        assertTrue(issued)
+        assertEquals("move", record.commandType)
+        assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
+        assertTrue(runtime.currentMinimapConfirm()?.subtle == true)
+        assertNull(runtime.groundMode)
+    }
+
+    @Test
+    fun `minimap right click issues command at minimap target`(@TempDir tempDir: Path) {
+        val runtime = runtime(tempDir)
+        val bounds = gdxMiniMapBounds(1280, 720)
+        runtime.session.state.selectedIds.add(4)
+
+        val issued =
+            runtime.issueMinimapRightClick(
+                screenX = bounds.left + (bounds.width * 0.6f),
+                screenY = bounds.top + (bounds.height * 0.4f),
+                viewWidth = 1280,
+                viewHeight = 720,
+                attackMoveModifier = false
+            )
+
+        val record: InputJson.InputCommandRecord =
+            json.decodeFromString(
+                InputJson.InputCommandRecord.serializer(),
+                Files.readAllLines(tempDir.resolve("client-input.ndjson")).last()
+            )
+
+        assertTrue(issued)
+        assertEquals("move", record.commandType)
+        assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
+        assertTrue(runtime.currentMinimapConfirm()?.subtle == true)
     }
 
     @Test
