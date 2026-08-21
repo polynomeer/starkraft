@@ -198,36 +198,7 @@ internal class GdxClientRuntime(
             }
             val worldX = camera.screenToWorldX(screenX)
             val worldY = camera.screenToWorldY(screenY)
-            if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && isFriendlyEntityAt(snapshot, worldX, worldY)) {
-                rejectGroundCommand(worldX, worldY, "invalid attack target")
-                return
-            }
-            val intent =
-                buildClientIntent(
-                    snapshot = snapshot,
-                    selectedIds = session.state.selectedIds,
-                    viewedFaction = session.state.viewedFaction,
-                    worldX = worldX,
-                    worldY = worldY,
-                    leftClick = false,
-                    rightClick = true,
-                    attackMoveModifier = false,
-                    forcedGroundCommandType = groundMode?.commandType,
-                    additiveSelection = false,
-                    requestIds = requestIds
-                ) ?: return
-            if (intent is ClientIntent.Command) {
-                session.append(intent)
-                recentGroundPing = GroundPing(worldX, worldY, if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") GroundPingKind.ATTACK else GroundPingKind.MOVE)
-                recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
-                pendingCommandSoundKind =
-                    if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
-                        CommandSoundKind.ATTACK
-                    } else {
-                        CommandSoundKind.MOVE
-                    }
-                groundMode = null
-            }
+            issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier = false)
             return
         }
         val beforeSelection = session.state.selectedIds.toSet()
@@ -300,9 +271,44 @@ internal class GdxClientRuntime(
             placeBuildingAt(screenX, screenY)
             return
         }
+        issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier)
+    }
+
+    fun issueMinimapLeftClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        if (buildModeTypeId != null) {
+            pendingCommandSoundKind = CommandSoundKind.INVALID
+            showNotice("place build in main view")
+            return false
+        }
+        val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        if (groundMode != null && session.state.selectedIds.isNotEmpty()) {
+            return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier = false, markMinimap = true)
+        }
+        return dragCenterFromMinimap(screenX, screenY, viewWidth, viewHeight)
+    }
+
+    fun issueMinimapRightClick(screenX: Float, screenY: Float, viewWidth: Int, viewHeight: Int, attackMoveModifier: Boolean): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        if (buildModeTypeId != null) {
+            pendingCommandSoundKind = CommandSoundKind.INVALID
+            showNotice("place build in main view")
+            return false
+        }
+        val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier, markMinimap = true)
+    }
+
+    private fun issueGroundCommandAtWorld(
+        snapshot: ClientSnapshot,
+        worldX: Float,
+        worldY: Float,
+        attackMoveModifier: Boolean,
+        markMinimap: Boolean = false
+    ): Boolean {
         if (groundMode == ClientGroundCommandMode.ATTACK_MOVE && isFriendlyEntityAt(snapshot, worldX, worldY)) {
             rejectGroundCommand(worldX, worldY, "invalid attack target")
-            return
+            return false
         }
         val intent =
             buildClientIntent(
@@ -317,11 +323,15 @@ internal class GdxClientRuntime(
                 forcedGroundCommandType = groundMode?.commandType,
                 additiveSelection = false,
                 requestIds = requestIds
-            ) ?: return
+            ) ?: return false
         if (intent is ClientIntent.Command) {
             session.append(intent)
             recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+            if (markMinimap) {
+                recentMinimapConfirm = MinimapConfirm(worldX, worldY, subtle = true)
+                recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
+            }
             pendingCommandSoundKind =
                 if (intent.record.commandType == "attack" || intent.record.commandType == "attackMove") {
                     CommandSoundKind.ATTACK
@@ -329,7 +339,9 @@ internal class GdxClientRuntime(
                     CommandSoundKind.MOVE
                 }
             groundMode = null
+            return true
         }
+        return false
     }
 
     private fun rejectGroundCommand(worldX: Float, worldY: Float, notice: String) {

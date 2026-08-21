@@ -2621,15 +2621,18 @@ internal class GameScreen(
                 Input.Buttons.LEFT -> {
                     val clickX = screenX.toFloat()
                     val clickY = screenY.toFloat()
-                    if (isHudSurface(clickX, clickY)) {
-                        if (!runtime.isGameplayCommandArmed() &&
-                            gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY) &&
-                            runtime.dragCenterFromMinimap(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height)
+                    val minimapHit = gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY)
+                    if (minimapHit) {
+                        if (runtime.issueMinimapLeftClick(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height) &&
+                            !runtime.isGameplayCommandArmed()
                         ) {
                             minimapDragging = true
                             minimapPanActive = true
                             dragSelection = null
                         }
+                        return true
+                    }
+                    if (isHudSurface(clickX, clickY)) {
                         return true
                     }
                     startX = screenX.toFloat()
@@ -2641,11 +2644,24 @@ internal class GameScreen(
                     return true
                 }
                 Input.Buttons.RIGHT -> {
-                    if (isHudSurface(screenX.toFloat(), screenY.toFloat())) {
+                    val clickX = screenX.toFloat()
+                    val clickY = screenY.toFloat()
+                    if (gdxMiniMapBounds(Gdx.graphics.width, Gdx.graphics.height).contains(clickX, clickY)) {
+                        rightClickHandled =
+                            runtime.issueMinimapRightClick(
+                                clickX,
+                                clickY,
+                                Gdx.graphics.width,
+                                Gdx.graphics.height,
+                                Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)
+                            )
+                        return true
+                    }
+                    if (isHudSurface(clickX, clickY)) {
                         rightClickHandled = false
                         return true
                     }
-                    runtime.issueRightClick(screenX.toFloat(), screenY.toFloat(), Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                    runtime.issueRightClick(clickX, clickY, Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
                     rightClickHandled = true
                     return true
                 }
