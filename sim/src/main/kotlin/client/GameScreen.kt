@@ -1016,7 +1016,7 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = null
-                            pad(3f, 5f, 5f, 5f)
+                            pad(2f, 4f, 4f, 4f)
                             add(content).expand().fill()
                         }
                     ).expand().fill()
@@ -2870,17 +2870,19 @@ internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean
 
 internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
     val minimapHeight = gdxMiniMapBounds(screenWidth, screenHeight).height
-    val centerHeight = (screenHeight * 0.118f).coerceIn(98f, 126f)
-    val commandHeight = (screenHeight * 0.072f).coerceIn(58f, 78f)
-    val commandShellHeight = (commandHeight + 18f).coerceIn(82f, 100f)
+    val compact = screenWidth < 1440
+    val centerHeight = if (compact) (screenHeight * 0.104f).coerceIn(88f, 112f) else (screenHeight * 0.110f).coerceIn(92f, 118f)
+    val commandHeight = if (compact) (screenHeight * 0.060f).coerceIn(44f, 58f) else (screenHeight * 0.064f).coerceIn(48f, 64f)
+    val commandShellHeight = commandHeight + if (compact) 14f else 16f
     return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
 }
 
 internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
-    val leftSlotWidth = (minimapWidth + 8).coerceAtLeast(138)
-    val centerWidth = (screenWidth * 0.156f).coerceIn(202f, 252f).toInt()
-    val commandWidth = (screenWidth * 0.138f).coerceIn(184f, 224f).toInt()
+    val compact = screenWidth < 1440
+    val leftSlotWidth = minimapWidth.coerceAtLeast(if (compact) 132 else 144)
+    val centerWidth = if (compact) (screenWidth * 0.142f).coerceIn(188f, 228f).toInt() else (screenWidth * 0.148f).coerceIn(198f, 238f).toInt()
+    val commandWidth = if (compact) (screenWidth * 0.126f).coerceIn(170f, 206f).toInt() else (screenWidth * 0.130f).coerceIn(178f, 214f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
@@ -2889,26 +2891,26 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
 }
 
 internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): CommandDeckLayout {
-    val compact = screenWidth < 1360
-    val scrollHeight = if (compact) (screenHeight * 0.068f).coerceIn(54f, 70f) else (screenHeight * 0.074f).coerceIn(58f, 80f)
+    val compact = screenWidth < 1440
+    val scrollHeight = if (compact) (screenHeight * 0.056f).coerceIn(40f, 54f) else (screenHeight * 0.060f).coerceIn(44f, 58f)
     return CommandDeckLayout(
         scrollHeight = scrollHeight.toInt(),
-        buttonHeight = if (compact) 15 else 17,
+        buttonHeight = if (compact) 14 else 16,
         groupPad = if (compact) 1 else 2,
-        headerPadX = if (compact) 3 else 5,
-        actorInset = if (compact) 11 else 13
+        headerPadX = if (compact) 3 else 4,
+        actorInset = if (compact) 10 else 12
     )
 }
 
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
-    val compact = screenWidth < 1360
+    val compact = screenWidth < 1440
     return CenterPanelLayout(
-        portraitSize = if (compact) 42 else 48,
-        rosterSlotSize = if (compact) 28 else 32,
-        pagerButtonSize = if (compact) 15 else 17,
-        pagerLabelWidth = if (compact) 42 else 46,
-        groupSummaryWidth = if (compact) 46 else 54,
-        healthBarWidth = if (compact) 82 else 92
+        portraitSize = if (compact) 40 else 46,
+        rosterSlotSize = if (compact) 26 else 30,
+        pagerButtonSize = if (compact) 14 else 16,
+        pagerLabelWidth = if (compact) 38 else 44,
+        groupSummaryWidth = if (compact) 42 else 50,
+        healthBarWidth = if (compact) 76 else 88
     )
 }
 
@@ -2936,7 +2938,7 @@ internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlo
 internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight: Int): Int {
     val bottomHudTop = screenHeight - computeBottomHudHeight(screenWidth, screenHeight)
     val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
-    return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
+    return minOf(bottomHudTop, minimapTop).coerceAtLeast((screenHeight * 0.66f).toInt())
 }
 
 internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {
