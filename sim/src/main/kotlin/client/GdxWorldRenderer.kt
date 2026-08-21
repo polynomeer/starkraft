@@ -75,6 +75,32 @@ internal class GdxWorldRenderer(
     private val buildPreviewInvalidFrameColor = colors.warning.cpy().also { it.a = 0.94f }
     private val buildPreviewInvalidAccentColor = colors.danger.cpy().also { it.a = 0.32f }
     private val buildPreviewInvalidCrossColor = colors.warning.cpy().also { it.a = 0.22f }
+    private val gasNodeCoreColor = colors.build.cpy().also { it.a = 0.95f }
+    private val gasNodeAuraColor = colors.build.cpy().lerp(colors.selectionSoft, 0.24f).also { it.a = 0.12f }
+    private val gasNodeShadowColor = colors.panel.cpy().lerp(colors.build, 0.16f).also { it.a = 0.92f }
+    private val gasNodeSparkColor = colors.selectionSoft.cpy().also { it.a = 0.32f }
+    private val mineralNodeShadowColor = colors.terrainDust.cpy().also { it.a = 0.90f }
+    private val mineralNodeGlowColor = colors.warningSoft.cpy().also { it.a = 0.12f }
+    private val mineralNodeSparkColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.12f).also { it.a = 0.16f }
+    private val blockedInsetColor = colors.borderDefault.cpy().lerp(colors.panelStrong, 0.42f).also { it.a = 0.82f }
+    private val staticOccupancyBaseColor = colors.terrainDust.cpy().lerp(colors.danger, 0.16f).also { it.a = 0.84f }
+    private val staticOccupancyInsetColor = colors.warning.cpy().lerp(colors.terrainDust, 0.42f).also { it.a = 0.38f }
+    private val gridLineColor = colors.terrainRidge.cpy().also { it.a = 0.22f }
+    private val terrainEdgeColor = colors.borderDefault.cpy().lerp(colors.panelStrong, 0.26f).also { it.a = 0.42f }
+    private val dustRegionEdgeColor = colors.warning.cpy().lerp(colors.terrainDust, 0.34f).also { it.a = 0.34f }
+    private val healthBarSelectedBackColor = colors.scrim.cpy().also { it.a = 0.66f }
+    private val healthBarBackColor = colors.scrim.cpy().also { it.a = 0.58f }
+    private val healthBarDamagedBackColor = colors.panelStrong.cpy().lerp(colors.danger, 0.24f).also { it.a = 0.78f }
+    private val healthBarMeleeBackColor = colors.panelStrong.cpy().lerp(colors.build, 0.18f).also { it.a = 0.78f }
+    private val healthBarCriticalColor = colors.danger.cpy().lerp(colors.textPrimary, 0.10f)
+    private val healthBarMidColor = colors.production.cpy().lerp(colors.textPrimary, 0.06f)
+    private val healthBarHighColor = colors.selection.cpy()
+    private val healthBarMeleeHighColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f)
+    private val healthBarMeleeMidColor = colors.warningSoft.cpy().lerp(colors.textPrimary, 0.08f)
+    private val healthBarMeleeCriticalColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.24f)
+    private val healthBarHighlightColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.14f).also { it.a = 0.48f }
+    private val selectionOverlayColor = colors.selection.cpy().also { it.a = 0.16f }
+    private val selectionDamageCrossColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.82f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -191,23 +217,23 @@ internal class GdxWorldRenderer(
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             shape.color = terrainMetal
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
-            shape.color = Color(0.28f, 0.30f, 0.34f, 0.82f)
+            shape.color = blockedInsetColor
             shape.rect(sx + 2f, sy + 2f, runtime.camera.tileSize - 4f, runtime.camera.tileSize - 4f)
         }
         mapState?.staticOccupancyTiles?.forEach { (x, y) ->
             if (!visibleRange.contains(x, y)) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
-            shape.color = Color(0.37f, 0.24f, 0.14f, 0.84f)
+            shape.color = staticOccupancyBaseColor
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
-            shape.color = Color(0.52f, 0.34f, 0.20f, 0.38f)
+            shape.color = staticOccupancyInsetColor
             shape.rect(sx + 3f, sy + 3f, runtime.camera.tileSize - 6f, runtime.camera.tileSize - 6f)
         }
     }
 
     private fun drawGrid(shape: ShapeRenderer, runtime: GdxClientRuntime, visibleRange: VisibleTileRange, worldViewportHeight: Int) {
         val snapshot = runtime.snapshot ?: return
-        shape.color = Color(0.18f, 0.22f, 0.18f, 0.22f)
+        shape.color = gridLineColor
         val worldRight = runtime.camera.worldToScreenX(snapshot.mapWidth.toFloat())
         val worldBottom = runtime.camera.worldToScreenY(snapshot.mapHeight.toFloat())
         val lineBottom = minOf(worldBottom, worldViewportHeight.toFloat())
@@ -224,7 +250,7 @@ internal class GdxWorldRenderer(
     private fun drawTerrainEdges(shape: ShapeRenderer, runtime: GdxClientRuntime, visibleRange: VisibleTileRange) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState ?: return
-        shape.color = Color(0.34f, 0.40f, 0.42f, 0.42f)
+        shape.color = terrainEdgeColor
         mapState.blockedTiles.forEach { (x, y) ->
             if (!visibleRange.contains(x, y)) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
@@ -232,7 +258,7 @@ internal class GdxWorldRenderer(
             val tile = runtime.camera.tileSize
             shape.rect(sx, sy, tile, tile)
         }
-        shape.color = Color(0.58f, 0.42f, 0.22f, 0.34f)
+        shape.color = dustRegionEdgeColor
         for (x in maxOf(40, visibleRange.startX)..minOf(56, visibleRange.endXExclusive - 1)) {
             val topY = runtime.camera.worldToScreenY(40f)
             val bottomY = runtime.camera.worldToScreenY(57f)
@@ -254,26 +280,26 @@ internal class GdxWorldRenderer(
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
-                shape.color = Color(0.10f, 0.18f, 0.16f, 0.92f)
+                shape.color = gasNodeShadowColor
                 shape.circle(sx + 1.5f, sy + 1.5f, 10f)
-                shape.color = Color(0.24f, 0.94f, 0.70f, 0.12f + (pulse * 0.10f))
+                shape.color = scratchColorA.set(gasNodeAuraColor).also { it.a = 0.12f + (pulse * 0.10f) }
                 shape.circle(sx, sy, 12f + (pulse * 2f))
-                shape.color = Color(0.26f, 0.82f, 0.60f, 0.95f)
+                shape.color = gasNodeCoreColor
                 shape.circle(sx, sy, 9f)
-                shape.color = Color(0.64f, 1.00f, 0.86f, 0.32f)
+                shape.color = gasNodeSparkColor
                 shape.circle(sx - 2f, sy - 2f, 4f)
                 shape.rect(sx - 2.5f, sy - 9f, 5f, 4f)
             } else {
-                shape.color = Color(0.16f, 0.13f, 0.08f, 0.90f)
+                shape.color = mineralNodeShadowColor
                 shape.circle(sx + 1.5f, sy + 1.5f, 9f)
                 shape.color = neutralColor
                 shape.rect(sx - 7f, sy - 5f, 6f, 5f)
                 shape.rect(sx - 1f, sy - 8f, 7f, 6f)
                 shape.rect(sx - 6f, sy + 1f, 8f, 5f)
-                shape.color = Color(1f, 0.95f, 0.72f, 0.12f + (pulse * 0.12f))
+                shape.color = scratchColorA.set(mineralNodeGlowColor).also { it.a = 0.12f + (pulse * 0.12f) }
                 shape.rect(sx - 5f, sy - 4f, 3f, 2f)
                 shape.rect(sx, sy - 6f, 3f, 2f)
-                shape.color = Color(1f, 0.98f, 0.80f, 0.16f + (pulse * 0.12f))
+                shape.color = scratchColorA.set(mineralNodeSparkColor).also { it.a = 0.16f + (pulse * 0.12f) }
                 shape.rect(sx - 2f, sy + 2f, 4f, 2f)
             }
         }
@@ -411,26 +437,26 @@ internal class GdxWorldRenderer(
         val top = y - if (selected) 16f else 14f
         shape.color =
             when {
-                damaged && meleeImpact -> Color(0.10f, 0.18f, 0.08f, 0.78f)
-                damaged -> Color(0.18f, 0.08f, 0.08f, 0.78f)
-                selected -> Color(0.04f, 0.04f, 0.04f, 0.66f)
-                else -> Color(0.1f, 0.1f, 0.1f, 0.58f)
+                damaged && meleeImpact -> healthBarMeleeBackColor
+                damaged -> healthBarDamagedBackColor
+                selected -> healthBarSelectedBackColor
+                else -> healthBarBackColor
             }
         shape.rect(x - (barWidth / 2f), top, barWidth, barHeight)
         val fillColor =
             when {
-                meleeImpact && hp * 100 >= maxHp * 66 -> Color(0.68f, 1.00f, 0.60f, 1f)
-                meleeImpact && hp * 100 >= maxHp * 33 -> Color(0.92f, 1.00f, 0.42f, 1f)
-                meleeImpact -> Color(1.00f, 0.58f, 0.34f, 1f)
-                hp * 100 >= maxHp * 66 -> Color(0.30f, 0.83f, 0.43f, 1f)
-                hp * 100 >= maxHp * 33 -> Color(0.89f, 0.71f, 0.22f, 1f)
-                else -> Color(0.84f, 0.29f, 0.29f, 1f)
+                meleeImpact && hp * 100 >= maxHp * 66 -> healthBarMeleeHighColor
+                meleeImpact && hp * 100 >= maxHp * 33 -> healthBarMeleeMidColor
+                meleeImpact -> healthBarMeleeCriticalColor
+                hp * 100 >= maxHp * 66 -> healthBarHighColor
+                hp * 100 >= maxHp * 33 -> healthBarMidColor
+                else -> healthBarCriticalColor
             }
         shape.color = if (damaged) fillColor.cpy().lerp(Color.WHITE, 0.24f) else fillColor
         val fillWidth = barWidth * (hp.toFloat() / maxHp.coerceAtLeast(1))
         shape.rect(x - (barWidth / 2f), top, fillWidth, barHeight)
         if (damaged) {
-            shape.color = Color(1.00f, 0.88f, 0.76f, 0.48f)
+            shape.color = healthBarHighlightColor
             shape.rect(x - (barWidth / 2f), top - 1f, fillWidth.coerceAtLeast(3f), 1f)
         }
     }
@@ -443,7 +469,7 @@ internal class GdxWorldRenderer(
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(startX, startY)) continue
-            shape.color = selectionColor.cpy().apply { a = 0.16f }
+            shape.color = selectionOverlayColor
             shape.circle(startX, startY, 8f)
         }
     }
@@ -478,7 +504,7 @@ internal class GdxWorldRenderer(
                 val height = footprintHeight * runtime.camera.tileSize + 12f
                 val corner = 12f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.08f))
+                shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.12f + (pulse * 0.08f) }
                 shape.line(left - 3f, top - 3f, left + width + 3f, top - 3f)
                 shape.line(left - 3f, top + height + 3f, left + width + 3f, top + height + 3f)
                 shape.line(left - 3f, top - 3f, left - 3f, top + height + 3f)
@@ -493,7 +519,7 @@ internal class GdxWorldRenderer(
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.22f * confirmPulse)
+                    shape.color = scratchColorA.set(bracketColor).also { it.a = 0.22f * confirmPulse }
                     shape.line(left - 6f, top - 6f, left + width + 6f, top - 6f)
                     shape.line(left - 6f, top + height + 6f, left + width + 6f, top + height + 6f)
                     shape.line(left - 6f, top - 6f, left - 6f, top + height + 6f)
@@ -503,22 +529,22 @@ internal class GdxWorldRenderer(
                     shape.color =
                         when (impactKind) {
                             CombatSoundKind.MELEE,
-                            CombatSoundKind.ZERGLING_MELEE -> Color(0.92f, 1.00f, 0.72f, 0.76f)
-                            else -> Color(0.92f, 1.00f, 0.78f, 0.76f)
+                            CombatSoundKind.ZERGLING_MELEE -> selectionDamageCrossColor.cpy().lerp(colors.warningSoft, 0.08f).also { it.a = 0.76f }
+                            else -> selectionDamageCrossColor.cpy().also { it.a = 0.76f }
                         }
                     shape.rect(left - 2f, top + (height * 0.5f), width + 4f, 1.5f)
                     shape.rect(left + (width * 0.5f), top - 2f, 1.5f, height + 4f)
                 }
-                shape.color = Color(0.84f, 1.00f, 0.76f, 0.44f + (pulse * 0.14f))
+                shape.color = scratchColorA.set(colors.selectionSoft).also { it.a = 0.44f + (pulse * 0.14f) }
                 shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
                 shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
             } else {
                 val radius = 11f
                 val pulse = selectionPulse()
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.06f))
+                shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.12f + (pulse * 0.06f) }
                 shape.circle(screenX, screenY, radius + 1.5f)
                 if (confirmPulse > 0f) {
-                    shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.18f * confirmPulse)
+                    shape.color = scratchColorA.set(bracketColor).also { it.a = 0.18f * confirmPulse }
                     shape.circle(screenX, screenY, radius + 6f + ((1f - confirmPulse) * 4f))
                 }
                 shape.color = bracketColor
@@ -533,11 +559,11 @@ internal class GdxWorldRenderer(
                 shape.line(screenX - 7f, screenY + 7f, screenX - 3.5f, screenY + 3.5f)
                 shape.line(screenX + 7f, screenY + 7f, screenX + 3.5f, screenY + 3.5f)
                 if (runtime.isDamageFlashActive(entity.id)) {
-                    shape.color = Color(0.92f, 1.00f, 0.78f, 0.82f)
+                    shape.color = selectionDamageCrossColor
                     shape.rect(screenX - radius - 2f, screenY - 0.75f, (radius * 2f) + 4f, 1.5f)
                     shape.rect(screenX - 0.75f, screenY - radius - 2f, 1.5f, (radius * 2f) + 4f)
                 }
-                shape.color = Color(0.84f, 1.00f, 0.76f, 0.40f + (pulse * 0.14f))
+                shape.color = scratchColorA.set(colors.selectionSoft).also { it.a = 0.40f + (pulse * 0.14f) }
                 shape.rect(screenX - 4.5f, screenY + radius + 2.5f, 9f, 1.5f)
             }
         }
