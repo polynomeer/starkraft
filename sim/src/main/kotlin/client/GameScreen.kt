@@ -615,7 +615,7 @@ internal class GameScreen(
         screenFade.apply {
             setFillParent(true)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            background = assets.panelDrawable(Color(0f, 0f, 0f, 1f))
+            background = assets.panelDrawable(colors.scrim.cpy().also { it.a = 1f })
             color.a = screenFadeAlpha
         }
         stage.addActor(screenFade)
@@ -1434,7 +1434,7 @@ internal class GameScreen(
         if (selected.isEmpty()) {
             selectionGrid.add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.74f))
+                    background = assets.panelDrawable(assets.theme.colors.panelAlt.cpy().also { it.a = 0.74f })
                     pad(4f, 8f, 4f, 8f)
                     add(Label("No slots", assets.mutedLabelStyle)).left()
                 }
@@ -1552,7 +1552,7 @@ internal class GameScreen(
                         Table().apply {
                             background =
                                 assets.panelDrawable(
-                                    if (focused) Color(0.16f, 0.20f, 0.08f, 1f)
+                                    if (focused) colors.panel.cpy().lerp(colors.warning, 0.24f).also { it.a = 1f }
                                     else if (damaged) colors.panel.cpy().lerp(colors.danger, 0.24f).also { it.a = 1f }
                                     else colors.panelAlt.cpy()
                                 )
@@ -1836,7 +1836,7 @@ internal class GameScreen(
         runtime.controlGroupSizes().forEach { (group, count) ->
             controlGroupButtons.add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.90f))
+                    background = assets.panelDrawable(assets.theme.colors.panelSoft.cpy().also { it.a = 0.90f })
                     pad(1f)
                     add(
                         makeButton("$group:$count", style = assets.subtleButtonStyle()) {
