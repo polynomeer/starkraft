@@ -21,12 +21,141 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.LinkedHashMap
 
+internal data class PresentationColorTokens(
+    val appBackground: Color,
+    val worldFrame: Color,
+    val panel: Color,
+    val panelAlt: Color,
+    val panelStrong: Color,
+    val panelSoft: Color,
+    val scrim: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val textDisabled: Color,
+    val textInverse: Color,
+    val selection: Color,
+    val selectionSoft: Color,
+    val command: Color,
+    val commandSoft: Color,
+    val warning: Color,
+    val warningSoft: Color,
+    val danger: Color,
+    val dangerSoft: Color,
+    val research: Color,
+    val production: Color,
+    val build: Color,
+    val borderSubtle: Color,
+    val borderDefault: Color,
+    val borderActive: Color,
+    val borderWarning: Color,
+    val glowSelection: Color,
+    val glowCommand: Color,
+    val glowAlert: Color,
+    val terrainA: Color,
+    val terrainB: Color,
+    val terrainRidge: Color,
+    val terrainDust: Color,
+    val terrainMetal: Color,
+    val fog: Color,
+    val shroud: Color,
+    val friendlyFaction: Color,
+    val enemyFaction: Color,
+    val neutralFaction: Color
+)
+
+internal data class PresentationMotionTokens(
+    val fastMs: Long,
+    val uiMs: Long,
+    val confirmMs: Long,
+    val alertMs: Long,
+    val effectMs: Long
+)
+
+internal data class PresentationAudioTokens(
+    val uiGain: Float,
+    val commandGain: Float,
+    val combatGain: Float,
+    val alertGain: Float,
+    val structureDeathGain: Float
+)
+
+internal data class PresentationTheme(
+    val colors: PresentationColorTokens,
+    val motion: PresentationMotionTokens,
+    val audio: PresentationAudioTokens
+)
+
+internal fun defaultPresentationTheme(): PresentationTheme =
+    PresentationTheme(
+        colors =
+            PresentationColorTokens(
+                appBackground = Color(0.043f, 0.075f, 0.106f, 1f),
+                worldFrame = Color.valueOf("0F172A"),
+                panel = Color.valueOf("192134"),
+                panelAlt = Color.valueOf("0F1F2B"),
+                panelStrong = Color.valueOf("102430"),
+                panelSoft = Color(0.10f, 0.16f, 0.20f, 0.72f),
+                scrim = Color(0.008f, 0.031f, 0.055f, 0.72f),
+                textPrimary = Color.WHITE.cpy(),
+                textSecondary = Color.valueOf("D5DEE8"),
+                textMuted = Color.valueOf("94A3B8"),
+                textDisabled = Color.valueOf("64748B"),
+                textInverse = Color.valueOf("0F172A"),
+                selection = Color.valueOf("22C55E"),
+                selectionSoft = Color.valueOf("86EFAC"),
+                command = Color.valueOf("38BDF8"),
+                commandSoft = Color.valueOf("7DD3FC"),
+                warning = Color.valueOf("F59E0B"),
+                warningSoft = Color.valueOf("FCD34D"),
+                danger = Color.valueOf("DC2626"),
+                dangerSoft = Color.valueOf("F87171"),
+                research = Color.valueOf("22D3EE"),
+                production = Color.valueOf("FBBF24"),
+                build = Color.valueOf("34D399"),
+                borderSubtle = Color(1f, 1f, 1f, 0.08f),
+                borderDefault = Color(0.49f, 0.83f, 0.99f, 0.28f),
+                borderActive = Color(0.13f, 0.77f, 0.37f, 0.56f),
+                borderWarning = Color(0.96f, 0.62f, 0.04f, 0.42f),
+                glowSelection = Color(0.13f, 0.77f, 0.37f, 0.20f),
+                glowCommand = Color(0.22f, 0.74f, 0.97f, 0.16f),
+                glowAlert = Color(0.96f, 0.62f, 0.04f, 0.18f),
+                terrainA = Color(0.10f, 0.15f, 0.11f, 1f),
+                terrainB = Color(0.12f, 0.18f, 0.13f, 1f),
+                terrainRidge = Color(0.18f, 0.22f, 0.15f, 1f),
+                terrainDust = Color(0.22f, 0.19f, 0.13f, 1f),
+                terrainMetal = Color(0.15f, 0.18f, 0.21f, 1f),
+                fog = Color(0.07f, 0.12f, 0.14f, 0.18f),
+                shroud = Color(0.05f, 0.09f, 0.11f, 0.32f),
+                friendlyFaction = Color(0.30f, 0.60f, 1.00f, 1f),
+                enemyFaction = Color(0.90f, 0.36f, 0.28f, 1f),
+                neutralFaction = Color(0.78f, 0.69f, 0.42f, 1f)
+            ),
+        motion =
+            PresentationMotionTokens(
+                fastMs = 120L,
+                uiMs = 180L,
+                confirmMs = 240L,
+                alertMs = 320L,
+                effectMs = 420L
+            ),
+        audio =
+            PresentationAudioTokens(
+                uiGain = 0.42f,
+                commandGain = 0.48f,
+                combatGain = 0.46f,
+                alertGain = 0.60f,
+                structureDeathGain = 0.60f
+            )
+    )
+
 internal class GdxUiAssets : Disposable {
     val font = BitmapFont()
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
     val visualCatalog = defaultVisualAssetCatalog()
     val spriteAssets = GdxSpriteAssets(visualCatalog)
+    val theme = defaultPresentationTheme()
     private var alertSoundPath: Path? = null
     private var attackSoundPath: Path? = null
     private var moveSoundPath: Path? = null
@@ -59,17 +188,17 @@ internal class GdxUiAssets : Disposable {
     val completeSound: Sound = createCompleteSound()
     private val whiteTexture = createWhiteTexture()
     private val baseDrawable = TextureRegionDrawable(TextureRegion(whiteTexture))
-    val paper = Color(0.95f, 0.94f, 0.89f, 1f)
-    val ink = Color(0.84f, 0.90f, 0.94f, 1f)
-    val muted = Color(0.61f, 0.72f, 0.78f, 1f)
-    val accent = Color(0.54f, 0.88f, 0.68f, 1f)
-    val alert = Color(0.93f, 0.54f, 0.34f, 1f)
-    val panel = Color(0.06f, 0.10f, 0.14f, 0.88f)
-    val panelStrong = Color(0.08f, 0.13f, 0.18f, 0.94f)
-    val panelSoft = Color(0.10f, 0.16f, 0.20f, 0.72f)
+    val paper = theme.colors.textPrimary.cpy()
+    val ink = theme.colors.textSecondary.cpy()
+    val muted = theme.colors.textMuted.cpy()
+    val accent = theme.colors.selection.cpy()
+    val alert = theme.colors.warning.cpy()
+    val panel = theme.colors.panel.cpy().also { it.a = 0.88f }
+    val panelStrong = theme.colors.panelStrong.cpy().also { it.a = 0.94f }
+    val panelSoft = theme.colors.panelSoft.cpy()
     val chrome = Color(0.16f, 0.29f, 0.35f, 1f)
-    val chromeBright = Color(0.22f, 0.42f, 0.48f, 1f)
-    val chromeMuted = Color(0.18f, 0.24f, 0.28f, 1f)
+    val chromeBright = theme.colors.command.cpy().lerp(theme.colors.panelStrong, 0.42f)
+    val chromeMuted = theme.colors.panelAlt.cpy().lerp(theme.colors.textMuted, 0.12f)
     private val panelDrawableCache = LinkedHashMap<Int, Drawable>(256)
 
     val titleLabelStyle = Label.LabelStyle(font, paper)
@@ -86,11 +215,11 @@ internal class GdxUiAssets : Disposable {
             up = panelDrawable(base)
             down = panelDrawable(base.cpy().lerp(Color.BLACK, 0.18f))
             over = panelDrawable(overColor)
-            checked = panelDrawable(base.cpy().lerp(Color.CYAN, 0.2f))
+            checked = panelDrawable(base.cpy().lerp(theme.colors.command, 0.2f))
             disabled = panelDrawable(base.cpy().lerp(Color.DARK_GRAY, 0.55f))
             this.font = this@GdxUiAssets.font
             fontColor = paper
-            disabledFontColor = Color(0.55f, 0.58f, 0.60f, 1f)
+            disabledFontColor = theme.colors.textDisabled.cpy()
         }
 
     fun primaryButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeBright, chromeBright.cpy().lerp(accent, 0.10f))

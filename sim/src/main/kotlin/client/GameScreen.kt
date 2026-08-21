@@ -215,6 +215,7 @@ internal class GameScreen(
     }
 
     private fun buildHud() {
+        val colors = assets.theme.colors
         val initialTopBarLayout = computeTopBarLayout(1280)
         val root =
             Table().apply {
@@ -227,13 +228,13 @@ internal class GameScreen(
             pad(0f, 2f, 0f, 2f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
+                    background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.60f })
                     pad(1f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.74f))
+                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.74f })
                             pad(1f, 2f, 1f, 2f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(3f)
+                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.78f }) }).width(2f).expandY().fillY().padRight(3f)
                             add(economyLabel).left()
                         }
                     ).left().expandX().fillX()
@@ -241,11 +242,11 @@ internal class GameScreen(
             ).left().expandX().fillX()
             topSelectionCell = add(
                 topSelectionShell.apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
+                    background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.58f })
                     pad(1f)
                     add(
                         topSelectionCard.apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f))
+                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.72f })
                             pad(1f, 2f, 1f, 2f)
                             add(topSelectionLabel).center()
                         }
@@ -254,11 +255,11 @@ internal class GameScreen(
             ).width(initialTopBarLayout.selectionWidth.toFloat()).center().padLeft(2f).padRight(2f)
             topModeCell = add(
                 topModeShell.apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f))
+                    background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.58f })
                     pad(1f)
                     add(
                         topModeCard.apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f))
+                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.14f).also { it.a = 0.72f })
                             pad(1f, 2f, 1f, 2f)
                             add(modeLabel).center()
                         }
@@ -267,11 +268,11 @@ internal class GameScreen(
             ).width(initialTopBarLayout.modeWidth.toFloat()).center().padRight(2f)
             topStatusCell = add(
                 topStatusShell.apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f))
+                    background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.60f })
                     pad(1f)
                     add(
                         topStatusCard.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f))
+                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.74f })
                             pad(1f, 2f, 1f, 2f)
                             add(statusBadgeLabel).right()
                         }
@@ -287,16 +288,16 @@ internal class GameScreen(
         }
 
         statusCard.apply {
-            background = assets.panelDrawable(Color(0.04f, 0.09f, 0.12f, 0.72f))
+            background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.72f })
             pad(10f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(5f)
+                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(5f)
                     add(statusHeader).left()
                 }
             ).left().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
+            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(5f).row()
             add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
             add(hudLinesLabel).left().expandX().fillX().padTop(8f)
         }
@@ -309,13 +310,13 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.76f))
+                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.76f })
                             pad(1f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.78f })
                                     pad(2f, 6f, 2f, 6f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHeaderLabel).left()
                                 }
                             )
@@ -326,19 +327,19 @@ internal class GameScreen(
                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(22f).height(18f)
                 }
             ).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
+            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(5f).row()
             add(
                 commandHintCard.apply {
                     pad(2f, 2f, 0f, 2f)
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
+                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
                             pad(1f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.72f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.72f })
                                     pad(2f, 4f, 2f, 4f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.82f)) }).width(2f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHintLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX()
@@ -359,9 +360,9 @@ internal class GameScreen(
             pad(0f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.48f))
+                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.48f })
                     pad(1f, 5f, 1f, 5f)
-                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.78f)) }).width(2f).expandY().fillY().padRight(4f)
+                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.78f }) }).width(2f).expandY().fillY().padRight(4f)
                     add(actionBannerLabel).center()
                 }
             ).center()
@@ -379,15 +380,15 @@ internal class GameScreen(
                     add(healthLabel).right()
                 }
             ).expandX().fillX().padBottom(1f).row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.20f, 0.44f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(2f).row()
+            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(2f).row()
             add(
                 selectionHeadlineCard.apply {
-                    background = assets.panelDrawable(Color(0.14f, 0.20f, 0.24f, 0.70f))
+                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.10f).also { it.a = 0.70f })
                     pad(1f, 4f, 1f, 4f)
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(2f).row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.09f, 0.15f, 0.19f, 0.60f)) }).height(1f).expandX().fillX().padTop(1f).row()
+            add(Table().apply { background = assets.panelDrawable(colors.borderSubtle.cpy().also { it.a = 0.60f }) }).height(1f).expandX().fillX().padTop(1f).row()
             add(
                 Table().apply {
                     add(
@@ -510,9 +511,9 @@ internal class GameScreen(
             background = null
             pad(0f, 18f, 8f, 18f)
             leftHudSpacerCell = add().width(208f).bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
+            centerHudCell = add(wrapHudPanel(centerCard, colors.borderDefault.cpy().also { it.a = 0.92f })).width(266f).bottom().padRight(10f)
             add().expandX().fillX()
-            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
+            commandHudCell = add(wrapHudPanel(commandCard, colors.command.cpy().lerp(colors.panelStrong, 0.35f).also { it.a = 0.92f })).width(278f).right().bottom()
         }
 
         root.top()
@@ -1281,7 +1282,7 @@ internal class GameScreen(
             background = assets.panelDrawable(backgroundTone)
             pad(1f, 2f, 1f, 2f)
             add(Table().apply { background = assets.panelDrawable(accentTone) }).width(2f).height(8f).padRight(3f)
-            add(Label(text.uppercase(), assets.mutedLabelStyle).apply { color = Color.WHITE }).left()
+            add(Label(text.uppercase(), assets.mutedLabelStyle).apply { color = assets.theme.colors.textPrimary }).left()
         }
 
     private fun buildCenterFooterLine(): String =
@@ -2023,140 +2024,164 @@ internal class GameScreen(
             }
 
     private fun currentActionBannerTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.16f, 0.24f, 0.30f, 0.76f)
-            runtime.groundMode != null -> Color(0.14f, 0.22f, 0.18f, 0.76f)
-            runtime.noticeKind() == NoticeKind.TRADE -> Color(0.20f, 0.18f, 0.12f, 0.80f)
-            runtime.noticeKind() == NoticeKind.LOSS -> Color(0.26f, 0.14f, 0.12f, 0.80f)
-            runtime.noticeKind() == NoticeKind.KILL -> Color(0.12f, 0.20f, 0.12f, 0.80f)
-            runtime.noticeLine() != null -> Color(0.18f, 0.16f, 0.10f, 0.76f)
-            else -> Color(0.08f, 0.14f, 0.18f, 0.62f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> panel.cpy().lerp(command, 0.18f).also { it.a = 0.76f }
+                runtime.groundMode != null -> panel.cpy().lerp(selection, 0.18f).also { it.a = 0.76f }
+                runtime.noticeKind() == NoticeKind.TRADE -> panel.cpy().lerp(production, 0.20f).also { it.a = 0.80f }
+                runtime.noticeKind() == NoticeKind.LOSS -> panel.cpy().lerp(danger, 0.24f).also { it.a = 0.80f }
+                runtime.noticeKind() == NoticeKind.KILL -> panel.cpy().lerp(build, 0.18f).also { it.a = 0.80f }
+                runtime.noticeLine() != null -> panel.cpy().lerp(warning, 0.18f).also { it.a = 0.76f }
+                else -> panelAlt.cpy().also { it.a = 0.62f }
+            }
         }
 
     private fun currentActionBannerTextTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.62f, 0.96f)
-            runtime.groundMode != null -> Color(0.72f, 0.96f, 0.82f, 0.96f)
-            runtime.noticeKind() == NoticeKind.TRADE -> Color(1.00f, 0.92f, 0.68f, 0.98f)
-            runtime.noticeKind() == NoticeKind.LOSS -> Color(1.00f, 0.78f, 0.72f, 0.98f)
-            runtime.noticeKind() == NoticeKind.KILL -> Color(0.84f, 1.00f, 0.78f, 0.98f)
-            runtime.noticeLine() != null -> Color(1.00f, 0.88f, 0.58f, 0.96f)
-            else -> Color(0.86f, 0.94f, 0.98f, 0.94f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.24f).also { it.a = 0.96f }
+                runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                runtime.noticeKind() == NoticeKind.TRADE -> production.cpy().lerp(textPrimary, 0.32f).also { it.a = 0.98f }
+                runtime.noticeKind() == NoticeKind.LOSS -> dangerSoft.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.98f }
+                runtime.noticeKind() == NoticeKind.KILL -> build.cpy().lerp(textPrimary, 0.26f).also { it.a = 0.98f }
+                runtime.noticeLine() != null -> warning.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.96f }
+                else -> textSecondary.cpy().also { it.a = 0.94f }
+            }
         }
 
     private fun currentTopEconomyTone(): Color =
-        when {
-            runtime.attackWarningLine() != null -> Color(1.00f, 0.88f, 0.78f, 0.98f)
-            runtime.noticeLine() != null -> Color(1.00f, 0.94f, 0.74f, 0.98f)
-            else -> Color(0.90f, 0.96f, 1.00f, 0.96f)
+        with(assets.theme.colors) {
+            when {
+                runtime.attackWarningLine() != null -> warningSoft.cpy().lerp(textPrimary, 0.28f).also { it.a = 0.98f }
+                runtime.noticeLine() != null -> production.cpy().lerp(textPrimary, 0.30f).also { it.a = 0.98f }
+                else -> textSecondary.cpy().lerp(commandSoft, 0.10f).also { it.a = 0.96f }
+            }
         }
 
     private fun currentTopSelectionTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.76f, 0.82f, 0.86f, 0.94f)
-            runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(1.00f, 0.94f, 0.68f, 0.98f)
-            else -> Color(0.82f, 0.96f, 1.00f, 0.98f)
+        with(assets.theme.colors) {
+            when {
+                runtime.session.state.selectedIds.isEmpty() -> textMuted.cpy().also { it.a = 0.94f }
+                runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
+                    production.cpy().lerp(textPrimary, 0.34f).also { it.a = 0.98f }
+                else -> commandSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.98f }
+            }
         }
 
     private fun currentTopModeTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(1.00f, 0.92f, 0.64f, 0.98f)
-            runtime.groundMode != null -> Color(0.78f, 0.98f, 0.88f, 0.98f)
-            runtime.pauseOverlayVisible || runtime.playControlState.paused -> Color(0.88f, 0.92f, 1.00f, 0.98f)
-            else -> Color(0.76f, 0.98f, 0.88f, 0.96f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.98f }
+                runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.98f }
+                runtime.pauseOverlayVisible || runtime.playControlState.paused -> commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.98f }
+                else -> selectionSoft.cpy().also { it.a = 0.96f }
+            }
         }
 
     private fun currentAttackWarningCardTone(): Color =
-        when {
-            runtime.isStructureLossWarning() -> Color(0.48f, 0.12f, 0.10f, 0.96f)
-            runtime.attackWarningLine() != null -> Color(0.66f, 0.18f, 0.14f, 0.94f)
-            runtime.noticeKind() == NoticeKind.TRADE -> Color(0.36f, 0.28f, 0.10f, 0.92f)
-            runtime.noticeKind() == NoticeKind.LOSS -> Color(0.34f, 0.18f, 0.16f, 0.92f)
-            runtime.noticeKind() == NoticeKind.KILL -> Color(0.16f, 0.28f, 0.18f, 0.92f)
-            runtime.noticeLine() != null -> Color(0.38f, 0.28f, 0.10f, 0.92f)
-            else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
+        with(assets.theme.colors) {
+            when {
+                runtime.isStructureLossWarning() -> panelStrong.cpy().lerp(danger, 0.42f).also { it.a = 0.96f }
+                runtime.attackWarningLine() != null -> panelStrong.cpy().lerp(danger, 0.54f).also { it.a = 0.94f }
+                runtime.noticeKind() == NoticeKind.TRADE -> panelStrong.cpy().lerp(production, 0.28f).also { it.a = 0.92f }
+                runtime.noticeKind() == NoticeKind.LOSS -> panelStrong.cpy().lerp(danger, 0.32f).also { it.a = 0.92f }
+                runtime.noticeKind() == NoticeKind.KILL -> panelStrong.cpy().lerp(build, 0.26f).also { it.a = 0.92f }
+                runtime.noticeLine() != null -> panelStrong.cpy().lerp(warning, 0.30f).also { it.a = 0.92f }
+                else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
+            }
         }
 
     private fun currentPauseHeaderTone(): Color =
-        when {
-            runtime.attackWarningLine() != null -> Color(0.34f, 0.18f, 0.16f, 0.92f)
-            runtime.noticeLine() != null -> Color(0.30f, 0.24f, 0.10f, 0.92f)
-            else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
+        with(assets.theme.colors) {
+            when {
+                runtime.attackWarningLine() != null -> panelStrong.cpy().lerp(danger, 0.32f).also { it.a = 0.92f }
+                runtime.noticeLine() != null -> panelStrong.cpy().lerp(warning, 0.24f).also { it.a = 0.92f }
+                else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
+            }
         }
 
     private fun currentHelpHeaderTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.30f, 0.24f, 0.10f, 0.92f)
-            runtime.groundMode != null -> Color(0.16f, 0.28f, 0.20f, 0.92f)
-            else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> panelStrong.cpy().lerp(production, 0.24f).also { it.a = 0.92f }
+                runtime.groundMode != null -> panelStrong.cpy().lerp(selection, 0.22f).also { it.a = 0.92f }
+                else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
+            }
         }
 
     private fun currentCommandHintCardTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.86f)
-            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.86f)
-            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.84f)
-            else -> Color(0.12f, 0.16f, 0.18f, 0.82f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> panel.cpy().lerp(production, 0.16f).also { it.a = 0.86f }
+                runtime.groundMode != null -> panel.cpy().lerp(selection, 0.16f).also { it.a = 0.86f }
+                runtime.session.state.selectedIds.isNotEmpty() -> panel.cpy().lerp(command, 0.16f).also { it.a = 0.84f }
+                else -> panelSoft.cpy().also { it.a = 0.82f }
+            }
         }
 
     private fun currentCommandHintTextTone(): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.96f)
-            runtime.groundMode != null -> Color(0.72f, 0.96f, 0.84f, 0.96f)
-            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.76f, 0.92f, 0.98f, 0.96f)
-            else -> Color(0.72f, 0.78f, 0.82f, 0.94f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
+                runtime.session.state.selectedIds.isNotEmpty() -> commandSoft.cpy().lerp(textPrimary, 0.14f).also { it.a = 0.96f }
+                else -> textMuted.cpy().also { it.a = 0.94f }
+            }
         }
 
     private fun currentSelectionHeadlineCardTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.90f)
-            runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(0.18f, 0.24f, 0.12f, 0.92f)
-            else -> Color(0.12f, 0.20f, 0.24f, 0.92f)
+        with(assets.theme.colors) {
+            when {
+                runtime.session.state.selectedIds.isEmpty() -> panelSoft.cpy().also { it.a = 0.90f }
+                runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
+                    panel.cpy().lerp(production, 0.14f).also { it.a = 0.92f }
+                else -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.92f }
+            }
         }
 
     private fun currentSelectionHeadlineTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.76f, 0.84f, 0.88f, 0.94f)
-            runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(0.98f, 0.92f, 0.62f, 0.96f)
-            else -> Color(0.74f, 0.94f, 0.98f, 0.96f)
+        with(assets.theme.colors) {
+            when {
+                runtime.session.state.selectedIds.isEmpty() -> textSecondary.cpy().also { it.a = 0.94f }
+                runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
+                    production.cpy().lerp(textPrimary, 0.24f).also { it.a = 0.96f }
+                else -> selectionSoft.cpy().lerp(textPrimary, 0.14f).also { it.a = 0.96f }
+            }
         }
 
-    private fun selectionFocusBaseTone(): Color = Color(0.98f, 0.92f, 0.56f, 0.96f)
+    private fun selectionFocusBaseTone(): Color = assets.theme.colors.production.cpy().lerp(assets.theme.colors.textPrimary, 0.18f).also { it.a = 0.96f }
 
     private fun selectionFocusShellTone(pulse: Float): Color =
-        Color(0.26f + (pulse * 0.10f), 0.22f + (pulse * 0.06f), 0.08f, 0.96f)
+        assets.theme.colors.panelStrong.cpy().lerp(assets.theme.colors.production, 0.30f + (pulse * 0.10f)).also { it.a = 0.96f }
 
     private fun selectionFocusCardTone(pulse: Float): Color =
-        Color(0.38f + (pulse * 0.08f), 0.30f + (pulse * 0.06f), 0.08f, 0.98f)
+        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.40f + (pulse * 0.08f)).also { it.a = 0.98f }
 
     private fun currentSelectionMetaTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.66f, 0.72f, 0.76f, 0.92f)
-            else -> Color(0.80f, 0.88f, 0.92f, 0.94f)
-        }
+        if (runtime.session.state.selectedIds.isEmpty()) assets.theme.colors.textMuted.cpy().also { it.a = 0.92f }
+        else assets.theme.colors.textSecondary.cpy().also { it.a = 0.94f }
 
     private fun currentRosterTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.64f, 0.70f, 0.74f, 0.90f)
-            else -> Color(0.84f, 0.88f, 0.92f, 0.94f)
-        }
+        if (runtime.session.state.selectedIds.isEmpty()) assets.theme.colors.textMuted.cpy().also { it.a = 0.90f }
+        else assets.theme.colors.textSecondary.cpy().also { it.a = 0.94f }
 
     private fun currentCenterStatusTone(): Color =
-        when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.60f, 0.70f, 0.76f, 0.92f)
-            buildCenterStatusLine() == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
-            else -> Color(0.90f, 0.94f, 0.98f, 0.94f)
+        with(assets.theme.colors) {
+            when {
+                runtime.session.state.selectedIds.isEmpty() -> textMuted.cpy().also { it.a = 0.92f }
+                buildCenterStatusLine() == "Ready" -> commandSoft.cpy().lerp(textPrimary, 0.10f).also { it.a = 0.92f }
+                else -> textSecondary.cpy().also { it.a = 0.94f }
+            }
         }
 
     private fun currentQueueHeaderTone(): Color =
-        when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(1.00f, 0.92f, 0.62f, 0.96f)
-            "RESEARCH" -> Color(0.78f, 0.96f, 1.00f, 0.96f)
-            "CONSTRUCT" -> Color(0.74f, 1.00f, 0.82f, 0.96f)
-            else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
+        with(assets.theme.colors) {
+            when (buildQueueHeaderLine()) {
+                "PRODUCTION" -> production.cpy().lerp(textPrimary, 0.24f).also { it.a = 0.96f }
+                "RESEARCH" -> research.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                "CONSTRUCT" -> build.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                else -> textMuted.cpy().also { it.a = 0.92f }
+            }
         }
 
     private fun compactHint(raw: String): String {
@@ -2195,81 +2220,99 @@ internal class GameScreen(
     }
 
     private fun currentQueueStatusTone(): Color =
-        when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(1.00f, 0.94f, 0.72f, 0.94f)
-            "RESEARCH" -> Color(0.86f, 0.96f, 1.00f, 0.94f)
-            "CONSTRUCT" -> Color(0.84f, 1.00f, 0.90f, 0.94f)
-            else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
+        with(assets.theme.colors) {
+            when (buildQueueHeaderLine()) {
+                "PRODUCTION" -> production.cpy().lerp(textPrimary, 0.38f).also { it.a = 0.94f }
+                "RESEARCH" -> research.cpy().lerp(textPrimary, 0.34f).also { it.a = 0.94f }
+                "CONSTRUCT" -> build.cpy().lerp(textPrimary, 0.34f).also { it.a = 0.94f }
+                else -> textMuted.cpy().also { it.a = 0.88f }
+            }
         }
 
     private fun currentQueueCardTone(): Color =
-        when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(0.18f, 0.14f, 0.08f, 0.74f)
-            "RESEARCH" -> Color(0.10f, 0.14f, 0.20f, 0.74f)
-            "CONSTRUCT" -> Color(0.10f, 0.17f, 0.12f, 0.74f)
-            else -> Color(0.08f, 0.12f, 0.16f, 0.62f)
+        with(assets.theme.colors) {
+            when (buildQueueHeaderLine()) {
+                "PRODUCTION" -> panel.cpy().lerp(production, 0.12f).also { it.a = 0.74f }
+                "RESEARCH" -> panel.cpy().lerp(research, 0.12f).also { it.a = 0.74f }
+                "CONSTRUCT" -> panel.cpy().lerp(build, 0.12f).also { it.a = 0.74f }
+                else -> panelAlt.cpy().also { it.a = 0.62f }
+            }
         }
 
     private fun currentQueueHeaderBackgroundTone(): Color =
-        when (buildQueueHeaderLine()) {
-            "PRODUCTION" -> Color(0.40f, 0.30f, 0.10f, 0.84f)
-            "RESEARCH" -> Color(0.20f, 0.30f, 0.42f, 0.84f)
-            "CONSTRUCT" -> Color(0.20f, 0.34f, 0.22f, 0.84f)
-            else -> Color(0.18f, 0.28f, 0.34f, 0.82f)
+        with(assets.theme.colors) {
+            when (buildQueueHeaderLine()) {
+                "PRODUCTION" -> panelStrong.cpy().lerp(production, 0.22f).also { it.a = 0.84f }
+                "RESEARCH" -> panelStrong.cpy().lerp(research, 0.22f).also { it.a = 0.84f }
+                "CONSTRUCT" -> panelStrong.cpy().lerp(build, 0.22f).also { it.a = 0.84f }
+                else -> panelStrong.cpy().lerp(command, 0.18f).also { it.a = 0.82f }
+            }
         }
 
     private fun currentStatusBadgeTone(): Color =
-        when {
-            runtime.attackWarningLine() != null -> Color(1.00f, 0.70f, 0.58f, 0.98f)
-            runtime.noticeLine() != null -> Color(1.00f, 0.90f, 0.62f, 0.98f)
-            runtime.playControlState.paused -> Color(0.82f, 0.88f, 0.96f, 0.96f)
-            else -> Color(0.62f, 0.96f, 0.80f, 0.96f)
+        with(assets.theme.colors) {
+            when {
+                runtime.attackWarningLine() != null -> dangerSoft.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.98f }
+                runtime.noticeLine() != null -> warningSoft.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.98f }
+                runtime.playControlState.paused -> commandSoft.cpy().lerp(textPrimary, 0.14f).also { it.a = 0.96f }
+                else -> selectionSoft.cpy().lerp(textPrimary, 0.12f).also { it.a = 0.96f }
+            }
         }
 
     private fun currentMinimapTitleTone(): Color =
-        when {
-            runtime.attackWarningLine() != null -> Color(1.00f, 0.78f, 0.64f, 0.98f)
-            runtime.session.state.viewedFaction == null -> Color(0.82f, 0.90f, 0.98f, 0.96f)
-            else -> Color(0.72f, 0.96f, 0.84f, 0.96f)
+        with(assets.theme.colors) {
+            when {
+                runtime.attackWarningLine() != null -> dangerSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.98f }
+                runtime.session.state.viewedFaction == null -> commandSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
+                else -> selectionSoft.cpy().lerp(textPrimary, 0.14f).also { it.a = 0.96f }
+            }
         }
 
     private fun currentMinimapHintTone(): Color =
-        when {
-            runtime.groundMode != null -> Color(0.74f, 0.96f, 0.84f, 0.94f)
-            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.94f)
-            else -> Color(0.66f, 0.74f, 0.80f, 0.90f)
+        with(assets.theme.colors) {
+            when {
+                runtime.groundMode != null -> selectionSoft.cpy().also { it.a = 0.94f }
+                runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.94f }
+                else -> textMuted.cpy().also { it.a = 0.90f }
+            }
         }
 
     private fun currentCommandHeaderTone(groups: List<Pair<String, List<ClientCommandButton>>>): Color =
-        when {
-            runtime.buildModeTypeId != null -> Color(0.98f, 0.90f, 0.58f, 0.96f)
-            runtime.groundMode != null -> Color(0.74f, 0.96f, 0.84f, 0.96f)
-            groups.any { it.first == "Production" && it.second.isNotEmpty() } -> Color(0.88f, 0.92f, 0.98f, 0.96f)
-            else -> Color(0.78f, 0.86f, 0.92f, 0.94f)
+        with(assets.theme.colors) {
+            when {
+                runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
+                groups.any { it.first == "Production" && it.second.isNotEmpty() } -> commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                else -> textSecondary.cpy().also { it.a = 0.94f }
+            }
         }
 
     private fun pingTone(kind: GroundPingKind): Color =
         when (kind) {
-            GroundPingKind.MOVE -> Color(0.34f, 0.98f, 0.58f, 0.94f)
-            GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.96f)
-            GroundPingKind.BUILD -> Color(0.64f, 0.84f, 1.00f, 0.96f)
-            GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.96f)
+            GroundPingKind.MOVE -> assets.theme.colors.selection.cpy().also { it.a = 0.94f }
+            GroundPingKind.ATTACK -> assets.theme.colors.warning.cpy().also { it.a = 0.96f }
+            GroundPingKind.BUILD -> assets.theme.colors.commandSoft.cpy().also { it.a = 0.96f }
+            GroundPingKind.INVALID -> assets.theme.colors.danger.cpy().also { it.a = 0.96f }
         }
 
     private fun commandGroupHeaderTone(group: String): Color =
-        when (group) {
-            "Orders" -> Color(0.10f, 0.20f, 0.26f, 0.86f)
-            "Production" -> Color(0.24f, 0.20f, 0.10f, 0.86f)
-            "Utility" -> Color(0.14f, 0.18f, 0.22f, 0.86f)
-            else -> Color(0.12f, 0.22f, 0.27f, 0.82f)
+        with(assets.theme.colors) {
+            when (group) {
+                "Orders" -> panel.cpy().lerp(command, 0.22f).also { it.a = 0.86f }
+                "Production" -> panel.cpy().lerp(production, 0.22f).also { it.a = 0.86f }
+                "Utility" -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.86f }
+                else -> panel.cpy().lerp(commandSoft, 0.18f).also { it.a = 0.82f }
+            }
         }
 
     private fun commandGroupAccentTone(group: String): Color =
-        when (group) {
-            "Orders" -> Color(0.58f, 0.88f, 0.96f, 0.82f)
-            "Production" -> Color(0.98f, 0.90f, 0.52f, 0.78f)
-            "Utility" -> Color(0.74f, 0.96f, 0.82f, 0.78f)
-            else -> Color(0.58f, 0.88f, 0.96f, 0.72f)
+        with(assets.theme.colors) {
+            when (group) {
+                "Orders" -> commandSoft.cpy().also { it.a = 0.82f }
+                "Production" -> production.cpy().also { it.a = 0.78f }
+                "Utility" -> selectionSoft.cpy().also { it.a = 0.78f }
+                else -> commandSoft.cpy().also { it.a = 0.72f }
+            }
         }
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =

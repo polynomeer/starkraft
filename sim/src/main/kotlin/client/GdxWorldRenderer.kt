@@ -13,18 +13,19 @@ internal class GdxWorldRenderer(
 ) {
     private val screenCamera = OrthographicCamera()
     private val textCamera = OrthographicCamera()
-    private val friendlyColor = Color(0.30f, 0.60f, 1.00f, 1f)
-    private val enemyColor = Color(0.90f, 0.36f, 0.28f, 1f)
-    private val neutralColor = Color(0.78f, 0.69f, 0.42f, 1f)
-    private val selectionColor = Color(0.62f, 1.00f, 0.56f, 1f)
-    private val selectionSoftColor = Color(0.46f, 0.96f, 0.54f, 0.14f)
+    private val colors = assets.theme.colors
+    private val friendlyColor = colors.friendlyFaction.cpy()
+    private val enemyColor = colors.enemyFaction.cpy()
+    private val neutralColor = colors.neutralFaction.cpy()
+    private val selectionColor = colors.selection.cpy()
+    private val selectionSoftColor = colors.selectionSoft.cpy().also { it.a = 0.14f }
 
     private fun pingTone(kind: GroundPingKind): Color =
         when (kind) {
-            GroundPingKind.MOVE -> Color(0.34f, 0.98f, 0.58f, 0.94f)
-            GroundPingKind.ATTACK -> Color(1.00f, 0.58f, 0.30f, 0.96f)
-            GroundPingKind.BUILD -> Color(0.64f, 0.84f, 1.00f, 0.96f)
-            GroundPingKind.INVALID -> Color(0.96f, 0.30f, 0.30f, 0.96f)
+            GroundPingKind.MOVE -> colors.selection.cpy().also { it.a = 0.94f }
+            GroundPingKind.ATTACK -> colors.warning.cpy().also { it.a = 0.96f }
+            GroundPingKind.BUILD -> colors.commandSoft.cpy().also { it.a = 0.96f }
+            GroundPingKind.INVALID -> colors.danger.cpy().also { it.a = 0.96f }
         }
 
     private fun activityTone(entity: EntitySnapshot): Color =
@@ -32,14 +33,14 @@ internal class GdxWorldRenderer(
             entity.activeResearchTech != null -> completionResearchSparkColor
             entity.activeProductionType != null || entity.productionQueueSize > 0 -> completionProductionSparkColor
             entity.underConstruction -> completionBuildSparkColor
-            else -> Color(0.80f, 0.80f, 0.80f, 0.92f)
+            else -> colors.textSecondary.cpy().also { it.a = 0.92f }
         }
 
     private fun damageFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.14f
 
     private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.12f
-    private val fogColor = Color(0.07f, 0.12f, 0.14f, 0.18f)
-    private val shroudColor = Color(0.05f, 0.09f, 0.11f, 0.32f)
+    private val fogColor = colors.fog.cpy()
+    private val shroudColor = colors.shroud.cpy()
     private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
     private val minimapShroudColor = Color(0.04f, 0.08f, 0.10f, 0.26f)
     private val impactFlashColor = Color(1.00f, 0.46f, 0.28f, 0.34f)
@@ -52,12 +53,12 @@ internal class GdxWorldRenderer(
     private val completionProductionSparkColor = Color(1.00f, 0.92f, 0.62f, 0.92f)
     private val completionResearchFlashColor = Color(0.56f, 0.92f, 1.00f, 0.26f)
     private val completionResearchSparkColor = Color(0.78f, 0.96f, 1.00f, 0.92f)
-    private val terrainA = Color(0.10f, 0.15f, 0.11f, 1f)
-    private val terrainB = Color(0.12f, 0.18f, 0.13f, 1f)
-    private val terrainRidge = Color(0.18f, 0.22f, 0.15f, 1f)
-    private val terrainDust = Color(0.22f, 0.19f, 0.13f, 1f)
-    private val terrainMetal = Color(0.15f, 0.18f, 0.21f, 1f)
-    private val mapFrameColor = Color(0.20f, 0.38f, 0.42f, 0.82f)
+    private val terrainA = colors.terrainA.cpy()
+    private val terrainB = colors.terrainB.cpy()
+    private val terrainRidge = colors.terrainRidge.cpy()
+    private val terrainDust = colors.terrainDust.cpy()
+    private val terrainMetal = colors.terrainMetal.cpy()
+    private val mapFrameColor = colors.borderDefault.cpy().also { it.a = 0.82f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -76,7 +77,7 @@ internal class GdxWorldRenderer(
         screenCamera.update()
         shape.projectionMatrix = screenCamera.combined
 
-        Gdx.gl.glClearColor(0.06f, 0.09f, 0.08f, 1f)
+        Gdx.gl.glClearColor(colors.appBackground.r, colors.appBackground.g, colors.appBackground.b, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         beginWorldScissor(width, height, worldViewportHeight)
