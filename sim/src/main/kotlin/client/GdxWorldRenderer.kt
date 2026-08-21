@@ -166,6 +166,36 @@ internal class GdxWorldRenderer(
     private val structureCollapseSmokeColor = colors.textMuted.cpy().also { it.a = 0.16f }
     private val structureCollapseDustColor = colors.terrainDust.cpy().lerp(colors.panelStrong, 0.22f).also { it.a = 0.10f }
     private val structureCollapseEmberColor = colors.warning.cpy().also { it.a = 0.04f }
+    private val unitBodyColor = colors.panel.cpy().lerp(colors.terrainMetal, 0.18f)
+    private val unitShadowColor = colors.scrim.cpy().also { it.a = 0.34f }
+    private val unitTrailShadowColor = colors.scrim.cpy().also { it.a = 0.18f }
+    private val unitTrimColor = colors.textSecondary.cpy().also { it.a = 0.65f }
+    private val unitSpecularColor = colors.textPrimary.cpy().also { it.a = 0.18f }
+    private val meleeRingColor = colors.selection.cpy().also { it.a = 0.18f }
+    private val rangedRingColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.20f).also { it.a = 0.18f }
+    private val meleeCooldownBarColor = colors.selectionSoft.cpy().also { it.a = 0.95f }
+    private val rangedCooldownBarColor = colors.warning.cpy().also { it.a = 0.95f }
+    private val meleeFlashColor = colors.selectionSoft.cpy().also { it.a = 0.24f }
+    private val marineFlashColor = colors.warningSoft.cpy().also { it.a = 0.22f }
+    private val rangedFlashColor = colors.warning.cpy().lerp(colors.production, 0.22f).also { it.a = 0.26f }
+    private val meleeCoreFlashColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.14f).also { it.a = 0.46f }
+    private val marineCoreFlashColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.18f).also { it.a = 0.54f }
+    private val rangedCoreFlashColor = colors.warningSoft.cpy().also { it.a = 0.48f }
+    private val meleeTraceColor = colors.selection.cpy().also { it.a = 0.74f }
+    private val marineTraceColor = colors.warning.cpy().also { it.a = 0.86f }
+    private val rangedTraceColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.14f).also { it.a = 0.78f }
+    private val meleeStrikeGlowColor = colors.selectionSoft.cpy().also { it.a = 0.12f }
+    private val zergSlashColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.88f }
+    private val zergTargetGlowColor = colors.selectionSoft.cpy().also { it.a = 0.40f }
+    private val meleeTargetColor = colors.selection.cpy().also { it.a = 0.78f }
+    private val rangedBeamGlowColor = colors.warning.cpy().also { it.a = 0.20f }
+    private val marineBeamCoreColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.16f).also { it.a = 0.86f }
+    private val rangedBeamCoreColor = colors.warningSoft.cpy().also { it.a = 0.74f }
+    private val rangedImpactGlowColor = colors.warning.cpy().also { it.a = 0.16f }
+    private val marineImpactCoreColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.12f).also { it.a = 0.84f }
+    private val rangedImpactCoreColor = colors.warningSoft.cpy().also { it.a = 0.76f }
+    private val rangedTailColor = colors.warningSoft.cpy().also { it.a = 0.20f }
+    private val impactDustColor = colors.terrainDust.cpy().lerp(colors.panelStrong, 0.24f).also { it.a = 0.12f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -687,16 +717,19 @@ internal class GdxWorldRenderer(
                 val hostile = nearestHostile(snapshot, entity)
                 val cooldownRatio = (entity.weaponCooldownTicks.coerceAtMost(20) / 20f)
                 val isMelee = isMeleeWeapon(entity)
-                shape.color = if (isMelee) Color(0.70f, 0.98f, 0.60f, 0.18f) else Color(0.98f, 0.54f, 0.22f, 0.18f)
+                shape.color = if (isMelee) meleeRingColor else rangedRingColor
                 shape.circle(screenX, screenY, if (isMelee) 14f else 12f)
-                shape.color = if (isMelee) Color(0.78f, 1.00f, 0.70f, 0.95f) else Color(0.98f, 0.72f, 0.26f, 0.95f)
+                shape.color = if (isMelee) meleeCooldownBarColor else rangedCooldownBarColor
                 shape.rect(screenX - 7f, screenY + 9f, cooldownRatio * 14f, 2f)
                 val muzzleX = screenX + directionDx(entity.dir, 8f)
                 val muzzleY = screenY + directionDy(entity.dir, 8f)
                 val flashPulse = ambientPulse(420L)
                 val marineStyle = entity.typeId.contains("Marine", ignoreCase = true)
                 val zerglingStyle = entity.typeId.contains("Zergling", ignoreCase = true)
-                shape.color = if (isMelee) Color(0.86f, 1.00f, 0.74f, 0.24f + (flashPulse * 0.14f)) else if (marineStyle) Color(1.00f, 0.92f, 0.60f, 0.22f + (flashPulse * 0.16f)) else Color(1.00f, 0.80f, 0.46f, 0.26f + (flashPulse * 0.16f))
+                shape.color =
+                    if (isMelee) scratchColorA.set(meleeFlashColor).also { it.a = 0.24f + (flashPulse * 0.14f) }
+                    else if (marineStyle) scratchColorA.set(marineFlashColor).also { it.a = 0.22f + (flashPulse * 0.16f) }
+                    else scratchColorA.set(rangedFlashColor).also { it.a = 0.26f + (flashPulse * 0.16f) }
                 if (marineStyle && !isMelee) {
                     shape.rectLine(muzzleX - directionDy(entity.dir, 3.5f), muzzleY + directionDx(entity.dir, 3.5f), muzzleX + directionDy(entity.dir, 3.5f), muzzleY - directionDx(entity.dir, 3.5f), 3.2f)
                     shape.rectLine(muzzleX, muzzleY, muzzleX + directionDx(entity.dir, 9f), muzzleY + directionDy(entity.dir, 9f), 2.4f)
@@ -710,14 +743,17 @@ internal class GdxWorldRenderer(
                 } else {
                     shape.circle(muzzleX, muzzleY, if (isMelee) 7f + (flashPulse * 2.6f) else 6f + (flashPulse * 2f))
                 }
-                shape.color = if (isMelee) Color(0.92f, 1.00f, 0.82f, 0.46f) else if (marineStyle) Color(1.00f, 0.98f, 0.80f, 0.54f) else Color(1.00f, 0.84f, 0.48f, 0.48f)
+                shape.color =
+                    if (isMelee) meleeCoreFlashColor
+                    else if (marineStyle) marineCoreFlashColor
+                    else rangedCoreFlashColor
                 if (marineStyle && !isMelee) {
                     shape.rectLine(muzzleX - directionDy(entity.dir, 2f), muzzleY + directionDx(entity.dir, 2f), muzzleX + directionDy(entity.dir, 2f), muzzleY - directionDx(entity.dir, 2f), 1.8f)
                     shape.rectLine(muzzleX, muzzleY, muzzleX + directionDx(entity.dir, 6f), muzzleY + directionDy(entity.dir, 6f), 1.4f)
                 } else {
                     shape.circle(muzzleX, muzzleY, if (isMelee) 4.2f else 3.5f)
                 }
-                shape.color = if (isMelee) Color(0.74f, 0.98f, 0.58f, 0.74f) else if (marineStyle) Color(1.00f, 0.72f, 0.24f, 0.86f) else Color(1.00f, 0.63f, 0.28f, 0.78f)
+                shape.color = if (isMelee) meleeTraceColor else if (marineStyle) marineTraceColor else rangedTraceColor
                 shape.rectLine(screenX, screenY, screenX + directionDx(entity.dir, if (isMelee) 10f else if (marineStyle) 15f else 13f), screenY + directionDy(entity.dir, if (isMelee) 10f else if (marineStyle) 15f else 13f), if (isMelee) 2.2f else if (marineStyle) 1.4f else 1.8f)
                 hostile?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
@@ -727,21 +763,21 @@ internal class GdxWorldRenderer(
                         val strikeY = screenY + ((targetY - screenY) * 0.62f)
                         val slashDx = directionDx(entity.dir, 8f)
                         val slashDy = directionDy(entity.dir, 8f)
-                        shape.color = Color(0.84f, 1.00f, 0.74f, 0.12f)
+                        shape.color = meleeStrikeGlowColor
                         shape.circle(strikeX, strikeY, 14f + (flashPulse * 3.5f))
                         if (entity.typeId.contains("Zergling", ignoreCase = true)) {
-                            shape.color = Color(0.92f, 1.00f, 0.84f, 0.88f)
+                            shape.color = zergSlashColor
                             shape.rectLine(strikeX - slashDy, strikeY + slashDx, strikeX + slashDy, strikeY - slashDx, 2.6f)
                             shape.rectLine(strikeX - (slashDx * 0.9f), strikeY - (slashDy * 0.9f), strikeX + (slashDx * 0.9f), strikeY + (slashDy * 0.9f), 1.8f)
                             shape.rectLine(strikeX - (slashDx * 0.2f) - (slashDy * 0.9f), strikeY - (slashDy * 0.2f) + (slashDx * 0.9f), strikeX, strikeY, 1.4f)
-                            shape.color = Color(0.82f, 1.00f, 0.74f, 0.40f)
+                            shape.color = zergTargetGlowColor
                             shape.circle(targetX, targetY, 8f)
                             shape.rectLine(targetX - 5f, targetY, targetX + 5f, targetY, 1.4f)
                         } else {
-                            shape.color = Color(0.96f, 1.00f, 0.88f, 0.82f)
+                            shape.color = meleeCoreFlashColor.cpy().also { it.a = 0.82f }
                             shape.rectLine(strikeX - slashDy, strikeY + slashDx, strikeX + slashDy, strikeY - slashDx, 2.0f)
                         }
-                        shape.color = Color(0.72f, 0.98f, 0.58f, 0.78f)
+                        shape.color = meleeTargetColor
                         shape.circle(targetX, targetY, 5.8f)
                         shape.rectLine(strikeX, strikeY, targetX, targetY, 1.8f)
                     } else {
@@ -753,29 +789,29 @@ internal class GdxWorldRenderer(
                         val farY = muzzleY + ((targetY - muzzleY) * 0.78f)
                         val tailX = targetX - ((targetX - muzzleX) * 0.10f)
                         val tailY = targetY - ((targetY - muzzleY) * 0.10f)
-                        shape.color = if (marineStyle) Color(1.00f, 0.82f, 0.46f, 0.20f) else Color(1.00f, 0.72f, 0.36f, 0.26f)
+                        shape.color = if (marineStyle) rangedBeamGlowColor else scratchColorA.set(rangedBeamGlowColor).also { it.a = 0.26f }
                         shape.rectLine(muzzleX, muzzleY, targetX, targetY, if (marineStyle) 3.4f else 4.2f)
-                        shape.color = if (marineStyle) Color(1.00f, 0.96f, 0.74f, 0.86f) else Color(1.00f, 0.88f, 0.62f, 0.74f)
+                        shape.color = if (marineStyle) marineBeamCoreColor else rangedBeamCoreColor
                         shape.rectLine(muzzleX, muzzleY, targetX, targetY, if (marineStyle) 1.1f else 1.6f)
-                        shape.color = Color(1.00f, 0.92f, 0.76f, 0.72f)
+                        shape.color = deathBurstSparkColor.cpy().also { it.a = 0.72f }
                         shape.circle(nearX, nearY, if (marineStyle) 1.2f else 1.6f)
                         shape.circle(midX, midY, if (marineStyle) 1.8f else 2.4f)
                         shape.circle(farX, farY, if (marineStyle) 1.4f else 1.8f)
-                        shape.color = if (marineStyle) Color(1.00f, 0.86f, 0.56f, 0.16f) else Color(1.00f, 0.78f, 0.44f, 0.18f)
+                        shape.color = if (marineStyle) rangedImpactGlowColor else scratchColorA.set(rangedImpactGlowColor).also { it.a = 0.18f }
                         shape.circle(targetX, targetY, 8f)
-                        shape.color = if (marineStyle) Color(1.00f, 0.98f, 0.80f, 0.84f) else Color(1.00f, 0.92f, 0.72f, 0.76f)
+                        shape.color = if (marineStyle) marineImpactCoreColor else rangedImpactCoreColor
                         shape.circle(targetX, targetY, 3.6f)
-                        shape.color = if (marineStyle) Color(1.00f, 0.92f, 0.74f, 0.20f) else Color(1.00f, 0.82f, 0.58f, 0.18f)
+                        shape.color = rangedTailColor
                         shape.circle(tailX, tailY, if (marineStyle) 3.8f else 4.8f)
-                        shape.color = if (marineStyle) Color(0.76f, 0.78f, 0.82f, 0.10f) else Color(0.40f, 0.38f, 0.34f, 0.12f)
+                        shape.color = impactDustColor
                         shape.circle(targetX + 2f, targetY + 3f, if (marineStyle) 2.8f else 3.4f)
                         shape.circle(targetX - 3f, targetY + 5f, if (marineStyle) 2.1f else 2.8f)
                         shape.rect(targetX - 7f, targetY - 1f, 14f, 2f)
                         shape.rect(targetX - 1f, targetY - 7f, 2f, 14f)
-                        shape.color = Color(1.00f, 0.90f, 0.70f, 0.36f)
+                        shape.color = deathBurstSparkColor.cpy().also { it.a = 0.36f }
                         shape.circle(midX, midY, 2.2f)
                         if (marineStyle) {
-                            shape.color = Color(1.00f, 0.96f, 0.78f, 0.44f)
+                            shape.color = marineImpactCoreColor.cpy().also { it.a = 0.44f }
                             shape.rectLine(targetX - 4f, targetY - 4f, targetX + 4f, targetY + 4f, 1.2f)
                             shape.rectLine(targetX - 4f, targetY + 4f, targetX + 4f, targetY - 4f, 1.2f)
                         }
@@ -1666,17 +1702,17 @@ internal class GdxWorldRenderer(
         val recoilBack = attackRecovery * 1.4f
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, (lead * 0.9f) - (recoilBack * 0.45f))
         val y = screenY + bobY + directionDy(entity.dir, (lead * 0.5f) - (recoilBack * 0.30f))
-        val body = Color(0.17f, 0.19f, 0.22f, 1f)
+        val body = unitBodyColor
         val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
         val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
         val shadowRadius = if (selected) 9f else 7f
         val typeName = entity.typeId.orEmpty()
-        shape.color = Color(0f, 0f, 0f, 0.34f)
+        shape.color = unitShadowColor
         val shadowX = x + 1.5f - directionDx(entity.dir, lead * 0.45f)
         val shadowY = screenY + 1.5f - directionDy(entity.dir, lead * 0.25f)
         shape.circle(shadowX, shadowY, shadowRadius)
         if (moving) {
-            shape.color = Color(0f, 0f, 0f, 0.18f)
+            shape.color = unitTrailShadowColor
             shape.rectLine(
                 shadowX - directionDx(entity.dir, 1.5f),
                 shadowY - directionDy(entity.dir, 1.5f),
@@ -1698,7 +1734,7 @@ internal class GdxWorldRenderer(
                 shape.rectLine(x - 4f - bodyLean, y + 4f + toolSwing, x + 4f + bodyLean, y + 4f - toolSwing, 1.2f)
                 shape.rect(x - 6.2f - bodyLean, y - 0.7f + toolSwing, 1.6f, 1.4f)
                 shape.rect(x + 4.6f + bodyLean, y - 0.7f - toolSwing, 1.6f, 1.4f)
-                shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
+                shape.color = unitTrimColor
                 shape.rectLine(
                     x + directionDx(entity.dir, 0.8f),
                     y + directionDy(entity.dir, 0.8f),
@@ -1706,7 +1742,7 @@ internal class GdxWorldRenderer(
                     y + directionDy(entity.dir, 5.8f),
                     1.4f
                 )
-                shape.color = Color.WHITE.cpy().apply { a = 0.18f }
+                shape.color = unitSpecularColor
                 shape.circle(x - 1f + bodyLean * 0.3f, y - 1f, 2.2f)
             }
             typeName.contains("Zergling", ignoreCase = true) -> {
@@ -1745,7 +1781,7 @@ internal class GdxWorldRenderer(
                     y + 3.8f + attackLunge + crouch,
                     1f
                 )
-                shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
+                shape.color = deathBurstSparkColor.cpy().also { it.a = 0.68f }
                 shape.rectLine(
                     x,
                     y + crouch,
@@ -1766,7 +1802,7 @@ internal class GdxWorldRenderer(
                 shape.color = trim
                 shape.rect(x - 1.5f + aimLean, y - 6.8f, 3f, 2.8f)
                 shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
-                shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
+                shape.color = deathBurstSparkColor.cpy().also { it.a = 0.72f }
                 shape.rectLine(
                     x + aimLean,
                     y,
@@ -1775,7 +1811,7 @@ internal class GdxWorldRenderer(
                     1.9f
                 )
                 if (attackReady > 0f) {
-                    shape.color = Color(1.00f, 0.78f, 0.34f, 0.20f + (attackReady * 0.22f))
+                    shape.color = scratchColorA.set(rangedBeamGlowColor).also { it.a = 0.20f + (attackReady * 0.22f) }
                     shape.rectLine(
                         x + directionDx(entity.dir, 4.2f),
                         y + directionDy(entity.dir, 4.2f),
@@ -1785,7 +1821,7 @@ internal class GdxWorldRenderer(
                     )
                 }
                 if (attackRecovery > 0f) {
-                    shape.color = Color(0.78f, 0.82f, 0.86f, 0.12f + (attackRecovery * 0.10f))
+                    shape.color = scratchColorA.set(impactDustColor).also { it.a = 0.12f + (attackRecovery * 0.10f) }
                     shape.circle(
                         x + directionDx(entity.dir, 10.5f + (attackRecovery * 1.5f)),
                         y + directionDy(entity.dir, 10.5f + (attackRecovery * 1.5f)),
@@ -1810,7 +1846,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 1.4f + aimBrace, y - 6.5f, 2.8f, 2.8f)
                 shape.rect(x - 6.5f, y - 0.8f, 2.4f, 1.6f)
                 shape.rect(x + 4.1f, y - 0.8f, 2.4f, 1.6f)
-                shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
+                shape.color = deathBurstSparkColor.cpy().also { it.a = 0.72f }
                 shape.rectLine(
                     x + aimBrace,
                     y,
@@ -1819,18 +1855,18 @@ internal class GdxWorldRenderer(
                     1.8f
                 )
                 if (entity.weaponCooldownTicks > 0) {
-                    shape.color = Color(1.00f, 0.68f, 0.32f, 0.40f)
+                    shape.color = deathBurstCoreColor
                     shape.rectLine(x - directionDx(entity.dir, 4f), y - directionDy(entity.dir, 4f), x, y, 2.4f)
                 }
                 if (attackRecovery > 0f) {
-                    shape.color = Color(0.74f, 0.80f, 0.84f, 0.10f + (attackRecovery * 0.08f))
+                    shape.color = scratchColorA.set(impactDustColor).also { it.a = 0.10f + (attackRecovery * 0.08f) }
                     shape.circle(
                         x + directionDx(entity.dir, 8.8f + (attackRecovery * 1.4f)),
                         y + directionDy(entity.dir, 8.8f + (attackRecovery * 1.4f)),
                         2.4f + (attackRecovery * 1.5f)
                     )
                 }
-                shape.color = Color.WHITE.cpy().apply { a = 0.18f }
+                shape.color = unitSpecularColor
                 shape.rect(x - 1.5f, y - 4.5f, 3f, 4f)
             }
             else -> {
@@ -1842,9 +1878,9 @@ internal class GdxWorldRenderer(
                 shape.color = trim
                 shape.rect(x - 2.5f, y - 4.5f, 5f, 2.4f)
                 shape.rect(x - 5.5f, y + 2.2f, 11f, 1.6f)
-                shape.color = Color(0.85f, 0.92f, 0.98f, 0.58f)
+                shape.color = colors.commandSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.58f }
                 shape.rectLine(x, y, x + directionDx(entity.dir, 6f), y + directionDy(entity.dir, 6f), 1.5f)
-                shape.color = Color.WHITE.cpy().apply { a = 0.14f }
+                shape.color = colors.textPrimary.cpy().also { it.a = 0.14f }
                 shape.rect(x - 3.5f, y - 2.5f, 4.5f, 2.5f)
             }
         }
