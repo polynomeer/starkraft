@@ -1069,24 +1069,29 @@ internal class GameScreen(
         Table().apply {
             background = null
             add(content).expandX().fillX().row()
-            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX().padTop(2f)
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(assets.theme.colors.borderDefault.cpy().also { it.a = 0.54f })
+                }
+            ).height(1f).expandX().fillX().padTop(2f)
         }
 
     private fun buildCommandGlyph(actionId: String, disabled: Boolean, checked: Boolean): Table {
+        val colors = assets.theme.colors
         val frameColor =
             when {
-                disabled -> Color(0.04f, 0.05f, 0.07f, 0.94f)
-                checked -> Color(0.34f, 0.40f, 0.16f, 0.98f)
-                else -> Color(0.05f, 0.09f, 0.12f, 0.95f)
+                disabled -> colors.panelAlt.cpy().also { it.a = 0.94f }
+                checked -> colors.panelStrong.cpy().lerp(colors.production, 0.26f).also { it.a = 0.98f }
+                else -> colors.panelAlt.cpy().also { it.a = 0.95f }
             }
         val accentColor =
             when {
-                disabled -> Color(1f, 1f, 1f, 0.04f)
-                checked -> Color(1f, 0.96f, 0.62f, 0.18f)
-                actionId == "attackMove" -> Color(1.00f, 0.62f, 0.38f, 0.22f)
-                actionId.startsWith("build:") -> Color(1.00f, 0.82f, 0.44f, 0.18f)
-                actionId.startsWith("train:") || actionId.startsWith("research:") -> Color(0.82f, 0.88f, 1.00f, 0.18f)
-                else -> Color(1f, 1f, 1f, 0.10f)
+                disabled -> colors.textPrimary.cpy().also { it.a = 0.04f }
+                checked -> colors.production.cpy().also { it.a = 0.18f }
+                actionId == "attackMove" -> colors.warning.cpy().also { it.a = 0.22f }
+                actionId.startsWith("build:") -> colors.production.cpy().also { it.a = 0.18f }
+                actionId.startsWith("train:") || actionId.startsWith("research:") -> colors.research.cpy().also { it.a = 0.18f }
+                else -> colors.textPrimary.cpy().also { it.a = 0.10f }
             }
         return Table().apply {
             background = assets.panelDrawable(frameColor)
@@ -1096,23 +1101,23 @@ internal class GameScreen(
                     background = assets.panelDrawable(accentColor)
                     when {
                         actionId == "attackMove" -> {
-                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.72f, 0.42f, if (disabled) 0.16f else 0.82f)) }).width(2f).height(8f).padRight(1f)
-                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.72f, 0.42f, if (disabled) 0.16f else 0.82f)) }).width(6f).height(2f)
+                            add(Table().apply { background = assets.panelDrawable(colors.warning.cpy().also { it.a = if (disabled) 0.16f else 0.82f }) }).width(2f).height(8f).padRight(1f)
+                            add(Table().apply { background = assets.panelDrawable(colors.warning.cpy().also { it.a = if (disabled) 0.16f else 0.82f }) }).width(6f).height(2f)
                         }
                         actionId == "move" || actionId == "patrol" || actionId == "hold" -> {
-                            add(Table().apply { background = assets.panelDrawable(Color(0.62f, 0.90f, 0.96f, if (disabled) 0.14f else 0.78f)) }).width(6f).height(2f).row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.62f, 0.90f, 0.96f, if (disabled) 0.14f else 0.78f)) }).width(2f).height(5f)
+                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = if (disabled) 0.14f else 0.78f }) }).width(6f).height(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = if (disabled) 0.14f else 0.78f }) }).width(2f).height(5f)
                         }
                         actionId.startsWith("build:") -> {
-                            add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.82f, 0.42f, if (disabled) 0.14f else 0.82f)) }).size(6f, 2f).row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.82f, 0.42f, if (disabled) 0.14f else 0.82f)) }).size(2f, 6f)
+                            add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(6f, 2f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(2f, 6f)
                         }
                         actionId.startsWith("train:") || actionId.startsWith("research:") -> {
-                            add(Table().apply { background = assets.panelDrawable(Color(0.72f, 0.82f, 1.00f, if (disabled) 0.14f else 0.82f)) }).width(7f).height(2f).row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.72f, 0.82f, 1.00f, if (disabled) 0.14f else 0.82f)) }).width(5f).height(2f)
+                            add(Table().apply { background = assets.panelDrawable(colors.research.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(7f).height(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.research.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(5f).height(2f)
                         }
                         else -> {
-                            add(Table().apply { background = assets.panelDrawable(Color(1f, 1f, 1f, if (disabled) 0.10f else 0.48f)) }).size(4f, 4f)
+                            add(Table().apply { background = assets.panelDrawable(colors.textPrimary.cpy().also { it.a = if (disabled) 0.10f else 0.48f }) }).size(4f, 4f)
                         }
                     }
                 }
@@ -1122,27 +1127,28 @@ internal class GameScreen(
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
+            val colors = assets.theme.colors
+            background = assets.panelDrawable(colors.scrim.cpy().also { it.a = 0.68f })
             pad(1f, 1f, 2f, 1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.22f))
+                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.22f })
                     pad(1f, 1f, 2f, 1f)
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.66f))
+                                    background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.66f })
                                 }
                             ).size(12f, 3f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.78f })
                                 }
                             ).width(6f).height(2f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
+                                    background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.78f })
                                 }
                             ).width(3f).height(6f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
@@ -1150,37 +1156,37 @@ internal class GameScreen(
                                 Table().apply {
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
+                                            background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.78f })
                                         }
                                     ).width(20f).height(2f).right().row()
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.78f))
+                                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.14f).also { it.a = 0.78f })
                                         }
                                     ).width(8f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.78f))
+                                            background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.78f })
                                         }
                                     ).width(10f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.78f))
+                                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.12f).also { it.a = 0.78f })
                                         }
                                     ).width(4f).height(4f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.78f))
+                                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.78f })
                                         }
                                     ).width(9f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
+                                            background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.78f })
                                         }
                                     ).width(3f).height(5f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
+                                            background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.78f })
                                         }
                                     ).width(6f).height(2f).right().padTop(1f)
                                 }
@@ -1227,7 +1233,7 @@ internal class GameScreen(
         centerStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
         val bits = buildCenterStatusBits()
         if (bits.isEmpty()) {
-            centerStatusStrip.add(buildStatusChip("RDY", Color(0.20f, 0.40f, 0.46f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.92f)))
+            centerStatusStrip.add(buildStatusChip("RDY", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.22f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.92f }))
             return
         }
         bits.forEachIndexed { index, bit ->
@@ -1251,26 +1257,26 @@ internal class GameScreen(
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
-                add(StatusChip("O ${it.lowercase().take(4)}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
+                add(StatusChip("O ${it.lowercase().take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
             }
-            if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", Color(0.16f, 0.21f, 0.11f, 0.90f), Color(0.92f, 0.88f, 0.48f, 0.90f)))
-            if (lead.pathRemainingNodes > 0) add(StatusChip("P${lead.pathRemainingNodes}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
+            if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.20f).also { it.a = 0.90f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
+            if (lead.pathRemainingNodes > 0) add(StatusChip("P${lead.pathRemainingNodes}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
             lead.activeProductionType?.let {
-                add(StatusChip("P ${it.take(4)}", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                add(StatusChip("P ${it.take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
             }
             lead.activeResearchTech?.let {
-                add(StatusChip("R ${it.take(4)}", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+                add(StatusChip("R ${it.take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
             }
-            if (lead.underConstruction) add(StatusChip("BLD", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+            if (lead.underConstruction) add(StatusChip("BLD", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
             lead.harvestPhase?.let {
-                add(StatusChip("H ${it.lowercase().take(3)}", Color(0.10f, 0.26f, 0.20f, 0.92f), Color(0.58f, 0.92f, 0.72f, 0.90f)))
+                add(StatusChip("H ${it.lowercase().take(3)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
             }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
                 add(
                     StatusChip(
                         "C ${(lead.harvestCargoKind ?: "res").take(1).uppercase()}${lead.harvestCargoAmount}",
-                        Color(0.10f, 0.26f, 0.20f, 0.92f),
-                        Color(0.58f, 0.92f, 0.72f, 0.90f)
+                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f },
+                        assets.theme.colors.build.cpy().also { it.a = 0.90f }
                     )
                 )
             }
@@ -1298,7 +1304,7 @@ internal class GameScreen(
         queueStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
         val bits = buildQueueStatusBits()
         if (bits.isEmpty()) {
-            queueStatusStrip.add(buildStatusChip("IDLE", Color(0.10f, 0.14f, 0.18f, 0.86f), Color(0.50f, 0.58f, 0.66f, 0.86f)))
+            queueStatusStrip.add(buildStatusChip("IDLE", assets.theme.colors.panelAlt.cpy().also { it.a = 0.86f }, assets.theme.colors.textMuted.cpy().also { it.a = 0.86f }))
             return
         }
         bits.forEachIndexed { index, bit ->
@@ -1319,36 +1325,36 @@ internal class GameScreen(
                 add(
                     StatusChip(
                         "P ${(lead.activeProductionType ?: "Q").take(4)}",
-                        Color(0.20f, 0.26f, 0.12f, 0.92f),
-                        Color(0.98f, 0.84f, 0.46f, 0.90f)
+                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f },
+                        assets.theme.colors.production.cpy().also { it.a = 0.90f }
                     )
                 )
                 if (lead.productionQueueSize > 0) {
-                    add(StatusChip("x${lead.productionQueueSize}", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                    add(StatusChip("x${lead.productionQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
                 }
                 if (lead.activeProductionRemainingTicks > 0) {
-                    add(StatusChip("${lead.activeProductionRemainingTicks}t", Color(0.20f, 0.26f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                    add(StatusChip("${lead.activeProductionRemainingTicks}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
                 }
             }
             if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
                 add(
                     StatusChip(
                         "R ${(lead.activeResearchTech ?: "Q").take(4)}",
-                        Color(0.16f, 0.18f, 0.30f, 0.92f),
-                        Color(0.78f, 0.84f, 1.00f, 0.92f)
+                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f },
+                        assets.theme.colors.research.cpy().also { it.a = 0.92f }
                     )
                 )
                 if (lead.researchQueueSize > 0) {
-                    add(StatusChip("x${lead.researchQueueSize}", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+                    add(StatusChip("x${lead.researchQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
                 }
                 if (lead.activeResearchRemainingTicks > 0) {
-                    add(StatusChip("${lead.activeResearchRemainingTicks}t", Color(0.16f, 0.18f, 0.30f, 0.92f), Color(0.78f, 0.84f, 1.00f, 0.92f)))
+                    add(StatusChip("${lead.activeResearchRemainingTicks}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
                 }
             }
             if (lead.underConstruction) {
-                add(StatusChip("BLD", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                add(StatusChip("BLD", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
                 lead.constructionRemainingTicks?.takeIf { it > 0 }?.let {
-                    add(StatusChip("${it}t", Color(0.20f, 0.24f, 0.12f, 0.92f), Color(0.98f, 0.84f, 0.46f, 0.90f)))
+                    add(StatusChip("${it}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
                 }
             }
         }.take(6)
@@ -1406,6 +1412,7 @@ internal class GameScreen(
     }
 
     private fun updateHealthBar() {
+        val colors = assets.theme.colors
         val snapshot = runtime.snapshot
         val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
         val takingDamage = selected.any { runtime.isDamageFlashActive(it.id) }
@@ -1426,9 +1433,9 @@ internal class GameScreen(
             assets.panelDrawable(
                 when {
                     takingDamage && (impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE) ->
-                        Color(0.12f, 0.20f, 0.10f, 0.96f)
-                    takingDamage -> Color(0.20f, 0.08f, 0.08f, 0.96f)
-                    else -> Color(0.12f, 0.14f, 0.16f, 1f)
+                        colors.panel.cpy().lerp(colors.build, 0.24f).also { it.a = 0.96f }
+                    takingDamage -> colors.panel.cpy().lerp(colors.danger, 0.28f).also { it.a = 0.96f }
+                    else -> colors.panelAlt.cpy()
                 }
             )
         healthBarFill.background =
@@ -1436,21 +1443,21 @@ internal class GameScreen(
                 when {
                     ratio >= 0.66f ->
                         when {
-                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(0.68f, 1.00f, 0.60f, 1f)
-                            takingDamage -> Color(0.44f, 0.92f, 0.56f, 1f)
-                            else -> Color(0.22f, 0.78f, 0.42f, 1f)
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f)
+                            takingDamage -> colors.build.cpy().lerp(colors.textPrimary, 0.10f)
+                            else -> colors.selection.cpy()
                         }
                     ratio >= 0.33f ->
                         when {
-                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(0.92f, 1.00f, 0.42f, 1f)
-                            takingDamage -> Color(1.00f, 0.82f, 0.34f, 1f)
-                            else -> Color(0.87f, 0.73f, 0.20f, 1f)
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.08f)
+                            takingDamage -> colors.warning.cpy().lerp(colors.textPrimary, 0.06f)
+                            else -> colors.production.cpy().lerp(colors.textPrimary, 0.06f)
                         }
                     else ->
                         when {
-                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> Color(1.00f, 0.58f, 0.34f, 1f)
-                            takingDamage -> Color(1.00f, 0.42f, 0.34f, 1f)
-                            else -> Color(0.84f, 0.30f, 0.25f, 1f)
+                            impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE -> colors.warning.cpy().lerp(colors.dangerSoft, 0.28f)
+                            takingDamage -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.06f)
+                            else -> colors.danger.cpy().lerp(colors.textPrimary, 0.10f)
                         }
                 }
             )
@@ -1488,6 +1495,7 @@ internal class GameScreen(
     }
 
     private fun buildSelectionSlot(entity: EntitySnapshot, layout: CenterPanelLayout): Table {
+        val colors = assets.theme.colors
         val visualLayout = computeSelectionSlotVisualLayout(layout.rosterSlotSize)
         val hpRatio = entity.hp.toFloat() / entity.maxHp.coerceAtLeast(1).toFloat()
         val focused = focusedSelectionId == entity.id || (focusedSelectionId == null && runtime.session.state.selectedIds.firstOrNull() == entity.id)
@@ -1498,37 +1506,37 @@ internal class GameScreen(
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
         val tone =
             when {
-                entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
-                entity.footprintWidth != null -> Color(0.28f, 0.24f, 0.15f, 0.96f)
-                else -> Color(0.16f, 0.25f, 0.18f, 0.96f)
+                entity.weaponId != null -> colors.panel.cpy().lerp(colors.command, 0.24f).also { it.a = 0.96f }
+                entity.footprintWidth != null -> colors.panel.cpy().lerp(colors.production, 0.24f).also { it.a = 0.96f }
+                else -> colors.panel.cpy().lerp(colors.build, 0.22f).also { it.a = 0.96f }
             }
         val badgeTone =
             when {
-                entity.footprintWidth != null -> Color(0.44f, 0.34f, 0.16f, 0.96f)
-                isWorker -> Color(0.20f, 0.44f, 0.28f, 0.96f)
-                entity.weaponId != null -> Color(0.18f, 0.46f, 0.48f, 0.96f)
-                else -> Color(0.28f, 0.34f, 0.40f, 0.96f)
+                entity.footprintWidth != null -> colors.production.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
+                isWorker -> colors.build.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
+                entity.weaponId != null -> colors.commandSoft.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
+                else -> colors.textMuted.cpy().lerp(colors.panelStrong, 0.20f).also { it.a = 0.96f }
             }
         val hpColor =
             when {
                 impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE ->
                     when {
-                        hpRatio >= 0.66f -> Color(0.68f, 1.00f, 0.60f, 1f)
-                        hpRatio >= 0.33f -> Color(0.92f, 1.00f, 0.42f, 1f)
-                        else -> Color(1.00f, 0.58f, 0.34f, 1f)
+                        hpRatio >= 0.66f -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f)
+                        hpRatio >= 0.33f -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.08f)
+                        else -> colors.warning.cpy().lerp(colors.dangerSoft, 0.24f)
                     }
-                hpRatio >= 0.66f -> Color(0.22f, 0.78f, 0.42f, 1f)
-                hpRatio >= 0.33f -> Color(0.87f, 0.73f, 0.20f, 1f)
-                else -> Color(0.84f, 0.30f, 0.25f, 1f)
+                hpRatio >= 0.66f -> colors.selection.cpy()
+                hpRatio >= 0.33f -> colors.production.cpy().lerp(colors.textPrimary, 0.06f)
+                else -> colors.danger.cpy().lerp(colors.textPrimary, 0.10f)
             }
         val shortName = buildSelectionSlotCode(entity)
         return Table().apply {
             background =
                 assets.panelDrawable(
                     if (focused) selectionFocusShellTone(focusPulse)
-                    else if (clickPulse > 0f) Color(0.14f, 0.20f, 0.16f, 0.94f).lerp(Color(0.40f, 0.56f, 0.32f, 0.96f), clickPulse * 0.34f)
-                    else if (damaged) Color(0.22f, 0.10f, 0.10f, 0.94f)
-                    else Color(0.08f, 0.12f, 0.16f, 0.92f)
+                    else if (clickPulse > 0f) colors.panelStrong.cpy().lerp(colors.selection, 0.24f + (clickPulse * 0.10f)).also { it.a = 0.94f }
+                    else if (damaged) colors.panelStrong.cpy().lerp(colors.danger, 0.26f).also { it.a = 0.94f }
+                    else colors.panelAlt.cpy().also { it.a = 0.92f }
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             pad(1f)
@@ -1537,7 +1545,7 @@ internal class GameScreen(
                     background =
                         assets.panelDrawable(
                             if (focused) selectionFocusCardTone(focusPulse)
-                            else if (clickPulse > 0f) tone.cpy().lerp(Color(0.40f, 0.54f, 0.30f, 0.96f), clickPulse * 0.28f)
+                            else if (clickPulse > 0f) tone.cpy().lerp(colors.selectionSoft, clickPulse * 0.28f)
                             else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
                             else tone
                         )
@@ -1547,14 +1555,14 @@ internal class GameScreen(
                             background =
                                 assets.panelDrawable(
                                     if (focused) selectionFocusBaseTone().cpy().apply { a = 0.62f + (focusPulse * 0.18f) }
-                                    else if (damaged) Color(1.00f, 0.74f, 0.64f, 0.28f)
-                                    else Color(1f, 1f, 1f, 0.08f)
+                                    else if (damaged) colors.dangerSoft.cpy().also { it.a = 0.28f }
+                                    else colors.textPrimary.cpy().also { it.a = 0.08f }
                                 )
                         }
                     ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(2f).row()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
+                            background = assets.panelDrawable(colors.textPrimary.cpy().also { it.a = if (focused) 0.08f else 0.04f })
                             pad(2f, 1f, 0.5f, 1f)
                             add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
                         }
@@ -1567,7 +1575,7 @@ internal class GameScreen(
                                     background =
                                         assets.panelDrawable(
                                             if (focused) selectionFocusBaseTone().cpy().lerp(Color.WHITE, 0.12f)
-                                            else Color(1f, 1f, 1f, 0.08f)
+                                            else colors.textPrimary.cpy().also { it.a = 0.08f }
                                         )
                                 }
                             ).size(6f * visualLayout.glyphScale, visualLayout.topBarHeight)
@@ -1576,9 +1584,9 @@ internal class GameScreen(
                                 Table().apply {
                                 background =
                                     assets.panelDrawable(
-                                        if (impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE) Color(0.82f, 1.00f, 0.58f, 0.96f)
-                                        else if (damaged) Color(0.92f, 0.34f, 0.28f, 0.96f)
-                                        else Color(1f, 1f, 1f, 0.06f)
+                                        if (impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE) colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.96f }
+                                        else if (damaged) colors.dangerSoft.cpy().also { it.a = 0.96f }
+                                        else colors.textPrimary.cpy().also { it.a = 0.06f }
                                     )
                                 }
                             ).size(visualLayout.markerSize, visualLayout.markerSize)
@@ -1589,8 +1597,8 @@ internal class GameScreen(
                             background =
                                 assets.panelDrawable(
                                     if (focused) Color(0.16f, 0.20f, 0.08f, 1f)
-                                    else if (damaged) Color(0.18f, 0.08f, 0.08f, 1f)
-                                    else Color(0.09f, 0.11f, 0.13f, 1f)
+                                    else if (damaged) colors.panel.cpy().lerp(colors.danger, 0.24f).also { it.a = 1f }
+                                    else colors.panelAlt.cpy()
                                 )
                             add(
                                 Table().apply {
