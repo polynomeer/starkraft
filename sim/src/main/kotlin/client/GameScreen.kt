@@ -1216,11 +1216,12 @@ internal class GameScreen(
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) return emptyList()
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        val queueChipTone = resolveQueueChipTone(lead)
         return buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
                 add(StatusChip("O ${it.lowercase().take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
             }
-            if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.20f).also { it.a = 0.90f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
+            if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", queueChipTone.first, queueChipTone.second))
             if (lead.pathRemainingNodes > 0) add(StatusChip("P${lead.pathRemainingNodes}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
             lead.activeProductionType?.let {
                 add(StatusChip("P ${it.take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
@@ -1242,6 +1243,27 @@ internal class GameScreen(
                 )
             }
         }.take(6)
+    }
+
+    private fun resolveQueueChipTone(entity: EntitySnapshot): Pair<Color, Color> {
+        val panel = assets.theme.colors.panel
+        val order = entity.activeOrder?.lowercase()
+        val phase = entity.harvestPhase?.lowercase()
+        return when {
+            order == "attack" || order == "attackmove" ->
+                panel.cpy().lerp(assets.theme.colors.warning, 0.24f).also { it.a = 0.92f } to assets.theme.colors.warning.cpy().also { it.a = 0.92f }
+            phase == "gather" || phase == "return" || order == "construct" ->
+                panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f } to
+                    if (entity.harvestCargoKind == "gas") assets.theme.colors.build.cpy().also { it.a = 0.92f } else assets.theme.colors.production.cpy().also { it.a = 0.90f }
+            order == "patrol" ->
+                panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f } to assets.theme.colors.research.cpy().also { it.a = 0.92f }
+            order == "hold" ->
+                panel.cpy().lerp(assets.theme.colors.panelStrong, 0.24f).also { it.a = 0.92f } to assets.theme.colors.textSecondary.cpy().also { it.a = 0.92f }
+            entity.buildTargetId != null || entity.rallyX != null || entity.rallyY != null ->
+                panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f } to assets.theme.colors.build.cpy().also { it.a = 0.90f }
+            else ->
+                panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f } to assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }
+        }
     }
 
     private fun buildStatusChip(text: String, backgroundTone: Color, accentTone: Color): Table =

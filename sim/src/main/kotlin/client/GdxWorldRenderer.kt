@@ -110,10 +110,18 @@ internal class GdxWorldRenderer(
     private val pathTrailGlowColor = colors.commandSoft.cpy().also { it.a = 0.14f }
     private val pathTrailLineColor = colors.command.cpy().lerp(colors.commandSoft, 0.18f).also { it.a = 0.34f }
     private val pathTrailSparkColor = colors.textPrimary.cpy().lerp(colors.commandSoft, 0.12f).also { it.a = 0.12f }
-    private val queueMarkerFillColor = colors.panelStrong.cpy().lerp(colors.production, 0.18f).also { it.a = 0.92f }
-    private val queueMarkerAccentColor = colors.selectionSoft.cpy().lerp(colors.production, 0.36f).also { it.a = 0.96f }
-    private val queueGhostLineColor = colors.selectionSoft.cpy().lerp(colors.production, 0.28f).also { it.a = 0.44f }
-    private val queueGhostDotColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.86f }
+    private val queueMoveFillColor = colors.panelStrong.cpy().lerp(colors.command, 0.18f).also { it.a = 0.92f }
+    private val queueMoveAccentColor = colors.selectionSoft.cpy().lerp(colors.commandSoft, 0.28f).also { it.a = 0.96f }
+    private val queueAttackFillColor = colors.panelStrong.cpy().lerp(colors.warning, 0.18f).also { it.a = 0.92f }
+    private val queueAttackAccentColor = colors.warningSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.96f }
+    private val queueHarvestFillColor = colors.panelStrong.cpy().lerp(colors.production, 0.18f).also { it.a = 0.92f }
+    private val queueHarvestAccentColor = colors.production.cpy().lerp(colors.selectionSoft, 0.24f).also { it.a = 0.96f }
+    private val queuePatrolFillColor = colors.panelStrong.cpy().lerp(colors.research, 0.18f).also { it.a = 0.92f }
+    private val queuePatrolAccentColor = colors.research.cpy().lerp(colors.textPrimary, 0.14f).also { it.a = 0.96f }
+    private val queueHoldFillColor = colors.panelStrong.cpy().lerp(colors.borderDefault, 0.18f).also { it.a = 0.92f }
+    private val queueHoldAccentColor = colors.textSecondary.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.96f }
+    private val queueBuildFillColor = colors.panelStrong.cpy().lerp(colors.build, 0.18f).also { it.a = 0.92f }
+    private val queueBuildAccentColor = colors.build.cpy().lerp(colors.selectionSoft, 0.22f).also { it.a = 0.96f }
     private val harvestGasToneColor = colors.build.cpy().lerp(colors.selectionSoft, 0.18f).also { it.a = 0.82f }
     private val harvestMineralToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.82f }
     private val harvestGasGlowColor = colors.build.cpy().also { it.a = 0.20f }
@@ -719,26 +727,27 @@ internal class GdxWorldRenderer(
         startY: Float
     ) {
         if (entity.orderQueueSize <= 0 || !isOnScreen(startX, startY)) return
+        val queueTone = resolveQueueMarkerTone(entity)
         val activeTarget = resolveQueuedMarkerTarget(runtime, entity) ?: return drawQueuePips(shape, entity, startX, startY)
         val pulse = ambientPulse(820L)
         val totalOrders = entity.orderQueueSize.coerceAtLeast(1)
         val queuedTail = (totalOrders - 1).coerceAtLeast(0)
         val lineWidth = if (queuedTail > 0) 2.2f else 1.6f
-        shape.color = scratchColorA.set(queueGhostLineColor).also { it.a = 0.24f + (queuedTail.coerceAtMost(4) * 0.05f) + (pulse * 0.04f) }
+        shape.color = scratchColorA.set(queueTone.line).also { it.a = 0.24f + (queuedTail.coerceAtMost(4) * 0.05f) + (pulse * 0.04f) }
         shape.rectLine(startX, startY, activeTarget.first, activeTarget.second, lineWidth)
         val beadCount = (queuedTail.coerceIn(1, 4)) + 1
         for (index in 1 until beadCount) {
             val t = index.toFloat() / beadCount.toFloat()
             val beadX = startX + ((activeTarget.first - startX) * t)
             val beadY = startY + ((activeTarget.second - startY) * t)
-            shape.color = scratchColorA.set(queueGhostDotColor).also { it.a = 0.40f + (pulse * 0.08f) }
+            shape.color = scratchColorA.set(queueTone.dot).also { it.a = 0.40f + (pulse * 0.08f) }
             shape.circle(beadX, beadY, 1.5f + (pulse * 0.35f))
         }
-        shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.54f + (pulse * 0.10f) }
+        shape.color = scratchColorA.set(queueTone.accent).also { it.a = 0.54f + (pulse * 0.10f) }
         shape.circle(activeTarget.first, activeTarget.second, 7.5f + (queuedTail.coerceAtMost(5) * 0.9f))
-        shape.color = queueMarkerAccentColor
+        shape.color = queueTone.accent
         shape.circle(activeTarget.first, activeTarget.second, 2.8f)
-        drawQueuePips(shape, entity, startX, startY)
+        drawQueuePips(shape, entity, startX, startY, queueTone)
     }
 
     private fun resolveQueuedMarkerTarget(runtime: GdxClientRuntime, entity: EntitySnapshot): Pair<Float, Float>? {
@@ -755,7 +764,7 @@ internal class GdxWorldRenderer(
         return null
     }
 
-    private fun drawQueuePips(shape: ShapeRenderer, entity: EntitySnapshot, startX: Float, startY: Float) {
+    private fun drawQueuePips(shape: ShapeRenderer, entity: EntitySnapshot, startX: Float, startY: Float, tone: QueueMarkerTone = resolveQueueMarkerTone(entity)) {
         val visiblePips = entity.orderQueueSize.coerceIn(1, 4)
         val pulse = ambientPulse(720L)
         val baseY = startY + 18f
@@ -763,17 +772,63 @@ internal class GdxWorldRenderer(
         val startOffset = ((visiblePips - 1) * spacing) * 0.5f
         for (index in 0 until visiblePips) {
             val pipX = startX - startOffset + (index * spacing)
-            shape.color = scratchColorA.set(queueMarkerFillColor).also { it.a = 0.84f + (pulse * 0.04f) }
+            shape.color = scratchColorA.set(tone.fill).also { it.a = 0.84f + (pulse * 0.04f) }
             shape.circle(pipX, baseY, 2.8f)
-            shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.92f }
+            shape.color = scratchColorA.set(tone.accent).also { it.a = 0.92f }
             shape.circle(pipX, baseY, 1.4f)
         }
         if (entity.orderQueueSize > visiblePips) {
             val extraX = startX - startOffset + (visiblePips * spacing)
-            shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.90f }
+            shape.color = scratchColorA.set(tone.accent).also { it.a = 0.90f }
             shape.rect(extraX - 1.1f, baseY - 2.8f, 2.2f, 5.6f)
             shape.rect(extraX - 3.2f, baseY - 0.9f, 6.4f, 1.8f)
         }
+    }
+
+    private data class QueueMarkerTone(
+        val fill: Color,
+        val accent: Color,
+        val line: Color,
+        val dot: Color
+    )
+
+    private fun resolveQueueMarkerTone(entity: EntitySnapshot): QueueMarkerTone {
+        val order = entity.activeOrder?.lowercase()
+        val phase = entity.harvestPhase?.lowercase()
+        val fill: Color
+        val accent: Color
+        when {
+            order == "attack" || order == "attackmove" -> {
+                fill = queueAttackFillColor
+                accent = queueAttackAccentColor
+            }
+            phase == "gather" || phase == "return" || order == "construct" -> {
+                fill = queueHarvestFillColor
+                accent = if (entity.harvestCargoKind == "gas") harvestGasToneColor else queueHarvestAccentColor
+            }
+            order == "patrol" -> {
+                fill = queuePatrolFillColor
+                accent = queuePatrolAccentColor
+            }
+            order == "hold" -> {
+                fill = queueHoldFillColor
+                accent = queueHoldAccentColor
+            }
+            entity.buildTargetId != null || entity.rallyX != null || entity.rallyY != null -> {
+                fill = queueBuildFillColor
+                accent = queueBuildAccentColor
+            }
+            else -> {
+                fill = queueMoveFillColor
+                accent = queueMoveAccentColor
+            }
+        }
+        return QueueMarkerTone(
+            fill = fill,
+            accent = accent,
+            line = fill.cpy().lerp(accent, 0.34f).also { it.a = 0.44f },
+            dot = accent.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.86f }
+        )
     }
 
     private fun drawActivityMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
