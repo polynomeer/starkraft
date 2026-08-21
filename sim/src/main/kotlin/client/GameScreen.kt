@@ -29,6 +29,8 @@ internal class GameScreen(
         const val HUD_SELECTION_PULSE_DURATION_MS = 260L
         const val COMMAND_CLICK_PULSE_DURATION_MS = 180L
         const val SLOT_CLICK_PULSE_DURATION_MS = 180L
+        const val SELECTION_DRAG_THRESHOLD_PX = 8f
+        const val KEYBOARD_PAN_STEP = 24f
     }
 
     private val worldRenderer = GdxWorldRenderer(assets)
@@ -117,6 +119,9 @@ internal class GameScreen(
     private var screenFadeAlpha = 1f
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
+    private var middlePanActive = false
+    private var minimapPanActive = false
+    private var selectionDragActive = false
     private lateinit var topSelectionCell: Cell<*>
     private lateinit var topModeCell: Cell<*>
     private lateinit var topStatusCell: Cell<*>
@@ -1864,10 +1869,12 @@ internal class GameScreen(
     private fun applyEdgePan(worldViewportHeight: Float) {
         if (runtime.pauseOverlayVisible || runtime.helpOverlayVisible) return
         if (Gdx.input.isTouched) return
+        if (middlePanActive || minimapPanActive || selectionDragActive) return
         var deltaX = 0f
         var deltaY = 0f
         val mouseX = Gdx.input.x.toFloat()
         val mouseY = Gdx.input.y.toFloat()
+        if (isHudSurface(mouseX, mouseY)) return
         val width = Gdx.graphics.width.toFloat()
         val height = worldViewportHeight
         if (mouseX <= edgePanMargin) {
@@ -2595,6 +2602,9 @@ internal class GameScreen(
             minimapDragging = false
             armedLeftPress = false
             rightClickHandled = false
+            middlePanActive = false
+            minimapPanActive = false
+            selectionDragActive = false
             dragSelection = null
         }
 
@@ -2603,6 +2613,7 @@ internal class GameScreen(
             when (button) {
                 Input.Buttons.MIDDLE -> {
                     panning = true
+                    middlePanActive = true
                     lastX = screenX.toFloat()
                     lastY = screenY.toFloat()
                     return true
@@ -2616,6 +2627,7 @@ internal class GameScreen(
                             runtime.dragCenterFromMinimap(clickX, clickY, Gdx.graphics.width, Gdx.graphics.height)
                         ) {
                             minimapDragging = true
+                            minimapPanActive = true
                             dragSelection = null
                         }
                         return true
@@ -2661,7 +2673,9 @@ internal class GameScreen(
                 return true
             }
             if (dragging) {
-                if (!armedLeftPress) {
+                val dragDistance = maxOf(abs(screenX.toFloat() - startX), abs(screenY.toFloat() - startY))
+                if (!armedLeftPress && dragDistance >= SELECTION_DRAG_THRESHOLD_PX) {
+                    selectionDragActive = true
                     dragSelection = DragSelectionBox(startX, startY, screenX.toFloat(), screenY.toFloat(), true)
                 }
                 lastX = screenX.toFloat()
@@ -2678,10 +2692,12 @@ internal class GameScreen(
             }
             if (button == Input.Buttons.MIDDLE) {
                 panning = false
+                middlePanActive = false
                 return true
             }
             if (button == Input.Buttons.LEFT && minimapDragging) {
                 minimapDragging = false
+                minimapPanActive = false
                 return true
             }
             if (button == Input.Buttons.RIGHT) {
@@ -2703,6 +2719,7 @@ internal class GameScreen(
         }
 
         override fun scrolled(amountX: Float, amountY: Float): Boolean {
+            if (runtime.zoomLocked) return false
             val factor = if (amountY < 0f) 1.1f else 0.9f
             runtime.zoomAt(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), factor)
             return true
@@ -2732,12 +2749,12 @@ internal class GameScreen(
                 Input.Keys.SPACE -> runtime.togglePlayPause()
                 Input.Keys.F1 -> runtime.toggleHelpOverlay()
                 Input.Keys.TAB -> runtime.toggleDebug()
-                Input.Keys.LEFT -> runtime.nudgePanBy(28f, 0f)
-                Input.Keys.RIGHT -> runtime.nudgePanBy(-28f, 0f)
-                Input.Keys.UP -> runtime.nudgePanBy(0f, 28f)
-                Input.Keys.DOWN -> runtime.nudgePanBy(0f, -28f)
-                Input.Keys.EQUALS, Input.Keys.PLUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 1.1f)
-                Input.Keys.MINUS -> runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 0.9f)
+                Input.Keys.LEFT -> runtime.nudgePanBy(KEYBOARD_PAN_STEP, 0f)
+                Input.Keys.RIGHT -> runtime.nudgePanBy(-KEYBOARD_PAN_STEP, 0f)
+                Input.Keys.UP -> runtime.nudgePanBy(0f, KEYBOARD_PAN_STEP)
+                Input.Keys.DOWN -> runtime.nudgePanBy(0f, -KEYBOARD_PAN_STEP)
+                Input.Keys.EQUALS, Input.Keys.PLUS -> if (!runtime.zoomLocked) runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 1.1f)
+                Input.Keys.MINUS -> if (!runtime.zoomLocked) runtime.zoomAt(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 0.9f)
                 Input.Keys.NUM_0 -> {
                     if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.ALT_RIGHT)) {
                         runtime.clearControlGroups()
