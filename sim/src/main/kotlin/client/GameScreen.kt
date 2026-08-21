@@ -393,21 +393,21 @@ internal class GameScreen(
                 Table().apply {
                     add(
                         portraitFrame.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f))
+                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.build, 0.08f).also { it.a = 0.80f })
                             pad(2f)
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.34f, 0.40f, 0.16f, 0.76f))
+                                    background = assets.panelDrawable(colors.production.cpy().lerp(colors.textPrimary, 0.20f).also { it.a = 0.76f })
                                 }
                             ).height(1f).expandX().fillX().row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.08f, 0.11f, 0.09f, 0.76f))
+                                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.76f })
                                     pad(5f, 4f, 3f, 4f)
                                     add(portraitLabel).center().row()
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.58f))
+                                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.14f).also { it.a = 0.58f })
                                             pad(1f, 4f, 1f, 4f)
                                             add(healthLabel).center()
                                         }
@@ -420,38 +420,38 @@ internal class GameScreen(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
                                     pad(1f, 4f, 1f, 4f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
-                            add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.15f, 0.19f, 0.58f)) }).height(1f).expandX().fillX().padTop(1f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.borderSubtle.cpy().also { it.a = 0.58f }) }).height(1f).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.24f, 0.28f, 0.30f))
+                                    background = assets.panelDrawable(colors.command.cpy().lerp(colors.panelStrong, 0.44f).also { it.a = 0.30f })
                                 }
                             ).height(2f).expandX().fillX().padTop(1f).row()
                             add(
                                 healthBarBack.apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.14f, 0.16f, 1f))
+                                    background = assets.panelDrawable(colors.panelAlt.cpy())
                                     clearChildren()
                                     add(healthBarFill.apply {
-                                        background = assets.panelDrawable(Color(0.22f, 0.78f, 0.42f, 1f))
+                                        background = assets.panelDrawable(colors.selection.cpy())
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
                             ).width(initialCenterLayout.healthBarWidth.toFloat()).height(7f).left().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
                                     pad(1f, 5f, 1f, 5f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.68f)) }).width(1f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.68f }) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.38f))
+                                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.38f })
                                     pad(2f, 3f, 2f, 3f)
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
@@ -472,9 +472,9 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
+                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
                                     pad(1f, 4f, 1f, 4f)
-                                    add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.64f)) }).width(1f).expandY().fillY().padRight(4f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(2f).row()
@@ -485,7 +485,7 @@ internal class GameScreen(
                                     add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat()).padRight(2f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
+                                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
                                             pad(1f, 4f, 1f, 4f)
                                             add(selectionPageLabel).left()
                                         }
@@ -493,7 +493,7 @@ internal class GameScreen(
                                     add(controlGroupButtons).minWidth(56f).right().padRight(2f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.68f))
+                                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
                                             pad(1f, 4f, 1f, 4f)
                                             add(controlGroupsLabel).right()
                                         }
@@ -537,13 +537,13 @@ internal class GameScreen(
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.22f, 0.05f, 0.05f, 0.56f))
+                    background = assets.panelDrawable(colors.panelStrong.cpy().lerp(colors.danger, 0.22f).also { it.a = 0.56f })
                     pad(1f)
                     add(
                         attackWarningCard.apply {
-                            background = assets.panelDrawable(Color(0.66f, 0.18f, 0.14f, 0.76f))
+                            background = assets.panelDrawable(colors.panelStrong.cpy().lerp(colors.danger, 0.50f).also { it.a = 0.76f })
                             pad(6f, 14f, 6f, 14f)
-                            add(Table().apply { background = assets.panelDrawable(Color(1.00f, 0.84f, 0.70f, 0.72f)) }).width(2f).expandY().fillY().padRight(6f)
+                            add(Table().apply { background = assets.panelDrawable(colors.warningSoft.cpy().also { it.a = 0.72f }) }).width(2f).expandY().fillY().padRight(6f)
                             add(attackWarningLabel).center()
                         }
                     )
@@ -555,21 +555,21 @@ internal class GameScreen(
         pauseOverlay.apply {
             setFillParent(true)
             isVisible = false
-            background = assets.panelDrawable(Color(0.03f, 0.04f, 0.06f, 0.62f))
+            background = assets.panelDrawable(colors.scrim.cpy().also { it.a = 0.62f })
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.76f))
+                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.76f })
                     pad(10f)
                     defaults().pad(4f)
                     add(
                         pauseHeaderCard.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.72f))
+                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.20f).also { it.a = 0.72f })
                             pad(3f, 8f, 3f, 8f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.72f)) }).width(2f).expandY().fillY().padRight(5f)
+                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.72f }) }).width(2f).expandY().fillY().padRight(5f)
                             add(Label("PAUSED", assets.titleLabelStyle)).left()
                         }
                     ).width(248f).left().row()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.58f)) }).height(1f).width(248f).padBottom(6f).row()
+                    add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.58f }) }).height(1f).width(248f).padBottom(6f).row()
                     add(makeButton("Resume", style = assets.primaryButtonStyle()) { runtime.togglePauseOverlay() }).width(248f).row()
                     add(makeButton("Sim Pause", style = assets.secondaryButtonStyle()) { runtime.togglePlayPause() }).width(248f).row()
                     add(makeButton("Restart", style = assets.secondaryButtonStyle()) { runtime.restartMatch() }).width(248f).row()
@@ -592,20 +592,20 @@ internal class GameScreen(
             isVisible = false
             top().left()
             pad(14f)
-            background = assets.panelDrawable(Color(0.03f, 0.05f, 0.08f, 0.56f))
+            background = assets.panelDrawable(colors.scrim.cpy().also { it.a = 0.56f })
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.05f, 0.09f, 0.13f, 0.74f))
+                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.74f })
                     pad(8f, 10f, 8f, 10f)
                     add(
                         helpHeaderCard.apply {
-                            background = assets.panelDrawable(Color(0.16f, 0.28f, 0.34f, 0.72f))
+                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.20f).also { it.a = 0.72f })
                             pad(3f, 8f, 3f, 8f)
-                            add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.72f)) }).width(2f).expandY().fillY().padRight(5f)
+                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.72f }) }).width(2f).expandY().fillY().padRight(5f)
                             add(Label("HELP", assets.titleLabelStyle)).left()
                         }
                     ).left().row()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.58f)) }).height(1f).expandX().fillX().padTop(5f).padBottom(6f).row()
+                    add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.58f }) }).height(1f).expandX().fillX().padTop(5f).padBottom(6f).row()
                     add(helpLabel).left().top()
                 }
             ).left().top()
@@ -766,7 +766,7 @@ internal class GameScreen(
             if (group.second.isEmpty()) return@forEachIndexed
             buttonTable.add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.02f, 0.05f, 0.08f, 0.98f))
+                    background = assets.panelDrawable(commandGroupShellTone(group.first))
                     pad(commandDeckLayout.groupPad.toFloat())
                     add(
                         Table().apply {
@@ -789,37 +789,14 @@ internal class GameScreen(
                         actor.isChecked = runtime.isActionActive(button.actionId)
                         actor.color =
                             when {
-                                actor.isDisabled -> Color(0.66f, 0.70f, 0.74f, 0.55f)
-                                actor.isChecked -> Color(1.00f, 0.98f, 0.86f, 0.94f)
+                                actor.isDisabled -> assets.theme.colors.textDisabled.cpy().also { it.a = 0.55f }
+                                actor.isChecked -> assets.theme.colors.textPrimary.cpy().lerp(assets.theme.colors.warningSoft, 0.32f).also { it.a = 0.94f }
                                 else -> Color.WHITE
                             }
-                        val cardTone =
-                            when {
-                                button.actionId.startsWith("build") ->
-                                    Color(0.20f, 0.24f, 0.32f, 0.98f)
-                                button.actionId.startsWith("train") || button.actionId.startsWith("research") ->
-                                    Color(0.22f, 0.20f, 0.10f, 0.98f)
-                                button.actionId == "move" || button.actionId == "hold" ->
-                                    Color(0.10f, 0.24f, 0.16f, 0.98f)
-                                button.actionId == "patrol" ->
-                                    Color(0.10f, 0.20f, 0.30f, 0.98f)
-                                button.actionId == "attackMove" ->
-                                    Color(0.36f, 0.14f, 0.10f, 0.98f)
-                                else -> Color(0.16f, 0.18f, 0.22f, 0.98f)
-                            }
+                        val cardTone = commandButtonCardTone(button.actionId)
                         val clickPulse = commandClickPulse(button.actionId)
-                        val frameTone =
-                            when {
-                                actor.isDisabled -> Color(0.05f, 0.06f, 0.08f, 0.94f)
-                                actor.isChecked -> Color(0.28f + (activePulse * 0.06f), 0.32f + (activePulse * 0.05f), 0.14f, 0.90f)
-                                else -> cardTone.cpy().lerp(Color(0.34f, 0.44f, 0.30f, 0.96f), clickPulse * 0.26f)
-                            }
-                        val shellTone =
-                            when {
-                                actor.isDisabled -> Color(0.01f, 0.03f, 0.05f, 0.88f)
-                                actor.isChecked -> Color(0.30f + (activePulse * 0.04f), 0.28f + (activePulse * 0.03f), 0.10f, 0.86f)
-                                else -> Color(0.01f, 0.03f, 0.05f, 0.90f).lerp(Color(0.12f, 0.20f, 0.14f, 0.92f), clickPulse * 0.22f)
-                            }
+                        val frameTone = commandButtonFrameTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse, cardTone)
+                        val shellTone = commandButtonShellTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse)
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(shellTone)
@@ -832,16 +809,7 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        when {
-                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
-                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.64f)
-                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.74f)
-                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
-                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.72f, 0.84f, 1.00f, 0.72f)
-                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
-                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.66f)
-                                                        }
-                                                            .lerp(Color(0.78f, 1.00f, 0.86f, 0.88f), clickPulse * 0.18f)
+                                                        commandButtonEdgeTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse)
                                                     )
                                             }
                                         ).height(1.5f).expandX().fillX().colspan(4).padBottom(1f).row()
@@ -849,15 +817,7 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                            when {
-                                                                actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.28f)
-                                                            actor.isChecked -> Color(1.00f, 0.92f, 0.46f, 0.62f + (activePulse * 0.06f))
-                                                            button.actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.76f)
-                                                            button.actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.74f)
-                                                            button.actionId.startsWith("train:") || button.actionId.startsWith("research:") -> Color(0.64f, 0.78f, 1.00f, 0.72f)
-                                                            button.actionId == "move" || button.actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
-                                                            else -> Color(0.56f, 0.88f, 0.96f, 0.64f)
-                                                        }
+                                                        commandButtonRailTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse)
                                                     )
                                             }
                                         ).width(2f).expandY().fillY().padRight(2f)
@@ -873,11 +833,7 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        when {
-                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
-                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.66f)
-                                                            else -> Color(1f, 1f, 1f, 0.09f)
-                                                        }
+                                                        commandButtonCornerTone(actor.isDisabled, actor.isChecked)
                                                     )
                                             }
                                         ).size(4f, 4f).padLeft(3f)
@@ -2380,6 +2336,130 @@ internal class GameScreen(
                 "Production" -> production.cpy().also { it.a = 0.78f }
                 "Utility" -> selectionSoft.cpy().also { it.a = 0.78f }
                 else -> commandSoft.cpy().also { it.a = 0.72f }
+            }
+        }
+
+    private fun commandGroupShellTone(group: String): Color =
+        with(assets.theme.colors) {
+            when (group) {
+                "Orders" -> panelAlt.cpy().lerp(command, 0.08f).also { it.a = 0.98f }
+                "Production" -> panelAlt.cpy().lerp(production, 0.08f).also { it.a = 0.98f }
+                "Utility" -> panelAlt.cpy().lerp(selection, 0.08f).also { it.a = 0.98f }
+                else -> panelAlt.cpy().also { it.a = 0.98f }
+            }
+        }
+
+    private fun commandButtonCardTone(actionId: String): Color =
+        with(assets.theme.colors) {
+            when {
+                actionId.startsWith("build") -> panel.cpy().lerp(command, 0.18f).also { it.a = 0.98f }
+                actionId.startsWith("train") || actionId.startsWith("research") -> panel.cpy().lerp(production, 0.20f).also { it.a = 0.98f }
+                actionId == "move" || actionId == "hold" -> panel.cpy().lerp(selection, 0.16f).also { it.a = 0.98f }
+                actionId == "patrol" -> panel.cpy().lerp(commandSoft, 0.18f).also { it.a = 0.98f }
+                actionId == "attackMove" -> panel.cpy().lerp(danger, 0.22f).also { it.a = 0.98f }
+                else -> panel.cpy().also { it.a = 0.98f }
+            }
+        }
+
+    private fun commandButtonFrameTone(
+        actionId: String,
+        disabled: Boolean,
+        checked: Boolean,
+        activePulse: Float,
+        clickPulse: Float,
+        cardTone: Color
+    ): Color =
+        with(assets.theme.colors) {
+            when {
+                disabled -> panelAlt.cpy().also { it.a = 0.94f }
+                checked -> panel.cpy().lerp(warning, 0.28f + (activePulse * 0.06f)).also { it.a = 0.90f }
+                else -> cardTone.cpy().lerp(commandButtonPulseAccentTone(actionId), clickPulse * 0.26f)
+            }
+        }
+
+    private fun commandButtonShellTone(
+        actionId: String,
+        disabled: Boolean,
+        checked: Boolean,
+        activePulse: Float,
+        clickPulse: Float
+    ): Color =
+        with(assets.theme.colors) {
+            when {
+                disabled -> scrim.cpy().also { it.a = 0.88f }
+                checked -> panelStrong.cpy().lerp(warning, 0.24f + (activePulse * 0.04f)).also { it.a = 0.86f }
+                else -> panelAlt.cpy().lerp(commandButtonShellAccentTone(actionId), clickPulse * 0.22f).also { it.a = 0.90f }
+            }
+        }
+
+    private fun commandButtonEdgeTone(
+        actionId: String,
+        disabled: Boolean,
+        checked: Boolean,
+        activePulse: Float,
+        clickPulse: Float
+    ): Color =
+        with(assets.theme.colors) {
+            when {
+                disabled -> textPrimary.cpy().also { it.a = 0.06f }
+                checked -> warningSoft.cpy().lerp(textPrimary, 0.12f).also { it.a = 0.64f }
+                else -> commandButtonAccentTone(actionId).lerp(selectionSoft.cpy().also { it.a = 0.88f }, clickPulse * 0.18f)
+            }
+        }
+
+    private fun commandButtonRailTone(
+        actionId: String,
+        disabled: Boolean,
+        checked: Boolean,
+        activePulse: Float
+    ): Color =
+        with(assets.theme.colors) {
+            when {
+                disabled -> textMuted.cpy().also { it.a = 0.28f }
+                checked -> warningSoft.cpy().also { it.a = 0.62f + (activePulse * 0.06f) }
+                else -> commandButtonAccentTone(actionId).cpy()
+            }
+        }
+
+    private fun commandButtonCornerTone(disabled: Boolean, checked: Boolean): Color =
+        with(assets.theme.colors) {
+            when {
+                disabled -> textPrimary.cpy().also { it.a = 0.08f }
+                checked -> warningSoft.cpy().also { it.a = 0.66f }
+                else -> textPrimary.cpy().also { it.a = 0.09f }
+            }
+        }
+
+    private fun commandButtonAccentTone(actionId: String): Color =
+        with(assets.theme.colors) {
+            when {
+                actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.74f)
+                actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
+                actionId.startsWith("train:") || actionId.startsWith("research:") -> research.cpy().lerp(commandSoft, 0.44f).also { it.a = 0.72f }
+                actionId == "move" || actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
+                else -> commandSoft.cpy().also { it.a = 0.66f }
+            }
+        }
+
+    private fun commandButtonPulseAccentTone(actionId: String): Color =
+        with(assets.theme.colors) {
+            when {
+                actionId == "attackMove" -> dangerSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId.startsWith("build:") -> selectionSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId.startsWith("train:") || actionId.startsWith("research:") -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId == "move" || actionId == "hold" -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
+                else -> commandSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+            }
+        }
+
+    private fun commandButtonShellAccentTone(actionId: String): Color =
+        with(assets.theme.colors) {
+            when {
+                actionId == "attackMove" -> danger.cpy().also { it.a = 0.92f }
+                actionId.startsWith("build:") -> command.cpy().also { it.a = 0.92f }
+                actionId.startsWith("train:") || actionId.startsWith("research:") -> production.cpy().also { it.a = 0.92f }
+                actionId == "move" || actionId == "hold" -> selection.cpy().also { it.a = 0.92f }
+                else -> build.cpy().also { it.a = 0.92f }
             }
         }
 
