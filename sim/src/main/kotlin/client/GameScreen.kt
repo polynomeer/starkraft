@@ -1255,8 +1255,8 @@ internal class GameScreen(
     private fun buildCenterFooterLine(): String =
         when {
             runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
-            runtime.groundMode != null -> "LMB/RMB confirm  Esc cancel"
-            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
+            runtime.groundMode != null -> "LMB/RMB confirm  Shift queue  Esc cancel"
+            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add/queue"
             else -> "Drag select  RMB order  MMB pan"
         }
 

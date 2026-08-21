@@ -110,6 +110,10 @@ internal class GdxWorldRenderer(
     private val pathTrailGlowColor = colors.commandSoft.cpy().also { it.a = 0.14f }
     private val pathTrailLineColor = colors.command.cpy().lerp(colors.commandSoft, 0.18f).also { it.a = 0.34f }
     private val pathTrailSparkColor = colors.textPrimary.cpy().lerp(colors.commandSoft, 0.12f).also { it.a = 0.12f }
+    private val queueMarkerFillColor = colors.panelStrong.cpy().lerp(colors.production, 0.18f).also { it.a = 0.92f }
+    private val queueMarkerAccentColor = colors.selectionSoft.cpy().lerp(colors.production, 0.36f).also { it.a = 0.96f }
+    private val queueGhostLineColor = colors.selectionSoft.cpy().lerp(colors.production, 0.28f).also { it.a = 0.44f }
+    private val queueGhostDotColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.86f }
     private val harvestGasToneColor = colors.build.cpy().lerp(colors.selectionSoft, 0.18f).also { it.a = 0.82f }
     private val harvestMineralToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.82f }
     private val harvestGasGlowColor = colors.build.cpy().also { it.a = 0.20f }
@@ -675,6 +679,7 @@ internal class GdxWorldRenderer(
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
                 // Move-path arrows are intentionally suppressed; the click ripple carries the order feedback.
             }
+            drawQueuedOrderMarkers(shape, runtime, entity, startX, startY)
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
                 val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
@@ -703,6 +708,71 @@ internal class GdxWorldRenderer(
                     drawChevronTrail(shape, startX, startY, targetX, targetY, pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.68f))
                 }
             }
+        }
+    }
+
+    private fun drawQueuedOrderMarkers(
+        shape: ShapeRenderer,
+        runtime: GdxClientRuntime,
+        entity: EntitySnapshot,
+        startX: Float,
+        startY: Float
+    ) {
+        if (entity.orderQueueSize <= 0 || !isOnScreen(startX, startY)) return
+        val activeTarget = resolveQueuedMarkerTarget(runtime, entity) ?: return drawQueuePips(shape, entity, startX, startY)
+        val pulse = ambientPulse(820L)
+        val totalOrders = entity.orderQueueSize.coerceAtLeast(1)
+        val queuedTail = (totalOrders - 1).coerceAtLeast(0)
+        val lineWidth = if (queuedTail > 0) 2.2f else 1.6f
+        shape.color = scratchColorA.set(queueGhostLineColor).also { it.a = 0.24f + (queuedTail.coerceAtMost(4) * 0.05f) + (pulse * 0.04f) }
+        shape.rectLine(startX, startY, activeTarget.first, activeTarget.second, lineWidth)
+        val beadCount = (queuedTail.coerceIn(1, 4)) + 1
+        for (index in 1 until beadCount) {
+            val t = index.toFloat() / beadCount.toFloat()
+            val beadX = startX + ((activeTarget.first - startX) * t)
+            val beadY = startY + ((activeTarget.second - startY) * t)
+            shape.color = scratchColorA.set(queueGhostDotColor).also { it.a = 0.40f + (pulse * 0.08f) }
+            shape.circle(beadX, beadY, 1.5f + (pulse * 0.35f))
+        }
+        shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.54f + (pulse * 0.10f) }
+        shape.circle(activeTarget.first, activeTarget.second, 7.5f + (queuedTail.coerceAtMost(5) * 0.9f))
+        shape.color = queueMarkerAccentColor
+        shape.circle(activeTarget.first, activeTarget.second, 2.8f)
+        drawQueuePips(shape, entity, startX, startY)
+    }
+
+    private fun resolveQueuedMarkerTarget(runtime: GdxClientRuntime, entity: EntitySnapshot): Pair<Float, Float>? {
+        entity.pathGoalX?.let { goalX ->
+            entity.pathGoalY?.let { goalY ->
+                return runtime.camera.worldToScreenX(goalX + 0.5f) to runtime.camera.worldToScreenY(goalY + 0.5f)
+            }
+        }
+        entity.rallyX?.let { rallyX ->
+            entity.rallyY?.let { rallyY ->
+                return runtime.camera.worldToScreenX(rallyX) to runtime.camera.worldToScreenY(rallyY)
+            }
+        }
+        return null
+    }
+
+    private fun drawQueuePips(shape: ShapeRenderer, entity: EntitySnapshot, startX: Float, startY: Float) {
+        val visiblePips = entity.orderQueueSize.coerceIn(1, 4)
+        val pulse = ambientPulse(720L)
+        val baseY = startY + 18f
+        val spacing = 6f
+        val startOffset = ((visiblePips - 1) * spacing) * 0.5f
+        for (index in 0 until visiblePips) {
+            val pipX = startX - startOffset + (index * spacing)
+            shape.color = scratchColorA.set(queueMarkerFillColor).also { it.a = 0.84f + (pulse * 0.04f) }
+            shape.circle(pipX, baseY, 2.8f)
+            shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.92f }
+            shape.circle(pipX, baseY, 1.4f)
+        }
+        if (entity.orderQueueSize > visiblePips) {
+            val extraX = startX - startOffset + (visiblePips * spacing)
+            shape.color = scratchColorA.set(queueMarkerAccentColor).also { it.a = 0.90f }
+            shape.rect(extraX - 1.1f, baseY - 2.8f, 2.2f, 5.6f)
+            shape.rect(extraX - 3.2f, baseY - 0.9f, 6.4f, 1.8f)
         }
     }
 
