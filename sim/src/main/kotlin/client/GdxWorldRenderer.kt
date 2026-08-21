@@ -101,6 +101,19 @@ internal class GdxWorldRenderer(
     private val healthBarHighlightColor = colors.textPrimary.cpy().lerp(colors.warningSoft, 0.14f).also { it.a = 0.48f }
     private val selectionOverlayColor = colors.selection.cpy().also { it.a = 0.16f }
     private val selectionDamageCrossColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.82f }
+    private val labelShadowColor = colors.scrim.cpy().also { it.a = 0.58f }
+    private val labelBackdropColor = colors.panelAlt.cpy().also { it.a = 0.30f }
+    private val gasLabelColor = colors.build.cpy().lerp(colors.selectionSoft, 0.24f)
+    private val mineralLabelColor = colors.production.cpy().lerp(colors.textPrimary, 0.18f)
+    private val selectedStatusLabelColor = colors.textSecondary.cpy()
+    private val matchEndedLabelColor = colors.production.cpy().lerp(colors.textPrimary, 0.20f)
+    private val pathTrailGlowColor = colors.commandSoft.cpy().also { it.a = 0.14f }
+    private val pathTrailLineColor = colors.command.cpy().lerp(colors.commandSoft, 0.18f).also { it.a = 0.34f }
+    private val pathTrailSparkColor = colors.textPrimary.cpy().lerp(colors.commandSoft, 0.12f).also { it.a = 0.12f }
+    private val harvestGasToneColor = colors.build.cpy().lerp(colors.selectionSoft, 0.18f).also { it.a = 0.82f }
+    private val harvestMineralToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.82f }
+    private val harvestGasGlowColor = colors.build.cpy().also { it.a = 0.20f }
+    private val harvestMineralGlowColor = colors.production.cpy().also { it.a = 0.18f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -720,37 +733,37 @@ internal class GdxWorldRenderer(
             if (entity.pathRemainingNodes > 0) {
                 val trailX = screenX - directionDx(entity.dir, 7f)
                 val trailY = screenY - directionDy(entity.dir, 7f)
-                shape.color = Color(0.74f, 0.90f, 1.00f, 0.14f)
+                shape.color = pathTrailGlowColor
                 shape.circle(trailX, trailY, 4.5f)
-                shape.color = Color(0.68f, 0.86f, 0.96f, 0.34f)
+                shape.color = pathTrailLineColor
                 shape.rectLine(trailX, trailY, screenX, screenY, 1.4f)
-                shape.color = Color(0.84f, 0.96f, 1.00f, 0.12f)
+                shape.color = pathTrailSparkColor
                 shape.circle(trailX - 4f, trailY - 2f, 2.8f)
             }
             if (entity.harvestCargoAmount != null && entity.harvestCargoAmount > 0) {
                 shape.color =
                     when (entity.harvestCargoKind) {
-                        "gas" -> Color(0.50f, 0.96f, 0.78f, 0.74f)
-                        else -> Color(0.98f, 0.84f, 0.42f, 0.74f)
+                        "gas" -> scratchColorA.set(harvestGasToneColor).also { it.a = 0.74f }
+                        else -> scratchColorA.set(harvestMineralToneColor).also { it.a = 0.74f }
                     }
                 shape.circle(screenX + 6f, screenY - 6f, 3f)
                 shape.color =
                     when (entity.harvestCargoKind) {
-                        "gas" -> Color(0.60f, 1.00f, 0.86f, 0.26f)
-                        else -> Color(1.00f, 0.92f, 0.62f, 0.26f)
+                        "gas" -> scratchColorA.set(harvestGasGlowColor).also { it.a = 0.26f }
+                        else -> scratchColorA.set(harvestMineralGlowColor).also { it.a = 0.26f }
                     }
                 shape.circle(screenX + 6f, screenY - 6f, 6f)
             }
             entity.harvestPhase?.lowercase()?.let { phase ->
                 val harvestTone =
                     when (entity.harvestCargoKind) {
-                        "gas" -> Color(0.58f, 1.00f, 0.84f, 0.82f)
-                        else -> Color(1.00f, 0.90f, 0.56f, 0.82f)
+                        "gas" -> harvestGasToneColor
+                        else -> harvestMineralToneColor
                     }
                 val harvestGlow =
                     when (entity.harvestCargoKind) {
-                        "gas" -> Color(0.42f, 0.96f, 0.78f, 0.20f)
-                        else -> Color(1.00f, 0.84f, 0.42f, 0.18f)
+                        "gas" -> harvestGasGlowColor
+                        else -> harvestMineralGlowColor
                     }
                 when {
                     phase.contains("return") || phase.contains("drop") -> {
@@ -1512,16 +1525,16 @@ internal class GdxWorldRenderer(
             val labelX = runtime.camera.worldToScreenX(node.x) - 8f
             val labelY = height - runtime.camera.worldToScreenY(node.y) - 10f
             if (!isOnScreen(runtime.camera.worldToScreenX(node.x), runtime.camera.worldToScreenY(node.y))) continue
-            assets.font.color = Color(0f, 0f, 0f, 0.58f)
+            assets.font.color = labelShadowColor
             val widthHint = (node.remaining.toString().length * 7f) + 6f
-            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 2f, y = labelY - 9f, color = Color(0.04f, 0.07f, 0.09f, 0.30f))
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 2f, y = labelY - 9f, color = labelBackdropColor)
             assets.font.draw(
                 batch,
                 node.remaining.toString(),
                 labelX + 0.5f,
                 labelY + 0.5f
             )
-            assets.font.color = if (node.kind == "gas") Color(0.72f, 0.98f, 0.84f, 1f) else Color(1f, 0.92f, 0.70f, 1f)
+            assets.font.color = if (node.kind == "gas") gasLabelColor else mineralLabelColor
             assets.font.draw(
                 batch,
                 node.remaining.toString(),
@@ -1536,7 +1549,7 @@ internal class GdxWorldRenderer(
             val valid = isBuildPreviewValid(runtime.session.state.mapState, snapshot, spec, tileX, tileY)
             val label = buildPreviewLabel(spec, valid)
             if (label != null) {
-                assets.font.color = if (label.valid) Color.WHITE else Color.SCARLET
+                assets.font.color = if (label.valid) colors.textPrimary else colors.dangerSoft
                 assets.font.draw(batch, "${label.title} ${label.cost} ${label.size}", 18f, height - 22f)
             }
         }
@@ -1547,15 +1560,15 @@ internal class GdxWorldRenderer(
             val labelX = runtime.camera.worldToScreenX(entity.x) + 10f
             val labelY = height - runtime.camera.worldToScreenY(entity.y) + 14f
             val widthHint = (status.length * 7f) + 8f
-            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 3f, y = labelY - 9f, color = Color(0.04f, 0.07f, 0.09f, 0.32f))
-            assets.font.color = Color(0f, 0f, 0f, 0.60f)
+            shapeRendererForLabels(batch = batch, width = widthHint, x = labelX - 3f, y = labelY - 9f, color = scratchColorA.set(labelBackdropColor).also { it.a = 0.32f })
+            assets.font.color = scratchColorA.set(labelShadowColor).also { it.a = 0.60f }
             assets.font.draw(
                 batch,
                 status,
                 labelX + 0.5f,
                 labelY + 0.5f
             )
-            assets.font.color = Color(0.94f, 0.96f, 0.98f, 1f)
+            assets.font.color = selectedStatusLabelColor
             assets.font.draw(
                 batch,
                 status,
@@ -1564,7 +1577,7 @@ internal class GdxWorldRenderer(
             )
         }
         if (snapshot.matchEnded) {
-            assets.font.color = Color(1f, 0.86f, 0.63f, 1f)
+            assets.font.color = matchEndedLabelColor
             val state = buildGameState(snapshot, runtime.session.state.viewedFaction)
             assets.font.draw(batch, state?.title ?: "Match Ended", width / 2f - 70f, height - 48f)
             assets.font.draw(batch, state?.detail ?: "", width / 2f - 90f, height - 68f)
