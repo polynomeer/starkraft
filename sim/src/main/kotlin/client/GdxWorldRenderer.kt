@@ -114,6 +114,58 @@ internal class GdxWorldRenderer(
     private val harvestMineralToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.82f }
     private val harvestGasGlowColor = colors.build.cpy().also { it.a = 0.20f }
     private val harvestMineralGlowColor = colors.production.cpy().also { it.a = 0.18f }
+    private val selectionBoxFillColor = colors.selection.cpy().also { it.a = 0.10f }
+    private val selectionBoxFrameColor = colors.selectionSoft.cpy().also { it.a = 0.94f }
+    private val selectionBoxAccentColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.34f }
+    private val deathBurstOuterColor = colors.danger.cpy().lerp(colors.warning, 0.24f).also { it.a = 0.22f }
+    private val deathBurstCoreColor = colors.warning.cpy().also { it.a = 0.40f }
+    private val deathBurstSparkColor = colors.warningSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.62f }
+    private val deathBurstSmokeColor = colors.panelStrong.cpy().lerp(colors.terrainDust, 0.18f).also { it.a = 0.20f }
+    private val deathBurstShardColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.18f).also { it.a = 0.50f }
+    private val deathBurstStructureDebrisColor = colors.terrainDust.cpy().lerp(colors.panelStrong, 0.22f).also { it.a = 0.42f }
+    private val deathBurstUnitDebrisColor = colors.panel.cpy().lerp(colors.terrainDust, 0.34f).also { it.a = 0.44f }
+    private val deathBurstZergDebrisColor = colors.danger.cpy().lerp(colors.terrainDust, 0.52f).also { it.a = 0.44f }
+    private val deathBurstCollapseColor = colors.terrainDust.cpy().lerp(colors.warningSoft, 0.18f).also { it.a = 0.36f }
+    private val deathBurstDustColor = colors.terrainDust.cpy().lerp(colors.panelAlt, 0.20f).also { it.a = 0.28f }
+    private val deathRemainHotColor = colors.danger.cpy().lerp(colors.warning, 0.22f).also { it.a = 0.08f }
+    private val deathRemainStructureBaseColor = colors.panelStrong.cpy().lerp(colors.terrainDust, 0.18f)
+    private val deathRemainStructurePlateColor = colors.terrainDust.cpy().lerp(colors.panel, 0.22f)
+    private val deathRemainStructureDebrisColor = colors.panelStrong.cpy().lerp(colors.terrainDust, 0.32f)
+    private val deathRemainStructureSmokeColor = colors.panelAlt.cpy().also { it.a = 0.56f }
+    private val deathRemainUnitBaseColor = colors.panel.cpy().lerp(colors.terrainMetal, 0.24f)
+    private val deathRemainMarineAccentColor = colors.terrainMetal.cpy().lerp(colors.textSecondary, 0.18f)
+    private val deathRemainZergAccentColor = colors.danger.cpy().lerp(colors.terrainDust, 0.56f)
+    private val deathRemainZergGlowColor = colors.danger.cpy().lerp(colors.terrainDust, 0.66f)
+    private val deathRemainSmokeColor = colors.panelAlt.cpy().also { it.a = 0.42f }
+    private val deathRemainZergSmokeColor = colors.terrainDust.cpy().lerp(colors.panelAlt, 0.26f).also { it.a = 0.32f }
+    private val deathRemainStructureEmberColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.14f).also { it.a = 0.10f }
+    private val structureShellColor = colors.panel.cpy().lerp(colors.terrainMetal, 0.18f)
+    private val structureRoofColor = colors.panelStrong.cpy().lerp(colors.terrainMetal, 0.22f)
+    private val structureShadowColor = colors.scrim.cpy().also { it.a = 0.74f }
+    private val structureTopShadowColor = colors.panelAlt.cpy().also { it.a = 0.64f }
+    private val structureGlossColor = colors.textSecondary.cpy().also { it.a = 0.08f }
+    private val structureCutColor = colors.scrim.cpy().also { it.a = 0.16f }
+    private val structureLineColor = colors.textSecondary.cpy().also { it.a = 0.10f }
+    private val structureWindowColor = colors.textSecondary.cpy().also { it.a = 0.10f }
+    private val structureDepotToneColor = colors.production.cpy().also { it.a = 0.88f }
+    private val structureDepotGlowColor = colors.production.cpy().lerp(colors.warningSoft, 0.18f).also { it.a = 0.42f }
+    private val structureDepotPanelColor = colors.production.cpy().lerp(colors.terrainDust, 0.30f).also { it.a = 0.24f }
+    private val structureResourceToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.88f }
+    private val structureResourceGlowColor = colors.production.cpy().also { it.a = 0.26f }
+    private val structureResourcePanelColor = colors.warningSoft.cpy().also { it.a = 0.24f }
+    private val structureGasToneColor = colors.build.cpy().also { it.a = 0.82f }
+    private val structureGasGlowColor = colors.build.cpy().lerp(colors.selectionSoft, 0.18f).also { it.a = 0.28f }
+    private val structureGasPanelColor = colors.selectionSoft.cpy().also { it.a = 0.22f }
+    private val structureResearchToneColor = colors.research.cpy().lerp(colors.commandSoft, 0.20f).also { it.a = 0.82f }
+    private val structureTrainingToneColor = colors.warning.cpy().lerp(colors.dangerSoft, 0.10f).also { it.a = 0.82f }
+    private val structureUnderConstructionFillColor = colors.warning.cpy().lerp(colors.terrainDust, 0.28f).also { it.a = 0.35f }
+    private val structureUnderConstructionStripeColor = colors.warningSoft.cpy().lerp(colors.warning, 0.18f).also { it.a = 0.55f }
+    private val structureProductionStripColor = colors.warning.cpy().also { it.a = 0.18f }
+    private val structureResearchStripColor = colors.research.cpy().also { it.a = 0.18f }
+    private val structureCollapseCrackColor = colors.scrim.cpy().also { it.a = 0.30f }
+    private val structureCollapseSmokeColor = colors.textMuted.cpy().also { it.a = 0.16f }
+    private val structureCollapseDustColor = colors.terrainDust.cpy().lerp(colors.panelStrong, 0.22f).also { it.a = 0.10f }
+    private val structureCollapseEmberColor = colors.warning.cpy().also { it.a = 0.04f }
     private val scratchColorA = Color()
     private val scratchColorB = Color()
 
@@ -1328,13 +1380,13 @@ internal class GdxWorldRenderer(
         val corner = minOf(14f, width * 0.28f, height * 0.28f)
         val pulse = ambientPulse(1200L)
 
-        shape.color = Color(0.52f, 0.98f, 0.54f, 0.10f + (pulse * 0.05f))
+        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.10f + (pulse * 0.05f) }
         shape.line(minX, minY, right, minY)
         shape.line(minX, bottom, right, bottom)
         shape.line(minX, minY, minX, bottom)
         shape.line(right, minY, right, bottom)
 
-        shape.color = Color(0.70f, 1.00f, 0.70f, 0.94f)
+        shape.color = selectionBoxFrameColor
         shape.line(minX, minY, minX + corner, minY)
         shape.line(minX, minY, minX, minY + corner)
         shape.line(right, minY, right - corner, minY)
@@ -1344,7 +1396,7 @@ internal class GdxWorldRenderer(
         shape.line(right, bottom, right - corner, bottom)
         shape.line(right, bottom, right, bottom - corner)
 
-        shape.color = Color(0.84f, 1.00f, 0.76f, 0.34f + (pulse * 0.10f))
+        shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.34f + (pulse * 0.10f) }
         shape.rect(minX + (width * 0.24f), minY - 0.75f, width * 0.52f, 1.2f)
         shape.rect(minX + (width * 0.24f), bottom - 0.45f, width * 0.52f, 1.2f)
     }
@@ -1361,17 +1413,17 @@ internal class GdxWorldRenderer(
             val fade = (1f - progress).coerceIn(0f, 1f)
             val core = if (burst.isStructure) 8f + (progress * 14f) else 5f + (progress * 9f)
             val outer = if (burst.isStructure) 16f + (progress * 28f) else 11f + (progress * 18f)
-            shape.color = Color(1.00f, 0.58f, 0.28f, 0.22f * fade)
+            shape.color = scratchColorA.set(deathBurstOuterColor).also { it.a = deathBurstOuterColor.a * fade }
             shape.circle(x, y, outer)
-            shape.color = Color(1.00f, 0.78f, 0.40f, 0.40f * fade)
+            shape.color = scratchColorA.set(deathBurstCoreColor).also { it.a = deathBurstCoreColor.a * fade }
             shape.circle(x, y, core)
-            shape.color = Color(1.00f, 0.92f, 0.72f, 0.62f * fade)
+            shape.color = scratchColorA.set(deathBurstSparkColor).also { it.a = deathBurstSparkColor.a * fade }
             shape.circle(x, y, core * 0.42f)
-            shape.color = Color(0.22f, 0.24f, 0.22f, 0.20f * fade)
+            shape.color = scratchColorA.set(deathBurstSmokeColor).also { it.a = deathBurstSmokeColor.a * fade }
             shape.circle(x + (progress * 6f), y - (progress * 10f), outer * 0.82f)
             shape.circle(x - (progress * 8f), y - (progress * 6f), outer * 0.64f)
             val shard = if (burst.isStructure) 18f else 12f
-            shape.color = Color(1.00f, 0.76f, 0.44f, 0.50f * fade)
+            shape.color = scratchColorA.set(deathBurstShardColor).also { it.a = deathBurstShardColor.a * fade }
             shape.rectLine(x - shard, y, x - (shard * 0.35f), y, 2.2f)
             shape.rectLine(x + shard, y, x + (shard * 0.35f), y, 2.2f)
             shape.rectLine(x, y - shard, x, y - (shard * 0.35f), 2.2f)
@@ -1382,9 +1434,9 @@ internal class GdxWorldRenderer(
             shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
             val debrisColor =
                 when {
-                    burst.typeId.contains("Zergling", ignoreCase = true) -> Color(0.74f, 0.46f, 0.34f, 0.44f * fade)
-                    burst.isStructure -> Color(0.52f, 0.50f, 0.44f, 0.42f * fade)
-                    else -> Color(0.68f, 0.66f, 0.60f, 0.44f * fade)
+                    burst.typeId.contains("Zergling", ignoreCase = true) -> scratchColorA.set(deathBurstZergDebrisColor).also { it.a = deathBurstZergDebrisColor.a * fade }
+                    burst.isStructure -> scratchColorA.set(deathBurstStructureDebrisColor).also { it.a = deathBurstStructureDebrisColor.a * fade }
+                    else -> scratchColorA.set(deathBurstUnitDebrisColor).also { it.a = deathBurstUnitDebrisColor.a * fade }
                 }
             shape.color = debrisColor
             shape.rect(x - (shard * 0.46f), y + (shard * 0.16f), 5f, 3f)
@@ -1392,7 +1444,7 @@ internal class GdxWorldRenderer(
             if (burst.isStructure) {
                 shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
                 shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
-                shape.color = Color(0.72f, 0.66f, 0.52f, 0.36f * fade)
+                shape.color = scratchColorA.set(deathBurstCollapseColor).also { it.a = deathBurstCollapseColor.a * fade }
                 val collapseTilt = (((burst.entityId % 7) - 3) / 3f).coerceIn(-1f, 1f)
                 shape.rectLine(
                     x - (shard * 1.18f),
@@ -1415,7 +1467,7 @@ internal class GdxWorldRenderer(
                     y + (shard * 0.46f),
                     2.4f
                 )
-                shape.color = Color(0.26f, 0.24f, 0.20f, 0.28f * fade)
+                shape.color = scratchColorA.set(deathBurstDustColor).also { it.a = deathBurstDustColor.a * fade }
                 shape.rect(x - (shard * 0.88f), y + (shard * 0.86f), 10f, 3.5f)
                 shape.rect(x + (shard * 0.44f), y + (shard * 0.74f), 8f, 3f)
                 shape.rect(x - (shard * 0.16f), y + (shard * 1.02f), 7f, 3f)
@@ -1454,56 +1506,56 @@ internal class GdxWorldRenderer(
             val smokeDrift = if (remain.isStructure) settle * 1.8f else settle * 0.8f
             val smokeRise = if (remain.isStructure) settle * 6f else settle * 3f
             if (remain.isStructure) {
-                shape.color = Color(1.00f, 0.62f, 0.32f, 0.08f * hotAlpha)
+                shape.color = scratchColorA.set(deathRemainHotColor).also { it.a = deathRemainHotColor.a * hotAlpha }
                 shape.circle(x, y, 14f + ((1f - progress) * 10f))
-                shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
+                shape.color = scratchColorA.set(deathRemainStructureBaseColor).also { it.a = alpha }
                 shape.rect(x - 12f, y - 12f, 24f, 24f)
-                shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
+                shape.color = scratchColorA.set(deathRemainStructurePlateColor).also { it.a = alpha * 0.9f }
                 shape.rect(x - 8f - spread, y - 9f, 7f, 5f)
                 shape.rect(x + 1f + spread, y - 6f, 8f, 6f)
                 shape.rect(x - 3f, y + 2f + (settle * 0.8f), 9f, 4f)
-                shape.color = Color(0.22f, 0.20f, 0.18f, alpha * 0.86f)
+                shape.color = scratchColorA.set(deathRemainStructureDebrisColor).also { it.a = alpha * 0.86f }
                 shape.rect(x - 14f - (spread * 0.6f), y + 10f, 5f, 4f)
                 shape.rect(x + 8f + (spread * 0.5f), y + 6f, 4f, 5f)
-                shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
+                shape.color = scratchColorA.set(deathRemainStructureSmokeColor).also { it.a = alpha * 0.56f }
                 shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
                 shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
                 shape.circle(x - 8f, y + 6f, 5f + ((1f - progress) * 4f))
-                shape.color = Color(0.24f, 0.22f, 0.18f, alpha * 0.78f)
+                shape.color = scratchColorA.set(deathRemainStructureDebrisColor).also { it.a = alpha * 0.78f }
                 shape.rect(x - 17f - spread, y + 5f, 7f, 4f)
                 shape.rect(x + 10f + spread, y - 10f, 6f, 5f)
             } else {
                 val debris =
                     when {
-                        zerglingRemain -> Color(0.34f, 0.24f, 0.20f, alpha)
-                        else -> Color(0.28f, 0.30f, 0.30f, alpha)
+                        zerglingRemain -> scratchColorA.set(deathRemainZergAccentColor).also { it.a = alpha }
+                        else -> scratchColorA.set(deathRemainUnitBaseColor).also { it.a = alpha }
                     }
                 shape.color = debris
                 shape.rect(x - 6f - (spread * 0.4f), y - 2f, 5f, 3f)
                 shape.rect(x + 1f + (spread * 0.5f), y - 4f, 4f, 3f)
                 shape.rect(x - 1f, y + 1f + (settle * 0.3f), 3f, 2f)
                 if (marineRemain) {
-                    shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
+                    shape.color = scratchColorA.set(deathRemainMarineAccentColor).also { it.a = alpha * 0.92f }
                     shape.rect(x - 3f, y - 6f + (settle * 0.4f), 6f, 2f)
                     shape.rect(x - 9f - spread, y - 1f, 3f, 2f)
-                    shape.color = Color(0.20f, 0.22f, 0.24f, alpha * 0.52f)
+                    shape.color = scratchColorA.set(deathRemainSmokeColor).also { it.a = alpha * 0.52f }
                     shape.circle(x + 4f + (spread * 0.3f), y + 4f, 4f + ((1f - progress) * 2f))
                 }
                 if (zerglingRemain) {
-                    shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
+                    shape.color = scratchColorA.set(deathRemainZergAccentColor).also { it.a = alpha * 0.88f }
                     shape.rect(x - 8f - spread, y + 1f, 5f, 2f)
                     shape.rect(x + 4f + spread, y - 1f, 4f, 2f)
                     shape.rect(x - 2f, y - 6f + (settle * 0.5f), 4f, 2f)
-                    shape.color = Color(0.30f, 0.20f, 0.18f, alpha * 0.42f)
+                    shape.color = scratchColorA.set(deathRemainZergGlowColor).also { it.a = alpha * 0.42f }
                     shape.circle(x - 2f - (spread * 0.2f), y + 5f, 3.6f + ((1f - progress) * 2f))
                     shape.circle(x + 5f + (spread * 0.4f), y + 2f, 2.8f + ((1f - progress) * 1.8f))
                 }
             }
             val smokeColor =
                 when {
-                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * (0.52f + ((1f - progress) * 0.30f)))
-                    zerglingRemain -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
-                    else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
+                    remain.isStructure -> scratchColorA.set(deathRemainStructureSmokeColor).also { it.a = alpha * (0.52f + ((1f - progress) * 0.30f)) }
+                    zerglingRemain -> scratchColorA.set(deathRemainZergSmokeColor).also { it.a = alpha * (0.32f + ((1f - progress) * 0.16f)) }
+                    else -> scratchColorA.set(deathRemainSmokeColor).also { it.a = alpha * (0.42f + ((1f - progress) * 0.18f)) }
                 }
             shape.color = smokeColor
             shape.circle(x + 3f + smokeDrift, y + 6f + smokeRise, 7f + ((1f - progress) * 5f))
@@ -1818,119 +1870,119 @@ internal class GdxWorldRenderer(
         val settleDrop = collapseSeverity * 1.4f
         val left = runtime.camera.worldToScreenX(tileX.toFloat()) + collapseWobble
         val top = runtime.camera.worldToScreenY(tileY.toFloat()) + settleDrop
-        val shell = Color(0.18f, 0.20f, 0.22f, 1f)
-        val roof = Color(0.24f, 0.27f, 0.30f, 1f)
+        val shell = structureShellColor
+        val roof = structureRoofColor
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
         val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
         val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
-        shape.color = Color(0.08f, 0.10f, 0.12f, 0.74f)
+        shape.color = structureShadowColor
         shape.rect(left - 3f, top - 3f, width + 6f, height + 6f)
-        shape.color = Color(0.14f, 0.18f, 0.20f, 0.64f)
+        shape.color = structureTopShadowColor
         shape.rect(left - 1f, top + height - 2f, width + 2f, 5f)
         shape.color = shell
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
-        shape.color = Color(0.82f, 0.88f, 0.94f, 0.08f)
+        shape.color = structureGlossColor
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
-        shape.color = Color(0f, 0f, 0f, 0.16f)
+        shape.color = structureCutColor
         shape.rect(left + 5f, top + height * 0.48f, width - 10f, 2f)
         shape.color =
             when {
-                isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
-                isResourceDepot -> Color(0.92f, 0.78f, 0.36f, 0.95f)
+                isGasDepot -> structureGasToneColor.cpy().also { it.a = 0.95f }
+                isResourceDepot -> structureResourceToneColor.cpy().also { it.a = 0.95f }
                 else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
             }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
         shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
         shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
-        shape.color = Color(0.82f, 0.88f, 0.92f, 0.10f)
+        shape.color = structureLineColor
         shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
-        shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
+        shape.color = structureWindowColor
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
         if (isDepot) {
-            shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
+            shape.color = structureDepotToneColor
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
-            shape.color = Color(0.88f, 0.70f, 0.24f, 0.42f)
+            shape.color = structureDepotGlowColor
             shape.rect(left + width * 0.25f, top + height - 6f, width * 0.5f, 3f)
-            shape.color = Color(0.84f, 0.74f, 0.36f, 0.24f)
+            shape.color = structureDepotPanelColor
             shape.rect(left + width * 0.18f, top + height * 0.30f, width * 0.18f, height * 0.26f)
             shape.rect(left + width * 0.62f, top + height * 0.30f, width * 0.18f, height * 0.18f)
         }
         if (isResourceDepot) {
-            shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
+            shape.color = structureResourceToneColor
             shape.rect(left + width - 13f, top + height - 12f, 8f, 6f)
             shape.rect(left + 6f, top + height - 12f, 8f, 6f)
-            shape.color = Color(0.96f, 0.84f, 0.42f, 0.26f)
+            shape.color = structureResourceGlowColor
             shape.rect(left + width * 0.18f, top + height - 5f, width * 0.64f, 3f)
-            shape.color = Color(1.00f, 0.90f, 0.56f, 0.24f)
+            shape.color = structureResourcePanelColor
             shape.rect(left + width * 0.38f, top + height * 0.24f, width * 0.24f, height * 0.22f)
             shape.rect(left + width * 0.22f, top + height * 0.46f, width * 0.56f, height * 0.10f)
         }
         if (isGasDepot) {
-            shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
+            shape.color = structureGasToneColor
             shape.circle(left + width * 0.5f, top + height * 0.55f, 6f)
-            shape.color = Color(0.40f, 0.90f, 0.72f, 0.28f + (ambientPulse(1600L) * 0.12f))
+            shape.color = scratchColorA.set(structureGasGlowColor).also { it.a = 0.28f + (ambientPulse(1600L) * 0.12f) }
             shape.circle(left + width * 0.5f, top + height * 0.55f, 9f)
-            shape.color = Color(0.64f, 1.00f, 0.86f, 0.22f)
+            shape.color = structureGasPanelColor
             shape.rect(left + width * 0.42f, top + height * 0.18f, width * 0.16f, height * 0.16f)
             shape.rect(left + width * 0.28f, top + height * 0.62f, width * 0.44f, height * 0.08f)
         }
         if (entity.supportsResearch == true) {
-            shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
+            shape.color = structureResearchToneColor
             shape.rect(left + width - 11f, top + height - 11f, 6f, 6f)
             shape.rect(left + width - 16f, top + height - 8f, 3f, 3f)
         }
         if (entity.supportsTraining == true) {
-            shape.color = Color(0.97f, 0.68f, 0.28f, 0.82f)
+            shape.color = structureTrainingToneColor
             shape.rect(left + 5f, top + height - 11f, 6f, 6f)
             shape.rect(left + 13f, top + height - 8f, 3f, 3f)
         }
         if (entity.underConstruction) {
-            shape.color = Color(0.78f, 0.64f, 0.30f, 0.35f)
+            shape.color = structureUnderConstructionFillColor
             shape.rect(left + 2f, top + 2f, width - 4f, height - 4f)
             val stripeCount = (width / 8f).toInt().coerceAtLeast(2)
-            shape.color = Color(0.92f, 0.76f, 0.40f, 0.55f)
+            shape.color = structureUnderConstructionStripeColor
             for (i in 0..stripeCount) {
                 val stripeX = left + 4f + (i * ((width - 8f) / stripeCount))
                 shape.rect(stripeX, top + 4f, 2f, height - 8f)
             }
         }
         if (entity.activeProductionType != null || entity.productionQueueSize > 0) {
-            shape.color = Color(0.98f, 0.76f, 0.34f, 0.18f + (ambientPulse(1100L) * 0.10f))
+            shape.color = scratchColorA.set(structureProductionStripColor).also { it.a = 0.18f + (ambientPulse(1100L) * 0.10f) }
             shape.rect(left + width - 14f, top + 6f, 8f, height - 12f)
         }
         if (entity.activeResearchTech != null) {
-            shape.color = Color(0.62f, 0.76f, 1.00f, 0.18f + (ambientPulse(1200L) * 0.10f))
+            shape.color = scratchColorA.set(structureResearchStripColor).also { it.a = 0.18f + (ambientPulse(1200L) * 0.10f) }
             shape.rect(left + 6f, top + 6f, 8f, height - 12f)
         }
         if (collapseSeverity > 0f) {
-            shape.color = Color(0.08f, 0.08f, 0.08f, 0.30f + (collapseSeverity * 0.18f))
+            shape.color = scratchColorA.set(structureCollapseCrackColor).also { it.a = 0.30f + (collapseSeverity * 0.18f) }
             shape.rectLine(left + width * 0.24f, top + height * 0.18f, left + width * 0.48f, top + height * 0.48f, 1.8f)
             shape.rectLine(left + width * 0.62f, top + height * 0.22f, left + width * 0.40f, top + height * 0.64f, 1.6f)
-            shape.color = Color(0.34f, 0.34f, 0.36f, 0.16f + (collapseSeverity * 0.24f))
+            shape.color = scratchColorA.set(structureCollapseSmokeColor).also { it.a = 0.16f + (collapseSeverity * 0.24f) }
             shape.circle(left + width * 0.32f, top + 6f, 4f + (collapseSeverity * 2f))
             shape.circle(left + width * 0.66f, top + 8f, 5f + (collapseSeverity * 3f))
-            shape.color = Color(0.58f, 0.58f, 0.60f, 0.10f + (collapseSeverity * 0.18f))
+            shape.color = scratchColorA.set(structureCollapseDustColor).also { it.a = 0.10f + (collapseSeverity * 0.18f) }
             shape.circle(left + width * 0.34f, top + 4f, 6f + (collapseSeverity * 3f))
             shape.circle(left + width * 0.68f, top + 5f, 7f + (collapseSeverity * 4f))
-            shape.color = Color(1.00f, 0.70f, 0.38f, 0.04f + (collapseSeverity * 0.10f))
+            shape.color = scratchColorA.set(structureCollapseEmberColor).also { it.a = 0.04f + (collapseSeverity * 0.10f) }
             shape.rect(left + width * 0.18f, top + height * 0.22f, width * 0.18f, 2f)
             shape.rect(left + width * 0.58f, top + height * 0.52f, width * 0.14f, 2f)
             if (collapseSeverity > 0.40f) {
                 val slump = (collapseSeverity - 0.40f) / 0.60f
                 val slumpDrop = 1.2f + (slump * 4.0f)
-                shape.color = Color(0.12f, 0.13f, 0.14f, 0.22f + (slump * 0.18f))
+                shape.color = scratchColorA.set(structureTopShadowColor).also { it.a = 0.22f + (slump * 0.18f) }
                 shape.rect(left + width * 0.20f, top + height * 0.18f + slumpDrop, width * 0.54f, height * 0.12f)
-                shape.color = Color(0.42f, 0.42f, 0.44f, 0.18f + (slump * 0.18f))
+                shape.color = scratchColorA.set(structureCollapseSmokeColor).also { it.a = 0.18f + (slump * 0.18f) }
                 shape.rect(left + width * 0.24f, top + height * 0.16f + slumpDrop, width * 0.46f, 3f)
-                shape.color = Color(0.08f, 0.08f, 0.08f, 0.18f + (slump * 0.18f))
+                shape.color = scratchColorA.set(structureCollapseCrackColor).also { it.a = 0.18f + (slump * 0.18f) }
                 shape.rect(left + width * 0.34f, top + height * 0.18f + slumpDrop, width * 0.14f, height * 0.18f)
             }
             if (collapseSeverity > 0.62f) {
                 val fracture = (collapseSeverity - 0.62f) / 0.38f
                 val emberPulse = ambientPulse(540L)
-                shape.color = Color(1.00f, 0.78f, 0.46f, 0.10f + (fracture * 0.14f) + (emberPulse * 0.04f))
+                shape.color = scratchColorA.set(structureUnderConstructionStripeColor).also { it.a = 0.10f + (fracture * 0.14f) + (emberPulse * 0.04f) }
                 shape.circle(left + width * 0.28f, top + height * 0.30f, 4f + (fracture * 4f))
                 shape.circle(left + width * 0.62f, top + height * 0.26f, 3f + (fracture * 3f))
                 shape.color = Color(0.60f, 0.56f, 0.48f, 0.20f + (fracture * 0.24f))
