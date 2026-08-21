@@ -1,0 +1,59 @@
+{
+  "units": {
+    "Worker": {
+      "asset": "assets/sprites/units/worker.png",
+      "scale": 0.58,
+      "teamTintStrength": 0.06
+    },
+    "Marine": {
+      "asset": "assets/sprites/units/marine.png",
+      "scale": 0.56,
+      "teamTintStrength": 0.05
+    },
+    "Zergling": {
+      "asset": "assets/sprites/units/zergling.png",
+      "scale": 0.54,
+      "teamTintStrength": 0.04
+    }
+  },
+  "unitArchetypes": {},
+  "buildings": {
+    "Depot": {
+      "asset": "assets/sprites/buildings/depot.png",
+      "scale": 0.92,
+      "teamTintStrength": 0.05
+    },
+    "ResourceDepot": {
+      "asset": "assets/sprites/buildings/depot.png",
+      "scale": 0.92,
+      "teamTintStrength": 0.05
+    },
+    "GasDepot": {
+      "asset": "assets/sprites/buildings/depot.png",
+      "scale": 0.92,
+      "teamTintStrength": 0.05
+    }
+  },
+  "buildingArchetypes": {},
+  "resources": {
+    "minerals": {
+      "asset": "assets/sprites/resources/minerals.png",
+      "scale": 0.74
+    },
+    "gas": {
+      "asset": "assets/sprites/resources/gas.png",
+      "scale": 0.78
+    }
+  },
+  "terrain": {
+    "base": {
+      "asset": "assets/sprites/terrain/base-tile.png"
+    },
+    "blocked": {
+      "asset": "assets/sprites/terrain/blocked-tile.png"
+    },
+    "occupied": {
+      "asset": "assets/sprites/terrain/occupied-tile.png"
+    }
+  }
+}

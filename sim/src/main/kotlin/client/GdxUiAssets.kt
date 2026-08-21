@@ -19,11 +19,14 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.LinkedHashMap
 
 internal class GdxUiAssets : Disposable {
     val font = BitmapFont()
     val batch = SpriteBatch()
     val shapeRenderer = ShapeRenderer()
+    val visualCatalog = defaultVisualAssetCatalog()
+    val spriteAssets = GdxSpriteAssets(visualCatalog)
     private var alertSoundPath: Path? = null
     private var attackSoundPath: Path? = null
     private var moveSoundPath: Path? = null
@@ -67,6 +70,7 @@ internal class GdxUiAssets : Disposable {
     val chrome = Color(0.16f, 0.29f, 0.35f, 1f)
     val chromeBright = Color(0.22f, 0.42f, 0.48f, 1f)
     val chromeMuted = Color(0.18f, 0.24f, 0.28f, 1f)
+    private val panelDrawableCache = LinkedHashMap<Int, Drawable>(256)
 
     val titleLabelStyle = Label.LabelStyle(font, paper)
     val bodyLabelStyle = Label.LabelStyle(font, ink)
@@ -74,7 +78,8 @@ internal class GdxUiAssets : Disposable {
     val accentLabelStyle = Label.LabelStyle(font, accent)
     val alertLabelStyle = Label.LabelStyle(font, alert)
 
-    fun panelDrawable(color: Color): Drawable = baseDrawable.tint(color)
+    fun panelDrawable(color: Color): Drawable =
+        panelDrawableCache.getOrPut(color.toIntBits()) { baseDrawable.tint(Color(color)) }
 
     fun buttonStyle(base: Color, overColor: Color = base.cpy().lerp(Color.WHITE, 0.12f)): TextButton.TextButtonStyle =
         TextButton.TextButtonStyle().apply {
@@ -95,10 +100,12 @@ internal class GdxUiAssets : Disposable {
     fun subtleButtonStyle(): TextButton.TextButtonStyle = buttonStyle(chromeMuted, chromeMuted.cpy().lerp(Color.WHITE, 0.04f))
 
     override fun dispose() {
+        panelDrawableCache.clear()
         whiteTexture.dispose()
         font.dispose()
         batch.dispose()
         shapeRenderer.dispose()
+        spriteAssets.dispose()
         alertSound.dispose()
         attackSound.dispose()
         moveSound.dispose()

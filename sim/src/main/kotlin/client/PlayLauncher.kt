@@ -107,7 +107,8 @@ internal fun buildPlaySimCommand(
     inputPath: Path,
     controlPath: Path,
     ticks: Int,
-    scenario: PlayScenario
+    scenario: PlayScenario,
+    snapshotEvery: Int = DEFAULT_PLAY_SNAPSHOT_EVERY
 ): List<String> =
     listOf(
         javaBin,
@@ -115,7 +116,7 @@ internal fun buildPlaySimCommand(
         classpath,
         "starkraft.sim.AppKt",
         "--snapshotEvery",
-        "1",
+        snapshotEvery.toString(),
         "--snapshotOut",
         snapshotPath.toString(),
         "--inputTail",
@@ -126,6 +127,17 @@ internal fun buildPlaySimCommand(
         "--ticks",
         ticks.toString()
     ) + scenario.simArgs
+
+internal const val DEFAULT_PLAY_SNAPSHOT_EVERY = 2
+
+internal fun parsePlaySnapshotEvery(raw: String?, defaultValue: Int = DEFAULT_PLAY_SNAPSHOT_EVERY): Int {
+    val value = raw?.trim().orEmpty()
+    if (value.isEmpty()) return defaultValue
+    return value.toIntOrNull()?.coerceAtLeast(1) ?: defaultValue
+}
+
+internal fun resolvePlaySnapshotEvery(defaultValue: Int = DEFAULT_PLAY_SNAPSHOT_EVERY): Int =
+    parsePlaySnapshotEvery(System.getenv("STARKRAFT_PLAY_SNAPSHOT_EVERY"), defaultValue)
 
 internal fun buildPlayClientCommand(
     javaBin: String,
@@ -220,12 +232,13 @@ fun main(args: Array<String>) {
     val javaBin = currentJavaBinary()
     val classpath = currentMainClasspath()
     val initialSnapshotTimeoutMs = resolveInitialSnapshotTimeoutMs()
+    val snapshotEvery = resolvePlaySnapshotEvery()
 
     while (true) {
         val activeScenario = readPlayScenario(paths.scenario, scenario)
         resetPlayFiles(paths)
         val simProcess =
-            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, ticks, activeScenario))
+            ProcessBuilder(buildPlaySimCommand(javaBin, classpath, paths.snapshots, paths.input, paths.control, ticks, activeScenario, snapshotEvery))
                 .inheritIO()
                 .start()
 

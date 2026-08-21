@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
@@ -20,7 +19,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 internal class GameScreen(
     private val game: StarkraftGdxGame,
@@ -31,7 +29,6 @@ internal class GameScreen(
         const val HUD_SELECTION_PULSE_DURATION_MS = 260L
         const val COMMAND_CLICK_PULSE_DURATION_MS = 180L
         const val SLOT_CLICK_PULSE_DURATION_MS = 180L
-        const val IMPACT_FLASH_DECAY_PER_SECOND = 2.8f
     }
 
     private val worldRenderer = GdxWorldRenderer(assets)
@@ -97,7 +94,6 @@ internal class GameScreen(
     private val pauseHeaderCard = Table()
     private val helpOverlay = Table()
     private val helpHeaderCard = Table()
-    private val impactFlash = Table()
     private val screenFade = Table()
     private val helpLabel = Label("", assets.mutedLabelStyle)
     private val footerLabel = Label("", assets.mutedLabelStyle)
@@ -116,36 +112,17 @@ internal class GameScreen(
     private var bannerPulseUntilMillis = 0L
     private var lastBannerSignature = ""
     private var lastCommandPanelSignature = ""
-    private var lastCenterStatusStripSignature = ""
-    private var lastQueueStatusStripSignature = ""
-    private var lastHealthBarSignature = ""
-    private var lastSelectionGridSignature = ""
-    private var lastSelectionPagerSignature = ""
-    private var lastControlGroupButtonsSignature = ""
-    private var lastHudChromeSignature = ""
-    private var lastHudLayoutSignature = ""
     private val commandPulseUntilMillis = HashMap<String, Long>()
     private val slotPulseUntilMillis = HashMap<Int, Long>()
     private var screenFadeAlpha = 1f
-    private var impactFlashAlpha = 0f
-    private val impactFlashTone = Color(1f, 1f, 1f, 0f)
     private var soundVariantTick = 0
     private val soundCooldownUntilMillis = HashMap<String, Long>()
     private lateinit var topSelectionCell: Cell<*>
     private lateinit var topModeCell: Cell<*>
     private lateinit var topStatusCell: Cell<*>
     private lateinit var leftHudSpacerCell: Cell<*>
-    private lateinit var centerLeftGapCell: Cell<*>
     private lateinit var centerHudCell: Cell<*>
-    private lateinit var centerRightGapCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
-    private lateinit var commandHintCell: Cell<*>
-
-    private data class SelectionFrameContext(
-        val snapshot: ClientSnapshot,
-        val selected: List<EntitySnapshot>,
-        val lead: EntitySnapshot?
-    )
 
     init {
         statusHeader.setFontScale(0.94f)
@@ -157,11 +134,6 @@ internal class GameScreen(
         modeLabel.setFontScale(0.88f)
         statusBadgeLabel.setFontScale(0.88f)
         commandHintLabel.setFontScale(0.84f)
-        topSelectionLabel.setEllipsis(true)
-        modeLabel.setEllipsis(true)
-        statusBadgeLabel.setEllipsis(true)
-        commandHintLabel.setEllipsis(true)
-        commandHintLabel.setAlignment(Align.left)
         selectionMetaLabel.setFontScale(0.84f)
         factionOverviewLabel.setFontScale(0.84f)
         selectionRosterLabel.setFontScale(0.84f)
@@ -185,7 +157,6 @@ internal class GameScreen(
         refreshHud()
         if (runtime.consumeAttackAlertSound()) {
             playSoundVariant(assets.alertSound, 0.7f, 0.98f, 1.04f)
-            triggerImpactFlash(Color(1.00f, 0.42f, 0.22f, 1f), 0.13f)
         }
         when (runtime.consumeCommandSoundKind()) {
             CommandSoundKind.MOVE -> playSoundVariant("cmd-move", assets.moveSound, 0.48f, 0.98f, 1.05f, 30L)
@@ -195,50 +166,26 @@ internal class GameScreen(
             null -> Unit
         }
         when (runtime.consumeCombatSoundKind()) {
-            CombatSoundKind.MARINE_RANGED -> {
-                playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
-                triggerImpactFlash(Color(0.98f, 0.80f, 0.42f, 1f), 0.045f)
-            }
-            CombatSoundKind.ZERGLING_MELEE -> {
-                playSoundVariant(assets.zerglingCombatSound, 0.46f, 0.93f, 1.03f)
-                triggerImpactFlash(Color(0.62f, 1.00f, 0.54f, 1f), 0.050f)
-            }
-            CombatSoundKind.MELEE -> {
-                playSoundVariant(assets.meleeCombatSound, 0.44f, 0.95f, 1.04f)
-                triggerImpactFlash(Color(1.00f, 0.72f, 0.48f, 1f), 0.042f)
-            }
-            CombatSoundKind.RANGED -> {
-                playSoundVariant(assets.rangedCombatSound, 0.42f, 0.97f, 1.05f)
-                triggerImpactFlash(Color(0.86f, 0.92f, 1.00f, 1f), 0.036f)
-            }
+            CombatSoundKind.MARINE_RANGED -> playSoundVariant(assets.marineCombatSound, 0.46f, 0.96f, 1.06f)
+            CombatSoundKind.ZERGLING_MELEE -> playSoundVariant(assets.zerglingCombatSound, 0.46f, 0.93f, 1.03f)
+            CombatSoundKind.MELEE -> playSoundVariant(assets.meleeCombatSound, 0.44f, 0.95f, 1.04f)
+            CombatSoundKind.RANGED -> playSoundVariant(assets.rangedCombatSound, 0.42f, 0.97f, 1.05f)
             null -> Unit
         }
         when (runtime.consumeDeathSoundKind()) {
-            DeathSoundKind.UNIT -> {
-                playSoundVariant("death-unit", assets.deathSound, 0.56f, 0.94f, 1.03f, 55L)
-                triggerImpactFlash(Color(1.00f, 0.52f, 0.42f, 1f), 0.070f)
-            }
-            DeathSoundKind.MARINE -> {
-                playSoundVariant("death-marine", assets.marineDeathSound, 0.58f, 0.95f, 1.04f, 55L)
-                triggerImpactFlash(Color(1.00f, 0.56f, 0.46f, 1f), 0.076f)
-            }
-            DeathSoundKind.ZERGLING -> {
-                playSoundVariant("death-zergling", assets.zerglingDeathSound, 0.56f, 0.92f, 1.01f, 45L)
-                triggerImpactFlash(Color(0.68f, 1.00f, 0.56f, 1f), 0.076f)
-            }
+            DeathSoundKind.UNIT -> playSoundVariant("death-unit", assets.deathSound, 0.56f, 0.94f, 1.03f, 55L)
+            DeathSoundKind.MARINE -> playSoundVariant("death-marine", assets.marineDeathSound, 0.58f, 0.95f, 1.04f, 55L)
+            DeathSoundKind.ZERGLING -> playSoundVariant("death-zergling", assets.zerglingDeathSound, 0.56f, 0.92f, 1.01f, 45L)
             DeathSoundKind.STRUCTURE -> {
                 playSoundVariant("death-structure-main", assets.structureDeathSound, 0.60f, 0.92f, 1.00f, 80L)
                 playSoundVariant("death-structure-tail", assets.structureDeathTailSound, 0.38f, 0.88f, 0.96f, 120L)
-                triggerImpactFlash(Color(1.00f, 0.66f, 0.34f, 1f), 0.110f)
             }
             null -> Unit
         }
         if (runtime.consumeCompletionAlertSound()) {
             playSoundVariant(assets.completeSound, 0.55f, 0.98f, 1.04f)
-            triggerImpactFlash(Color(0.60f, 0.98f, 0.76f, 1f), 0.060f)
         }
         worldRenderer.render(runtime, Gdx.graphics.width, Gdx.graphics.height, worldViewportHeight, dragSelection)
-        updateImpactFlash(delta)
         updateScreenFade(delta)
         stage.act(delta)
         stage.draw()
@@ -380,7 +327,7 @@ internal class GameScreen(
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.50f, 0.62f)) }).height(1f).expandX().fillX().padTop(5f).row()
-            commandHintCell = add(
+            add(
                 commandHintCard.apply {
                     pad(2f, 2f, 0f, 2f)
                     add(
@@ -398,8 +345,7 @@ internal class GameScreen(
                         }
                     ).expandX().fillX()
                 }
-            ).expandX().fillX().padTop(3f).height(20f)
-            row()
+            ).expandX().fillX().padTop(3f).row()
             add(actionBanner).left().expandX().fillX().padTop(3f).row()
         }
         buttonTable.top().left()
@@ -474,7 +420,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(1f, 4f, 1f, 4f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
@@ -497,7 +443,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 4f, 1f, 4f)
+                                    pad(1f, 5f, 1f, 5f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.68f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
@@ -505,14 +451,14 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.06f, 0.10f, 0.14f, 0.38f))
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(2f, 3f, 2f, 3f)
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(2f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(2f, 3f, 2f, 3f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
@@ -526,7 +472,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(Color(0.12f, 0.18f, 0.22f, 0.62f))
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(1f, 4f, 1f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(Color(0.98f, 0.90f, 0.52f, 0.64f)) }).width(1f).expandY().fillY().padRight(4f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
@@ -562,22 +508,12 @@ internal class GameScreen(
 
         bottomHud.apply {
             background = null
-            pad(0f, 12f, 4f, 12f)
-            leftHudSpacerCell = add().width(188f).bottom()
-            centerLeftGapCell = add().expandX().fillX().bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.84f))).width(252f).bottom().padLeft(3f).padRight(3f)
-            centerRightGapCell = add().expandX().fillX().bottom()
-            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.84f))).width(224f).right().bottom()
+            pad(0f, 18f, 8f, 18f)
+            leftHudSpacerCell = add().width(208f).bottom()
+            centerHudCell = add(wrapHudPanel(centerCard, Color(0.20f, 0.44f, 0.50f, 0.92f))).width(266f).bottom().padRight(10f)
+            add().expandX().fillX()
+            commandHudCell = add(wrapHudPanel(commandCard, Color(0.22f, 0.38f, 0.46f, 0.92f))).width(278f).right().bottom()
         }
-
-        impactFlash.apply {
-            setFillParent(true)
-            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            isVisible = false
-            background = assets.panelDrawable(Color.WHITE)
-            color.set(impactFlashTone)
-        }
-        stage.addActor(impactFlash)
 
         root.top()
         root.add(wrapTopStrip(topBar)).expandX().fillX().pad(6f, 18f, 0f, 18f).row()
@@ -589,7 +525,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapFrame).padLeft(14f).padBottom(8f)
+            add(minimapFrame).padLeft(20f).padBottom(12f)
         }
         stage.addActor(leftHudColumn)
 
@@ -702,226 +638,14 @@ internal class GameScreen(
         val commandColumns = 3
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - commandDeckLayout.actorInset.toFloat()
+        val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
-        val hudLayoutSignature = buildHudLayoutSignature(width, height, topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight)
-        if (hudLayoutSignature != lastHudLayoutSignature) {
-            lastHudLayoutSignature = hudLayoutSignature
-            applyHudLayout(topBarLayout, bottomHudLayout, commandDeckLayout, centerPanelLayout, minimapWidth, minimapHeight, centerWidth, commandWidth, commandHeight, unifiedPanelHeight, hudShellHeight)
-        }
-        setLabelTextIfChanged(minimapTitle, "Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
-        setActorColorIfChanged(minimapTitle, currentMinimapTitleTone())
-        setLabelTextIfChanged(minimapHint, buildMinimapHintLine(runtime.isGameplayCommandArmed()))
-        setActorColorIfChanged(minimapHint, currentMinimapHintTone())
-        buttonTable.defaults().pad(0f, 0f, 3f, 3f)
-        val selectionHeadline = buildSelectionHeadline()
-        val selectionFrame = snapshot?.let(::buildSelectionFrameContext)
-        val selectionMetaLine = buildSelectionMetaLine(selectionFrame)
-        val centerStatusLine = buildCenterStatusLine(selectionFrame)
-        val queueStatusLine = buildQueueStatusLine(selectionFrame)
-        val queueHeaderLine = buildQueueHeaderLine(selectionFrame)
-        val selectionRosterLine = buildSelectionRosterLine(selectionFrame)
-        val factionOverviewLine = buildFactionOverviewLine()
-        val portraitText = buildPortraitText(selectionFrame)
-        val healthLine = buildHealthLine(selectionFrame)
-        val topEconomyLine = buildTopEconomyLine()
-        val topSelectionLine = buildTopSelectionLine(selectionFrame)
-        val topModeLine = buildTopModeLine()
-        val statusBadgeLine = buildStatusBadgeLine()
-        val actionBannerText = buildActionBannerLine()
-        val commandHintText = buildCommandHintLine()
-        val centerFooterLine = buildCenterFooterLine()
-        val statusSummaryText = buildStatusSummaryLines(topEconomyLine).joinToString("\n")
-        setLabelTextIfChanged(selectionLabel, selectionHeadline)
-        setLabelTextIfChanged(selectionMetaLabel, selectionMetaLine)
-        setLabelTextIfChanged(centerStatusLabel, centerStatusLine)
-        val centerStatusBits = buildCenterStatusBits(selectionFrame)
-        val centerStatusStripSignature = buildStatusStripSignature(centerStatusBits, "RDY")
-        if (centerStatusStripSignature != lastCenterStatusStripSignature) {
-            lastCenterStatusStripSignature = centerStatusStripSignature
-            rebuildCenterStatusStrip(centerStatusBits)
-        }
-        setLabelTextIfChanged(queueStatusLabel, queueStatusLine)
-        val queueStatusBits = buildQueueStatusBits(selectionFrame)
-        val queueStatusStripSignature = buildStatusStripSignature(queueStatusBits, "IDLE")
-        if (queueStatusStripSignature != lastQueueStatusStripSignature) {
-            lastQueueStatusStripSignature = queueStatusStripSignature
-            rebuildQueueStatusStrip(queueStatusBits)
-        }
-        setLabelTextIfChanged(queueHeaderLabel, queueHeaderLine)
-        setActorColorIfChanged(selectionLabel, currentSelectionHeadlineTone())
-        setActorColorIfChanged(selectionMetaLabel, currentSelectionMetaTone())
-        setActorColorIfChanged(centerStatusLabel, currentCenterStatusTone(centerStatusLine))
-        setActorColorIfChanged(queueHeaderLabel, currentQueueHeaderTone(queueHeaderLine))
-        setActorColorIfChanged(queueStatusLabel, currentQueueStatusTone(queueHeaderLine))
-        setLabelTextIfChanged(selectionRosterLabel, selectionRosterLine)
-        setActorColorIfChanged(selectionRosterLabel, currentRosterTone())
-        setLabelTextIfChanged(factionOverviewLabel, factionOverviewLine)
-        setLabelTextIfChanged(portraitLabel, portraitText)
-        setLabelTextIfChanged(healthLabel, healthLine)
-        val healthBarSignature = buildHealthBarSignature()
-        if (healthBarSignature != lastHealthBarSignature) {
-            lastHealthBarSignature = healthBarSignature
-            updateHealthBar()
-        }
-        val selectionGridSignature = buildSelectionGridSignature(snapshot, centerPanelLayout)
-        if (selectionGridSignature != lastSelectionGridSignature) {
-            lastSelectionGridSignature = selectionGridSignature
-            rebuildSelectionGrid()
-        }
-        setLabelTextIfChanged(hudLinesLabel, statusSummaryText)
-        setLabelTextIfChanged(
-            footerLabel,
-            buildHudFooterLine(
-                hasSelection = runtime.session.state.selectedIds.isNotEmpty(),
-                commandArmed = runtime.isGameplayCommandArmed()
-            )
-        )
-        setLabelTextIfChanged(statusHeader, "Battlefield")
-        setLabelTextIfChanged(centerHeaderLabel, buildCenterHeaderLine(selectionFrame))
-        val groupedButtons = commandGroups(runtime.buttonModels())
-        setLabelTextIfChanged(commandHeaderLabel, buildCommandHeader(groupedButtons))
-        setActorColorIfChanged(commandHeaderLabel, currentCommandHeaderTone(groupedButtons))
-        setLabelTextIfChanged(economyLabel, topEconomyLine)
-        setActorColorIfChanged(economyLabel, currentTopEconomyTone())
-        setLabelTextIfChanged(topSelectionLabel, topSelectionLine)
-        setActorColorIfChanged(topSelectionLabel, currentTopSelectionTone())
-        setLabelTextIfChanged(modeLabel, topModeLine)
-        setActorColorIfChanged(modeLabel, currentTopModeTone())
-        setLabelTextIfChanged(statusBadgeLabel, statusBadgeLine)
-        setActorColorIfChanged(statusBadgeLabel, currentStatusBadgeTone())
-        setLabelTextIfChanged(actionBannerLabel, actionBannerText)
-        setActorColorIfChanged(actionBannerLabel, currentActionBannerTextTone())
-        setLabelTextIfChanged(commandHintLabel, commandHintText)
-        setActorColorIfChanged(commandHintLabel, currentCommandHintTextTone())
-        setLabelTextIfChanged(attackWarningLabel, buildAttackWarningText())
-        val showAttackWarning = runtime.attackWarningLine() != null
-        setActorVisibleIfChanged(attackWarningTable, showAttackWarning)
-        setLabelTextIfChanged(centerFooterLabel, centerFooterLine)
-        syncSelectionPage(snapshot, actionBannerText, commandHintText, statusBadgeLine)
-        val selectionPagerSignature = buildSelectionPagerSignature(snapshot)
-        if (selectionPagerSignature != lastSelectionPagerSignature) {
-            lastSelectionPagerSignature = selectionPagerSignature
-            updateSelectionPager(snapshot)
-        }
-        setActorVisibleIfChanged(pauseOverlay, runtime.pauseOverlayVisible)
-        setActorVisibleIfChanged(helpOverlay, runtime.helpOverlayVisible)
-        setLabelTextIfChanged(helpLabel, buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
-        val showActionBanner = actionBannerText.isNotBlank()
-        setActorVisibleIfChanged(actionBanner, showActionBanner)
-        val hudChromeSignature = buildHudChromeSignature(showActionBanner, showAttackWarning)
-        if (hudChromeSignature != lastHudChromeSignature) {
-            lastHudChromeSignature = hudChromeSignature
-            applyHudChrome(showActionBanner, showAttackWarning)
-        }
-        val commandPanelSignature = buildCommandPanelSignature(groupedButtons, snapshot, commandDeckLayout, commandWidth, commandButtonHeight)
-        if (commandPanelSignature != lastCommandPanelSignature) {
-            lastCommandPanelSignature = commandPanelSignature
-            rebuildCommandPanel(groupedButtons, snapshot, commandDeckLayout, commandColumns, commandCellWidth, commandActorWidth, commandButtonHeight)
-            bottomHud.invalidateHierarchy()
-        }
-    }
-
-    private fun buildHudChromeSignature(showActionBanner: Boolean, showAttackWarning: Boolean): String {
-        val selectionPulse = quantizePulse(selectionHudPulse())
-        val topModePulse = quantizePulse(topModePulse())
-        val topStatusPulse = quantizePulse(topStatusPulse())
-        val overlayPulse = quantizePulse(overlayHeaderPulse())
-        val bannerPulse = quantizePulse(bannerPulse())
-        return listOf(
-            commandHintCardColor(bannerPulse).toIntBits(),
-            topSelectionShellColor(selectionPulse).toIntBits(),
-            topSelectionCardColor(selectionPulse).toIntBits(),
-            topModeShellColor(topModePulse).toIntBits(),
-            topModeCardColor(topModePulse).toIntBits(),
-            topStatusShellColor(topStatusPulse).toIntBits(),
-            topStatusCardColor(topStatusPulse).toIntBits(),
-            selectionHeadlineCardColor(selectionPulse).toIntBits(),
-            portraitFrameColor(selectionPulse).toIntBits(),
-            currentAttackWarningCardTone().toIntBits(),
-            pauseHeaderCardColor(overlayPulse).toIntBits(),
-            helpHeaderCardColor(overlayPulse).toIntBits(),
-            if (showActionBanner) actionBannerColor(bannerPulse).toIntBits() else "none",
-            showActionBanner,
-            showAttackWarning
-        ).joinToString("|")
-    }
-
-    private fun applyHudChrome(showActionBanner: Boolean, showAttackWarning: Boolean) {
-        val selectionPulse = quantizePulse(selectionHudPulse())
-        val topModePulse = quantizePulse(topModePulse())
-        val topStatusPulse = quantizePulse(topStatusPulse())
-        val overlayPulse = quantizePulse(overlayHeaderPulse())
-        val bannerPulse = quantizePulse(bannerPulse())
-        commandHintCard.background = assets.panelDrawable(commandHintCardColor(bannerPulse))
-        topSelectionShell.background = assets.panelDrawable(topSelectionShellColor(selectionPulse))
-        topSelectionCard.background = assets.panelDrawable(topSelectionCardColor(selectionPulse))
-        topModeShell.background = assets.panelDrawable(topModeShellColor(topModePulse))
-        topModeCard.background = assets.panelDrawable(topModeCardColor(topModePulse))
-        topStatusShell.background = assets.panelDrawable(topStatusShellColor(topStatusPulse))
-        topStatusCard.background = assets.panelDrawable(topStatusCardColor(topStatusPulse))
-        selectionHeadlineCard.background = assets.panelDrawable(selectionHeadlineCardColor(selectionPulse))
-        portraitFrame.background = assets.panelDrawable(portraitFrameColor(selectionPulse))
-        attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
-        pauseHeaderCard.background = assets.panelDrawable(pauseHeaderCardColor(overlayPulse))
-        helpHeaderCard.background = assets.panelDrawable(helpHeaderCardColor(overlayPulse))
-        actionBanner.background = if (showActionBanner) assets.panelDrawable(actionBannerColor(bannerPulse)) else null
-        actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
-        setActorVisibleIfChanged(attackWarningTable, showAttackWarning)
-    }
-
-    private fun quantizePulse(value: Float, steps: Int = 6): Float {
-        if (value <= 0f) return 0f
-        val clamped = value.coerceIn(0f, 1f)
-        return ((clamped * steps).roundToInt() / steps.toFloat()).coerceIn(0f, 1f)
-    }
-
-    private fun buildHudLayoutSignature(
-        width: Int,
-        height: Int,
-        topBarLayout: TopBarLayout,
-        bottomHudLayout: BottomHudLayout,
-        commandDeckLayout: CommandDeckLayout,
-        centerPanelLayout: CenterPanelLayout,
-        minimapWidth: Float,
-        minimapHeight: Float
-    ): String =
-        listOf(
-            width,
-            height,
-            topBarLayout.selectionWidth,
-            topBarLayout.modeWidth,
-            topBarLayout.statusWidth,
-            bottomHudLayout.leftSlotWidth,
-            bottomHudLayout.centerWidth,
-            bottomHudLayout.commandWidth,
-            commandDeckLayout.scrollHeight,
-            centerPanelLayout.portraitSize,
-            minimapWidth.toInt(),
-            minimapHeight.toInt(),
-            computeBottomHudHeight(width, height)
-        ).joinToString("|")
-
-    private fun applyHudLayout(
-        topBarLayout: TopBarLayout,
-        bottomHudLayout: BottomHudLayout,
-        commandDeckLayout: CommandDeckLayout,
-        centerPanelLayout: CenterPanelLayout,
-        minimapWidth: Float,
-        minimapHeight: Float,
-        centerWidth: Float,
-        commandWidth: Float,
-        commandHeight: Float,
-        unifiedPanelHeight: Float,
-        hudShellHeight: Float
-    ) {
         topSelectionCell.width(topBarLayout.selectionWidth.toFloat())
         topModeCell.width(topBarLayout.modeWidth.toFloat())
         topStatusCell.width(topBarLayout.statusWidth.toFloat())
         leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
-        centerLeftGapCell.minWidth(4f)
         centerHudCell.width(centerWidth)
-        centerRightGapCell.minWidth(4f)
         commandHudCell.width(commandWidth)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
@@ -931,10 +655,9 @@ internal class GameScreen(
         hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
         centerFooterLabel.setWrap(true)
-        topSelectionLabel.setWrap(false)
-        modeLabel.setWrap(false)
-        statusBadgeLabel.setWrap(false)
-        commandHintLabel.setWrap(false)
+        minimapTitle.setText("Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
+        minimapTitle.color = currentMinimapTitleTone()
+        minimapHint.color = currentMinimapHintTone()
         selectionLabel.setWidth(centerWidth)
         selectionMetaLabel.setWidth(centerWidth)
         queueStatusLabel.setWidth(centerWidth)
@@ -943,18 +666,89 @@ internal class GameScreen(
         factionOverviewLabel.setWidth(minimapWidth)
         footerLabel.setWidth(minimapWidth)
         centerFooterLabel.setWidth(centerWidth)
-        topSelectionLabel.setWidth(topBarLayout.selectionWidth.toFloat() - 8f)
-        modeLabel.setWidth(topBarLayout.modeWidth.toFloat() - 8f)
-        statusBadgeLabel.setWidth(topBarLayout.statusWidth.toFloat() - 8f)
-        commandHintLabel.setWidth(commandWidth - 38f)
-        minimapHint.setWidth(minimapWidth - 16f)
+        minimapHint.setWidth(minimapWidth - 20f)
         minimapFrame.setSize(minimapWidth, minimapHeight)
-        centerCard.setSize(centerWidth, unifiedPanelHeight - 4f)
-        commandCard.setSize(commandWidth, unifiedPanelHeight - 4f)
-        commandHintCell.height(computeCommandHintRowHeight(Gdx.graphics.width).toFloat())
-        commandScroll.setSize(commandWidth - 6f, commandHeight)
+        centerCard.setSize(centerWidth, unifiedPanelHeight - 6f)
+        commandCard.setSize(commandWidth, unifiedPanelHeight - 6f)
+        commandScroll.setSize(commandWidth - 8f, commandHeight)
         portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
+        buttonTable.defaults().pad(0f, 0f, 3f, 3f)
+        selectionLabel.setText(buildSelectionHeadline())
+        selectionMetaLabel.setText(buildSelectionMetaLine())
+        centerStatusLabel.setText(buildCenterStatusLine())
+        rebuildCenterStatusStrip()
+        queueStatusLabel.setText(buildQueueStatusLine())
+        rebuildQueueStatusStrip()
+        queueHeaderLabel.setText(buildQueueHeaderLine())
+        selectionLabel.color = currentSelectionHeadlineTone()
+        selectionMetaLabel.color = currentSelectionMetaTone()
+        centerStatusLabel.color = currentCenterStatusTone()
+        queueHeaderLabel.color = currentQueueHeaderTone()
+        queueStatusLabel.color = currentQueueStatusTone()
+        selectionRosterLabel.setText(buildSelectionRosterLine())
+        selectionRosterLabel.color = currentRosterTone()
+        factionOverviewLabel.setText(buildFactionOverviewLine())
+        portraitLabel.setText(buildPortraitText())
+        healthLabel.setText(buildHealthLine())
+        updateHealthBar()
+        rebuildSelectionGrid()
+        hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
+        footerLabel.setText("LMB select  RMB order  drag box select")
+        statusHeader.setText("Battlefield")
+        centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
+        val groupedButtons = commandGroups(runtime.buttonModels())
+        commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
+        commandHeaderLabel.color = currentCommandHeaderTone(groupedButtons)
+        economyLabel.setText(buildTopEconomyLine())
+        economyLabel.color = currentTopEconomyTone()
+        topSelectionLabel.setText(buildTopSelectionLine())
+        topSelectionLabel.color = currentTopSelectionTone()
+        modeLabel.setText(buildTopModeLine())
+        modeLabel.color = currentTopModeTone()
+        statusBadgeLabel.setText(buildStatusBadgeLine())
+        statusBadgeLabel.color = currentStatusBadgeTone()
+        val actionBannerText = buildActionBannerLine()
+        actionBannerLabel.setText(actionBannerText)
+        actionBannerLabel.color = currentActionBannerTextTone()
+        val commandHintText = buildCommandHintLine()
+        commandHintLabel.setText(commandHintText)
+        commandHintLabel.color = currentCommandHintTextTone()
+        val bannerPulse = bannerPulse()
+        commandHintCard.background = assets.panelDrawable(currentCommandHintCardTone().cpy().lerp(Color(0.22f, 0.30f, 0.22f, 0.82f), bannerPulse * 0.22f))
+        val selectionPulse = selectionHudPulse()
+        topSelectionShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.18f, 0.24f, 0.18f, 0.68f), selectionPulse * 0.20f))
+        topSelectionCard.background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.72f).lerp(Color(0.26f, 0.34f, 0.22f, 0.82f), selectionPulse * 0.28f))
+        val topModePulse = topModePulse()
+        topModeShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.58f).lerp(Color(0.16f, 0.22f, 0.18f, 0.68f), topModePulse * 0.20f))
+        topModeCard.background = assets.panelDrawable(Color(0.10f, 0.18f, 0.16f, 0.72f).lerp(Color(0.24f, 0.34f, 0.22f, 0.82f), topModePulse * 0.28f))
+        val topStatusPulse = topStatusPulse()
+        topStatusShell.background = assets.panelDrawable(Color(0.08f, 0.13f, 0.17f, 0.60f).lerp(Color(0.24f, 0.18f, 0.14f, 0.70f), topStatusPulse * 0.22f))
+        topStatusCard.background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.74f).lerp(Color(0.38f, 0.26f, 0.18f, 0.84f), topStatusPulse * 0.30f))
+        selectionHeadlineCard.background = assets.panelDrawable(currentSelectionHeadlineCardTone().cpy().lerp(Color(0.74f, 1.00f, 0.82f, 0.86f), selectionPulse * 0.34f))
+        portraitFrame.background = assets.panelDrawable(Color(0.16f, 0.20f, 0.18f, 0.80f).lerp(Color(0.28f, 0.36f, 0.22f, 0.86f), selectionPulse * 0.28f))
+        attackWarningLabel.setText(buildAttackWarningText())
+        attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
+        attackWarningTable.isVisible = runtime.attackWarningLine() != null
+        centerFooterLabel.setText(buildCenterFooterLine())
+        syncSelectionPage(snapshot)
+        updateSelectionPager(snapshot)
+        pauseOverlay.isVisible = runtime.pauseOverlayVisible
+        helpOverlay.isVisible = runtime.helpOverlayVisible
+        val overlayPulse = overlayHeaderPulse()
+        pauseHeaderCard.background = assets.panelDrawable(currentPauseHeaderTone().cpy().lerp(Color(0.38f, 0.30f, 0.20f, 0.94f), overlayPulse * 0.26f))
+        helpHeaderCard.background = assets.panelDrawable(currentHelpHeaderTone().cpy().lerp(Color(0.26f, 0.34f, 0.22f, 0.90f), overlayPulse * 0.22f))
+        helpLabel.setText(buildHelpOverlayLines(runtime.helpOverlayVisible).joinToString("\n"))
+        val showActionBanner = actionBannerText.isNotBlank()
+        actionBanner.isVisible = showActionBanner
+        actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerTone().cpy().lerp(Color(0.24f, 0.30f, 0.18f, 0.82f), bannerPulse * 0.24f)) else null
+        actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
+        val commandPanelSignature = buildCommandPanelSignature(groupedButtons, snapshot, commandDeckLayout, commandWidth, commandButtonHeight)
+        if (commandPanelSignature != lastCommandPanelSignature) {
+            lastCommandPanelSignature = commandPanelSignature
+            rebuildCommandPanel(groupedButtons, snapshot, commandDeckLayout, commandColumns, commandCellWidth, commandActorWidth, commandButtonHeight)
+            bottomHud.invalidateHierarchy()
+        }
     }
 
     private fun rebuildCommandPanel(
@@ -983,10 +777,8 @@ internal class GameScreen(
                     ).colspan(commandColumns).left().padBottom(4f).row()
                     group.second.forEachIndexed { index, button ->
                         val activePulse = uiPulse()
-                        val buttonLabel = commandButtonText(button)
-                        val hotkeyLabel = commandButtonHotkey(button)
                         val actor = makeButton(
-                            buttonLabel,
+                            commandButtonLabel(button),
                             runtime.actionHint(button.actionId),
                             commandButtonStyle(button.actionId)
                         ) {
@@ -1075,46 +867,19 @@ internal class GameScreen(
                                                 checked = actor.isChecked
                                             )
                                         ).size(if (commandDeckLayout.buttonHeight <= 17) 9f else 10f, if (commandDeckLayout.buttonHeight <= 17) 9f else 10f).left().padRight(3f)
-                                        add(actor).width(commandActorWidth - if (hotkeyLabel != null) 18f else 8f).height(commandButtonHeight).left().expandX().fillX()
-                                        if (hotkeyLabel != null) {
-                                            add(
-                                                Table().apply {
-                                                    background =
-                                                        assets.panelDrawable(
-                                                            when {
-                                                                actor.isDisabled -> Color(0.16f, 0.18f, 0.20f, 0.34f)
-                                                                actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.76f)
-                                                                else -> commandHotkeyTone(button.actionId)
-                                                            }
-                                                        )
-                                                    pad(1f, 3f, 1f, 3f)
-                                                    add(
-                                                        Label(hotkeyLabel, assets.mutedLabelStyle).apply {
-                                                            setFontScale(0.76f)
-                                                            color =
-                                                                when {
-                                                                    actor.isDisabled -> Color(0.72f, 0.76f, 0.80f, 0.62f)
-                                                                    actor.isChecked -> Color(0.14f, 0.12f, 0.08f, 0.94f)
-                                                                    else -> Color(0.92f, 0.96f, 1.00f, 0.96f)
-                                                                }
+                                        add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
+                                        add(
+                                            Table().apply {
+                                                background =
+                                                    assets.panelDrawable(
+                                                        when {
+                                                            actor.isDisabled -> Color(1f, 1f, 1f, 0.08f)
+                                                            actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.66f)
+                                                            else -> Color(1f, 1f, 1f, 0.09f)
                                                         }
-                                                    ).center()
-                                                }
-                                            ).minWidth(15f).height(commandButtonHeight - 2f).padLeft(3f)
-                                        } else {
-                                            add(
-                                                Table().apply {
-                                                    background =
-                                                        assets.panelDrawable(
-                                                            when {
-                                                                actor.isDisabled -> Color(1f, 1f, 1f, 0.06f)
-                                                                actor.isChecked -> Color(1.00f, 0.94f, 0.60f, 0.44f)
-                                                                else -> Color(1f, 1f, 1f, 0.08f)
-                                                            }
-                                                        )
-                                                }
-                                            ).size(3f, 3f).padLeft(3f)
-                                        }
+                                                    )
+                                            }
+                                        ).size(4f, 4f).padLeft(3f)
                                     }
                                 ).expand().fill()
                             }
@@ -1176,7 +941,7 @@ internal class GameScreen(
             }
         }
 
-    private fun buildStatusSummaryLines(topEconomyLine: String = buildTopEconomyLine()): List<String> {
+    private fun buildStatusSummaryLines(): List<String> {
         val lines = runtime.currentHudLines()
         val preferredPrefixes =
             listOf(
@@ -1195,7 +960,7 @@ internal class GameScreen(
         for (prefix in preferredPrefixes) {
             lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
         }
-        if (runtime.session.state.viewedFaction != null && topEconomyLine.contains("vis 0")) {
+        if (runtime.session.state.viewedFaction != null && buildTopEconomyLine().contains("vis 0")) {
             picked.add(0, "warning: no vision, press 1/2/3")
         }
         if (picked.isEmpty()) {
@@ -1212,33 +977,23 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "Awaiting"
         return if (runtime.session.state.selectedIds.isEmpty()) {
             val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "${faction.uppercase()} READY · ${snapshot.entities.size} UNITS"
+            "$faction · ${snapshot.entities.size} up"
         } else {
-            val lead = snapshot.entities.firstOrNull { it.id == runtime.session.state.selectedIds.first() }
-            if (runtime.session.state.selectedIds.size == 1 && lead != null) {
-                "${lead.typeId ?: "Unit"} #${lead.id}"
-            } else {
-                "${runtime.session.state.selectedIds.size} UNIT GROUP"
-            }
+            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
         }
     }
 
-    private fun buildSelectionFrameContext(snapshot: ClientSnapshot): SelectionFrameContext {
+    private fun buildPortraitText(): String {
+        val snapshot = runtime.snapshot ?: return "NO\nDATA"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        val lead = if (selected.isEmpty()) null else resolveFocusedEntity(snapshot, selected) ?: selected.first()
-        return SelectionFrameContext(snapshot, selected, lead)
-    }
-
-    private fun buildPortraitText(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val selectionContext = context ?: return "NO\nDATA"
-        if (selectionContext.selected.isEmpty()) {
+        if (selected.isEmpty()) {
             return runtime.session.state.viewedFaction?.let { "F$it\nVIEW" } ?: "OBS\nVIEW"
         }
-        val lead = selectionContext.lead ?: return "NO\nDATA"
-        return if (selectionContext.selected.size == 1) {
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return if (selected.size == 1) {
             "${compactPortraitType(lead.typeId)}\n${compactPortraitRole(lead.archetype)}"
         } else {
-            "${selectionContext.selected.size} UN\n${compactPortraitType(lead.typeId)}"
+            "${selected.size} UN\n${compactPortraitType(lead.typeId)}"
         }
     }
 
@@ -1254,18 +1009,20 @@ internal class GameScreen(
             .uppercase()
             .take(12)
 
-    private fun buildHealthLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val selected = context?.selected.orEmpty()
+    private fun buildHealthLine(): String {
+        val snapshot = runtime.snapshot ?: return "HP -"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) return "HP -"
         val hp = selected.sumOf { it.hp }
         val maxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
         return "HP $hp/$maxHp"
     }
 
-    private fun buildSelectionRosterLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val selected = context?.selected.orEmpty()
+    private fun buildSelectionRosterLine(): String {
+        val snapshot = runtime.snapshot ?: return "No ros"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         if (selected.isEmpty()) {
-            return "No active roster"
+            return "No card"
         }
         val counts =
             selected
@@ -1274,78 +1031,44 @@ internal class GameScreen(
                 .entries
                 .sortedByDescending { it.value }
                 .take(4)
-                .joinToString("  ") { "${it.key} x${it.value}" }
-        return counts
+                .joinToString("   ") { "${it.key}:${it.value}" }
+        return "Ros $counts"
     }
 
     private fun buildFactionOverviewLine(): String {
         val snapshot = runtime.snapshot ?: return "No data"
-        return formatFactionOverviewLine(snapshot.factions, runtime.session.state.viewedFaction)
+        if (snapshot.factions.isEmpty()) return "No factions"
+        return snapshot.factions.joinToString("\n") { faction ->
+            val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
+            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  V${faction.visibleTiles}$viewed"
+        }
     }
 
     private fun wrapHudPanel(content: Table, tone: Color): Table =
         Table().apply {
             background = null
+            add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.76f }) }).height(1f).expandX().fillX().row()
             add(
                 Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.12f).apply { a *= 0.70f }) }).width(12f).height(2f).left().padRight(2f)
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.60f }) }).height(1f).expandX().fillX()
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.20f).apply { a *= 0.64f }) }).width(8f).height(1f).right().padLeft(2f)
-                }
-            ).expandX().fillX().row()
-            add(
-                Table().apply {
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
                     add(
                         Table().apply {
-                            background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.06f).apply { a *= 0.54f })
-                            padTop(3f)
-                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.16f).apply { a *= 0.72f }) }).width(2f).height(8f).top().row()
-                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.04f).apply { a *= 0.42f }) }).width(1f).expandY().fillY().padTop(3f)
-                        }
-                    ).width(4f).expandY().fillY()
-                    add(
-                        Table().apply {
-                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.08f).apply { a *= 0.08f })
-                            pad(2f, 4f, 3f, 4f)
+                            background = null
+                            pad(3f, 5f, 5f, 5f)
                             add(content).expand().fill()
                         }
                     ).expand().fill()
-                    add(
-                        Table().apply {
-                            background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f).apply { a *= 0.54f })
-                            padTop(5f)
-                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.24f).apply { a *= 0.70f }) }).width(2f).height(12f).top().row()
-                            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.10f).apply { a *= 0.42f }) }).width(1f).expandY().fillY().padTop(4f)
-                        }
-                    ).width(4f).expandY().fillY()
+                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.16f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
                 }
             ).expand().fill().row()
-            add(
-                Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.10f).apply { a *= 0.56f }) }).width(8f).height(2f).left().padRight(2f)
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f).apply { a *= 0.54f }) }).height(1f).expandX().fillX()
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.06f).apply { a *= 0.30f }) }).width(14f).height(1f).right().padLeft(2f)
-                }
-            ).expandX().fillX().row()
-            add(
-                Table().apply {
-                    add().expandX().fillX()
-                    add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.18f).apply { a *= 0.54f }) }).width(18f).height(4f).padRight(6f)
-                }
-            ).expandX().fillX()
+            add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.BLACK, 0.12f).apply { a *= 0.72f }) }).height(1f).expandX().fillX()
         }
 
     private fun wrapTopStrip(content: Table): Table =
         Table().apply {
             background = null
             add(content).expandX().fillX().row()
-            add(
-                Table().apply {
-                    add(Table().apply { background = assets.panelDrawable(Color(0.30f, 0.58f, 0.66f, 0.42f)) }).width(18f).height(2f).padRight(2f)
-                    add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX()
-                    add(Table().apply { background = assets.panelDrawable(Color(0.10f, 0.18f, 0.22f, 0.48f)) }).width(12f).height(2f).padLeft(2f)
-                }
-            ).expandX().fillX().padTop(2f)
+            add(Table().apply { background = assets.panelDrawable(Color(0.22f, 0.42f, 0.48f, 0.54f)) }).height(1f).expandX().fillX().padTop(2f)
         }
 
     private fun buildCommandGlyph(actionId: String, disabled: Boolean, checked: Boolean): Table {
@@ -1398,67 +1121,67 @@ internal class GameScreen(
 
     private fun wrapMinimapPanel(content: Table): Table =
         Table().apply {
-            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.62f))
+            background = assets.panelDrawable(Color(0.01f, 0.03f, 0.05f, 0.68f))
             pad(1f, 1f, 2f, 1f)
             add(
                 Table().apply {
-                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.20f))
+                    background = assets.panelDrawable(Color(0.10f, 0.16f, 0.20f, 0.22f))
                     pad(1f, 1f, 2f, 1f)
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.56f))
+                                    background = assets.panelDrawable(Color(0.58f, 0.88f, 0.96f, 0.66f))
                                 }
-                            ).size(12f, 2f).left().padBottom(1f).row()
+                            ).size(12f, 3f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.58f))
+                                    background = assets.panelDrawable(Color(0.16f, 0.23f, 0.29f, 0.78f))
                                 }
                             ).width(6f).height(2f).left().padBottom(1f).row()
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.54f))
+                                    background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
                                 }
-                            ).width(2f).height(6f).left().padBottom(1f).row()
+                            ).width(3f).height(6f).left().padBottom(1f).row()
                             add(content).expand().fill().row()
                             add(
                                 Table().apply {
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.52f))
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(14f).height(1f).right().row()
+                                    ).width(20f).height(2f).right().row()
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.52f))
+                                            background = assets.panelDrawable(Color(0.20f, 0.28f, 0.32f, 0.78f))
                                         }
-                                    ).width(6f).height(1f).right().padTop(1f)
+                                    ).width(8f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.46f))
+                                            background = assets.panelDrawable(Color(0.10f, 0.15f, 0.18f, 0.78f))
                                         }
-                                    ).width(8f).height(1f).right().padTop(1f)
+                                    ).width(10f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.48f))
+                                            background = assets.panelDrawable(Color(0.24f, 0.30f, 0.34f, 0.78f))
                                         }
-                                    ).width(3f).height(3f).right().padTop(1f)
+                                    ).width(4f).height(4f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.46f))
+                                            background = assets.panelDrawable(Color(0.12f, 0.18f, 0.21f, 0.78f))
                                         }
-                                    ).width(6f).height(1f).right().padTop(1f)
+                                    ).width(9f).height(2f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.44f))
+                                            background = assets.panelDrawable(Color(0.18f, 0.24f, 0.28f, 0.78f))
                                         }
-                                    ).width(2f).height(4f).right().padTop(1f)
+                                    ).width(3f).height(5f).right().padTop(1f)
                                     add(
                                         Table().apply {
-                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.42f))
+                                            background = assets.panelDrawable(Color(0.08f, 0.12f, 0.15f, 0.78f))
                                         }
-                                    ).width(6f).height(1f).right().padTop(1f)
+                                    ).width(6f).height(2f).right().padTop(1f)
                                 }
                             ).right().padTop(1f)
                         }
@@ -1468,49 +1191,40 @@ internal class GameScreen(
         }
 
     private fun buildCommandHeader(groups: List<Pair<String, List<ClientCommandButton>>>): String {
-        val productionCount =
-            runtime.buttonModels().count {
-                it.actionId.startsWith("build:") ||
-                    it.actionId.startsWith("train:") ||
-                    it.actionId.startsWith("research:") ||
-                    it.actionId.startsWith("cancel")
-            }
-        val hasProduction = groups.any { it.first == "Production" && it.second.isNotEmpty() }
-        return formatCommandHeaderLine(
-            overlayModeLabel = runtime.overlayModeLabel(),
-            productionCount = if (hasProduction) productionCount else 0,
-            productionPage = productionPage
-        )
+        val productionGroup = groups.firstOrNull { it.first == "Production" }?.second.orEmpty()
+        val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
+        productionPage = productionPage.coerceIn(0, pageCount - 1)
+        return if (productionGroup.size > 6) {
+            "Cmd ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
+        } else {
+            "Cmd ${runtime.overlayModeLabel()}"
+        }
     }
 
-    private fun buildCenterHeaderLine(context: SelectionFrameContext?): String =
-        when {
-            context == null -> "Selected"
-            context.selected.isEmpty() -> "Selected"
-            context.selected.size == 1 -> "Focus"
-            else -> "Squad"
-        }
-
-    private fun buildCenterStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val lead = context?.lead ?: return "No status"
+    private fun buildCenterStatusLine(): String {
+        val snapshot = runtime.snapshot ?: return "No status"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "No status"
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         val statusBits = buildList {
-            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add(it.lowercase().take(8)) }
-            if (lead.orderQueueSize > 0) add("queue ${lead.orderQueueSize}")
-            if (lead.pathRemainingNodes > 0) add("path ${lead.pathRemainingNodes}")
-            lead.activeProductionType?.let { add("train ${it.take(8)}") }
-            lead.activeResearchTech?.let { add("tech ${it.take(8)}") }
-            if (lead.underConstruction) add("construct")
-            lead.harvestPhase?.let { add("harvest ${it.lowercase().take(8)}") }
+            lead.activeOrder?.takeIf { it.isNotBlank() }?.let { add("O ${it.lowercase().take(6)}") }
+            if (lead.orderQueueSize > 0) add("Q${lead.orderQueueSize}")
+            if (lead.pathRemainingNodes > 0) add("P${lead.pathRemainingNodes}")
+            lead.activeProductionType?.let { add("P ${it.take(6)}") }
+            lead.activeResearchTech?.let { add("R ${it.take(6)}") }
+            if (lead.underConstruction) add("B")
+            lead.harvestPhase?.let { add("H ${it.lowercase().take(6)}") }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
-                add("${(lead.harvestCargoKind ?: "res").take(3)} ${lead.harvestCargoAmount}")
+                add("C ${(lead.harvestCargoKind ?: "res").take(3)}:${lead.harvestCargoAmount}")
             }
         }
         return if (statusBits.isEmpty()) "Ready" else statusBits.joinToString(" · ")
     }
 
-    private fun rebuildCenterStatusStrip(bits: List<StatusChip>) {
+    private fun rebuildCenterStatusStrip() {
         centerStatusStrip.clearChildren()
         centerStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
+        val bits = buildCenterStatusBits()
         if (bits.isEmpty()) {
             centerStatusStrip.add(buildStatusChip("RDY", Color(0.20f, 0.40f, 0.46f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.92f)))
             return
@@ -1529,23 +1243,11 @@ internal class GameScreen(
         val accent: Color
     )
 
-    private fun buildStatusStripSignature(bits: List<StatusChip>, emptyLabel: String): String =
-        if (bits.isEmpty()) {
-            emptyLabel
-        } else {
-            bits.joinToString("|") { chip ->
-                buildString {
-                    append(chip.label)
-                    append('@')
-                    append(chip.background.toIntBits())
-                    append(':')
-                    append(chip.accent.toIntBits())
-                }
-            }
-        }
-
-    private fun buildCenterStatusBits(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): List<StatusChip> {
-        val lead = context?.lead ?: return emptyList()
+    private fun buildCenterStatusBits(): List<StatusChip> {
+        val snapshot = runtime.snapshot ?: return emptyList()
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return emptyList()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
                 add(StatusChip("O ${it.lowercase().take(4)}", Color(0.12f, 0.24f, 0.30f, 0.90f), Color(0.62f, 0.88f, 0.96f, 0.88f)))
@@ -1585,16 +1287,15 @@ internal class GameScreen(
     private fun buildCenterFooterLine(): String =
         when {
             runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
-            runtime.groundMode == ClientGroundCommandMode.MOVE -> "LMB/RMB move  Esc cancel"
-            runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "LMB/RMB attack  Esc cancel"
-            runtime.groundMode == ClientGroundCommandMode.PATROL -> "LMB/RMB patrol  Esc cancel"
-            runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB attack  Shift add"
+            runtime.groundMode != null -> "LMB/RMB confirm  Esc cancel"
+            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add"
             else -> "Drag select  RMB order  MMB pan"
         }
 
-    private fun rebuildQueueStatusStrip(bits: List<StatusChip>) {
+    private fun rebuildQueueStatusStrip() {
         queueStatusStrip.clearChildren()
         queueStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
+        val bits = buildQueueStatusBits()
         if (bits.isEmpty()) {
             queueStatusStrip.add(buildStatusChip("IDLE", Color(0.10f, 0.14f, 0.18f, 0.86f), Color(0.50f, 0.58f, 0.66f, 0.86f)))
             return
@@ -1607,8 +1308,11 @@ internal class GameScreen(
         }
     }
 
-    private fun buildQueueStatusBits(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): List<StatusChip> {
-        val lead = context?.lead ?: return emptyList()
+    private fun buildQueueStatusBits(): List<StatusChip> {
+        val snapshot = runtime.snapshot ?: return emptyList()
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return emptyList()
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
                 add(
@@ -1649,27 +1353,55 @@ internal class GameScreen(
         }.take(6)
     }
 
-    private fun buildQueueStatusLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val lead = context?.lead ?: return "Idle"
-        return formatQueueStatusLine(
-            productionType = lead.activeProductionType,
-            productionQueueSize = lead.productionQueueSize,
-            productionRemainingTicks = lead.activeProductionRemainingTicks,
-            researchTech = lead.activeResearchTech,
-            researchQueueSize = lead.researchQueueSize,
-            researchRemainingTicks = lead.activeResearchRemainingTicks,
-            underConstruction = lead.underConstruction,
-            constructionRemainingTicks = lead.constructionRemainingTicks
-        )
+    private fun buildQueueStatusLine(): String {
+        val snapshot = runtime.snapshot ?: return "No queue"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "Idle"
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        val parts = buildList {
+            if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
+                add(
+                    buildString {
+                        append("P ")
+                        append(lead.activeProductionType ?: "queue")
+                        if (lead.productionQueueSize > 0) append(" x${lead.productionQueueSize}")
+                        if (lead.activeProductionRemainingTicks > 0) append(" ${lead.activeProductionRemainingTicks}t")
+                    }
+                )
+            }
+            if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
+                add(
+                    buildString {
+                        append("R ")
+                        append(lead.activeResearchTech ?: "queue")
+                        if (lead.researchQueueSize > 0) append(" x${lead.researchQueueSize}")
+                        if (lead.activeResearchRemainingTicks > 0) append(" ${lead.activeResearchRemainingTicks}t")
+                    }
+                )
+            }
+            if (lead.underConstruction) {
+                add(
+                    buildString {
+                        append("B")
+                        lead.constructionRemainingTicks?.let { append(" ${it}t") }
+                    }
+                )
+            }
+        }
+        return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
     }
 
-    private fun buildQueueHeaderLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val lead = context?.lead ?: return "QUEUE"
-        return resolveQueueHeaderLine(
-            hasProduction = lead.activeProductionType != null || lead.productionQueueSize > 0,
-            hasResearch = lead.activeResearchTech != null || lead.researchQueueSize > 0,
-            underConstruction = lead.underConstruction
-        )
+    private fun buildQueueHeaderLine(): String {
+        val snapshot = runtime.snapshot ?: return "QUEUE"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "QUEUE"
+        val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
+        return when {
+            lead.activeResearchTech != null || lead.researchQueueSize > 0 -> "RESEARCH"
+            lead.activeProductionType != null || lead.productionQueueSize > 0 -> "PRODUCTION"
+            lead.underConstruction -> "CONSTRUCT"
+            else -> "QUEUE"
+        }
     }
 
     private fun updateHealthBar() {
@@ -1725,22 +1457,6 @@ internal class GameScreen(
         healthBarBack.add().expandX().fillX()
     }
 
-    private fun buildHealthBarSignature(): String {
-        val snapshot = runtime.snapshot
-        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
-        val takingDamage = selected.any { runtime.isDamageFlashActive(it.id) }
-        val impactKind = selected.firstNotNullOfOrNull { runtime.damageImpactKind(it.id) }
-        val totalHp = selected.sumOf { it.hp }
-        val totalMaxHp = selected.sumOf { it.maxHp.coerceAtLeast(1) }
-        return listOf(
-            selected.size,
-            totalHp,
-            totalMaxHp,
-            takingDamage,
-            impactKind?.name ?: "-"
-        ).joinToString("|")
-    }
-
     private fun rebuildSelectionGrid() {
         selectionGrid.clearChildren()
         val snapshot = runtime.snapshot ?: return
@@ -1755,53 +1471,17 @@ internal class GameScreen(
             selectionGrid.add(
                 Table().apply {
                     background = assets.panelDrawable(Color(0.08f, 0.12f, 0.16f, 0.74f))
-                    pad(3f, 6f, 3f, 6f)
+                    pad(4f, 8f, 4f, 8f)
                     add(Label("No slots", assets.mutedLabelStyle)).left()
                 }
             ).left()
             return
         }
-        selectionGrid.defaults().pad(0f, 1.5f, 1.5f, 0f)
+        selectionGrid.defaults().pad(0f, 2f, 2f, 0f)
         selected.forEachIndexed { index, entity ->
             selectionGrid.add(buildSelectionSlot(entity, centerPanelLayout)).size(centerPanelLayout.rosterSlotSize.toFloat(), centerPanelLayout.rosterSlotSize.toFloat())
             if ((index + 1) % 4 == 0) {
                 selectionGrid.row()
-            }
-        }
-    }
-
-    private fun buildSelectionGridSignature(snapshot: ClientSnapshot?, centerPanelLayout: CenterPanelLayout): String {
-        val safeSnapshot = snapshot ?: return "empty"
-        val selectedEntities = safeSnapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        val pageSize = 8
-        val pageCount = ((selectedEntities.size + pageSize - 1) / pageSize).coerceAtLeast(1)
-        val page = selectionPage.coerceIn(0, pageCount - 1)
-        val pageStart = page * pageSize
-        val selected = selectedEntities.drop(pageStart).take(pageSize)
-        return buildString {
-            append(page)
-            append('|')
-            append(centerPanelLayout.rosterSlotSize)
-            append('|')
-            append(focusedSelectionId ?: -1)
-            append('|')
-            selected.forEach { entity ->
-                append(entity.id)
-                append(':')
-                append(entity.hp)
-                append('/')
-                append(entity.maxHp)
-                append(':')
-                append(entity.weaponId ?: "-")
-                append(':')
-                append(entity.footprintWidth ?: -1)
-                append(':')
-                append(runtime.isDamageFlashActive(entity.id))
-                append(':')
-                append(runtime.damageImpactKind(entity.id)?.name ?: "-")
-                append(':')
-                append(slotPulseUntilMillis[entity.id] ?: 0L)
-                append(';')
             }
         }
     }
@@ -1817,16 +1497,16 @@ internal class GameScreen(
         val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
         val tone =
             when {
-                entity.weaponId != null -> Color(0.12f, 0.24f, 0.28f, 0.96f)
-                entity.footprintWidth != null -> Color(0.18f, 0.22f, 0.16f, 0.96f)
-                else -> Color(0.12f, 0.22f, 0.16f, 0.96f)
+                entity.weaponId != null -> Color(0.17f, 0.31f, 0.39f, 0.96f)
+                entity.footprintWidth != null -> Color(0.28f, 0.24f, 0.15f, 0.96f)
+                else -> Color(0.16f, 0.25f, 0.18f, 0.96f)
             }
         val badgeTone =
             when {
-                entity.footprintWidth != null -> Color(0.34f, 0.44f, 0.20f, 0.96f)
-                isWorker -> Color(0.18f, 0.52f, 0.30f, 0.96f)
-                entity.weaponId != null -> Color(0.16f, 0.48f, 0.42f, 0.96f)
-                else -> Color(0.24f, 0.40f, 0.34f, 0.96f)
+                entity.footprintWidth != null -> Color(0.44f, 0.34f, 0.16f, 0.96f)
+                isWorker -> Color(0.20f, 0.44f, 0.28f, 0.96f)
+                entity.weaponId != null -> Color(0.18f, 0.46f, 0.48f, 0.96f)
+                else -> Color(0.28f, 0.34f, 0.40f, 0.96f)
             }
         val hpColor =
             when {
@@ -1841,35 +1521,26 @@ internal class GameScreen(
                 else -> Color(0.84f, 0.30f, 0.25f, 1f)
             }
         val shortName = buildSelectionSlotCode(entity)
-        val titleLabel =
-            Label(shortName, assets.titleLabelStyle).apply {
-                setFontScale(if (layout.rosterSlotSize <= 32) 0.78f else 0.86f)
-                setAlignment(Align.center)
-            }
         return Table().apply {
             background =
                 assets.panelDrawable(
                     if (focused) selectionFocusShellTone(focusPulse)
-                    else if (clickPulse > 0f) Color(0.12f, 0.18f, 0.14f, 0.94f).lerp(Color(0.32f, 0.54f, 0.30f, 0.96f), clickPulse * 0.34f)
+                    else if (clickPulse > 0f) Color(0.14f, 0.20f, 0.16f, 0.94f).lerp(Color(0.40f, 0.56f, 0.32f, 0.96f), clickPulse * 0.34f)
                     else if (damaged) Color(0.22f, 0.10f, 0.10f, 0.94f)
                     else Color(0.08f, 0.12f, 0.16f, 0.92f)
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            pad(if (layout.rosterSlotSize <= 32) 0.5f else 1f)
+            pad(1f)
             add(
                 Table().apply {
                     background =
                         assets.panelDrawable(
                             if (focused) selectionFocusCardTone(focusPulse)
-                            else if (clickPulse > 0f) tone.cpy().lerp(Color(0.34f, 0.58f, 0.30f, 0.96f), clickPulse * 0.28f)
+                            else if (clickPulse > 0f) tone.cpy().lerp(Color(0.40f, 0.54f, 0.30f, 0.96f), clickPulse * 0.28f)
                             else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
                             else tone
                         )
-                    pad(if (layout.rosterSlotSize <= 32) {
-                        if (focused) 1.5f else 1f
-                    } else {
-                        if (focused) 2f else 1.5f
-                    })
+                    pad(if (focused) 2f else 1.5f)
                     add(
                         Table().apply {
                             background =
@@ -1879,15 +1550,15 @@ internal class GameScreen(
                                     else Color(1f, 1f, 1f, 0.08f)
                                 )
                         }
-                    ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(if (layout.rosterSlotSize <= 32) 1f else 2f).row()
+                    ).height(visualLayout.topBarHeight).expandX().fillX().padBottom(2f).row()
                     add(
                         Table().apply {
                             background = assets.panelDrawable(Color(1f, 1f, 1f, if (focused) 0.08f else 0.04f))
-                            pad(if (layout.rosterSlotSize <= 32) 1f else 2f, 1f, 0.5f, 1f)
-                            add(titleLabel).center().expandX().fillX()
+                            pad(2f, 1f, 0.5f, 1f)
+                            add(Label(shortName, assets.titleLabelStyle)).center().expandX().fillX()
                         }
                     ).expandX().fillX().height(visualLayout.titleHeight).row()
-                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged, visualLayout)).center().padTop(if (layout.rosterSlotSize <= 32) 0.5f else 1f).row()
+                    add(buildSelectionSlotGlyph(entity, badgeTone, focused, damaged, visualLayout)).center().padTop(1f).row()
                     add(
                         Table().apply {
                             add(
@@ -1911,7 +1582,7 @@ internal class GameScreen(
                                 }
                             ).size(visualLayout.markerSize, visualLayout.markerSize)
                         }
-                    ).expandX().fillX().padTop(if (layout.rosterSlotSize <= 32) 0.5f else 1f).row()
+                    ).expandX().fillX().padTop(1f).row()
                     add(
                         Table().apply {
                             background =
@@ -1924,10 +1595,10 @@ internal class GameScreen(
                                 Table().apply {
                                     background = assets.panelDrawable(if (damaged) hpColor.cpy().lerp(Color.WHITE, 0.24f) else hpColor)
                                 }
-                            ).width(visualLayout.hpBarWidth * hpRatio.coerceIn(0f, 1f)).height(visualLayout.hpBarHeight).left()
+                            ).width(visualLayout.hpBarWidth * hpRatio.coerceIn(0f, 1f)).height(4f).left()
                             add().expandX().fillX()
                         }
-                    ).width(visualLayout.hpBarWidth).height(visualLayout.hpBarHeight).padTop(if (layout.rosterSlotSize <= 32) 1f else 2f)
+                    ).width(visualLayout.hpBarWidth).height(4f).padTop(2f)
                 }
             ).expand().fill()
             addListener(
@@ -2065,8 +1736,8 @@ internal class GameScreen(
         }
     }
 
-    private fun syncSelectionPage(snapshot: ClientSnapshot?, actionBannerText: String, commandHintText: String, statusBadgeLine: String) {
-        val bannerSignature = "$actionBannerText|$commandHintText"
+    private fun syncSelectionPage(snapshot: ClientSnapshot?) {
+        val bannerSignature = "${buildActionBannerLine()}|${buildCommandHintLine()}"
         if (bannerSignature != lastBannerSignature) {
             lastBannerSignature = bannerSignature
             bannerPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
@@ -2081,7 +1752,7 @@ internal class GameScreen(
             lastTopModeSignature = topModeSignature
             topModePulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
         }
-        val topStatusSignature = "${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}|$statusBadgeLine"
+        val topStatusSignature = "${runtime.attackWarningLine().orEmpty()}|${runtime.noticeLine().orEmpty()}|${buildStatusBadgeLine()}"
         if (topStatusSignature != lastTopStatusSignature) {
             lastTopStatusSignature = topStatusSignature
             topStatusPulseUntilMillis = System.currentTimeMillis() + HUD_SELECTION_PULSE_DURATION_MS
@@ -2179,43 +1850,9 @@ internal class GameScreen(
         val pageSize = 8
         val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
         selectionPage = selectionPage.coerceIn(0, pageCount - 1)
-        setLabelTextIfChanged(selectionPageLabel, formatSelectionPageLabel(selectedCount, selectionPage, pageCount))
-        setLabelTextIfChanged(controlGroupsLabel, formatControlGroupDeckLine(runtime.controlGroupSizes()))
-        val controlGroupButtonsSignature = buildControlGroupButtonsSignature()
-        if (controlGroupButtonsSignature != lastControlGroupButtonsSignature) {
-            lastControlGroupButtonsSignature = controlGroupButtonsSignature
-            rebuildControlGroupButtons()
-        }
-    }
-
-    private fun setLabelTextIfChanged(label: Label, text: String) {
-        if (!label.textEquals(text)) {
-            label.setText(text)
-        }
-    }
-
-    private fun setActorColorIfChanged(actor: Actor, color: Color) {
-        if (actor.color.toIntBits() != color.toIntBits()) {
-            actor.color = color
-        }
-    }
-
-    private fun setActorVisibleIfChanged(actor: Actor, visible: Boolean) {
-        if (actor.isVisible != visible) {
-            actor.isVisible = visible
-        }
-    }
-
-    private fun buildSelectionPagerSignature(snapshot: ClientSnapshot?): String {
-        val selectedCount = snapshot?.entities?.count { it.id in runtime.session.state.selectedIds } ?: 0
-        val pageSize = 8
-        val pageCount = ((selectedCount + pageSize - 1) / pageSize).coerceAtLeast(1)
-        return listOf(
-            selectedCount,
-            selectionPage.coerceIn(0, pageCount - 1),
-            pageCount,
-            formatControlGroupDeckLine(runtime.controlGroupSizes())
-        ).joinToString("|")
+        selectionPageLabel.setText(if (selectedCount == 0) "Pg 0/0" else "Pg ${selectionPage + 1}/$pageCount")
+        controlGroupsLabel.setText(runtime.controlGroupSummaryLine()?.replace("Groups ", "Grp ") ?: "Grp idle")
+        rebuildControlGroupButtons()
     }
 
     private fun shiftSelectionPage(delta: Int) {
@@ -2246,9 +1883,6 @@ internal class GameScreen(
         }
     }
 
-    private fun buildControlGroupButtonsSignature(): String =
-        runtime.controlGroupSizes().joinToString("|") { (group, count) -> "$group:$count" }
-
     private fun updateScreenFade(delta: Float) {
         if (screenFadeAlpha <= 0f) {
             screenFade.isVisible = false
@@ -2257,25 +1891,6 @@ internal class GameScreen(
         screenFadeAlpha = (screenFadeAlpha - (delta * 1.8f)).coerceAtLeast(0f)
         screenFade.isVisible = screenFadeAlpha > 0f
         screenFade.color.a = screenFadeAlpha
-    }
-
-    private fun triggerImpactFlash(tone: Color, alpha: Float) {
-        if (alpha <= 0f) return
-        impactFlashTone.set(tone.r, tone.g, tone.b, 1f)
-        impactFlash.color.set(impactFlashTone)
-        impactFlashAlpha = maxOf(impactFlashAlpha, alpha.coerceIn(0f, 0.18f))
-        impactFlash.isVisible = impactFlashAlpha > 0f
-        impactFlash.color.a = impactFlashAlpha
-    }
-
-    private fun updateImpactFlash(delta: Float) {
-        if (impactFlashAlpha <= 0f) {
-            impactFlash.isVisible = false
-            return
-        }
-        impactFlashAlpha = (impactFlashAlpha - (delta * IMPACT_FLASH_DECAY_PER_SECOND)).coerceAtLeast(0f)
-        impactFlash.isVisible = impactFlashAlpha > 0f
-        impactFlash.color.set(impactFlashTone.r, impactFlashTone.g, impactFlashTone.b, impactFlashAlpha)
     }
 
     private fun resolveFocusedEntity(snapshot: ClientSnapshot, selected: List<EntitySnapshot>): EntitySnapshot? =
@@ -2331,15 +1946,16 @@ internal class GameScreen(
     private fun computeWorldViewportHeight(screenWidth: Int, screenHeight: Int): Int =
         computeWorldViewportHeightForLayout(screenWidth, screenHeight)
 
-    private fun buildSelectionMetaLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val selectionContext = context ?: return "No live snapshot"
-        if (selectionContext.selected.isEmpty()) {
-            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${selectionContext.snapshot.entities.size}"
+    private fun buildSelectionMetaLine(): String {
+        val snapshot = runtime.snapshot ?: return "No live snapshot"
+        if (runtime.session.state.selectedIds.isEmpty()) {
+            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
         }
-        val combat = selectionContext.selected.count { it.weaponId != null }
-        val workers = selectionContext.selected.count { it.archetype == "worker" }
-        val structures = selectionContext.selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "${selectionContext.selected.size} units · $combat combat · $workers workers · $structures structures"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        val combat = selected.count { it.weaponId != null }
+        val workers = selected.count { it.archetype == "worker" }
+        val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
+        return "${selected.size} sel · c$combat · w$workers · s$structures"
     }
 
     private fun buildTopEconomyLine(): String {
@@ -2359,13 +1975,15 @@ internal class GameScreen(
         return "${mode.uppercase()}  ${viewed.uppercase()}"
     }
 
-    private fun buildTopSelectionLine(context: SelectionFrameContext? = runtime.snapshot?.let(::buildSelectionFrameContext)): String {
-        val selectionContext = context ?: return "No sel"
-        val lead = selectionContext.lead ?: return "No sel"
-        return if (selectionContext.selected.size == 1) {
+    private fun buildTopSelectionLine(): String {
+        val snapshot = runtime.snapshot ?: return "No sel"
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        if (selected.isEmpty()) return "No sel"
+        val lead = selected.first()
+        return if (selected.size == 1) {
             "${lead.typeId} ${lead.hp}/${lead.maxHp}"
         } else {
-            "${selectionContext.selected.size}x ${lead.typeId}"
+            "${selected.size}x ${lead.typeId}"
         }
     }
 
@@ -2396,14 +2014,12 @@ internal class GameScreen(
         }
 
     private fun buildCommandHintLine(): String =
-        runtime.hoverHintLine()?.let(::compactCommandHint)
+        runtime.hoverHintLine()?.let(::compactHint)
             ?: when {
-                runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}  LMB/RMB confirm"
-                runtime.groundMode == ClientGroundCommandMode.MOVE -> "Move order  LMB/RMB confirm"
-                runtime.groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "Attack order  LMB/RMB confirm"
-                runtime.groundMode == ClientGroundCommandMode.PATROL -> "Patrol route  LMB/RMB confirm"
-                runtime.session.state.selectedIds.isNotEmpty() -> "RMB move  A+LMB atk  M move"
-                else -> "Select units for orders"
+                runtime.buildModeTypeId != null -> "Build armed"
+                runtime.groundMode != null -> "Order armed"
+                runtime.session.state.selectedIds.isNotEmpty() -> "Cmd ready"
+                else -> "Select to unlock orders"
             }
 
     private fun currentActionBannerTone(): Color =
@@ -2462,42 +2078,6 @@ internal class GameScreen(
             else -> Color(0.16f, 0.28f, 0.34f, 0.92f)
         }
 
-    private fun commandHintCardColor(pulse: Float): Color =
-        currentCommandHintCardTone().cpy().lerp(Color(0.20f, 0.28f, 0.20f, 0.74f), pulse * 0.20f)
-
-    private fun topSelectionShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.44f).lerp(Color(0.16f, 0.22f, 0.18f, 0.56f), pulse * 0.18f)
-
-    private fun topSelectionCardColor(pulse: Float): Color =
-        Color(0.10f, 0.16f, 0.20f, 0.58f).lerp(Color(0.22f, 0.30f, 0.20f, 0.70f), pulse * 0.24f)
-
-    private fun topModeShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.44f).lerp(Color(0.14f, 0.20f, 0.18f, 0.56f), pulse * 0.18f)
-
-    private fun topModeCardColor(pulse: Float): Color =
-        Color(0.10f, 0.18f, 0.16f, 0.58f).lerp(Color(0.22f, 0.30f, 0.20f, 0.70f), pulse * 0.24f)
-
-    private fun topStatusShellColor(pulse: Float): Color =
-        Color(0.08f, 0.13f, 0.17f, 0.46f).lerp(Color(0.22f, 0.18f, 0.14f, 0.58f), pulse * 0.20f)
-
-    private fun topStatusCardColor(pulse: Float): Color =
-        Color(0.14f, 0.21f, 0.27f, 0.60f).lerp(Color(0.32f, 0.24f, 0.18f, 0.72f), pulse * 0.26f)
-
-    private fun selectionHeadlineCardColor(pulse: Float): Color =
-        currentSelectionHeadlineCardTone().cpy().lerp(Color(0.70f, 0.96f, 0.80f, 0.76f), pulse * 0.28f)
-
-    private fun portraitFrameColor(pulse: Float): Color =
-        Color(0.14f, 0.18f, 0.17f, 0.66f).lerp(Color(0.24f, 0.32f, 0.22f, 0.74f), pulse * 0.24f)
-
-    private fun pauseHeaderCardColor(pulse: Float): Color =
-        currentPauseHeaderTone().cpy().lerp(Color(0.38f, 0.30f, 0.20f, 0.94f), pulse * 0.26f)
-
-    private fun helpHeaderCardColor(pulse: Float): Color =
-        currentHelpHeaderTone().cpy().lerp(Color(0.26f, 0.34f, 0.22f, 0.90f), pulse * 0.22f)
-
-    private fun actionBannerColor(pulse: Float): Color =
-        currentActionBannerTone().cpy().lerp(Color(0.24f, 0.30f, 0.18f, 0.82f), pulse * 0.24f)
-
     private fun currentPauseHeaderTone(): Color =
         when {
             runtime.attackWarningLine() != null -> Color(0.34f, 0.18f, 0.16f, 0.92f)
@@ -2514,10 +2094,10 @@ internal class GameScreen(
 
     private fun currentCommandHintCardTone(): Color =
         when {
-            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.74f)
-            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.74f)
-            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.72f)
-            else -> Color(0.12f, 0.16f, 0.18f, 0.70f)
+            runtime.buildModeTypeId != null -> Color(0.18f, 0.18f, 0.08f, 0.86f)
+            runtime.groundMode != null -> Color(0.10f, 0.20f, 0.16f, 0.86f)
+            runtime.session.state.selectedIds.isNotEmpty() -> Color(0.08f, 0.16f, 0.20f, 0.84f)
+            else -> Color(0.12f, 0.16f, 0.18f, 0.82f)
         }
 
     private fun currentCommandHintTextTone(): Color =
@@ -2530,10 +2110,10 @@ internal class GameScreen(
 
     private fun currentSelectionHeadlineCardTone(): Color =
         when {
-            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.74f)
+            runtime.session.state.selectedIds.isEmpty() -> Color(0.12f, 0.18f, 0.22f, 0.90f)
             runtime.snapshot?.entities?.any { it.id in runtime.session.state.selectedIds && it.weaponId != null } == true ->
-                Color(0.18f, 0.24f, 0.12f, 0.76f)
-            else -> Color(0.12f, 0.20f, 0.24f, 0.76f)
+                Color(0.18f, 0.24f, 0.12f, 0.92f)
+            else -> Color(0.12f, 0.20f, 0.24f, 0.92f)
         }
 
     private fun currentSelectionHeadlineTone(): Color =
@@ -2544,13 +2124,13 @@ internal class GameScreen(
             else -> Color(0.74f, 0.94f, 0.98f, 0.96f)
         }
 
-    private fun selectionFocusBaseTone(): Color = Color(0.68f, 1.00f, 0.56f, 0.96f)
+    private fun selectionFocusBaseTone(): Color = Color(0.98f, 0.92f, 0.56f, 0.96f)
 
     private fun selectionFocusShellTone(pulse: Float): Color =
-        Color(0.12f + (pulse * 0.08f), 0.24f + (pulse * 0.08f), 0.10f, 0.96f)
+        Color(0.26f + (pulse * 0.10f), 0.22f + (pulse * 0.06f), 0.08f, 0.96f)
 
     private fun selectionFocusCardTone(pulse: Float): Color =
-        Color(0.18f + (pulse * 0.08f), 0.34f + (pulse * 0.08f), 0.14f, 0.98f)
+        Color(0.38f + (pulse * 0.08f), 0.30f + (pulse * 0.06f), 0.08f, 0.98f)
 
     private fun currentSelectionMetaTone(): Color =
         when {
@@ -2564,23 +2144,35 @@ internal class GameScreen(
             else -> Color(0.84f, 0.88f, 0.92f, 0.94f)
         }
 
-    private fun currentCenterStatusTone(centerStatusLine: String = buildCenterStatusLine()): Color =
+    private fun currentCenterStatusTone(): Color =
         when {
             runtime.session.state.selectedIds.isEmpty() -> Color(0.60f, 0.70f, 0.76f, 0.92f)
-            centerStatusLine == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
+            buildCenterStatusLine() == "Ready" -> Color(0.62f, 0.88f, 0.96f, 0.92f)
             else -> Color(0.90f, 0.94f, 0.98f, 0.94f)
         }
 
-    private fun currentQueueHeaderTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
-        when (queueHeaderLine) {
+    private fun currentQueueHeaderTone(): Color =
+        when (buildQueueHeaderLine()) {
             "PRODUCTION" -> Color(1.00f, 0.92f, 0.62f, 0.96f)
             "RESEARCH" -> Color(0.78f, 0.96f, 1.00f, 0.96f)
             "CONSTRUCT" -> Color(0.74f, 1.00f, 0.82f, 0.96f)
             else -> Color(0.62f, 0.72f, 0.78f, 0.92f)
         }
 
-    private fun compactHint(raw: String): String =
-        starkraft.sim.client.compactCommandHint(raw)
+    private fun compactHint(raw: String): String {
+        val cleaned =
+            raw
+                .removePrefix("Switch to ")
+                .removeSuffix(" view")
+                .replace("faction ", "f")
+                .replace("selection", "sel")
+                .replace("current ", "")
+                .replace("camera ", "")
+                .replace("scenario ", "")
+                .replace("preset", "pst")
+                .trim()
+        return if (cleaned.length <= 24) cleaned else cleaned.take(21).trimEnd() + "..."
+    }
 
     private fun compactNotice(raw: String): String {
         val cleaned =
@@ -2602,24 +2194,24 @@ internal class GameScreen(
         return if (cycle < 0.5f) cycle * 2f else (1f - cycle) * 2f
     }
 
-    private fun currentQueueStatusTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
-        when (queueHeaderLine) {
+    private fun currentQueueStatusTone(): Color =
+        when (buildQueueHeaderLine()) {
             "PRODUCTION" -> Color(1.00f, 0.94f, 0.72f, 0.94f)
             "RESEARCH" -> Color(0.86f, 0.96f, 1.00f, 0.94f)
             "CONSTRUCT" -> Color(0.84f, 1.00f, 0.90f, 0.94f)
             else -> Color(0.66f, 0.74f, 0.80f, 0.88f)
         }
 
-    private fun currentQueueCardTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
-        when (queueHeaderLine) {
+    private fun currentQueueCardTone(): Color =
+        when (buildQueueHeaderLine()) {
             "PRODUCTION" -> Color(0.18f, 0.14f, 0.08f, 0.74f)
             "RESEARCH" -> Color(0.10f, 0.14f, 0.20f, 0.74f)
             "CONSTRUCT" -> Color(0.10f, 0.17f, 0.12f, 0.74f)
             else -> Color(0.08f, 0.12f, 0.16f, 0.62f)
         }
 
-    private fun currentQueueHeaderBackgroundTone(queueHeaderLine: String = buildQueueHeaderLine()): Color =
-        when (queueHeaderLine) {
+    private fun currentQueueHeaderBackgroundTone(): Color =
+        when (buildQueueHeaderLine()) {
             "PRODUCTION" -> Color(0.40f, 0.30f, 0.10f, 0.84f)
             "RESEARCH" -> Color(0.20f, 0.30f, 0.42f, 0.84f)
             "CONSTRUCT" -> Color(0.20f, 0.34f, 0.22f, 0.84f)
@@ -2688,20 +2280,54 @@ internal class GameScreen(
             else -> assets.subtleButtonStyle()
         }
 
-    private fun commandButtonText(button: ClientCommandButton): String =
-        formatCommandButtonText(button.actionId, button.label)
-
-    private fun commandButtonHotkey(button: ClientCommandButton): String? =
-        resolveCommandButtonHotkey(button.actionId)
-
-    private fun commandHotkeyTone(actionId: String): Color =
-        when {
-            actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.72f)
-            actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
-            actionId == "move" || actionId == "hold" || actionId == "patrol" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.68f)
-            actionId.startsWith("train:") || actionId.startsWith("research:") -> Color(0.66f, 0.80f, 1.00f, 0.68f)
-            else -> Color(0.34f, 0.42f, 0.48f, 0.68f)
-        }
+    private fun commandButtonLabel(button: ClientCommandButton): String {
+        val baseLabel =
+            when (button.actionId) {
+                "attackMove" -> "Attack"
+                "centerSelection" -> "Ctr"
+                "viewF1" -> "F1"
+                "viewF2" -> "F2"
+                "observer" -> "Obs"
+                "pause" -> "Pse"
+                "help" -> "Hlp"
+                "debug" -> "Dbg"
+                "build:Depot" -> "Depot"
+                "build:ResourceDepot" -> "Exp"
+                "build:GasDepot" -> "Gas"
+                "cancelBuild" -> "Stop B"
+                "cancelTrain" -> "Stop T"
+                "cancelResearch" -> "Stop R"
+                "patrol" -> "Pat"
+                "move" -> "Move"
+                "hold" -> "Hold"
+                else -> button.label
+            }
+        val hotkey =
+            when (button.actionId) {
+                "move" -> "M"
+                "attackMove" -> "A"
+                "patrol" -> "P"
+                "hold" -> "H"
+                "clear" -> "E"
+                "centerSelection" -> "Hm"
+                "viewF1" -> "1"
+                "viewF2" -> "2"
+                "observer" -> "3"
+                "pause" -> "Sp"
+                "help" -> "F1"
+                "debug" -> "Tb"
+                "selectViewedFaction" -> "F2"
+                "selectType" -> "F3"
+                "selectRole" -> "F4"
+                "selectAll" -> "F11"
+                "selectIdleWorkers" -> "F12"
+                "build:Depot" -> "B"
+                "build:ResourceDepot" -> "R"
+                "build:GasDepot" -> "G"
+                else -> null
+            }
+        return if (hotkey == null) baseLabel else "$baseLabel $hotkey"
+    }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
         val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
@@ -3066,9 +2692,6 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
     )
 }
 
-internal fun computeCommandHintRowHeight(screenWidth: Int): Int =
-    if (screenWidth < 1360) 20 else 22
-
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1360
     return CenterPanelLayout(
@@ -3106,188 +2729,6 @@ internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight:
     val bottomHudTop = screenHeight - computeBottomHudHeight(screenWidth, screenHeight)
     val minimapTop = gdxMiniMapBounds(screenWidth, screenHeight).top.toInt()
     return minOf(bottomHudTop, minimapTop).coerceAtLeast(240)
-}
-
-internal fun formatFactionOverviewLine(factions: List<FactionSnapshot>, viewedFaction: Int?): String {
-    if (factions.isEmpty()) return "No factions"
-    return factions.joinToString("  |  ") { faction ->
-        buildString {
-            append("F")
-            append(faction.faction)
-            if (viewedFaction == faction.faction) append("*")
-            append(" ")
-            append(faction.minerals)
-            append("/")
-            append(faction.gas)
-            append(" v")
-            append(faction.visibleTiles)
-        }
-    }
-}
-
-internal fun formatCommandHeaderLine(
-    overlayModeLabel: String,
-    productionCount: Int,
-    productionPage: Int,
-    productionPageSize: Int = 6
-): String {
-    val pageCount = ((productionCount + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
-    val normalizedPage = productionPage.coerceIn(0, pageCount - 1)
-    val base = "Orders · ${overlayModeLabel.uppercase()}"
-    return if (productionCount > productionPageSize) {
-        "$base · ${normalizedPage + 1}/$pageCount"
-    } else {
-        base
-    }
-}
-
-internal fun formatCommandButtonText(actionId: String, fallbackLabel: String): String =
-    when (actionId) {
-        "attackMove" -> "Attack"
-        "centerSelection" -> "Center"
-        "viewF1" -> "F1 View"
-        "viewF2" -> "F2 View"
-        "observer" -> "Observer"
-        "pause" -> "Pause"
-        "help" -> "Help"
-        "debug" -> "Debug"
-        "build:Depot" -> "Depot"
-        "build:ResourceDepot" -> "Expand"
-        "build:GasDepot" -> "Refine"
-        "cancelBuild" -> "Cancel B"
-        "cancelTrain" -> "Cancel T"
-        "cancelResearch" -> "Cancel R"
-        "patrol" -> "Patrol"
-        "move" -> "Move"
-        "hold" -> "Hold"
-        "clear" -> "Clear"
-        else -> fallbackLabel
-    }
-
-internal fun compactCommandHint(raw: String): String {
-    val cleaned =
-        raw
-            .removePrefix("Switch to ")
-            .removeSuffix(" view")
-            .replace("faction ", "f")
-            .replace("selection", "sel")
-            .replace("attack", "atk")
-            .replace("command", "cmd")
-            .replace("current ", "")
-            .replace("camera ", "")
-            .replace("scenario ", "")
-            .replace("preset", "pst")
-            .replace("production", "prod")
-            .replace("research", "tech")
-            .replace("resource", "res")
-            .replace("toggle ", "")
-            .trim()
-    return if (cleaned.length <= 16) cleaned else cleaned.take(13).trimEnd() + "..."
-}
-
-internal fun resolveCommandButtonHotkey(actionId: String): String? =
-    when (actionId) {
-        "move" -> "M"
-        "attackMove" -> "A"
-        "patrol" -> "P"
-        "hold" -> "H"
-        "clear" -> "Esc"
-        "centerSelection" -> "Hm"
-        "viewF1" -> "1"
-        "viewF2" -> "2"
-        "observer" -> "3"
-        "pause" -> "Sp"
-        "help" -> "F1"
-        "debug" -> "Tb"
-        "selectViewedFaction" -> "F2"
-        "selectType" -> "F3"
-        "selectRole" -> "F4"
-        "selectAll" -> "F11"
-        "selectIdleWorkers" -> "F12"
-        "build:Depot" -> "B"
-        "build:ResourceDepot" -> "R"
-        "build:GasDepot" -> "G"
-        else -> null
-    }
-
-internal fun buildHudFooterLine(hasSelection: Boolean, commandArmed: Boolean): String =
-    when {
-        commandArmed -> "LMB/RMB confirm  Esc cancel  MMB pan"
-        hasSelection -> "LMB reselect  RMB order  drag box add"
-        else -> "LMB select  RMB move  drag box select"
-    }
-
-internal fun buildMinimapHintLine(commandArmed: Boolean): String =
-    if (commandArmed) {
-        "armed: world click confirm"
-    } else {
-        "minimap drag camera"
-    }
-
-internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCount: Int): String =
-    if (selectedCount <= 0) {
-        "Pg 0/0 · 0"
-    } else {
-        "Pg ${pageIndex + 1}/$pageCount · $selectedCount"
-    }
-
-internal fun formatControlGroupDeckLine(groups: List<Pair<Int, Int>>): String =
-    if (groups.isEmpty()) {
-        "Groups idle"
-    } else {
-        groups.take(3).joinToString("  ") { (group, count) -> "$group:$count" }
-    }
-
-internal fun resolveQueueHeaderLine(hasProduction: Boolean, hasResearch: Boolean, underConstruction: Boolean): String =
-    when {
-        hasProduction && hasResearch -> "PIPELINE"
-        hasResearch -> "RESEARCH"
-        hasProduction -> "PRODUCTION"
-        underConstruction -> "CONSTRUCT"
-        else -> "QUEUE"
-    }
-
-internal fun formatQueueStatusLine(
-    productionType: String?,
-    productionQueueSize: Int,
-    productionRemainingTicks: Int,
-    researchTech: String?,
-    researchQueueSize: Int,
-    researchRemainingTicks: Int,
-    underConstruction: Boolean,
-    constructionRemainingTicks: Int?
-): String {
-    val parts = buildList {
-        if (productionQueueSize > 0 || productionType != null) {
-            add(
-                buildString {
-                    append("Train ")
-                    append(productionType ?: "queue")
-                    if (productionQueueSize > 0) append(" x$productionQueueSize")
-                    if (productionRemainingTicks > 0) append(" · ${productionRemainingTicks}t")
-                }
-            )
-        }
-        if (researchQueueSize > 0 || researchTech != null) {
-            add(
-                buildString {
-                    append("Tech ")
-                    append(researchTech ?: "queue")
-                    if (researchQueueSize > 0) append(" x$researchQueueSize")
-                    if (researchRemainingTicks > 0) append(" · ${researchRemainingTicks}t")
-                }
-            )
-        }
-        if (underConstruction) {
-            add(
-                buildString {
-                    append("Build")
-                    constructionRemainingTicks?.takeIf { it > 0 }?.let { append(" · ${it}t") }
-                }
-            )
-        }
-    }
-    return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
 }
 
 internal fun shouldHandleHotkeyWhileOverlayVisible(keycode: Int, pauseVisible: Boolean, helpVisible: Boolean): Boolean {

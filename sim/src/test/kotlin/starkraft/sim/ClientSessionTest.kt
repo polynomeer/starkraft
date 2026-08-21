@@ -21,7 +21,9 @@ import starkraft.sim.client.ClientStreamState
 import starkraft.sim.client.ClientStreamSubscription
 import starkraft.sim.client.ClientTickActivity
 import starkraft.sim.client.ClientViewState
+import starkraft.sim.client.ClientVisionState
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.extractClientRecordType
 import starkraft.sim.client.FileClientInputSink
 import starkraft.sim.client.FileClientStreamSubscription
 import starkraft.sim.client.FactionSnapshot
@@ -92,6 +94,100 @@ class ClientSessionTest {
             val update = subscription.poll()
             assertEquals(12, update?.snapshot?.tick)
         }
+    }
+
+    @Test
+    fun `file stream subscription caps records processed per poll`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        val lines =
+            buildString {
+                for (tick in 1..5) {
+                    append(
+                        "{\"recordType\":\"snapshot\",\"snapshot\":${
+                            json.encodeToString(
+                                ClientSnapshot.serializer(),
+                                ClientSnapshot(
+                                    tick = tick,
+                                    mapId = "demo-map",
+                                    buildVersion = "test-build",
+                                    mapWidth = 32,
+                                    mapHeight = 32,
+                                    factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                                    entities = emptyList(),
+                                    resourceNodes = emptyList()
+                                )
+                            )
+                        }}\n"
+                    )
+                }
+            }
+        Files.writeString(snapshotPath, lines)
+
+        FileClientStreamSubscription(snapshotPath, maxRecordsPerPoll = 2).use { subscription ->
+            val first = subscription.poll()
+            val second = subscription.poll()
+            val third = subscription.poll()
+
+            assertEquals(2, first?.snapshot?.tick)
+            assertEquals(4, second?.snapshot?.tick)
+            assertEquals(5, third?.snapshot?.tick)
+        }
+    }
+
+    @Test
+    fun `file stream subscription caps scanned lines when unsupported events flood the stream`(@TempDir tempDir: Path) {
+        val snapshotPath = tempDir.resolve("snapshots.ndjson")
+        val lines =
+            buildString {
+                repeat(6) { append("{\"recordType\":\"economy\",\"tick\":${it + 1}}\n") }
+                append(
+                    "{\"recordType\":\"snapshot\",\"snapshot\":${
+                        json.encodeToString(
+                            ClientSnapshot.serializer(),
+                            ClientSnapshot(
+                                tick = 9,
+                                mapId = "demo-map",
+                                buildVersion = "test-build",
+                                mapWidth = 32,
+                                mapHeight = 32,
+                                factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 10)),
+                                entities = emptyList(),
+                                resourceNodes = emptyList()
+                            )
+                        )
+                    }}\n"
+                )
+            }
+        Files.writeString(snapshotPath, lines)
+
+        FileClientStreamSubscription(snapshotPath, maxRecordsPerPoll = 2, maxLinesPerPoll = 4).use { subscription ->
+            assertEquals(null, subscription.poll())
+
+            val update = subscription.poll()
+            assertEquals(9, update?.snapshot?.tick)
+        }
+    }
+
+    @Test
+    fun `extracts client record type without full json parsing`() {
+        assertEquals("snapshot", extractClientRecordType("{\"recordType\":\"snapshot\",\"snapshot\":{}}"))
+        assertEquals(null, extractClientRecordType("{\"tick\":14}"))
+    }
+
+    @Test
+    fun `vision state supports fast visibility sampling`() {
+        val state =
+            ClientVisionState(
+                visibleTilesByFaction = mapOf(1 to setOf(2 to 3, 4 to 5)),
+                exploredTilesByFaction = mapOf(1 to setOf(2 to 3, 6 to 7))
+            )
+
+        assertTrue(state.isVisible(1, 2, 3))
+        assertFalse(state.isVisible(1, 6, 7))
+        assertTrue(state.isExplored(1, 6, 7))
+        assertTrue(state.hasVisibleTileInSample(1, 0, 0, 4, 16, 16))
+        assertFalse(state.hasVisibleTileInSample(1, 8, 8, 4, 16, 16))
+        assertTrue(state.hasExploredTileInSample(1, 4, 4, 4, 16, 16))
     }
 
     @Test

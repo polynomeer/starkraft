@@ -13,6 +13,7 @@ import starkraft.sim.client.buildPlaySimCommand
 import starkraft.sim.client.loadPlayPreset
 import starkraft.sim.client.parsePlayControlState
 import starkraft.sim.client.parseInitialSnapshotTimeoutMs
+import starkraft.sim.client.parsePlaySnapshotEvery
 import starkraft.sim.client.parsePlayPreset
 import starkraft.sim.client.presetFilePath
 import starkraft.sim.client.defaultPlayPaths
@@ -66,7 +67,7 @@ class PlayLauncherTest {
                 "/cp",
                 "starkraft.sim.AppKt",
                 "--snapshotEvery",
-                "1",
+                "2",
                 "--snapshotOut",
                 "/tmp/snapshots.ndjson",
                 "--inputTail",
@@ -91,10 +92,21 @@ class PlayLauncherTest {
                 inputPath = Paths.get("/tmp/client-input.ndjson"),
                 controlPath = Paths.get("/tmp/play-control.txt"),
                 ticks = 1000,
-                scenario = PlayScenario.SCRIPTED
+                scenario = PlayScenario.SCRIPTED,
+                snapshotEvery = 3
             )
 
+        assertTrue(command.containsAll(listOf("--snapshotEvery", "3")))
         assertTrue(command.containsAll(listOf("--spawnScript", "sim/scripts/spawn.script", "--script", "sim/scripts/sample.script")))
+    }
+
+    @Test
+    fun `parsePlaySnapshotEvery handles defaults and bounds`() {
+        assertEquals(2, parsePlaySnapshotEvery(null))
+        assertEquals(2, parsePlaySnapshotEvery(""))
+        assertEquals(2, parsePlaySnapshotEvery("bad"))
+        assertEquals(1, parsePlaySnapshotEvery("0"))
+        assertEquals(5, parsePlaySnapshotEvery("5"))
     }
 
     @Test

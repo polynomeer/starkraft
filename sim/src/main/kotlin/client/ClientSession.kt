@@ -155,6 +155,62 @@ internal data class ClientVisionState(
 ) {
     fun visibleTiles(faction: Int): Set<Pair<Int, Int>> = visibleTilesByFaction[faction] ?: emptySet()
     fun exploredTiles(faction: Int): Set<Pair<Int, Int>> = exploredTilesByFaction[faction] ?: emptySet()
+
+    fun isVisible(faction: Int, x: Int, y: Int): Boolean = pack(x, y) in packedVisibleTiles(faction)
+
+    fun isExplored(faction: Int, x: Int, y: Int): Boolean = pack(x, y) in packedExploredTiles(faction)
+
+    fun hasVisibleTileInSample(
+        faction: Int,
+        startX: Int,
+        startY: Int,
+        sampleStep: Int,
+        mapWidth: Int,
+        mapHeight: Int
+    ): Boolean = hasPackedTileInSample(packedVisibleTiles(faction), startX, startY, sampleStep, mapWidth, mapHeight)
+
+    fun hasExploredTileInSample(
+        faction: Int,
+        startX: Int,
+        startY: Int,
+        sampleStep: Int,
+        mapWidth: Int,
+        mapHeight: Int
+    ): Boolean = hasPackedTileInSample(packedExploredTiles(faction), startX, startY, sampleStep, mapWidth, mapHeight)
+
+    private val packedVisibleTilesByFaction: Map<Int, Set<Long>> by lazy(LazyThreadSafetyMode.NONE) {
+        visibleTilesByFaction.mapValues { (_, tiles) -> tiles.mapTo(LinkedHashSet(tiles.size), ::pack) }
+    }
+
+    private val packedExploredTilesByFaction: Map<Int, Set<Long>> by lazy(LazyThreadSafetyMode.NONE) {
+        exploredTilesByFaction.mapValues { (_, tiles) -> tiles.mapTo(LinkedHashSet(tiles.size), ::pack) }
+    }
+
+    private fun packedVisibleTiles(faction: Int): Set<Long> = packedVisibleTilesByFaction[faction] ?: emptySet()
+
+    private fun packedExploredTiles(faction: Int): Set<Long> = packedExploredTilesByFaction[faction] ?: emptySet()
+
+    private fun hasPackedTileInSample(
+        packedTiles: Set<Long>,
+        startX: Int,
+        startY: Int,
+        sampleStep: Int,
+        mapWidth: Int,
+        mapHeight: Int
+    ): Boolean {
+        val endX = minOf(startX + sampleStep, mapWidth)
+        val endY = minOf(startY + sampleStep, mapHeight)
+        for (x in startX until endX) {
+            for (y in startY until endY) {
+                if (pack(x, y) in packedTiles) return true
+            }
+        }
+        return false
+    }
+
+    private fun pack(tile: Pair<Int, Int>): Long = pack(tile.first, tile.second)
+
+    private fun pack(x: Int, y: Int): Long = (x.toLong() shl 32) or (y.toLong() and 0xffffffffL)
 }
 
 internal fun applyVisionChanges(

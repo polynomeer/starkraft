@@ -12,6 +12,7 @@ import starkraft.sim.client.computeCommandDeckLayout
 import starkraft.sim.client.computeCommandHintRowHeight
 import starkraft.sim.client.computeSelectionSlotVisualLayout
 import starkraft.sim.client.computeTopBarLayout
+import starkraft.sim.client.computeVisibleTileRange
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
@@ -24,6 +25,7 @@ import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
+import starkraft.sim.client.formatPerfMillis
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEffectAccentColor
@@ -34,6 +36,7 @@ import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.shouldRenderCompletionOverlay
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.compactCommandHint
+import starkraft.sim.client.resolveMiniMapSampleStep
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveFallbackTeamTintStrength
@@ -41,10 +44,13 @@ import starkraft.sim.client.resolveSilhouetteBodyColor
 import starkraft.sim.client.resolveSilhouetteStripeColor
 import starkraft.sim.client.resolveSilhouetteTrimColor
 import starkraft.sim.client.resolveStructureRoofColor
+import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
+import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
+import starkraft.sim.client.CameraView
 
 class GameScreenInputRulesTest {
     @Test
@@ -124,6 +130,64 @@ class GameScreenInputRulesTest {
             assertTrue(viewportHeight <= minimapTop, "viewport should stop above minimap at ${width}x$height")
             assertTrue(viewportHeight >= 240, "viewport should remain playable at ${width}x$height")
         }
+    }
+
+    @Test
+    fun `visible tile range tracks camera instead of full map`() {
+        val range =
+            computeVisibleTileRange(
+                camera = CameraView(panX = -640f, panY = -480f, zoom = 1f, baseTileSize = 20),
+                screenWidth = 1280,
+                screenHeight = 720,
+                mapWidth = 96,
+                mapHeight = 96
+            )
+
+        assertTrue(range.startX > 0, "camera offset should skip off-screen left tiles")
+        assertTrue(range.startY > 0, "camera offset should skip off-screen top tiles")
+        assertTrue(range.endXExclusive - range.startX < 96, "visible x-range should be smaller than full map")
+        assertTrue(range.endYExclusive - range.startY < 96, "visible y-range should be smaller than full map")
+    }
+
+    @Test
+    fun `visible tile range clamps to map edges`() {
+        val range =
+            computeVisibleTileRange(
+                camera = CameraView(panX = 120f, panY = 120f, zoom = 1f, baseTileSize = 20),
+                screenWidth = 1280,
+                screenHeight = 720,
+                mapWidth = 96,
+                mapHeight = 96
+            )
+
+        assertEquals(0, range.startX)
+        assertEquals(0, range.startY)
+        assertTrue(range.endXExclusive <= 96)
+        assertTrue(range.endYExclusive <= 96)
+    }
+
+    @Test
+    fun `terrain detail drops on default play zoom for performance`() {
+        assertFalse(shouldRenderDetailedTerrainForTileSize(20f))
+        assertFalse(shouldRenderDetailedTerrainForTileSize(23.9f))
+        assertTrue(shouldRenderDetailedTerrainForTileSize(24f))
+    }
+
+    @Test
+    fun `minimap sampling coarsens on larger maps`() {
+        assertEquals(2, resolveMiniMapSampleStep(32, 32))
+        assertEquals(3, resolveMiniMapSampleStep(64, 64))
+        assertEquals(4, resolveMiniMapSampleStep(96, 96))
+        assertEquals(6, resolveMiniMapSampleStep(128, 128))
+    }
+
+    @Test
+    fun `perf helpers smooth and format frame metrics predictably`() {
+        assertEquals(12.5f, smoothMetricSample(0f, 12.5f))
+        assertEquals(11.45f, smoothMetricSample(10f, 18.055557f), 0.0001f)
+        assertEquals("0.8", formatPerfMillis(0.84f))
+        assertEquals("16", formatPerfMillis(16.02f))
+        assertEquals("16.7", formatPerfMillis(16.66f))
     }
 
     @Test

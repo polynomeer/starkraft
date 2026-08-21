@@ -200,7 +200,11 @@ internal class WebSocketClientStreamSubscription(
     }
 }
 
-internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscription {
+internal class FileClientStreamSubscription(
+    path: Path,
+    private val maxRecordsPerPoll: Int = 96,
+    private val maxLinesPerPoll: Int = 384
+) : ClientStreamSubscription {
     init {
         val parent = path.parent
         if (parent != null) Files.createDirectories(parent)
@@ -219,10 +223,15 @@ internal class FileClientStreamSubscription(path: Path) : ClientStreamSubscripti
         var latestProductionActivity: ClientProductionActivity? = null
         var latestResearchActivity: ClientResearchActivity? = null
         var latestTickActivity: ClientTickActivity? = null
+        var processedRecords = 0
+        var scannedLines = 0
         while (true) {
+            if (processedRecords >= maxRecordsPerPoll || scannedLines >= maxLinesPerPoll) break
             val line = readCompleteLine() ?: break
+            scannedLines += 1
             if (line.isBlank()) continue
             val update = parseClientStreamLine(line) ?: continue
+            processedRecords += 1
             if (update.snapshot != null) latestSnapshot = update.snapshot
             if (update.mapState != null) latestMapState = update.mapState
             if (update.visionChanges.isNotEmpty()) visionChanges += update.visionChanges
@@ -397,8 +406,10 @@ internal fun openClientInputSink(spec: String): ClientInputSink {
 
 internal fun parseClientStreamLine(line: String): ClientStreamState? {
     if (line.isBlank()) return null
+    val recordType = extractClientRecordType(line) ?: return null
+    if (recordType !in liveClientRecordTypes) return null
     val obj = clientBridgeJson.parseToJsonElement(line).jsonObject
-    return when (obj["recordType"]?.jsonPrimitive?.content) {
+    return when (recordType) {
         "mapState" -> {
             val blocked = obj["blockedTiles"]?.jsonArray?.mapNotNull { tile ->
                 val x = tile.jsonObject["x"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@mapNotNull null
@@ -572,6 +583,31 @@ internal fun parseClientStreamLine(line: String): ClientStreamState? {
             )
         else -> null
     }
+}
+
+private val liveClientRecordTypes =
+    setOf(
+        "mapState",
+        "snapshot",
+        "vision",
+        "commandAck",
+        "research",
+        "production",
+        "constructionState",
+        "damage",
+        "tickSummary"
+    )
+
+internal fun extractClientRecordType(line: String): String? {
+    val keyIndex = line.indexOf("\"recordType\"")
+    if (keyIndex < 0) return null
+    val colonIndex = line.indexOf(':', keyIndex + 12)
+    if (colonIndex < 0) return null
+    val valueStart = line.indexOf('"', colonIndex + 1)
+    if (valueStart < 0) return null
+    val valueEnd = line.indexOf('"', valueStart + 1)
+    if (valueEnd < 0) return null
+    return line.substring(valueStart + 1, valueEnd)
 }
 
 private fun summarizeReasons(obj: kotlinx.serialization.json.JsonObject?): String {

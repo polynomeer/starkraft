@@ -81,7 +81,8 @@ internal class GdxClientRuntime(
             PlayScenario.SKIRMISH
         }
     var zoomLocked: Boolean = true
-    var debugVisible: Boolean = false
+    var classicPerformanceMode: Boolean = readClassicPerformanceMode()
+    var debugVisible: Boolean = readDebugOverlayEnabled()
     var pauseOverlayVisible: Boolean = false
     var helpOverlayVisible: Boolean = false
 
@@ -432,9 +433,7 @@ internal class GdxClientRuntime(
     }
 
     fun nudgePanBy(deltaX: Float, deltaY: Float) {
-        val base = cameraTarget ?: camera
-        cameraTarget = base.copy(panX = base.panX + deltaX, panY = base.panY + deltaY)
-        initialCameraApplied = true
+        panBy(deltaX, deltaY)
     }
 
     fun togglePauseOverlay() {
@@ -1251,6 +1250,21 @@ internal class GdxClientRuntime(
         lastGroupRecall = group
         lastGroupRecallAtNanos = now
         showNotice("group $group recalled (${ids.size})")
+    }
+
+    private fun readDebugOverlayEnabled(): Boolean {
+        val env = System.getenv("STARKRAFT_SIM_DEBUG")?.trim()?.lowercase()
+        if (env == "1" || env == "true" || env == "yes" || env == "on") return true
+        val property = System.getProperty("starkraft.sim.debug")?.trim()?.lowercase()
+        return property == "1" || property == "true" || property == "yes" || property == "on"
+    }
+
+    private fun readClassicPerformanceMode(): Boolean {
+        val env = System.getenv("STARKRAFT_CLASSIC_RENDERER")?.trim()?.lowercase()
+        if (env == "0" || env == "false" || env == "no" || env == "off") return false
+        val property = System.getProperty("starkraft.classicRenderer")?.trim()?.lowercase()
+        if (property == "0" || property == "false" || property == "no" || property == "off") return false
+        return true
     }
 }
 

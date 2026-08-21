@@ -342,14 +342,14 @@ class GdxClientRuntimeTest {
     }
 
     @Test
-    fun `keyboard pan nudges toward a queued target`(@TempDir tempDir: Path) {
+    fun `keyboard pan applies immediately without queued glide`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
 
         runtime.nudgePanBy(deltaX = -28f, deltaY = 0f)
 
-        assertEquals(0f, runtime.camera.panX)
+        assertEquals(-28f, runtime.camera.panX)
         runtime.tick()
-        assertTrue(runtime.camera.panX < 0f)
+        assertEquals(-28f, runtime.camera.panX)
     }
 
     @Test

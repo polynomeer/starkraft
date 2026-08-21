@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import kotlin.math.abs
 import kotlin.math.floor
@@ -36,9 +35,9 @@ internal class GdxWorldRenderer(
             else -> Color(0.80f, 0.80f, 0.80f, 0.92f)
         }
 
-    private fun damageFlashAlpha(selected: Boolean): Float = if (selected) 0.08f else 0.11f
+    private fun damageFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.14f
 
-    private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.07f else 0.09f
+    private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.12f
     private val fogColor = Color(0.07f, 0.12f, 0.14f, 0.18f)
     private val shroudColor = Color(0.05f, 0.09f, 0.11f, 0.32f)
     private val minimapFogColor = Color(0.05f, 0.09f, 0.11f, 0.14f)
@@ -62,7 +61,6 @@ internal class GdxWorldRenderer(
 
     fun render(runtime: GdxClientRuntime, width: Int, height: Int, worldViewportHeight: Int, dragBox: DragSelectionBox?) {
         val snapshot = runtime.snapshot ?: return
-        val nearestHostileCache = mutableMapOf<Int, EntitySnapshot?>()
         val shape = assets.shapeRenderer
         screenCamera.setToOrtho(true, width.toFloat(), height.toFloat())
         screenCamera.update()
@@ -74,16 +72,11 @@ internal class GdxWorldRenderer(
         beginWorldScissor(width, height, worldViewportHeight)
         shape.begin(ShapeRenderer.ShapeType.Filled)
         drawTerrain(shape, runtime)
-        shape.end()
-
-        renderWorldSprites(runtime, snapshot, nearestHostileCache)
-
-        shape.begin(ShapeRenderer.ShapeType.Filled)
         drawResources(shape, runtime)
         drawFog(shape, runtime)
-        drawEntities(shape, runtime, snapshot, nearestHostileCache)
-        drawActivityMarkers(shape, runtime, snapshot, nearestHostileCache)
-        drawOrderMarkers(shape, runtime, snapshot, nearestHostileCache)
+        drawEntities(shape, runtime)
+        drawActivityMarkers(shape, runtime)
+        drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
         drawSelectionClickPulse(shape, runtime)
         drawDeathRemains(shape, runtime)
@@ -120,31 +113,14 @@ internal class GdxWorldRenderer(
         return
     }
 
-    private fun renderWorldSprites(
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ) {
-        val batch = assets.batch
-        batch.projectionMatrix = screenCamera.combined
-        batch.begin()
-        drawTerrainSprites(batch, runtime)
-        drawResourceSprites(batch, runtime)
-        drawEntitySprites(batch, runtime, snapshot, nearestHostileCache)
-        batch.color = Color.WHITE
-        batch.end()
-    }
-
     private fun drawTerrain(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
         val mapState = runtime.session.state.mapState
         val tileSize = runtime.camera.tileSize
-        val terrainSprite = assets.spriteAssets.terrainBase()
         for (x in 0 until snapshot.mapWidth) {
             for (y in 0 until snapshot.mapHeight) {
                 val sx = runtime.camera.worldToScreenX(x.toFloat())
                 val sy = runtime.camera.worldToScreenY(y.toFloat())
-                if (terrainSprite != null) continue
                 val macroPatch = ((x / 10) + (y / 8)) % 3
                 val ridgeBand = ((x * 3) + (y * 2)) % 17
                 val terrainDrift = ((x / 14) - (y / 11)) % 4
@@ -177,9 +153,7 @@ internal class GdxWorldRenderer(
                 }
             }
         }
-        val blockedSprite = assets.spriteAssets.blockedTile()
         mapState?.blockedTiles?.forEach { (x, y) ->
-            if (blockedSprite != null) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             shape.color = terrainMetal
@@ -187,59 +161,13 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.28f, 0.30f, 0.34f, 0.82f)
             shape.rect(sx + 2f, sy + 2f, runtime.camera.tileSize - 4f, runtime.camera.tileSize - 4f)
         }
-        val occupiedSprite = assets.spriteAssets.occupiedTile()
         mapState?.staticOccupancyTiles?.forEach { (x, y) ->
-            if (occupiedSprite != null) return@forEach
             val sx = runtime.camera.worldToScreenX(x.toFloat())
             val sy = runtime.camera.worldToScreenY(y.toFloat())
             shape.color = Color(0.37f, 0.24f, 0.14f, 0.84f)
             shape.rect(sx, sy, runtime.camera.tileSize, runtime.camera.tileSize)
             shape.color = Color(0.52f, 0.34f, 0.20f, 0.38f)
             shape.rect(sx + 3f, sy + 3f, runtime.camera.tileSize - 6f, runtime.camera.tileSize - 6f)
-        }
-    }
-
-    private fun drawTerrainSprites(batch: SpriteBatch, runtime: GdxClientRuntime) {
-        val snapshot = runtime.snapshot ?: return
-        val mapState = runtime.session.state.mapState
-        val tileSize = runtime.camera.tileSize
-        assets.spriteAssets.terrainBase()?.let { sprite ->
-            for (x in 0 until snapshot.mapWidth) {
-                for (y in 0 until snapshot.mapHeight) {
-                    drawSprite(
-                        batch = batch,
-                        sprite = sprite,
-                        x = runtime.camera.worldToScreenX(x.toFloat()),
-                        y = runtime.camera.worldToScreenY(y.toFloat()),
-                        width = tileSize,
-                        height = tileSize
-                    )
-                }
-            }
-        }
-        assets.spriteAssets.blockedTile()?.let { sprite ->
-            mapState?.blockedTiles?.forEach { (x, y) ->
-                drawSprite(
-                    batch = batch,
-                    sprite = sprite,
-                    x = runtime.camera.worldToScreenX(x.toFloat()),
-                    y = runtime.camera.worldToScreenY(y.toFloat()),
-                    width = tileSize,
-                    height = tileSize
-                )
-            }
-        }
-        assets.spriteAssets.occupiedTile()?.let { sprite ->
-            mapState?.staticOccupancyTiles?.forEach { (x, y) ->
-                drawSprite(
-                    batch = batch,
-                    sprite = sprite,
-                    x = runtime.camera.worldToScreenX(x.toFloat()),
-                    y = runtime.camera.worldToScreenY(y.toFloat()),
-                    width = tileSize,
-                    height = tileSize
-                )
-            }
         }
     }
 
@@ -285,121 +213,40 @@ internal class GdxWorldRenderer(
         val snapshot = runtime.snapshot ?: return
         val pulse = ambientPulse(1400L)
         for (node in snapshot.resourceNodes) {
-            if (assets.spriteAssets.resource(node.kind) != null) continue
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
-                val core = resolveResourceCoreColor(node.kind)
-                val glow = resolveResourceGlowColor(node.kind)
-                shape.color = Color(0.06f, 0.12f, 0.10f, 0.88f)
-                shape.circle(sx + 1.5f, sy + 1.2f, 10.5f)
-                shape.color = glow.cpy().apply { a = 0.12f + (pulse * 0.10f) }
-                shape.circle(sx, sy, 13f + (pulse * 2.2f))
-                shape.color = Color(0.12f, 0.24f, 0.18f, 0.96f)
-                shape.rect(sx - 6.5f, sy - 8.5f, 13f, 5f)
-                shape.color = core
-                shape.circle(sx, sy, 7.8f)
-                shape.circle(sx - 4.8f, sy - 1.2f, 3.8f)
-                shape.circle(sx + 4.8f, sy - 0.6f, 3.4f)
-                shape.color = Color(0.74f, 1.00f, 0.88f, 0.24f + (pulse * 0.10f))
-                shape.circle(sx - 1.8f, sy - 2.1f, 3.4f)
-                shape.circle(sx + 2.6f, sy - 1.8f, 2.2f)
-                shape.color = Color(0.56f, 1.00f, 0.84f, 0.18f)
-                shape.rect(sx - 1f, sy - 10f, 2f, 4f)
+                shape.color = Color(0.10f, 0.18f, 0.16f, 0.92f)
+                shape.circle(sx + 1.5f, sy + 1.5f, 10f)
+                shape.color = Color(0.24f, 0.94f, 0.70f, 0.12f + (pulse * 0.10f))
+                shape.circle(sx, sy, 12f + (pulse * 2f))
+                shape.color = Color(0.26f, 0.82f, 0.60f, 0.95f)
+                shape.circle(sx, sy, 9f)
+                shape.color = Color(0.64f, 1.00f, 0.86f, 0.32f)
+                shape.circle(sx - 2f, sy - 2f, 4f)
+                shape.rect(sx - 2.5f, sy - 9f, 5f, 4f)
             } else {
-                val core = resolveResourceCoreColor(node.kind)
-                val glow = resolveResourceGlowColor(node.kind)
-                shape.color = Color(0.12f, 0.10f, 0.06f, 0.88f)
-                shape.circle(sx + 1.3f, sy + 1.3f, 9.5f)
-                shape.color = glow.cpy().apply { a = 0.10f + (pulse * 0.10f) }
-                shape.circle(sx - 3.5f, sy + 1f, 5.8f)
-                shape.circle(sx + 4.4f, sy - 1.5f, 6.2f)
-                shape.color = core
-                shape.rect(sx - 8f, sy - 5f, 4f, 8f)
-                shape.rect(sx - 3f, sy - 8f, 5f, 11f)
-                shape.rect(sx + 3f, sy - 6f, 4f, 9f)
-                shape.rect(sx - 5f, sy + 1f, 4f, 5f)
-                shape.color = Color(1f, 0.97f, 0.78f, 0.18f + (pulse * 0.10f))
-                shape.rect(sx - 6.5f, sy - 2.5f, 1.8f, 6.5f)
-                shape.rect(sx - 1.3f, sy - 5.8f, 1.8f, 8.8f)
-                shape.rect(sx + 4.3f, sy - 3.8f, 1.6f, 6.8f)
+                shape.color = Color(0.16f, 0.13f, 0.08f, 0.90f)
+                shape.circle(sx + 1.5f, sy + 1.5f, 9f)
+                shape.color = neutralColor
+                shape.rect(sx - 7f, sy - 5f, 6f, 5f)
+                shape.rect(sx - 1f, sy - 8f, 7f, 6f)
+                shape.rect(sx - 6f, sy + 1f, 8f, 5f)
+                shape.color = Color(1f, 0.95f, 0.72f, 0.12f + (pulse * 0.12f))
+                shape.rect(sx - 5f, sy - 4f, 3f, 2f)
+                shape.rect(sx, sy - 6f, 3f, 2f)
+                shape.color = Color(1f, 0.98f, 0.80f, 0.16f + (pulse * 0.12f))
+                shape.rect(sx - 2f, sy + 2f, 4f, 2f)
             }
         }
     }
 
-    private fun drawResourceSprites(batch: SpriteBatch, runtime: GdxClientRuntime) {
+    private fun drawEntities(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        for (node in snapshot.resourceNodes) {
-            val sprite = assets.spriteAssets.resource(node.kind) ?: continue
-            val size = runtime.camera.tileSize * sprite.scale
-            drawSprite(
-                batch = batch,
-                sprite = sprite,
-                x = runtime.camera.worldToScreenX(node.x) - (size / 2f),
-                y = runtime.camera.worldToScreenY(node.y) - (size / 2f),
-                width = size,
-                height = size
-            )
-        }
-    }
-
-    private fun drawEntitySprites(
-        batch: SpriteBatch,
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ) {
         val viewedFaction = runtime.session.state.viewedFaction
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
-            val sprite = assets.spriteAssets.entity(entity) ?: continue
-            val recoil = damageRecoilOffset(runtime, snapshot, entity, nearestHostileCache)
-            val criticalShake = criticalShakeOffset(entity)
-            val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first
-            val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
-            if (!isOnScreen(screenX, screenY)) continue
-            if (entity.footprintWidth != null && entity.footprintHeight != null) {
-                val tileX = floor(entity.x).toInt()
-                val tileY = floor(entity.y).toInt()
-                val width = entity.footprintWidth * runtime.camera.tileSize * sprite.scale
-                val height = entity.footprintHeight * runtime.camera.tileSize * sprite.scale
-                val left = runtime.camera.worldToScreenX(tileX.toFloat()) - ((width - (entity.footprintWidth * runtime.camera.tileSize)) / 2f)
-                val top = runtime.camera.worldToScreenY(tileY.toFloat()) - ((height - (entity.footprintHeight * runtime.camera.tileSize)) / 2f)
-                drawSprite(
-                    batch = batch,
-                    sprite = sprite,
-                    x = left,
-                    y = top,
-                    width = width,
-                    height = height,
-                    teamColor = factionColor(entity.faction, viewedFaction)
-                )
-            } else {
-                val size = runtime.camera.tileSize * sprite.scale
-                drawSprite(
-                    batch = batch,
-                    sprite = sprite,
-                    x = screenX - (size / 2f),
-                    y = screenY - (size / 2f),
-                    width = size,
-                    height = size,
-                    teamColor = factionColor(entity.faction, viewedFaction)
-                )
-            }
-        }
-    }
-
-    private fun drawEntities(
-        shape: ShapeRenderer,
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ) {
-        val viewedFaction = runtime.session.state.viewedFaction
-        for (entity in snapshot.entities) {
-            if (!isEntityVisible(entity, runtime)) continue
-            val hasSprite = assets.spriteAssets.entity(entity) != null
-            val recoil = damageRecoilOffset(runtime, snapshot, entity, nearestHostileCache)
+            val recoil = damageRecoilOffset(runtime, snapshot, entity)
             val criticalShake = criticalShakeOffset(entity)
             val screenX = runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first
             val screenY = runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
@@ -407,8 +254,6 @@ internal class GdxWorldRenderer(
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
             val selected = entity.id in runtime.session.state.selectedIds
-            val damageActive = runtime.isDamageFlashActive(entity.id)
-            val completionActive = shouldRenderCompletionOverlay(damageActive, runtime.isCompletionFlashActive(entity.id))
             if (footprintWidth != null && footprintHeight != null) {
                 val tileX = floor(entity.x).toInt()
                 val tileY = floor(entity.y).toInt()
@@ -416,140 +261,105 @@ internal class GdxWorldRenderer(
                 val h = footprintHeight * runtime.camera.tileSize
                 val left = runtime.camera.worldToScreenX(tileX.toFloat())
                 val top = runtime.camera.worldToScreenY(tileY.toFloat())
-                if (!hasSprite) {
-                    shape.color = Color(0f, 0f, 0f, 0.18f)
-                    shape.rect(left + 7f, top + 8f, w, h)
-                    shape.color = Color(0f, 0f, 0f, 0.12f)
-                    shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
-                }
-                if (damageActive) {
+                shape.color = Color(0f, 0f, 0f, 0.18f)
+                shape.rect(left + 7f, top + 8f, w, h)
+                shape.color = Color(0f, 0f, 0f, 0.12f)
+                shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
+                if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
                     shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
-                    shape.rect(left - 7f, top - 7f, w + 14f, h + 14f)
-                    shape.color = flashColor.cpy().apply { a = 0.78f }
-                    shape.rect(left - 3f, top - 3f, w + 6f, h + 6f)
+                    shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
+                    shape.color = flashColor
+                    shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
                 }
-                if (completionActive) {
+                if (runtime.isCompletionFlashActive(entity.id)) {
                     val completionColor = completionFlashColor(runtime, entity.id)
                     val sparkColor = completionSparkColor(runtime, entity.id)
                     shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
-                    shape.rect(left - 7f, top - 7f, w + 14f, h + 14f)
+                    shape.rect(left - 9f, top - 9f, w + 18f, h + 18f)
                     shape.color = completionColor
                     when (runtime.completionFlashKind(entity.id)) {
                         CompletionFlashKind.CONSTRUCTION -> {
-                            shape.rect(left - 4f, top - 4f, w + 8f, h + 8f)
-                            shape.color = sparkColor.cpy().apply { a = 0.74f }
-                            shape.rect(left - 6f, top + (h * 0.5f), w + 12f, 1.5f)
-                            shape.rect(left + (w * 0.5f), top - 6f, 1.5f, h + 12f)
+                            shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                            shape.color = sparkColor.cpy().apply { a = 0.84f }
+                            shape.rect(left - 8f, top + (h * 0.5f), w + 16f, 2f)
+                            shape.rect(left + (w * 0.5f), top - 8f, 2f, h + 16f)
                         }
                         CompletionFlashKind.PRODUCTION -> {
-                            shape.rect(left - 4f, top - 1.5f, w + 8f, h + 3f)
-                            shape.color = sparkColor.cpy().apply { a = 0.76f }
-                            shape.rect(left - 6f, top + h + 1.5f, w + 12f, 2f)
-                            shape.rect(left - 6f, top - 3.5f, w + 12f, 2f)
+                            shape.rect(left - 6f, top - 2f, w + 12f, h + 4f)
+                            shape.color = sparkColor.cpy().apply { a = 0.86f }
+                            shape.rect(left - 8f, top + h + 2f, w + 16f, 3f)
+                            shape.rect(left - 8f, top - 5f, w + 16f, 3f)
                         }
                         CompletionFlashKind.RESEARCH, null -> {
-                            shape.rect(left - 4f, top - 4f, w + 8f, h + 8f)
-                            shape.color = sparkColor.cpy().apply { a = 0.74f }
-                            shape.rect(left + (w * 0.18f), top - 5f, w * 0.64f, 1.5f)
-                            shape.rect(left + (w * 0.18f), top + h + 3.5f, w * 0.64f, 1.5f)
-                            shape.rect(left - 5f, top + (h * 0.18f), 1.5f, h * 0.64f)
-                            shape.rect(left + w + 3.5f, top + (h * 0.18f), 1.5f, h * 0.64f)
+                            shape.rect(left - 6f, top - 6f, w + 12f, h + 12f)
+                            shape.color = sparkColor.cpy().apply { a = 0.84f }
+                            shape.rect(left + (w * 0.18f), top - 7f, w * 0.64f, 2f)
+                            shape.rect(left + (w * 0.18f), top + h + 5f, w * 0.64f, 2f)
+                            shape.rect(left - 7f, top + (h * 0.18f), 2f, h * 0.64f)
+                            shape.rect(left + w + 5f, top + (h * 0.18f), 2f, h * 0.64f)
                         }
                     }
                 }
-                if (!hasSprite) {
-                    shape.color = Color(0f, 0f, 0f, 0.22f)
-                    shape.rect(left + 3f, top + 3f, w, h)
-                    drawStructureSilhouette(
-                        shape = shape,
-                        entity = entity,
-                        tileX = tileX,
-                        tileY = tileY,
-                        width = w,
-                        height = h,
-                        runtime = runtime,
-                        factionColor = factionColor(entity.faction, viewedFaction)
-                    )
-                }
+                shape.color = Color(0f, 0f, 0f, 0.22f)
+                shape.rect(left + 3f, top + 3f, w, h)
+                drawStructureSilhouette(
+                    shape = shape,
+                    entity = entity,
+                    tileX = tileX,
+                    tileY = tileY,
+                    width = w,
+                    height = h,
+                    runtime = runtime,
+                    factionColor = factionColor(entity.faction, viewedFaction)
+                )
             } else {
-                if (!hasSprite) {
-                    shape.color = Color(0f, 0f, 0f, 0.20f)
-                    shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
-                }
-                if (damageActive) {
+                shape.color = Color(0f, 0f, 0f, 0.20f)
+                shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
+                if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
                     val sparkColor = impactSparkForEntity(runtime, entity.id)
                     shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
-                    shape.circle(screenX, screenY, if (selected) 14f else 12f)
-                    shape.color = flashColor.cpy().apply { a = 0.78f }
-                    shape.circle(screenX, screenY, if (selected) 11.5f else 10f)
+                    shape.circle(screenX, screenY, if (selected) 16f else 14f)
+                    shape.color = flashColor
+                    shape.circle(screenX, screenY, if (selected) 13.5f else 12f)
                     shape.color = sparkColor
-                    shape.rect(screenX - 1.2f, screenY - 7f, 2.4f, 14f)
-                    shape.rect(screenX - 7f, screenY - 1.2f, 14f, 2.4f)
+                    shape.rect(screenX - 1.5f, screenY - 9f, 3f, 18f)
+                    shape.rect(screenX - 9f, screenY - 1.5f, 18f, 3f)
                 }
-                if (completionActive) {
+                if (runtime.isCompletionFlashActive(entity.id)) {
                     val completionColor = completionFlashColor(runtime, entity.id)
                     val sparkColor = completionSparkColor(runtime, entity.id)
                     shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
-                    shape.circle(screenX, screenY, if (selected) 15f else 13f)
+                    shape.circle(screenX, screenY, if (selected) 17f else 15f)
                     shape.color = completionColor
                     when (runtime.completionFlashKind(entity.id)) {
                         CompletionFlashKind.CONSTRUCTION -> {
-                            shape.rect(screenX - 6f, screenY - 6f, 12f, 12f)
+                            shape.rect(screenX - 8f, screenY - 8f, 16f, 16f)
                             shape.color = sparkColor
-                            shape.rect(screenX - 8f, screenY - 0.75f, 16f, 1.5f)
-                            shape.rect(screenX - 0.75f, screenY - 8f, 1.5f, 16f)
+                            shape.rect(screenX - 10f, screenY - 1f, 20f, 2f)
+                            shape.rect(screenX - 1f, screenY - 10f, 2f, 20f)
                         }
                         CompletionFlashKind.PRODUCTION -> {
-                            shape.circle(screenX, screenY, if (selected) 13f else 11f)
+                            shape.circle(screenX, screenY, if (selected) 15f else 13f)
                             shape.color = sparkColor
-                            shape.rect(screenX - 8f, screenY - 4f, 16f, 2f)
-                            shape.rect(screenX - 8f, screenY + 2f, 16f, 2f)
+                            shape.rect(screenX - 10f, screenY - 5f, 20f, 3f)
+                            shape.rect(screenX - 10f, screenY + 2f, 20f, 3f)
                         }
                         CompletionFlashKind.RESEARCH, null -> {
-                            shape.circle(screenX, screenY, if (selected) 13f else 11f)
+                            shape.circle(screenX, screenY, if (selected) 15f else 13f)
                             shape.color = sparkColor
-                            shape.rectLine(screenX - 7f, screenY, screenX, screenY - 7f, 1.4f)
-                            shape.rectLine(screenX, screenY - 7f, screenX + 7f, screenY, 1.4f)
-                            shape.rectLine(screenX + 7f, screenY, screenX, screenY + 7f, 1.4f)
-                            shape.rectLine(screenX, screenY + 7f, screenX - 7f, screenY, 1.4f)
+                            shape.rectLine(screenX - 8f, screenY, screenX, screenY - 8f, 1.8f)
+                            shape.rectLine(screenX, screenY - 8f, screenX + 8f, screenY, 1.8f)
+                            shape.rectLine(screenX + 8f, screenY, screenX, screenY + 8f, 1.8f)
+                            shape.rectLine(screenX, screenY + 8f, screenX - 8f, screenY, 1.8f)
                         }
                     }
                 }
-                if (!hasSprite) {
-                    drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
-                }
+                drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
             }
             drawHealthBar(shape, runtime, entity, screenX, screenY, selected)
         }
-    }
-
-    private fun drawSprite(
-        batch: SpriteBatch,
-        sprite: LoadedSpriteAsset,
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        teamColor: Color? = null
-    ) {
-        val tint = sprite.tint ?: Color.WHITE
-        val shadowAlpha =
-            when {
-                width >= 36f || height >= 36f -> 0.18f
-                width >= 20f || height >= 20f -> 0.14f
-                else -> 0.10f
-            }
-        batch.color = Color(0f, 0f, 0f, shadowAlpha)
-        batch.draw(sprite.region, x + 1.8f, y + 2.4f, width, height)
-        batch.color =
-            if (teamColor != null && sprite.teamTintStrength > 0f) {
-                tint.cpy().lerp(teamColor, sprite.teamTintStrength)
-            } else {
-                tint
-            }
-        batch.draw(sprite.region, x, y, width, height)
     }
 
     private fun drawHealthBar(shape: ShapeRenderer, runtime: GdxClientRuntime, entity: EntitySnapshot, x: Float, y: Float, selected: Boolean) {
@@ -589,40 +399,19 @@ internal class GdxWorldRenderer(
 
     private fun drawSelectionOverlays(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        val leadSelectedId = runtime.session.state.selectedIds.firstOrNull()
-        val pulse = selectionPulse()
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
             if (!isEntityVisible(entity, runtime)) continue
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(startX, startY)) continue
-            if (entity.id == leadSelectedId) {
-                val radius = 14f + (pulse * 1.8f)
-                shape.color = Color(0.84f, 1.00f, 0.86f, 0.30f + (pulse * 0.12f))
-                shape.rect(startX - 1f, startY - radius, 2f, 5f)
-                shape.rect(startX - 1f, startY + radius - 5f, 2f, 5f)
-                shape.rect(startX - radius, startY - 1f, 5f, 2f)
-                shape.rect(startX + radius - 5f, startY - 1f, 5f, 2f)
-                shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.20f + (pulse * 0.08f))
-                shape.rect(startX - 0.75f, startY - (radius + 5f), 1.5f, 3.5f)
-                shape.rect(startX - 0.75f, startY + radius + 1.5f, 1.5f, 3.5f)
-                shape.rect(startX - (radius + 5f), startY - 0.75f, 3.5f, 1.5f)
-                shape.rect(startX + radius + 1.5f, startY - 0.75f, 3.5f, 1.5f)
-            } else {
-                val radius = 9f
-                shape.color = Color(0.76f, 1.00f, 0.78f, 0.18f)
-                shape.rect(startX - 0.75f, startY - radius, 1.5f, 3f)
-                shape.rect(startX - 0.75f, startY + radius - 3f, 1.5f, 3f)
-                shape.rect(startX - radius, startY - 0.75f, 3f, 1.5f)
-                shape.rect(startX + radius - 3f, startY - 0.75f, 3f, 1.5f)
-            }
+            shape.color = selectionColor.cpy().apply { a = 0.16f }
+            shape.circle(startX, startY, 8f)
         }
     }
 
     private fun drawSelectionBrackets(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val snapshot = runtime.snapshot ?: return
-        val leadSelectedId = runtime.session.state.selectedIds.firstOrNull()
         shape.color = selectionColor
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
@@ -630,7 +419,6 @@ internal class GdxWorldRenderer(
             val screenX = runtime.camera.worldToScreenX(entity.x)
             val screenY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(screenX, screenY)) continue
-            val leadSelected = entity.id == leadSelectedId
             val impactKind = runtime.damageImpactKind(entity.id)
             val bracketColor =
                 when (impactKind) {
@@ -650,7 +438,7 @@ internal class GdxWorldRenderer(
                 val top = runtime.camera.worldToScreenY(tileY.toFloat()) - 6f
                 val width = footprintWidth * runtime.camera.tileSize + 12f
                 val height = footprintHeight * runtime.camera.tileSize + 12f
-                val corner = if (leadSelected) 15f else 12f
+                val corner = 12f
                 val pulse = selectionPulse()
                 shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.08f))
                 shape.line(left - 3f, top - 3f, left + width + 3f, top - 3f)
@@ -666,12 +454,6 @@ internal class GdxWorldRenderer(
                 shape.line(left, top + height, left, top + height - corner)
                 shape.line(left + width, top + height, left + width - corner, top + height)
                 shape.line(left + width, top + height, left + width, top + height - corner)
-                if (leadSelected) {
-                    shape.color = Color(0.90f, 1.00f, 0.86f, 0.88f)
-                    shape.rect(left + (width * 0.30f), top - 6f, width * 0.40f, 1.6f)
-                    shape.rect(left + (width * 0.30f), top + height + 4.4f, width * 0.40f, 1.6f)
-                    shape.color = bracketColor
-                }
                 if (confirmPulse > 0f) {
                     shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.22f * confirmPulse)
                     shape.line(left - 6f, top - 6f, left + width + 6f, top - 6f)
@@ -693,17 +475,17 @@ internal class GdxWorldRenderer(
                 shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
                 shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
             } else {
-                val radius = if (leadSelected) 12.5f else 11f
+                val radius = 11f
                 val pulse = selectionPulse()
                 shape.color = Color(selectionSoftColor.r, selectionSoftColor.g, selectionSoftColor.b, 0.12f + (pulse * 0.06f))
-                shape.circle(screenX, screenY, radius + if (leadSelected) 2.5f else 1.5f)
+                shape.circle(screenX, screenY, radius + 1.5f)
                 if (confirmPulse > 0f) {
                     shape.color = Color(bracketColor.r, bracketColor.g, bracketColor.b, 0.18f * confirmPulse)
                     shape.circle(screenX, screenY, radius + 6f + ((1f - confirmPulse) * 4f))
                 }
                 shape.color = bracketColor
                 shape.circle(screenX, screenY, radius)
-                val wing = if (leadSelected) 7f else 5.5f
+                val wing = 5.5f
                 shape.line(screenX - radius - wing, screenY, screenX - radius + 1.5f, screenY)
                 shape.line(screenX + radius - 1.5f, screenY, screenX + radius + wing, screenY)
                 shape.line(screenX, screenY - radius - wing, screenX, screenY - radius + 1.5f)
@@ -712,12 +494,6 @@ internal class GdxWorldRenderer(
                 shape.line(screenX + 7f, screenY - 7f, screenX + 3.5f, screenY - 3.5f)
                 shape.line(screenX - 7f, screenY + 7f, screenX - 3.5f, screenY + 3.5f)
                 shape.line(screenX + 7f, screenY + 7f, screenX + 3.5f, screenY + 3.5f)
-                if (leadSelected) {
-                    shape.color = Color(0.90f, 1.00f, 0.86f, 0.92f)
-                    shape.rect(screenX - 6f, screenY - radius - 5.8f, 12f, 1.8f)
-                    shape.rect(screenX - 6f, screenY + radius + 4f, 12f, 1.8f)
-                    shape.color = bracketColor
-                }
                 if (runtime.isDamageFlashActive(entity.id)) {
                     shape.color = Color(0.92f, 1.00f, 0.78f, 0.82f)
                     shape.rect(screenX - radius - 2f, screenY - 0.75f, (radius * 2f) + 4f, 1.5f)
@@ -729,97 +505,57 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun drawOrderMarkers(
-        shape: ShapeRenderer,
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ) {
+    private fun drawOrderMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
         val entitiesById = snapshot.entities.associateBy { it.id }
-        val leadSelectedId = runtime.session.state.selectedIds.firstOrNull()
         for (entity in snapshot.entities) {
             if (entity.id !in runtime.session.state.selectedIds) continue
             if (!isEntityVisible(entity, runtime)) continue
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (entity.pathRemainingNodes > 0 && entity.pathGoalX != null && entity.pathGoalY != null) {
-                if (entity.id == leadSelectedId) {
-                    val goalX = runtime.camera.worldToScreenX(entity.pathGoalX.toFloat() + 0.5f)
-                    val goalY = runtime.camera.worldToScreenY(entity.pathGoalY.toFloat() + 0.5f)
-                    val pathKind = orderMarkerKind(entity)
-                    val tone = pingTone(pathKind)
-                    drawRouteBeads(shape, startX, startY, goalX, goalY, tone)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.14f)
-                    shape.circle(goalX, goalY, 11f)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.92f)
-                    shape.circle(goalX, goalY, 2.8f)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.28f)
-                    shape.circle(goalX, goalY, 6f)
-                }
+                // Move-path arrows are intentionally suppressed; the click ripple carries the order feedback.
             }
             if (entity.rallyX != null && entity.rallyY != null) {
                 val rallyX = runtime.camera.worldToScreenX(entity.rallyX)
                 val rallyY = runtime.camera.worldToScreenY(entity.rallyY)
-                val tone = pingTone(GroundPingKind.MOVE)
-                drawRouteBeads(shape, startX, startY, rallyX, rallyY, tone)
-                shape.color = tone.cpy().mul(1f, 1f, 1f, 0.24f)
-                shape.circle(rallyX, rallyY, 12f)
-                shape.color = tone.cpy().mul(1f, 1f, 1f, 0.94f)
-                shape.rect(rallyX - 2f, rallyY - 2f, 4f, 4f)
-                shape.rect(rallyX - 7f, rallyY - 0.75f, 14f, 1.5f)
-                shape.rect(rallyX - 0.75f, rallyY - 7f, 1.5f, 14f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.14f)
+                shape.rectLine(startX, startY, rallyX, rallyY, 2f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.24f)
+                shape.circle(rallyX, rallyY, 11f)
+                shape.color = pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.94f)
+                shape.rect(rallyX - 3f, rallyY - 3f, 6f, 6f)
+                shape.rect(rallyX - 9f, rallyY - 1f, 18f, 2f)
+                shape.rect(rallyX - 1f, rallyY - 9f, 2f, 18f)
+                drawChevronTrail(shape, startX, startY, rallyX, rallyY, pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.64f))
             }
             if (entity.buildTargetId != null) {
                 entitiesById[entity.buildTargetId]?.let { target ->
                     val targetX = runtime.camera.worldToScreenX(target.x)
                     val targetY = runtime.camera.worldToScreenY(target.y)
-                    val tone = pingTone(GroundPingKind.BUILD)
-                    drawRouteBeads(shape, startX, startY, targetX, targetY, tone)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.22f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.16f)
+                    shape.rectLine(startX, startY, targetX, targetY, 2.2f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.22f)
                     shape.circle(targetX, targetY, 10f)
-                    shape.color = tone.cpy().mul(1f, 1f, 1f, 0.92f)
-                    shape.circle(targetX, targetY, 3.2f)
+                    shape.color = pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.92f)
+                    shape.circle(targetX, targetY, 3.5f)
                     shape.rect(targetX - 8f, targetY - 8f, 16f, 2f)
                     shape.rect(targetX - 8f, targetY + 6f, 16f, 2f)
-                    shape.rect(targetX - 8f, targetY - 8f, 2f, 16f)
-                    shape.rect(targetX + 6f, targetY - 8f, 2f, 16f)
-                }
-            }
-            if (entity.id == leadSelectedId && isAttackOrder(entity)) {
-                nearestHostile(snapshot, entity, nearestHostileCache)?.let { hostile ->
-                    val hostileX = runtime.camera.worldToScreenX(hostile.x)
-                    val hostileY = runtime.camera.worldToScreenY(hostile.y)
-                    if (isOnScreen(hostileX, hostileY)) {
-                        val pulse = ambientPulse(520L)
-                        shape.color = Color(0.82f, 1.00f, 0.74f, 0.12f + (pulse * 0.08f))
-                        shape.rectLine(startX, startY, hostileX, hostileY, 1.8f)
-                        shape.color = Color(0.78f, 1.00f, 0.68f, 0.34f + (pulse * 0.18f))
-                        shape.circle(hostileX, hostileY, 10f + (pulse * 2.4f))
-                        shape.rectLine(hostileX - 8f, hostileY, hostileX - 3f, hostileY, 1.4f)
-                        shape.rectLine(hostileX + 3f, hostileY, hostileX + 8f, hostileY, 1.4f)
-                        shape.rectLine(hostileX, hostileY - 8f, hostileX, hostileY - 3f, 1.4f)
-                        shape.rectLine(hostileX, hostileY + 3f, hostileX, hostileY + 8f, 1.4f)
-                        shape.color = Color(0.92f, 1.00f, 0.84f, 0.86f)
-                        shape.circle(hostileX, hostileY, 2.2f)
-                    }
+                    drawChevronTrail(shape, startX, startY, targetX, targetY, pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.68f))
                 }
             }
         }
     }
 
-    private fun drawActivityMarkers(
-        shape: ShapeRenderer,
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ) {
+    private fun drawActivityMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
         for (entity in snapshot.entities) {
             if (!isEntityVisible(entity, runtime)) continue
             val screenX = runtime.camera.worldToScreenX(entity.x)
             val screenY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(screenX, screenY)) continue
             if (entity.weaponCooldownTicks > 0 && entity.weaponId != null) {
-                val hostile = nearestHostile(snapshot, entity, nearestHostileCache)
+                val hostile = nearestHostile(snapshot, entity)
                 val cooldownRatio = (entity.weaponCooldownTicks.coerceAtMost(20) / 20f)
                 val isMelee = isMeleeWeapon(entity)
                 shape.color = if (isMelee) Color(0.70f, 0.98f, 0.60f, 0.18f) else Color(0.98f, 0.54f, 0.22f, 0.18f)
@@ -1020,22 +756,13 @@ internal class GdxWorldRenderer(
                 }
             }
             if (runtime.isDamageFlashActive(entity.id)) {
-                nearestHostile(snapshot, entity, nearestHostileCache)?.let { attacker ->
+                nearestHostile(snapshot, entity)?.let { attacker ->
                     val attackDir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
                     val hitX = screenX - directionDx(attackDir, 10f)
                     val hitY = screenY - directionDy(attackDir, 10f)
-                    val warnX = screenX - directionDx(attackDir, 14f)
-                    val warnY = screenY - directionDy(attackDir, 14f)
-                    val flankX = directionDy(attackDir, 4.5f)
-                    val flankY = -directionDx(attackDir, 4.5f)
                     val meleeHit = isMeleeAttacker(attacker)
                     shape.color = if (meleeHit) selectionColor.cpy().apply { a = 0.86f } else pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.82f)
                     shape.rectLine(hitX, hitY, screenX, screenY, 2.2f)
-                    shape.color = if (meleeHit) Color(0.90f, 1.00f, 0.78f, 0.84f) else Color(1.00f, 0.82f, 0.58f, 0.88f)
-                    shape.rectLine(warnX - flankX, warnY - flankY, warnX, warnY, 1.8f)
-                    shape.rectLine(warnX + flankX, warnY + flankY, warnX, warnY, 1.8f)
-                    shape.color = if (meleeHit) Color(0.82f, 1.00f, 0.72f, 0.36f) else Color(1.00f, 0.68f, 0.42f, 0.32f)
-                    shape.circle(warnX, warnY, if (meleeHit) 3.8f else 3.4f)
                     if (meleeHit) {
                         shape.rectLine(hitX + directionDy(attackDir, 6f), hitY - directionDx(attackDir, 6f), hitX - directionDy(attackDir, 6f), hitY + directionDx(attackDir, 6f), 2.2f)
                         shape.color = selectionColor.cpy().apply { a = 0.48f }
@@ -1160,16 +887,8 @@ internal class GdxWorldRenderer(
         for (node in snapshot.resourceNodes) {
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
             val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
-            shape.color = if (node.kind == "gas") Color(0.26f, 0.92f, 0.68f, 0.96f) else Color(0.96f, 0.84f, 0.46f, 0.96f)
-            if (node.kind == "gas") {
-                shape.circle(nodeX, nodeY, 1.6f)
-                shape.color = Color(0.62f, 1.00f, 0.86f, 0.34f)
-                shape.circle(nodeX, nodeY, 2.6f)
-            } else {
-                shape.rect(nodeX - 1.2f, nodeY - 1.2f, 2.4f, 2.4f)
-                shape.color = Color(1.00f, 0.94f, 0.68f, 0.30f)
-                shape.rect(nodeX - 2f, nodeY - 0.5f, 4f, 1f)
-            }
+            shape.color = if (node.kind == "gas") Color(0.28f, 0.88f, 0.64f, 0.95f) else Color(0.90f, 0.81f, 0.42f, 0.95f)
+            shape.rect(nodeX - 0.75f, nodeY - 0.75f, 2.5f, 2.5f)
         }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
@@ -1179,13 +898,9 @@ internal class GdxWorldRenderer(
             val damaged = runtime.isDamageFlashActive(entity.id)
             val impactKind = runtime.damageImpactKind(entity.id)
             val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
-            val isStructure = entity.footprintWidth != null && entity.footprintHeight != null
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
-            when {
-                isStructure -> shape.rect(x - 2.8f, y - 2.8f, 5.6f, 5.6f)
-                entity.weaponId != null -> shape.rect(x - 2.2f, y - 2.2f, 4.4f, 4.4f)
-                else -> shape.circle(x, y, if (selected) 2.6f else 2.1f)
-            }
+            val size = if (selected) 5f else 4f
+            shape.rect(x - (size / 2f), y - (size / 2f), size, size)
             if (damaged) {
                 shape.color =
                     if (meleeImpact) Color(0.86f, 1.00f, 0.62f, if (visible) 0.88f else 0.30f)
@@ -1241,14 +956,14 @@ internal class GdxWorldRenderer(
                         else -> selectionColor.cpy().apply { a = if (visible) 0.90f else 0.36f }
                     }
                 shape.color = selectedTone
-                shape.rect(x - 4.8f, y - 4.8f, 3.5f, 0.9f)
-                shape.rect(x - 4.8f, y - 4.8f, 0.9f, 3.5f)
-                shape.rect(x + 1.3f, y - 4.8f, 3.5f, 0.9f)
-                shape.rect(x + 3.9f, y - 4.8f, 0.9f, 3.5f)
-                shape.rect(x - 4.8f, y + 3.9f, 3.5f, 0.9f)
-                shape.rect(x - 4.8f, y + 1.3f, 0.9f, 3.5f)
-                shape.rect(x + 1.3f, y + 3.9f, 3.5f, 0.9f)
-                shape.rect(x + 3.9f, y + 1.3f, 0.9f, 3.5f)
+                shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
+                shape.rect(x - 4.5f, y - 4.5f, 1f, 4f)
+                shape.rect(x + 0.5f, y - 4.5f, 4f, 1f)
+                shape.rect(x + 3.5f, y - 4.5f, 1f, 4f)
+                shape.rect(x - 4.5f, y + 3.5f, 4f, 1f)
+                shape.rect(x - 4.5f, y + 0.5f, 1f, 4f)
+                shape.rect(x + 0.5f, y + 3.5f, 4f, 1f)
+                shape.rect(x + 3.5f, y + 0.5f, 1f, 4f)
                 if (damaged) {
                     shape.color =
                         if (meleeImpact) Color(0.94f, 1.00f, 0.72f, if (visible) 0.88f else 0.34f)
@@ -1305,26 +1020,26 @@ internal class GdxWorldRenderer(
     }
 
     private fun drawMiniMapStatusLegend(shape: ShapeRenderer, left: Float, top: Float, width: Float) {
-        val legendTop = top + 4f
-        val startX = left + width - 35f
-        shape.color = Color(0.04f, 0.07f, 0.09f, 0.22f)
-        shape.rect(startX - 3f, legendTop - 2f, 37f, 8f)
-        shape.color = Color(0.64f, 0.88f, 0.98f, 0.64f)
-        shape.rect(startX, legendTop + 1f, 2f, 2f)
-        shape.color = completionProductionSparkColor.cpy().apply { a = 0.68f }
-        shape.rect(startX + 6f, legendTop, 3f, 4f)
-        shape.color = completionResearchSparkColor.cpy().apply { a = 0.68f }
-        shape.rect(startX + 13f, legendTop + 1f, 2f, 2f)
-        shape.rect(startX + 12f, legendTop + 1.5f, 4f, 1f)
-        shape.color = completionBuildSparkColor.cpy().apply { a = 0.68f }
-        shape.rect(startX + 19f, legendTop + 1f, 2f, 2f)
-        shape.rect(startX + 19.5f, legendTop - 0.5f, 1f, 5f)
-        shape.color = Color(0.98f, 0.48f, 0.30f, 0.68f)
-        shape.rect(startX + 24f, legendTop + 1f, 2f, 2f)
-        shape.rect(startX + 23f, legendTop + 1.5f, 4f, 1f)
-        shape.rect(startX + 24.5f, legendTop - 0.5f, 1f, 5f)
-        shape.color = Color(0.98f, 0.86f, 0.48f, 0.68f)
-        shape.circle(startX + 31f, legendTop + 2f, 1.6f)
+        val legendTop = top + 5f
+        val startX = left + width - 49f
+        shape.color = Color(0.04f, 0.07f, 0.09f, 0.30f)
+        shape.rect(startX - 4f, legendTop - 3f, 52f, 10f)
+        shape.color = Color(0.64f, 0.88f, 0.98f, 0.72f)
+        shape.rect(startX, legendTop + 1f, 3f, 3f)
+        shape.color = completionProductionSparkColor.cpy().apply { a = 0.74f }
+        shape.rect(startX + 9f, legendTop, 4f, 5f)
+        shape.color = completionResearchSparkColor.cpy().apply { a = 0.74f }
+        shape.rect(startX + 18f, legendTop + 1f, 3f, 3f)
+        shape.rect(startX + 17f, legendTop + 2f, 5f, 1f)
+        shape.color = completionBuildSparkColor.cpy().apply { a = 0.74f }
+        shape.rect(startX + 27f, legendTop + 1f, 3f, 3f)
+        shape.rect(startX + 28f, legendTop - 1f, 1.5f, 7f)
+        shape.color = Color(0.98f, 0.48f, 0.30f, 0.72f)
+        shape.rect(startX + 36f, legendTop + 1f, 3f, 3f)
+        shape.rect(startX + 34f, legendTop + 2f, 7f, 1f)
+        shape.rect(startX + 37f, legendTop - 1f, 1.5f, 7f)
+        shape.color = Color(0.98f, 0.86f, 0.48f, 0.72f)
+        shape.circle(startX + 46f, legendTop + 2.5f, 2f)
     }
 
     private fun drawMiniMapViewport(shape: ShapeRenderer, runtime: GdxClientRuntime, width: Int, height: Int) {
@@ -1343,12 +1058,12 @@ internal class GdxWorldRenderer(
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         val pulse = ambientPulse(1050L)
-        shape.color = Color(0.72f, 0.96f, 0.82f, 0.08f + (pulse * 0.05f))
+        shape.color = Color(0.82f, 0.96f, 1.00f, 0.07f + (pulse * 0.05f))
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = Color(0.90f, 1.00f, 0.86f, 0.84f + (pulse * 0.10f))
-        shape.rect(viewportLeft - 0.6f, viewportTop - 0.6f, viewportWidth + 1.2f, viewportHeight + 1.2f)
+        shape.color = Color(0.92f, 0.98f, 1f, 0.66f + (pulse * 0.14f))
+        shape.rect(viewportLeft - 0.8f, viewportTop - 0.8f, viewportWidth + 1.6f, viewportHeight + 1.6f)
         val corner = minOf(9f, viewportWidth * 0.28f, viewportHeight * 0.28f).coerceAtLeast(4f)
-        shape.color = Color(0.68f, 1.00f, 0.62f, 0.96f)
+        shape.color = selectionColor
         shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
         shape.line(viewportLeft, viewportTop, viewportLeft, viewportTop + corner)
         shape.line(viewportLeft + viewportWidth, viewportTop, viewportLeft + viewportWidth - corner, viewportTop)
@@ -1498,11 +1213,6 @@ internal class GdxWorldRenderer(
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
         drawConfirmPulse(shape, x, y, scale = 0.82f, periodMillis = 720L, alphaScale = 0.72f)
-        shape.color = Color(0.78f, 1.00f, 0.84f, 0.82f)
-        shape.rectLine(x - 8f, y, x - 3.5f, y, 1.2f)
-        shape.rectLine(x + 3.5f, y, x + 8f, y, 1.2f)
-        shape.rectLine(x, y - 8f, x, y - 3.5f, 1.2f)
-        shape.rectLine(x, y + 3.5f, x, y + 8f, 1.2f)
     }
 
     private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long, alphaScale: Float = 1f) {
@@ -1553,7 +1263,6 @@ internal class GdxWorldRenderer(
         val bursts = runtime.activeDeathBursts()
         if (bursts.isEmpty()) return
         val now = System.currentTimeMillis()
-        val viewedFaction = runtime.session.state.viewedFaction
         for (burst in bursts) {
             val x = runtime.camera.worldToScreenX(burst.x)
             val y = runtime.camera.worldToScreenY(burst.y)
@@ -1562,19 +1271,17 @@ internal class GdxWorldRenderer(
             val fade = (1f - progress).coerceIn(0f, 1f)
             val core = if (burst.isStructure) 8f + (progress * 14f) else 5f + (progress * 9f)
             val outer = if (burst.isStructure) 16f + (progress * 28f) else 11f + (progress * 18f)
-            val accent = resolveEffectAccentColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction))
-            val ember = resolveEffectEmberColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction))
-            shape.color = accent.cpy().lerp(Color.WHITE, 0.08f).apply { a = 0.22f * fade }
+            shape.color = Color(1.00f, 0.58f, 0.28f, 0.22f * fade)
             shape.circle(x, y, outer)
-            shape.color = ember.cpy().apply { a = 0.40f * fade }
+            shape.color = Color(1.00f, 0.78f, 0.40f, 0.40f * fade)
             shape.circle(x, y, core)
-            shape.color = ember.cpy().lerp(Color.WHITE, 0.36f).apply { a = 0.62f * fade }
+            shape.color = Color(1.00f, 0.92f, 0.72f, 0.62f * fade)
             shape.circle(x, y, core * 0.42f)
             shape.color = Color(0.22f, 0.24f, 0.22f, 0.20f * fade)
             shape.circle(x + (progress * 6f), y - (progress * 10f), outer * 0.82f)
             shape.circle(x - (progress * 8f), y - (progress * 6f), outer * 0.64f)
             val shard = if (burst.isStructure) 18f else 12f
-            shape.color = ember.cpy().lerp(Color.WHITE, 0.18f).apply { a = 0.50f * fade }
+            shape.color = Color(1.00f, 0.76f, 0.44f, 0.50f * fade)
             shape.rectLine(x - shard, y, x - (shard * 0.35f), y, 2.2f)
             shape.rectLine(x + shard, y, x + (shard * 0.35f), y, 2.2f)
             shape.rectLine(x, y - shard, x, y - (shard * 0.35f), 2.2f)
@@ -1583,13 +1290,19 @@ internal class GdxWorldRenderer(
             shape.rectLine(x + (shard * 0.72f), y - (shard * 0.72f), x + (shard * 0.22f), y - (shard * 0.22f), 1.6f)
             shape.rectLine(x - (shard * 0.72f), y + (shard * 0.72f), x - (shard * 0.22f), y + (shard * 0.22f), 1.6f)
             shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
-            shape.color = resolveEffectDebrisColor(burst.typeId, burst.isStructure, factionColor(burst.faction, viewedFaction)).apply { a *= fade }
+            val debrisColor =
+                when {
+                    burst.typeId.contains("Zergling", ignoreCase = true) -> Color(0.74f, 0.46f, 0.34f, 0.44f * fade)
+                    burst.isStructure -> Color(0.52f, 0.50f, 0.44f, 0.42f * fade)
+                    else -> Color(0.68f, 0.66f, 0.60f, 0.44f * fade)
+                }
+            shape.color = debrisColor
             shape.rect(x - (shard * 0.46f), y + (shard * 0.16f), 5f, 3f)
             shape.rect(x + (shard * 0.22f), y - (shard * 0.34f), 4f, 3f)
             if (burst.isStructure) {
                 shape.rect(x - (shard * 0.10f), y + (shard * 0.40f), 7f, 4f)
                 shape.rect(x - (shard * 0.58f), y - (shard * 0.28f), 6f, 4f)
-                shape.color = ember.cpy().lerp(Color(0.44f, 0.40f, 0.28f, 1f), 0.42f).apply { a = 0.36f * fade }
+                shape.color = Color(0.72f, 0.66f, 0.52f, 0.36f * fade)
                 val collapseTilt = (((burst.entityId % 7) - 3) / 3f).coerceIn(-1f, 1f)
                 shape.rectLine(
                     x - (shard * 1.18f),
@@ -1624,7 +1337,6 @@ internal class GdxWorldRenderer(
         val remains = runtime.activeDeathRemains()
         if (remains.isEmpty()) return
         val now = System.currentTimeMillis()
-        val viewedFaction = runtime.session.state.viewedFaction
         for (remain in remains) {
             val progress = ((remain.expiresAtMillis - now).toFloat() / 2600f).coerceIn(0f, 1f)
             val settle = (1f - progress).coerceIn(0f, 1f)
@@ -1651,53 +1363,58 @@ internal class GdxWorldRenderer(
             val hotAlpha = (progress * progress).coerceIn(0f, 1f)
             val smokeDrift = if (remain.isStructure) settle * 1.8f else settle * 0.8f
             val smokeRise = if (remain.isStructure) settle * 6f else settle * 3f
-            val accent = resolveEffectAccentColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
-            val ember = resolveEffectEmberColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
-            val debrisTone = resolveEffectDebrisColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction))
             if (remain.isStructure) {
-                shape.color = accent.cpy().lerp(Color.WHITE, 0.12f).apply { a = 0.08f * hotAlpha }
+                shape.color = Color(1.00f, 0.62f, 0.32f, 0.08f * hotAlpha)
                 shape.circle(x, y, 14f + ((1f - progress) * 10f))
-                shape.color = debrisTone.cpy().lerp(Color(0.18f, 0.18f, 0.18f, 1f), 0.42f).apply { a = alpha }
+                shape.color = Color(0.18f, 0.18f, 0.18f, alpha)
                 shape.rect(x - 12f, y - 12f, 24f, 24f)
-                shape.color = debrisTone.cpy().apply { a = alpha * 0.9f }
+                shape.color = Color(0.34f, 0.32f, 0.28f, alpha * 0.9f)
                 shape.rect(x - 8f - spread, y - 9f, 7f, 5f)
                 shape.rect(x + 1f + spread, y - 6f, 8f, 6f)
                 shape.rect(x - 3f, y + 2f + (settle * 0.8f), 9f, 4f)
-                shape.color = debrisTone.cpy().lerp(Color(0.20f, 0.18f, 0.16f, 1f), 0.34f).apply { a = alpha * 0.86f }
+                shape.color = Color(0.22f, 0.20f, 0.18f, alpha * 0.86f)
                 shape.rect(x - 14f - (spread * 0.6f), y + 10f, 5f, 4f)
                 shape.rect(x + 8f + (spread * 0.5f), y + 6f, 4f, 5f)
                 shape.color = Color(0.16f, 0.18f, 0.18f, alpha * 0.56f)
                 shape.circle(x - 3f, y + 15f, 8f + ((1f - progress) * 6f))
                 shape.circle(x + 6f, y + 11f, 6f + ((1f - progress) * 5f))
                 shape.circle(x - 8f, y + 6f, 5f + ((1f - progress) * 4f))
-                shape.color = ember.cpy().lerp(debrisTone, 0.72f).apply { a = alpha * 0.78f }
+                shape.color = Color(0.24f, 0.22f, 0.18f, alpha * 0.78f)
                 shape.rect(x - 17f - spread, y + 5f, 7f, 4f)
                 shape.rect(x + 10f + spread, y - 10f, 6f, 5f)
             } else {
-                shape.color = debrisTone.cpy().apply { a = alpha }
+                val debris =
+                    when {
+                        zerglingRemain -> Color(0.34f, 0.24f, 0.20f, alpha)
+                        else -> Color(0.28f, 0.30f, 0.30f, alpha)
+                    }
+                shape.color = debris
                 shape.rect(x - 6f - (spread * 0.4f), y - 2f, 5f, 3f)
                 shape.rect(x + 1f + (spread * 0.5f), y - 4f, 4f, 3f)
                 shape.rect(x - 1f, y + 1f + (settle * 0.3f), 3f, 2f)
                 if (marineRemain) {
-                    shape.color = debrisTone.cpy().lerp(Color(0.36f, 0.38f, 0.42f, 1f), 0.18f).apply { a = alpha * 0.92f }
+                    shape.color = Color(0.34f, 0.36f, 0.38f, alpha * 0.92f)
                     shape.rect(x - 3f, y - 6f + (settle * 0.4f), 6f, 2f)
                     shape.rect(x - 9f - spread, y - 1f, 3f, 2f)
-                    shape.color = accent.cpy().lerp(Color(0.20f, 0.22f, 0.24f, 1f), 0.74f).apply { a = alpha * 0.52f }
+                    shape.color = Color(0.20f, 0.22f, 0.24f, alpha * 0.52f)
                     shape.circle(x + 4f + (spread * 0.3f), y + 4f, 4f + ((1f - progress) * 2f))
                 }
                 if (zerglingRemain) {
-                    shape.color = debrisTone.cpy().lerp(Color(0.46f, 0.30f, 0.22f, 1f), 0.26f).apply { a = alpha * 0.88f }
+                    shape.color = Color(0.40f, 0.28f, 0.22f, alpha * 0.88f)
                     shape.rect(x - 8f - spread, y + 1f, 5f, 2f)
                     shape.rect(x + 4f + spread, y - 1f, 4f, 2f)
                     shape.rect(x - 2f, y - 6f + (settle * 0.5f), 4f, 2f)
-                    shape.color = accent.cpy().lerp(Color(0.30f, 0.20f, 0.18f, 1f), 0.78f).apply { a = alpha * 0.42f }
+                    shape.color = Color(0.30f, 0.20f, 0.18f, alpha * 0.42f)
                     shape.circle(x - 2f - (spread * 0.2f), y + 5f, 3.6f + ((1f - progress) * 2f))
                     shape.circle(x + 5f + (spread * 0.4f), y + 2f, 2.8f + ((1f - progress) * 1.8f))
                 }
             }
-            val smokeColor = resolveEffectSmokeColor(remain.typeId, remain.isStructure, factionColor(remain.faction, viewedFaction)).apply {
-                a = alpha * if (remain.isStructure) 0.66f + ((1f - progress) * 0.18f) else 0.46f + ((1f - progress) * 0.12f)
-            }
+            val smokeColor =
+                when {
+                    remain.isStructure -> Color(0.16f, 0.18f, 0.18f, alpha * (0.52f + ((1f - progress) * 0.30f)))
+                    zerglingRemain -> Color(0.20f, 0.18f, 0.16f, alpha * (0.32f + ((1f - progress) * 0.16f)))
+                    else -> Color(0.16f, 0.18f, 0.18f, alpha * (0.42f + ((1f - progress) * 0.18f)))
+                }
             shape.color = smokeColor
             shape.circle(x + 3f + smokeDrift, y + 6f + smokeRise, 7f + ((1f - progress) * 5f))
             shape.circle(x - 5f - (smokeDrift * 0.6f), y + 3f + (smokeRise * 0.7f), 5f + ((1f - progress) * 3f))
@@ -1807,11 +1524,11 @@ internal class GdxWorldRenderer(
         val recoilBack = attackRecovery * 1.4f
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, (lead * 0.9f) - (recoilBack * 0.45f))
         val y = screenY + bobY + directionDy(entity.dir, (lead * 0.5f) - (recoilBack * 0.30f))
-        val typeName = entity.typeId.orEmpty()
-        val body = resolveSilhouetteBodyColor(typeName, isStructure = false, factionColor = factionColor)
-        val teamStripe = resolveSilhouetteStripeColor(typeName, isStructure = false, factionColor = factionColor)
-        val trim = resolveSilhouetteTrimColor(typeName, isStructure = false, factionColor = factionColor)
+        val body = Color(0.17f, 0.19f, 0.22f, 1f)
+        val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
+        val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
         val shadowRadius = if (selected) 9f else 7f
+        val typeName = entity.typeId.orEmpty()
         shape.color = Color(0f, 0f, 0f, 0.34f)
         val shadowX = x + 1.5f - directionDx(entity.dir, lead * 0.45f)
         val shadowY = screenY + 1.5f - directionDy(entity.dir, lead * 0.25f)
@@ -1831,20 +1548,14 @@ internal class GdxWorldRenderer(
                 val toolSwing = stride * 1.4f
                 val bodyLean = (sway * 1.2f) + (damageTilt * 0.55f)
                 shape.color = body
-                shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.1f)
-                shape.rect(x - 3.8f + (bodyLean * 0.15f), y - 5.4f, 7.2f, 5.1f)
+                shape.circle(x + bodyLean * 0.25f, y + settle * 0.35f, 6.5f)
                 shape.color = teamStripe
-                shape.rect(x - 5.3f, y - 2f + (toolSwing * 0.15f), 10.6f, 4.1f)
-                shape.rect(x - 2.2f + (bodyLean * 0.2f), y - 4.7f, 4.4f, 2.8f)
+                shape.rect(x - 5f, y - 2f + (toolSwing * 0.15f), 10f, 4f)
                 shape.color = trim
                 shape.circle(x + bodyLean * 0.4f, y, 2.8f)
                 shape.rectLine(x - 4f - bodyLean, y + 4f + toolSwing, x + 4f + bodyLean, y + 4f - toolSwing, 1.2f)
-                shape.rectLine(x - 2.8f, y - 3.2f, x - 5.2f - bodyLean, y + 1.8f + toolSwing, 1.1f)
-                shape.rectLine(x + 2.8f, y - 3.1f, x + 5.0f + bodyLean, y + 1.6f - toolSwing, 1.1f)
                 shape.rect(x - 6.2f - bodyLean, y - 0.7f + toolSwing, 1.6f, 1.4f)
                 shape.rect(x + 4.6f + bodyLean, y - 0.7f - toolSwing, 1.6f, 1.4f)
-                shape.rectLine(x - 1.9f, y - 5.2f, x - 2.8f + stride, y - 8.4f, 1.2f)
-                shape.rectLine(x + 1.9f, y - 5.2f, x + 2.8f - stride, y - 8.4f, 1.2f)
                 shape.color = Color(0.94f, 0.96f, 0.98f, 0.65f)
                 shape.rectLine(
                     x + directionDx(entity.dir, 0.8f),
@@ -1862,11 +1573,14 @@ internal class GdxWorldRenderer(
                 val attackLunge = lunge + aimBias - (attackRecovery * 0.9f)
                 val crouch = attackReady * 1.8f
                 shape.color = body
-                shape.rect(x - 6.8f + directionDx(entity.dir, attackLunge * 0.4f), y - 2.6f + settle * 0.25f + crouch, 13.6f, 4.8f)
-                shape.rectLine(x - 1.2f, y - 1.4f + crouch, x - 8.4f - (lunge * 0.35f), y - 4.8f + crouch, 1.8f)
-                shape.rectLine(x - 1.0f, y - 0.6f + crouch, x - 7.6f - (lunge * 0.45f), y + 1.4f + crouch, 1.4f)
+                shape.rect(
+                    x - 6.5f + directionDx(entity.dir, attackLunge * 0.4f),
+                    y - 3.2f + settle * 0.25f + crouch,
+                    13f,
+                    6.4f
+                )
                 shape.color = teamStripe
-                shape.rect(x - 5.6f + directionDx(entity.dir, attackLunge * 0.5f), y - 1.9f + crouch, 11.2f, 3.2f)
+                shape.rect(x - 5.2f + directionDx(entity.dir, attackLunge * 0.5f), y - 2.2f + crouch, 10.4f, 4.4f)
                 shape.color = trim
                 shape.rectLine(
                     x - 5f,
@@ -1889,8 +1603,6 @@ internal class GdxWorldRenderer(
                     y + 3.8f + attackLunge + crouch,
                     1f
                 )
-                shape.rectLine(x - 3.2f, y - 1.8f + crouch, x - 5.1f - clawSpread, y - 6.8f + crouch, 1f)
-                shape.rectLine(x + 2.8f, y - 1.8f + crouch, x + 4.9f + clawSpread, y - 6.8f + crouch, 1f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.68f)
                 shape.rectLine(
                     x,
@@ -1905,17 +1617,12 @@ internal class GdxWorldRenderer(
                 val torsoLean = (sway * 0.55f) + (damageTilt * 0.40f)
                 val aimLean = torsoLean + (aimBias * 0.45f) - (attackRecovery * 0.60f)
                 shape.color = body
-                shape.rect(x - 3.7f + aimLean, y - 5.8f + settle * 0.18f, 7.4f, 11.3f)
-                shape.rect(x - 6.8f, y - 0.8f + (march * 0.7f), 13.6f, 2.4f)
-                shape.rect(x - 5.4f + aimLean, y + 2.6f, 10.8f, 2.1f)
+                shape.rect(x - 3.8f + aimLean, y - 6.8f + settle * 0.18f, 7.6f, 13.6f)
+                shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
                 shape.color = teamStripe
-                shape.rect(x - 2.4f + aimLean, y - 4.9f, 4.8f, 9.8f)
-                shape.rect(x - 1.8f + aimLean, y + 5.1f, 3.6f, 2f)
+                shape.rect(x - 2.6f + aimLean, y - 5.8f, 5.2f, 11.6f)
                 shape.color = trim
-                shape.rect(x - 2.4f + aimLean, y - 7.4f, 4.8f, 2.4f)
-                shape.rect(x - 3.8f + aimLean, y + 6.8f, 7.6f, 1.4f)
-                shape.rectLine(x - 4.8f + aimLean, y + 0.8f, x - 6.2f, y - 4.8f + march, 1.1f)
-                shape.rectLine(x + 4.8f + aimLean, y + 0.8f, x + 6.2f, y - 4.8f - march, 1.1f)
+                shape.rect(x - 1.5f + aimLean, y - 6.8f, 3f, 2.8f)
                 shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
                 shape.color = Color(0.98f, 0.94f, 0.74f, 0.72f)
                 shape.rectLine(
@@ -2021,10 +1728,8 @@ internal class GdxWorldRenderer(
         val settleDrop = collapseSeverity * 1.4f
         val left = runtime.camera.worldToScreenX(tileX.toFloat()) + collapseWobble
         val top = runtime.camera.worldToScreenY(tileY.toFloat()) + settleDrop
-        val shell = resolveSilhouetteBodyColor(entity.typeId, isStructure = true, factionColor = factionColor)
-        val roof = resolveStructureRoofColor(entity.typeId, factionColor)
-        val trim = resolveSilhouetteTrimColor(entity.typeId, isStructure = true, factionColor = factionColor)
-        val panelAccent = resolveSilhouetteStripeColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val shell = Color(0.18f, 0.20f, 0.22f, 1f)
+        val roof = Color(0.24f, 0.27f, 0.30f, 1f)
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
         val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
         val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
@@ -2036,8 +1741,6 @@ internal class GdxWorldRenderer(
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
-        shape.color = Color(0f, 0f, 0f, 0.18f)
-        shape.rect(left + (width * 0.08f), top + (height * 0.62f), width * 0.84f, height * 0.08f)
         shape.color = Color(0.82f, 0.88f, 0.94f, 0.08f)
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
         shape.color = Color(0f, 0f, 0f, 0.16f)
@@ -2046,18 +1749,15 @@ internal class GdxWorldRenderer(
             when {
                 isGasDepot -> Color(0.26f, 0.82f, 0.60f, 0.95f)
                 isResourceDepot -> Color(0.92f, 0.78f, 0.36f, 0.95f)
-                else -> panelAccent
+                else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
             }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
-        shape.color = trim.cpy().apply { a = 0.42f }
+        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
         shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
         shape.color = Color(0.82f, 0.88f, 0.92f, 0.10f)
         shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
         shape.color = Color(0.82f, 0.88f, 0.93f, 0.10f)
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
-        shape.color = Color(0.04f, 0.06f, 0.08f, 0.22f)
-        shape.rect(left + 2f, top + 2f, 3f, height - 4f)
-        shape.rect(left + width - 5f, top + 2f, 3f, height - 4f)
         if (isDepot) {
             shape.color = Color(0.95f, 0.82f, 0.36f, 0.88f)
             shape.rect(left + width - 10f, top + 5f, 5f, 5f)
@@ -2066,8 +1766,6 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.84f, 0.74f, 0.36f, 0.24f)
             shape.rect(left + width * 0.18f, top + height * 0.30f, width * 0.18f, height * 0.26f)
             shape.rect(left + width * 0.62f, top + height * 0.30f, width * 0.18f, height * 0.18f)
-            shape.color = Color(0.18f, 0.20f, 0.22f, 0.48f)
-            shape.rect(left + width * 0.36f, top + 5f, width * 0.28f, height * 0.22f)
         }
         if (isResourceDepot) {
             shape.color = Color(0.95f, 0.86f, 0.42f, 0.88f)
@@ -2078,8 +1776,6 @@ internal class GdxWorldRenderer(
             shape.color = Color(1.00f, 0.90f, 0.56f, 0.24f)
             shape.rect(left + width * 0.38f, top + height * 0.24f, width * 0.24f, height * 0.22f)
             shape.rect(left + width * 0.22f, top + height * 0.46f, width * 0.56f, height * 0.10f)
-            shape.color = Color(0.22f, 0.18f, 0.10f, 0.42f)
-            shape.rect(left + width * 0.30f, top + 5f, width * 0.40f, height * 0.18f)
         }
         if (isGasDepot) {
             shape.color = Color(0.52f, 0.98f, 0.78f, 0.82f)
@@ -2089,10 +1785,6 @@ internal class GdxWorldRenderer(
             shape.color = Color(0.64f, 1.00f, 0.86f, 0.22f)
             shape.rect(left + width * 0.42f, top + height * 0.18f, width * 0.16f, height * 0.16f)
             shape.rect(left + width * 0.28f, top + height * 0.62f, width * 0.44f, height * 0.08f)
-            shape.color = Color(0.10f, 0.16f, 0.14f, 0.46f)
-            shape.rect(left + width * 0.36f, top + 4f, width * 0.28f, height * 0.16f)
-            shape.rect(left + width * 0.18f, top + height * 0.34f, width * 0.12f, height * 0.24f)
-            shape.rect(left + width * 0.70f, top + height * 0.34f, width * 0.12f, height * 0.24f)
         }
         if (entity.supportsResearch == true) {
             shape.color = Color(0.66f, 0.74f, 1.00f, 0.82f)
@@ -2191,14 +1883,9 @@ internal class GdxWorldRenderer(
         return base * severity
     }
 
-    private fun damageRecoilOffset(
-        runtime: GdxClientRuntime,
-        snapshot: ClientSnapshot,
-        entity: EntitySnapshot,
-        nearestHostileCache: MutableMap<Int, EntitySnapshot?>
-    ): Pair<Float, Float> {
+    private fun damageRecoilOffset(runtime: GdxClientRuntime, snapshot: ClientSnapshot, entity: EntitySnapshot): Pair<Float, Float> {
         if (!runtime.isDamageFlashActive(entity.id)) return 0f to 0f
-        val attacker = nearestHostile(snapshot, entity, nearestHostileCache) ?: return 0f to 0f
+        val attacker = nearestHostile(snapshot, entity) ?: return 0f to 0f
         val dir = directionTo(attacker.x, attacker.y, entity.x, entity.y)
         val scale = if (entity.footprintWidth != null && entity.footprintHeight != null) 1.6f else 2.8f
         return directionDx(dir, scale) to directionDy(dir, scale)
@@ -2212,27 +1899,6 @@ internal class GdxWorldRenderer(
         val lateral = kotlin.math.sin(phase * Math.PI * 2.0).toFloat() * (0.7f + (severity * 1.9f))
         val vertical = kotlin.math.cos(phase * Math.PI * 2.0).toFloat() * (0.2f + (severity * 0.9f))
         return lateral to vertical
-    }
-
-    private fun drawRouteBeads(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, tone: Color) {
-        val dx = endX - startX
-        val dy = endY - startY
-        val length = kotlin.math.sqrt((dx * dx) + (dy * dy))
-        if (length < 18f) return
-        val nx = dx / length
-        val ny = dy / length
-        val count = (length / 34f).toInt().coerceIn(1, 4)
-        for (i in 1..count) {
-            val t = i / (count + 1f)
-            val px = startX + (dx * t)
-            val py = startY + (dy * t)
-            val alpha = 0.08f + (0.08f * t)
-            val size = 1.6f + (0.8f * t)
-            shape.color = tone.cpy().mul(1f, 1f, 1f, alpha)
-            shape.circle(px, py, 4.6f * t.coerceAtLeast(0.65f))
-            shape.color = tone.cpy().mul(1f, 1f, 1f, 0.24f + (0.10f * t))
-            shape.rectLine(px - (nx * size), py - (ny * size), px + (nx * size), py + (ny * size), 1.2f)
-        }
     }
 
     private fun drawChevronTrail(shape: ShapeRenderer, startX: Float, startY: Float, endX: Float, endY: Float, color: Color) {
@@ -2257,34 +1923,17 @@ internal class GdxWorldRenderer(
         }
     }
 
-    private fun nearestHostile(
-        snapshot: ClientSnapshot,
-        entity: EntitySnapshot,
-        cache: MutableMap<Int, EntitySnapshot?>
-    ): EntitySnapshot? =
-        cache.getOrPut(entity.id) {
-            snapshot.entities
-                .asSequence()
-                .filter { it.faction > 0 && it.faction != entity.faction }
-                .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
-        }
+    private fun nearestHostile(snapshot: ClientSnapshot, entity: EntitySnapshot): EntitySnapshot? =
+        snapshot.entities
+            .asSequence()
+            .filter { it.faction > 0 && it.faction != entity.faction }
+            .minByOrNull { distanceSq(entity.x, entity.y, it.x, it.y) }
 
     private fun isMeleeAttacker(entity: EntitySnapshot): Boolean = isMeleeWeapon(entity)
 
     private fun isMeleeWeapon(entity: EntitySnapshot): Boolean =
         entity.weaponId?.contains("Claw", ignoreCase = true) == true ||
             entity.typeId.contains("Zergling", ignoreCase = true)
-
-    private fun orderMarkerKind(entity: EntitySnapshot): GroundPingKind =
-        when {
-            entity.buildTargetId != null -> GroundPingKind.BUILD
-            entity.activeOrder.equals("attack", ignoreCase = true) || entity.activeOrder.equals("attackMove", ignoreCase = true) -> GroundPingKind.ATTACK
-            else -> GroundPingKind.MOVE
-        }
-
-    private fun isAttackOrder(entity: EntitySnapshot): Boolean =
-        entity.activeOrder.equals("attack", ignoreCase = true) ||
-            entity.activeOrder.equals("attackMove", ignoreCase = true)
 
     private fun distanceSq(ax: Float, ay: Float, bx: Float, by: Float): Float {
         val dx = ax - bx
@@ -2324,93 +1973,6 @@ internal class GdxWorldRenderer(
             CombatSoundKind.MARINE_RANGED,
             CombatSoundKind.RANGED, null -> impactSparkColor
         }
-
-internal fun resolveEffectAccentColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.74f, 0.34f, 1f), 0.54f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.96f, 0.54f, 0.28f, 1f), 0.62f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.70f, 0.36f, 1f), 0.42f)
-        else -> factionColor.cpy().lerp(Color(0.92f, 0.66f, 0.34f, 1f), 0.46f)
-    }
-
-internal fun resolveEffectEmberColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.88f, 0.56f, 1f), 0.62f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.78f, 0.48f, 1f), 0.56f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.84f, 0.56f, 1f), 0.48f)
-        else -> factionColor.cpy().lerp(Color(0.96f, 0.82f, 0.52f, 1f), 0.50f)
-    }
-
-internal fun resolveEffectDebrisColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.46f, 0.42f, 0.36f, 1f), 0.72f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.42f, 0.28f, 0.22f, 1f), 0.74f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.38f, 0.40f, 0.42f, 1f), 0.68f)
-        else -> factionColor.cpy().lerp(Color(0.34f, 0.34f, 0.34f, 1f), 0.70f)
-    }
-
-internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
-        else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
-    }
-
-internal fun resolveResourceCoreColor(kind: String): Color =
-    when {
-        kind.equals("gas", ignoreCase = true) -> Color(0.26f, 0.82f, 0.60f, 1f)
-        else -> Color(0.86f, 0.74f, 0.34f, 1f)
-    }
-
-internal fun resolveResourceGlowColor(kind: String): Color =
-    when {
-        kind.equals("gas", ignoreCase = true) -> Color(0.58f, 1.00f, 0.84f, 1f)
-        else -> Color(1.00f, 0.95f, 0.72f, 1f)
-    }
-
-internal fun resolveFallbackTeamTintStrength(typeId: String, isStructure: Boolean): Float =
-    when {
-        isStructure -> 0.08f
-        typeId.contains("Worker", ignoreCase = true) -> 0.06f
-        typeId.contains("Marine", ignoreCase = true) -> 0.05f
-        typeId.contains("Zergling", ignoreCase = true) -> 0.04f
-        else -> 0.05f
-    }
-
-internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.24f, 0.18f, 0.16f, 1f), 0.72f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.16f, 0.22f, 0.24f, 1f), 0.70f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.24f, 1f), 0.74f)
-        else -> factionColor.cpy().lerp(Color(0.17f, 0.19f, 0.22f, 1f), 0.74f)
-    }
-
-internal fun resolveSilhouetteStripeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), resolveFallbackTeamTintStrength(typeId, true))
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), resolveFallbackTeamTintStrength(typeId, false))
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), resolveFallbackTeamTintStrength(typeId, false))
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), resolveFallbackTeamTintStrength(typeId, false))
-        else -> factionColor.cpy().lerp(Color.WHITE, resolveFallbackTeamTintStrength(typeId, false))
-    }
-
-internal fun resolveSilhouetteTrimColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.18f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.14f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.13f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.15f)
-        else -> factionColor.cpy().lerp(Color.WHITE, 0.16f)
-    }
-
-internal fun resolveStructureRoofColor(typeId: String, factionColor: Color): Color =
-    when {
-        typeId.contains("GasDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.30f, 0.28f, 1f), 0.78f)
-        typeId.contains("ResourceDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.28f, 0.26f, 0.22f, 1f), 0.78f)
-        typeId.contains("Depot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.26f, 0.28f, 0.32f, 1f), 0.78f)
-        else -> factionColor.cpy().lerp(Color(0.24f, 0.27f, 0.30f, 1f), 0.78f)
-    }
 
     private fun directionDx(dir: Float, scale: Float): Float = kotlin.math.cos(dir) * scale
 
@@ -2507,93 +2069,3 @@ internal fun gdxMiniMapWorldPosition(
     val worldY = (((screenY - bounds.top) / bounds.height) * snapshot.mapHeight).coerceIn(0f, snapshot.mapHeight.toFloat())
     return worldX to worldY
 }
-
-internal fun resolveFallbackTeamTintStrength(typeId: String, isStructure: Boolean): Float =
-    when {
-        isStructure -> 0.08f
-        typeId.contains("Worker", ignoreCase = true) -> 0.06f
-        typeId.contains("Marine", ignoreCase = true) -> 0.05f
-        typeId.contains("Zergling", ignoreCase = true) -> 0.04f
-        else -> 0.05f
-    }
-
-internal fun shouldRenderCompletionOverlay(damageActive: Boolean, completionActive: Boolean): Boolean =
-    completionActive && !damageActive
-
-internal fun resolveEffectAccentColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.74f, 0.34f, 1f), 0.54f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.96f, 0.54f, 0.28f, 1f), 0.62f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.70f, 0.36f, 1f), 0.42f)
-        else -> factionColor.cpy().lerp(Color(0.92f, 0.66f, 0.34f, 1f), 0.46f)
-    }
-
-internal fun resolveEffectEmberColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(1.00f, 0.88f, 0.56f, 1f), 0.62f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.78f, 0.48f, 1f), 0.56f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(1.00f, 0.84f, 0.56f, 1f), 0.48f)
-        else -> factionColor.cpy().lerp(Color(0.96f, 0.82f, 0.52f, 1f), 0.50f)
-    }
-
-internal fun resolveEffectDebrisColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.46f, 0.42f, 0.36f, 1f), 0.72f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.42f, 0.28f, 0.22f, 1f), 0.74f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.38f, 0.40f, 0.42f, 1f), 0.68f)
-        else -> factionColor.cpy().lerp(Color(0.34f, 0.34f, 0.34f, 1f), 0.70f)
-    }
-
-internal fun resolveEffectSmokeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.16f, 0.18f, 0.18f, 1f), 0.86f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.18f, 0.16f, 1f), 0.84f)
-        else -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.22f, 1f), 0.84f)
-    }
-
-internal fun resolveResourceCoreColor(kind: String): Color =
-    when {
-        kind.equals("gas", ignoreCase = true) -> Color(0.26f, 0.82f, 0.60f, 1f)
-        else -> Color(0.86f, 0.74f, 0.34f, 1f)
-    }
-
-internal fun resolveResourceGlowColor(kind: String): Color =
-    when {
-        kind.equals("gas", ignoreCase = true) -> Color(0.58f, 1.00f, 0.84f, 1f)
-        else -> Color(1.00f, 0.95f, 0.72f, 1f)
-    }
-
-internal fun resolveSilhouetteBodyColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.18f, 0.21f, 0.24f, 1f), 0.78f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.24f, 0.18f, 0.16f, 1f), 0.72f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.16f, 0.22f, 0.24f, 1f), 0.70f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.18f, 0.20f, 0.24f, 1f), 0.74f)
-        else -> factionColor.cpy().lerp(Color(0.17f, 0.19f, 0.22f, 1f), 0.74f)
-    }
-
-internal fun resolveSilhouetteStripeColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.84f, 0.88f, 0.92f, 1f), 0.14f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.96f, 0.72f, 1f), 0.12f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.78f, 0.92f, 1.00f, 1f), 0.10f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.96f, 1.00f, 1f), 0.10f)
-        else -> factionColor.cpy().lerp(Color.WHITE, 0.08f)
-    }
-
-internal fun resolveSilhouetteTrimColor(typeId: String, isStructure: Boolean, factionColor: Color): Color =
-    when {
-        isStructure -> factionColor.cpy().lerp(Color(0.90f, 0.94f, 0.98f, 1f), 0.30f)
-        typeId.contains("Zergling", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.90f, 0.74f, 1f), 0.24f)
-        typeId.contains("Worker", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.90f, 0.98f, 1.00f, 1f), 0.22f)
-        typeId.contains("Marine", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.94f, 0.97f, 1.00f, 1f), 0.26f)
-        else -> factionColor.cpy().lerp(Color.WHITE, 0.30f)
-    }
-
-internal fun resolveStructureRoofColor(typeId: String, factionColor: Color): Color =
-    when {
-        typeId.contains("GasDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.22f, 0.30f, 0.28f, 1f), 0.78f)
-        typeId.contains("ResourceDepot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.28f, 0.26f, 0.22f, 1f), 0.78f)
-        typeId.contains("Depot", ignoreCase = true) -> factionColor.cpy().lerp(Color(0.26f, 0.28f, 0.32f, 1f), 0.78f)
-        else -> factionColor.cpy().lerp(Color(0.24f, 0.27f, 0.30f, 1f), 0.78f)
-    }

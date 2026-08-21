@@ -1,152 +1,177 @@
 # Starkraft Docs
 
-이 디렉터리는 `starkraft`의 제품/기술 산출물을 정리하는 기본 문서 집합이다.
+이 디렉터리는 `starkraft`의 제품 기획, 아키텍처, 규칙 설계, 운영 절차, 품질 전략을 정리한 문서 허브다.  
+루트 `README.md`가 저장소의 입구라면, 이 디렉터리는 역할별로 필요한 문서를 찾는 네비게이션 레이어다.
 
-## 문서 목록
+## 먼저 읽을 문서
 
-- `product-vision.md`
-  - 제품 목표, 비목표, 핵심 가치, 성공 지표
-- `feature-backlog.md`
-  - 남은 작업의 우선순위와 상태
-- `milestone-plan.md`
-  - 단계별 완성 기준과 검증 자산 매핑
-- `balance-spec.md`
-  - 수치 밸런스 관리 원칙과 변경 절차
-- `data-schema-spec.md`
-  - 유닛/건물/기술/시각 데이터 구조와 검증 원칙
-- `map-format-spec.md`
-  - 맵 데이터 구조와 유효성 규칙
-- `architecture-overview.md`
-  - 저장소 모듈 책임과 상위 레벨 데이터 흐름
-- `simulation-architecture.md`
-  - `sim` 고정 tick, 시스템 순서, 결정론 규칙
-- `protocol-spec.md`
-  - 서버/클라이언트/도구 간 메시지 계약과 버전 정책
-- `replay-format-spec.md`
-  - replay 파일 구조, 검증 규칙, 활용 흐름
-- `game-design-document.md`
-  - 게임 규칙, 핵심 루프, 유닛/건물/자원/승리 조건
-- `ui-ux-spec.md`
-  - 그래픽 클라이언트의 HUD/패널/피드백 기준
-- `input-mapping-spec.md`
-  - 입력 체계와 단축키 원칙
-- `ai-behavior-spec.md`
-  - 봇/AI 계층과 행동 우선순위
-- `security-validation-spec.md`
-  - 권위 서버 입력 검증과 보안 경계
-- `contribution-guide.md`
-  - 저장소 기여 절차와 검증 기준
-- `release-artifact-spec.md`
-  - 릴리스 산출물과 manifest/checksum 기준
-- `replay-validation-checklist.md`
-  - replay 검증용 운영 체크리스트
-- `benchmark-report-template.md`
-  - 성능 측정 결과 기록 템플릿
-- `desync-debugging-guide.md`
-  - 결정론 불일치 조사 절차
-- `playtest-report-template.md`
-  - 플레이테스트 결과 기록 템플릿
-- `art-direction-brief.md`
-  - 전장 가독성과 시각 자산 방향
-- `audio-direction-brief.md`
-  - 정보 전달 중심 오디오 방향
-- `glossary.md`
-  - 공통 용어 정의
-- `document-maintenance-policy.md`
-  - 문서 갱신 책임과 유지 규칙
-- `testing-strategy.md`
-  - 단위/통합/결정론/성능/소크 테스트 전략
-- `server-ops-runbook.md`
-  - 서버 실행, 헬스체크, 장애 대응, 운영 점검
+### 처음 방문자
 
-## 문서 매트릭스
+1. `project-overview.md`
+2. `product-vision.md`
+3. `architecture-overview.md`
+4. `technical-deep-dive.md`
 
-| 영역 | 핵심 문서 | 보조 문서 |
-| --- | --- | --- |
-| 제품 방향 | `product-vision.md` | `feature-backlog.md`, `milestone-plan.md` |
-| 게임 규칙 | `game-design-document.md` | `balance-spec.md`, `ai-behavior-spec.md` |
-| 시뮬레이션 구조 | `simulation-architecture.md` | `architecture-overview.md`, `testing-strategy.md` |
-| 데이터/맵 | `data-schema-spec.md` | `map-format-spec.md` |
-| 네트워크/프로토콜 | `protocol-spec.md` | `security-validation-spec.md`, `replay-format-spec.md` |
-| 클라이언트 UX | `ui-ux-spec.md` | `input-mapping-spec.md`, `art-direction-brief.md`, `audio-direction-brief.md` |
-| 운영/릴리스 | `server-ops-runbook.md` | `release-artifact-spec.md`, `replay-validation-checklist.md` |
-| 품질/분석 | `testing-strategy.md` | `benchmark-report-template.md`, `desync-debugging-guide.md`, `playtest-report-template.md` |
-| 협업 규칙 | `contribution-guide.md` | `document-maintenance-policy.md`, `glossary.md` |
+### 채용담당자 / 기술면접관
 
-## 추천 읽기 순서
+1. `project-overview.md`
+2. `technical-deep-dive.md`
+3. `testing-strategy.md`
+4. `server-ops-runbook.md`
 
-### 제품 방향부터 볼 때
-
-1. `product-vision.md`
-2. `feature-backlog.md`
-3. `milestone-plan.md`
-4. `game-design-document.md`
-
-### 구현 구조부터 볼 때
+### 엔지니어
 
 1. `architecture-overview.md`
 2. `simulation-architecture.md`
 3. `protocol-spec.md`
 4. `replay-format-spec.md`
-5. `testing-strategy.md`
-6. `server-ops-runbook.md`
+5. `data-schema-spec.md`
 
-## 빠른 참조
+### 기획 / UX / 게임 디자인
 
-- 게임 규칙을 바꿀 때:
-  - `game-design-document.md`
-  - `simulation-architecture.md`
-  - `testing-strategy.md`
-- 데이터/콘텐츠 구조를 바꿀 때:
-  - `data-schema-spec.md`
-  - `map-format-spec.md`
-  - `balance-spec.md`
-- 네트워크/프로토콜을 바꿀 때:
-  - `protocol-spec.md`
-  - `replay-format-spec.md`
-  - `server-ops-runbook.md`
-- 서버 검증/운영 규칙을 바꿀 때:
-  - `security-validation-spec.md`
-  - `server-ops-runbook.md`
-  - `protocol-spec.md`
-- 제품 우선순위를 조정할 때:
-  - `product-vision.md`
-  - `feature-backlog.md`
-  - `milestone-plan.md`
-- 릴리스/검증 절차를 정리할 때:
-  - `release-artifact-spec.md`
-  - `replay-validation-checklist.md`
-  - `server-ops-runbook.md`
-- 성능/결정론 이슈를 분석할 때:
-  - `benchmark-report-template.md`
-  - `desync-debugging-guide.md`
-  - `testing-strategy.md`
-- 시각/오디오 방향을 정리할 때:
-  - `art-direction-brief.md`
-  - `audio-direction-brief.md`
-  - `ui-ux-spec.md`
-- 문서 기준을 정리할 때:
-  - `glossary.md`
-  - `document-maintenance-policy.md`
-  - `contribution-guide.md`
+1. `product-vision.md`
+2. `game-design-document.md`
+3. `ui-ux-spec.md`
+4. `feature-backlog.md`
 
-## 기존 문서와의 관계
+## 문서 지형도
+
+| 범주 | 핵심 문서 | 설명 |
+| --- | --- | --- |
+| 프로젝트 소개 | `project-overview.md` | 첫 방문자와 리뷰어를 위한 종합 설명 |
+| 제품 방향 | `product-vision.md` | 목표, 비목표, 핵심 가치, 성공 기준 |
+| 게임 기획 | `game-design-document.md` | 핵심 플레이 루프와 규칙 구조 |
+| 기능 우선순위 | `feature-backlog.md`, `milestone-plan.md` | 남은 범위와 단계별 목표 |
+| 상위 설계 | `architecture-overview.md` | 모듈 책임과 데이터 흐름 |
+| 기술 심화 | `technical-deep-dive.md` | 결정론, 서버 경계, replay 중심 설계 해설 |
+| 시뮬레이션 내부 | `simulation-architecture.md` | `sim` 내부 구조와 성능/결정론 원칙 |
+| 네트워크 계약 | `protocol-spec.md` | 메시지 구조, 버전 정책, 호환성 원칙 |
+| 리플레이/도구 | `replay-format-spec.md`, `replay-validation-checklist.md` | replay 구조와 검증 절차 |
+| 데이터/맵 | `data-schema-spec.md`, `map-format-spec.md` | 콘텐츠 정의 구조와 검증 규칙 |
+| 밸런스/AI | `balance-spec.md`, `ai-behavior-spec.md` | 수치 정책과 봇 행동 기준 |
+| UX/입력 | `ui-ux-spec.md`, `input-mapping-spec.md` | HUD, 조작, 피드백 기준 |
+| 아트/오디오 | `art-direction-brief.md`, `audio-direction-brief.md` | 시각/청각 방향성 |
+| 품질 전략 | `testing-strategy.md`, `desync-debugging-guide.md` | 테스트 계층과 디버깅 절차 |
+| 운영/릴리스 | `server-ops-runbook.md`, `release-artifact-spec.md` | 운영 절차와 배포 산출물 기준 |
+| 협업 규칙 | `contribution-guide.md`, `document-maintenance-policy.md`, `glossary.md` | 협업, 용어, 문서 유지 기준 |
+
+## 목적별 빠른 링크
+
+### 이 프로젝트가 어떤 프로젝트인지 알고 싶을 때
+
+- `project-overview.md`
+- `product-vision.md`
+
+### 어떤 기술적 난제를 풀고 있는지 보고 싶을 때
+
+- `technical-deep-dive.md`
+- `simulation-architecture.md`
+- `testing-strategy.md`
+
+### 게임 규칙과 기능을 확인하고 싶을 때
+
+- `game-design-document.md`
+- `feature-backlog.md`
+- `balance-spec.md`
+
+### 실행/운영 방법을 확인하고 싶을 때
+
+- `server-ops-runbook.md`
+- `replay-validation-checklist.md`
+- `performance-debugging-workflow.md`
+- 루트 `README.md`
+
+### 데이터나 콘텐츠 정의를 수정하려 할 때
+
+- `data-schema-spec.md`
+- `map-format-spec.md`
+- `balance-spec.md`
+
+### 프로토콜이나 서버 검증 로직을 수정하려 할 때
+
+- `protocol-spec.md`
+- `security-validation-spec.md`
+- `replay-format-spec.md`
+
+## 문서 목록
+
+- `project-overview.md`
+  - 프로젝트 소개, 완성도, 사용법, 포트폴리오 포인트
+- `technical-deep-dive.md`
+  - 결정론, authoritative server, replay/tooling 중심 기술 해설
+- `product-vision.md`
+  - 제품 목표, 비목표, 품질 기준, 성공 지표
+- `feature-backlog.md`
+  - 기능 우선순위와 남은 작업
+- `milestone-plan.md`
+  - 단계별 목표와 검증 자산 매핑
+- `game-design-document.md`
+  - 핵심 규칙과 플레이 루프
+- `balance-spec.md`
+  - 수치 변경 원칙과 운영 방식
+- `architecture-overview.md`
+  - 모듈 구조와 상위 데이터 흐름
+- `simulation-architecture.md`
+  - `sim` 내부 구조와 결정론 원칙
+- `protocol-spec.md`
+  - 네트워크/도구 간 메시지 계약
+- `replay-format-spec.md`
+  - replay 구조와 검증 포인트
+- `data-schema-spec.md`
+  - 데이터 정의 구조와 validation 규칙
+- `map-format-spec.md`
+  - 맵 포맷과 무결성 규칙
+- `ui-ux-spec.md`
+  - 그래픽 클라이언트 UX 기준
+- `input-mapping-spec.md`
+  - 입력 체계와 조작 정책
+- `ai-behavior-spec.md`
+  - 봇 AI 규칙과 우선순위
+- `testing-strategy.md`
+  - 테스트, smoke, benchmark, soak 전략
+- `desync-debugging-guide.md`
+  - 결정론 불일치 추적 절차
+- `server-ops-runbook.md`
+  - 서버 실행, health, 장애 대응
+- `release-artifact-spec.md`
+  - 배포 아티팩트와 manifest/checksum 기준
+- `replay-validation-checklist.md`
+  - replay 운영 검증 체크리스트
+- `benchmark-report-template.md`
+  - 성능 보고 템플릿
+- `playtest-report-template.md`
+  - 플레이테스트 기록 템플릿
+- `performance-debugging-workflow.md`
+  - 그래픽 플레이 지연/프레임 드랍 재현 및 계측 절차
+- `art-direction-brief.md`
+  - 전장 가독성과 시각 자산 방향
+- `audio-direction-brief.md`
+  - 피드백 중심 오디오 방향
+- `glossary.md`
+  - 공통 용어 사전
+- `contribution-guide.md`
+  - 기여 방식과 검증 기준
+- `document-maintenance-policy.md`
+  - 문서 유지보수 정책
+
+## 루트 문서와의 관계
 
 - 루트 `README.md`
-  - 빠른 시작, 모듈 요약, 실행 명령
+  - 저장소 입구, 실행 경로, 핵심 가치, 빠른 시작
 - `OPERATIONS.md`
-  - 실제 실행/패키징/트러블슈팅 중심 운영 문서
+  - 실제 운영/실행 중심의 보조 문서
 - `COMMAND_CONTRACT.md`
-  - 입력/명령 계약 상세
+  - 명령 구조 상세 계약
 - `CHANGELOG.md`
-  - 릴리스 변경 이력
+  - 변경 이력
 - `RELEASE_CHECKLIST.md`
-  - 릴리스 게이트 체크리스트
+  - 릴리스 전 게이트
 - `COMMERCIALIZATION_ROADMAP.md`
-  - 상용화/확장 계획
+  - 확장/상용화 방향
 
-## 사용 원칙
+## 유지 원칙
 
-- 설계 변경 시 관련 문서를 함께 갱신한다.
-- 코드보다 늦게 문서가 바뀌지 않도록, 기능 머지 전에 최소 초안은 최신 상태로 유지한다.
-- 시뮬레이션 규칙은 반드시 `sim` 구현을 기준으로 기록한다.
+- 기능, 구조, 운영 규칙이 바뀌면 관련 문서를 함께 갱신한다.
+- 새로운 검증 명령이나 운영 절차가 생기면 README와 관련 문서 허브를 같이 업데이트한다.
+- 시뮬레이션 규칙의 최종 기준은 항상 `sim` 구현과 테스트다.
+- 플레이 성능 회귀를 수정했다면 `performance-debugging-workflow.md` 기준으로 재현 절차와 계측 지점을 함께 갱신한다.
