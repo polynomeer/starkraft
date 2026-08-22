@@ -42,6 +42,9 @@ import starkraft.sim.client.resolveCommandButtonHotkey
 import starkraft.sim.client.shouldRenderCompletionOverlay
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.compactCommandHint
+import starkraft.sim.client.MiniMapMarkerKind
+import starkraft.sim.client.resolveMiniMapMarkerKind
+import starkraft.sim.client.resolveMiniMapMarkerSize
 import starkraft.sim.client.resolveMiniMapSampleStep
 import starkraft.sim.client.resolveCommandDeckGroups
 import starkraft.sim.client.resolveCommandDeckHeader
@@ -454,6 +457,21 @@ class GameScreenInputRulesTest {
         assertEquals(3, resolveMiniMapSampleStep(64, 64))
         assertEquals(4, resolveMiniMapSampleStep(96, 96))
         assertEquals(6, resolveMiniMapSampleStep(128, 128))
+    }
+
+    @Test
+    fun `minimap marker helpers distinguish battlefield roles`() {
+        val structure = EntitySnapshot(id = 1, faction = 1, typeId = "Depot", x = 1f, y = 1f, dir = 0f, hp = 100, maxHp = 100, armor = 1, footprintWidth = 2, footprintHeight = 2)
+        val combat = EntitySnapshot(id = 2, faction = 1, typeId = "Marine", archetype = "infantry", x = 1f, y = 1f, dir = 0f, hp = 40, maxHp = 40, armor = 0, weaponId = "Gauss")
+        val worker = EntitySnapshot(id = 3, faction = 1, typeId = "Worker", archetype = "worker", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
+        val support = EntitySnapshot(id = 4, faction = 1, typeId = "Scout", archetype = "support", x = 1f, y = 1f, dir = 0f, hp = 30, maxHp = 30, armor = 0)
+
+        assertEquals(MiniMapMarkerKind.STRUCTURE, resolveMiniMapMarkerKind(structure))
+        assertEquals(MiniMapMarkerKind.COMBAT, resolveMiniMapMarkerKind(combat))
+        assertEquals(MiniMapMarkerKind.WORKER, resolveMiniMapMarkerKind(worker))
+        assertEquals(MiniMapMarkerKind.SUPPORT, resolveMiniMapMarkerKind(support))
+        assertTrue(resolveMiniMapMarkerSize(structure, selected = true) > resolveMiniMapMarkerSize(combat, selected = false))
+        assertTrue(resolveMiniMapMarkerSize(combat, selected = true) > resolveMiniMapMarkerSize(worker, selected = false))
     }
 
     @Test

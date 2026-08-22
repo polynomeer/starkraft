@@ -1300,9 +1300,27 @@ internal class GdxWorldRenderer(
             val damaged = runtime.isDamageFlashActive(entity.id)
             val impactKind = runtime.damageImpactKind(entity.id)
             val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
+            val markerKind = resolveMiniMapMarkerKind(entity)
             shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
-            val size = if (selected) 5f else 4f
-            shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+            val size = resolveMiniMapMarkerSize(entity, selected)
+            when (markerKind) {
+                MiniMapMarkerKind.STRUCTURE -> {
+                    shape.rect(x - (size / 2f), y - (size / 2f), size + 1f, size - 0.5f)
+                    shape.rect(x - ((size - 1f) / 2f), y - ((size - 1.5f) / 2f), size - 1f, 1.25f)
+                }
+                MiniMapMarkerKind.COMBAT -> {
+                    shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+                    shape.rect(x - 0.6f, y - (size / 2f) - 1f, 1.2f, size + 2f)
+                }
+                MiniMapMarkerKind.WORKER -> {
+                    shape.rect(x - (size / 2f), y - 0.8f, size, 1.6f)
+                    shape.rect(x - 0.8f, y - (size / 2f), 1.6f, size)
+                    shape.rect(x - 1.8f, y - 1.8f, 3.6f, 3.6f)
+                }
+                MiniMapMarkerKind.SUPPORT -> {
+                    shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+                }
+            }
             if (damaged) {
                 shape.color =
                     if (meleeImpact) Color(0.86f, 1.00f, 0.62f, if (visible) 0.88f else 0.30f)
@@ -1358,14 +1376,24 @@ internal class GdxWorldRenderer(
                         else -> selectionColor.cpy().apply { a = if (visible) 0.90f else 0.36f }
                     }
                 shape.color = selectedTone
-                shape.rect(x - 4.5f, y - 4.5f, 4f, 1f)
-                shape.rect(x - 4.5f, y - 4.5f, 1f, 4f)
-                shape.rect(x + 0.5f, y - 4.5f, 4f, 1f)
-                shape.rect(x + 3.5f, y - 4.5f, 1f, 4f)
-                shape.rect(x - 4.5f, y + 3.5f, 4f, 1f)
-                shape.rect(x - 4.5f, y + 0.5f, 1f, 4f)
-                shape.rect(x + 0.5f, y + 3.5f, 4f, 1f)
-                shape.rect(x + 3.5f, y + 0.5f, 1f, 4f)
+                val bracket = when (markerKind) {
+                    MiniMapMarkerKind.STRUCTURE -> 6.2f
+                    MiniMapMarkerKind.COMBAT -> 5.2f
+                    MiniMapMarkerKind.WORKER -> 4.9f
+                    MiniMapMarkerKind.SUPPORT -> 4.8f
+                }
+                val arm = when (markerKind) {
+                    MiniMapMarkerKind.STRUCTURE -> 5f
+                    else -> 4f
+                }
+                shape.rect(x - bracket, y - bracket, arm, 1.2f)
+                shape.rect(x - bracket, y - bracket, 1.2f, arm)
+                shape.rect(x + bracket - arm, y - bracket, arm, 1.2f)
+                shape.rect(x + bracket - 1.2f, y - bracket, 1.2f, arm)
+                shape.rect(x - bracket, y + bracket - 1.2f, arm, 1.2f)
+                shape.rect(x - bracket, y + bracket - arm, 1.2f, arm)
+                shape.rect(x + bracket - arm, y + bracket - 1.2f, arm, 1.2f)
+                shape.rect(x + bracket - 1.2f, y + bracket - arm, 1.2f, arm)
                 if (damaged) {
                     shape.color =
                         if (meleeImpact) Color(0.94f, 1.00f, 0.72f, if (visible) 0.88f else 0.34f)
@@ -1460,10 +1488,12 @@ internal class GdxWorldRenderer(
         val viewportWidth = ((rightWorld - leftWorld) / snapshot.mapWidth) * boundsWidth
         val viewportHeight = ((bottomWorld - topWorld) / snapshot.mapHeight) * boundsHeight
         val pulse = ambientPulse(1050L)
-        shape.color = scratchColorA.set(minimapViewportFillColor).also { it.a = 0.07f + (pulse * 0.05f) }
+        shape.color = scratchColorA.set(minimapViewportFillColor).also { it.a = 0.11f + (pulse * 0.05f) }
         shape.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight)
-        shape.color = scratchColorA.set(minimapViewportFrameColor).also { it.a = 0.66f + (pulse * 0.14f) }
+        shape.color = scratchColorA.set(minimapViewportFrameColor).also { it.a = 0.76f + (pulse * 0.14f) }
         shape.rect(viewportLeft - 0.8f, viewportTop - 0.8f, viewportWidth + 1.6f, viewportHeight + 1.6f)
+        shape.color = scratchColorA.set(selectionColor).also { it.a = 0.38f + (pulse * 0.10f) }
+        shape.rect(viewportLeft + 1.2f, viewportTop + 1.2f, (viewportWidth - 2.4f).coerceAtLeast(1f), (viewportHeight - 2.4f).coerceAtLeast(1f))
         val corner = minOf(9f, viewportWidth * 0.28f, viewportHeight * 0.28f).coerceAtLeast(4f)
         shape.color = selectionColor
         shape.line(viewportLeft, viewportTop, viewportLeft + corner, viewportTop)
@@ -1484,6 +1514,12 @@ internal class GdxWorldRenderer(
             viewportLeft + viewportWidth,
             viewportTop + viewportHeight - corner
         )
+        val centerX = viewportLeft + (viewportWidth / 2f)
+        val centerY = viewportTop + (viewportHeight / 2f)
+        shape.rect(centerX - 0.8f, viewportTop - 1.2f, 1.6f, 3.2f)
+        shape.rect(centerX - 0.8f, viewportTop + viewportHeight - 2f, 1.6f, 3.2f)
+        shape.rect(viewportLeft - 1.2f, centerY - 0.8f, 3.2f, 1.6f)
+        shape.rect(viewportLeft + viewportWidth - 2f, centerY - 0.8f, 3.2f, 1.6f)
     }
 
     private fun drawBuildPreview(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -2450,6 +2486,13 @@ internal data class GdxMiniMapBounds(
         x in left..(left + width) && y in top..(top + height)
 }
 
+internal enum class MiniMapMarkerKind {
+    STRUCTURE,
+    COMBAT,
+    WORKER,
+    SUPPORT
+}
+
 internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
     GdxMiniMapBounds(
         left = 16f,
@@ -2457,6 +2500,22 @@ internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBo
         width = minOf(176, screenWidth / 7).toFloat(),
         height = minOf(144, screenHeight / 7).toFloat()
     )
+
+internal fun resolveMiniMapMarkerKind(entity: EntitySnapshot): MiniMapMarkerKind =
+    when {
+        entity.footprintWidth != null || entity.footprintHeight != null -> MiniMapMarkerKind.STRUCTURE
+        entity.archetype == "worker" -> MiniMapMarkerKind.WORKER
+        entity.weaponId != null -> MiniMapMarkerKind.COMBAT
+        else -> MiniMapMarkerKind.SUPPORT
+    }
+
+internal fun resolveMiniMapMarkerSize(entity: EntitySnapshot, selected: Boolean): Float =
+    when (resolveMiniMapMarkerKind(entity)) {
+        MiniMapMarkerKind.STRUCTURE -> if (selected) 6.5f else 5.5f
+        MiniMapMarkerKind.COMBAT -> if (selected) 5.5f else 4.5f
+        MiniMapMarkerKind.WORKER -> if (selected) 5f else 4f
+        MiniMapMarkerKind.SUPPORT -> if (selected) 4.75f else 4f
+    }
 
 internal fun gdxMiniMapWorldPosition(
     screenX: Float,
