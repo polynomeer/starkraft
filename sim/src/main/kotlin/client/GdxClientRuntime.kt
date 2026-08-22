@@ -68,6 +68,7 @@ internal class GdxClientRuntime(
     var camera: CameraView = CameraView()
     var groundMode: ClientGroundCommandMode? = null
     var buildModeTypeId: String? = null
+    var rallyModeBuildingId: Int? = null
     var playControlState: PlayControlState =
         if (controlPath != null && Files.exists(controlPath)) {
             parsePlayControlState(Files.readString(controlPath))
@@ -171,6 +172,7 @@ internal class GdxClientRuntime(
 
     fun overlayModeLabel(): String =
         buildModeTypeId?.let { "build:$it" }
+            ?: rallyModeBuildingId?.let { "rally" }
             ?: groundMode?.name?.lowercase()?.replace('_', '-')
             ?: "default"
 
@@ -191,9 +193,15 @@ internal class GdxClientRuntime(
 
     fun issueLeftClick(screenX: Float, screenY: Float, additiveSelection: Boolean, queuedCommand: Boolean = false) {
         val snapshot = session.state.snapshot ?: return
-        if ((buildModeTypeId != null || groundMode != null) && session.state.selectedIds.isNotEmpty()) {
+        if ((buildModeTypeId != null || rallyModeBuildingId != null || groundMode != null) && session.state.selectedIds.isNotEmpty()) {
             if (buildModeTypeId != null) {
                 placeBuildingAt(screenX, screenY)
+                return
+            }
+            if (rallyModeBuildingId != null) {
+                val worldX = camera.screenToWorldX(screenX)
+                val worldY = camera.screenToWorldY(screenY)
+                issueRallyAtWorld(snapshot, worldX, worldY)
                 return
             }
             val worldX = camera.screenToWorldX(screenX)
@@ -271,6 +279,10 @@ internal class GdxClientRuntime(
             placeBuildingAt(screenX, screenY)
             return
         }
+        if (rallyModeBuildingId != null) {
+            issueRallyAtWorld(snapshot, worldX, worldY)
+            return
+        }
         issueGroundCommandAtWorld(snapshot, worldX, worldY, attackMoveModifier, queuedCommand = queuedCommand)
     }
 
@@ -282,6 +294,9 @@ internal class GdxClientRuntime(
             return false
         }
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        if (rallyModeBuildingId != null) {
+            return issueRallyAtWorld(snapshot, world.first, world.second, markMinimap = true)
+        }
         if (groundMode != null && session.state.selectedIds.isNotEmpty()) {
             return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier = false, queuedCommand = queuedCommand, markMinimap = true)
         }
@@ -296,7 +311,41 @@ internal class GdxClientRuntime(
             return false
         }
         val world = gdxMiniMapWorldPosition(screenX, screenY, viewWidth, viewHeight, snapshot) ?: return false
+        if (rallyModeBuildingId != null) {
+            return issueRallyAtWorld(snapshot, world.first, world.second, markMinimap = true)
+        }
         return issueGroundCommandAtWorld(snapshot, world.first, world.second, attackMoveModifier, queuedCommand = queuedCommand, markMinimap = true)
+    }
+
+    private fun issueRallyAtWorld(
+        snapshot: ClientSnapshot,
+        worldX: Float,
+        worldY: Float,
+        markMinimap: Boolean = false
+    ): Boolean {
+        val buildingId = rallyModeBuildingId ?: resolveRallyBuildingId(snapshot, session.state.selectedIds) ?: return false
+        session.append(
+            ClientIntent.Command(
+                InputJson.InputCommandRecord(
+                    tick = snapshot.tick + 1,
+                    commandType = "rally",
+                    requestId = requestIds.nextRequestId(),
+                    buildingId = buildingId,
+                    x = worldX,
+                    y = worldY
+                )
+            )
+        )
+        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.BUILD)
+        recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
+        if (markMinimap) {
+            recentMinimapConfirm = MinimapConfirm(worldX, worldY, subtle = true)
+            recentMinimapConfirmUntilMillis = System.currentTimeMillis() + MINIMAP_CONFIRM_DURATION_MS
+        }
+        pendingCommandSoundKind = CommandSoundKind.BUILD
+        rallyModeBuildingId = null
+        showNotice("rally set")
+        return true
     }
 
     private fun issueGroundCommandAtWorld(
@@ -406,16 +455,18 @@ internal class GdxClientRuntime(
         session.clearSelection()
         groundMode = null
         buildModeTypeId = null
+        rallyModeBuildingId = null
     }
 
     fun cancelArmedMode(): Boolean {
-        val hadArmedMode = groundMode != null || buildModeTypeId != null
+        val hadArmedMode = groundMode != null || buildModeTypeId != null || rallyModeBuildingId != null
         groundMode = null
         buildModeTypeId = null
+        rallyModeBuildingId = null
         return hadArmedMode
     }
 
-    fun isGameplayCommandArmed(): Boolean = groundMode != null || buildModeTypeId != null
+    fun isGameplayCommandArmed(): Boolean = groundMode != null || buildModeTypeId != null || rallyModeBuildingId != null
 
     fun centerOnSelection(viewWidth: Int, viewHeight: Int) {
         val snapshot = session.state.snapshot ?: return
@@ -519,6 +570,7 @@ internal class GdxClientRuntime(
         hoverHint = null
         groundMode = null
         buildModeTypeId = null
+        rallyModeBuildingId = null
         cameraTarget = null
         recentGroundPing = null
         recentGroundPingUntilMillis = 0L
@@ -710,6 +762,7 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.MOVE
                 buildModeTypeId = null
+                rallyModeBuildingId = null
                 pendingCommandSoundKind = CommandSoundKind.MOVE
                 showNotice("move armed")
             }
@@ -721,6 +774,7 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.ATTACK_MOVE
                 buildModeTypeId = null
+                rallyModeBuildingId = null
                 pendingCommandSoundKind = CommandSoundKind.ATTACK
                 showNotice("attack armed")
             }
@@ -732,14 +786,29 @@ internal class GdxClientRuntime(
                 }
                 groundMode = ClientGroundCommandMode.PATROL
                 buildModeTypeId = null
+                rallyModeBuildingId = null
                 pendingCommandSoundKind = CommandSoundKind.MOVE
                 showNotice("patrol armed")
+            }
+            actionId == "rally" -> {
+                val buildingId = snapshot?.let { resolveRallyBuildingId(it, session.state.selectedIds) }
+                if (buildingId == null) {
+                    pendingCommandSoundKind = CommandSoundKind.INVALID
+                    showNotice("select rally building")
+                    return
+                }
+                rallyModeBuildingId = buildingId
+                groundMode = null
+                buildModeTypeId = null
+                pendingCommandSoundKind = CommandSoundKind.BUILD
+                showNotice("rally armed")
             }
             actionId == "hold" -> {
                 val hold = snapshot?.let { buildHoldIntent(it, session.state.selectedIds, requestIds) }
                 if (hold != null) session.append(hold)
                 groundMode = null
                 buildModeTypeId = null
+                rallyModeBuildingId = null
                 if (hasSelection) {
                     showNotice("holding position")
                 }
@@ -785,6 +854,7 @@ internal class GdxClientRuntime(
                 }
                 buildModeTypeId = actionId.removePrefix("build:")
                 groundMode = null
+                rallyModeBuildingId = null
                 pendingCommandSoundKind = CommandSoundKind.BUILD
                 showNotice("place ${buildModeTypeId ?: "build"}")
             }
@@ -807,6 +877,9 @@ internal class GdxClientRuntime(
                 add(ClientCommandButton("Attack", "attackMove"))
                 add(ClientCommandButton("Patrol", "patrol"))
                 add(ClientCommandButton("Hold", "hold"))
+                if (snapshotSupportsRally()) {
+                    add(ClientCommandButton("Rally", "rally"))
+                }
                 catalog.buildOptions
                     .filter { isActionEnabled("build:${it.typeId}") }
                     .forEach { add(ClientCommandButton("Build ${it.label}", "build:${it.typeId}")) }
@@ -894,6 +967,7 @@ internal class GdxClientRuntime(
             "move" -> groundMode == ClientGroundCommandMode.MOVE
             "attackMove" -> groundMode == ClientGroundCommandMode.ATTACK_MOVE
             "patrol" -> groundMode == ClientGroundCommandMode.PATROL
+            "rally" -> rallyModeBuildingId != null
             "debug" -> debugVisible
             "help" -> helpOverlayVisible
             "viewF1" -> session.state.viewedFaction == 1
@@ -937,6 +1011,7 @@ internal class GdxClientRuntime(
             "move" -> "Arm move [M] then LMB/RMB"
             "attackMove" -> "Arm attack [A] then LMB/RMB"
             "patrol" -> "Arm patrol [P] then LMB/RMB"
+            "rally" -> "Arm rally [S] then LMB/RMB"
             "hold" -> "Hold position [H]"
             "cancelBuild" -> "Cancel build [X]"
             "cancelTrain" -> "Cancel train [T]"
@@ -958,6 +1033,14 @@ internal class GdxClientRuntime(
             presetAvailabilityLine(),
             noticeLine()
         )
+
+    private fun snapshotSupportsRally(): Boolean {
+        val snapshot = session.state.snapshot ?: return false
+        return resolveRallyBuildingId(snapshot, session.state.selectedIds) != null
+    }
+
+    private fun resolveRallyBuildingId(snapshot: ClientSnapshot, selectedIds: Set<Int>): Int? =
+        snapshot.entities.firstOrNull { entity -> entity.id in selectedIds && entity.supportsRally == true }?.id
 
     private fun selectViewedFaction() {
         val snapshot = session.state.snapshot ?: return

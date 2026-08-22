@@ -144,6 +144,7 @@ internal fun resolveCommandButtonHotkey(actionId: String): String? =
         "build:Depot" -> "B"
         "build:ResourceDepot" -> "R"
         "build:GasDepot" -> "G"
+        "rally" -> "S"
         else -> null
     }
 

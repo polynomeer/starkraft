@@ -181,6 +181,38 @@ class GdxClientRuntimeTest {
     }
 
     @Test
+    fun `rally action with producer selection arms rally mode and feedback`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 7,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8)),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 4, faction = 1, typeId = "Depot", archetype = "producer", x = 5f, y = 6f, dir = 0f, hp = 400, maxHp = 400, armor = 1, supportsRally = true),
+                                EntitySnapshot(id = 5, faction = 1, typeId = "Worker", archetype = "worker", x = 8f, y = 7f, dir = 0f, hp = 40, maxHp = 40, armor = 0)
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.refreshViewState()
+
+        runtime.executeAction(actionId = "rally", viewWidth = 1280, viewHeight = 720)
+
+        assertEquals(4, runtime.rallyModeBuildingId)
+        assertEquals(CommandSoundKind.BUILD, runtime.consumeCommandSoundKind())
+        assertEquals("notice: rally armed", runtime.noticeLine())
+        assertTrue(runtime.buttonModels().any { it.actionId == "rally" })
+    }
+
+    @Test
     fun `hold action with selection shows confirmation notice`(@TempDir tempDir: Path) {
         val runtime = runtime(tempDir)
         runtime.session.state.selectedIds.add(4)
@@ -354,6 +386,53 @@ class GdxClientRuntimeTest {
         assertEquals("move", record.commandType)
         assertEquals(GroundPingKind.MOVE, runtime.currentGroundPing()?.kind)
         assertTrue(runtime.currentMinimapConfirm()?.subtle == true)
+    }
+
+    @Test
+    fun `rally mode minimap left click writes rally command record`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 7,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8)),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 4, faction = 1, typeId = "Depot", archetype = "producer", x = 5f, y = 6f, dir = 0f, hp = 400, maxHp = 400, armor = 1, supportsRally = true)
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+        val bounds = gdxMiniMapBounds(1280, 720)
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.refreshViewState()
+        runtime.executeAction(actionId = "rally", viewWidth = 1280, viewHeight = 720)
+
+        val issued =
+            runtime.issueMinimapLeftClick(
+                screenX = bounds.left + (bounds.width * 0.65f),
+                screenY = bounds.top + (bounds.height * 0.35f),
+                viewWidth = 1280,
+                viewHeight = 720
+            )
+
+        val record: InputJson.InputCommandRecord =
+            json.decodeFromString(
+                InputJson.InputCommandRecord.serializer(),
+                Files.readAllLines(tempDir.resolve("client-input.ndjson")).last()
+            )
+
+        assertTrue(issued)
+        assertEquals("rally", record.commandType)
+        assertEquals(4, record.buildingId)
+        assertEquals(GroundPingKind.BUILD, runtime.currentGroundPing()?.kind)
+        assertTrue(runtime.currentMinimapConfirm()?.subtle == true)
+        assertNull(runtime.rallyModeBuildingId)
     }
 
     @Test
@@ -729,6 +808,45 @@ class GdxClientRuntimeTest {
 
         assertEquals(GroundPingKind.BUILD, runtime.currentGroundPing()?.kind)
         assertNull(runtime.buildModeTypeId)
+        assertEquals(CommandSoundKind.BUILD, runtime.consumeCommandSoundKind())
+    }
+
+    @Test
+    fun `rally mode left click places rally command and clears mode`(@TempDir tempDir: Path) {
+        val runtime =
+            runtime(
+                tempDir,
+                snapshot =
+                    ClientSnapshot(
+                        tick = 7,
+                        mapId = "demo-map",
+                        buildVersion = "test-build",
+                        mapWidth = 32,
+                        mapHeight = 32,
+                        factions = listOf(FactionSnapshot(faction = 1, visibleTiles = 8)),
+                        entities =
+                            listOf(
+                                EntitySnapshot(id = 4, faction = 1, typeId = "Depot", archetype = "producer", x = 5f, y = 6f, dir = 0f, hp = 400, maxHp = 400, armor = 1, supportsRally = true)
+                            ),
+                        resourceNodes = emptyList()
+                    )
+            )
+        runtime.session.state.selectedIds.add(4)
+        runtime.session.refreshViewState()
+        runtime.executeAction(actionId = "rally", viewWidth = 1280, viewHeight = 720)
+
+        runtime.issueLeftClick(screenX = 220f, screenY = 180f, additiveSelection = false)
+
+        val record: InputJson.InputCommandRecord =
+            json.decodeFromString(
+                InputJson.InputCommandRecord.serializer(),
+                Files.readAllLines(tempDir.resolve("client-input.ndjson")).last()
+            )
+
+        assertEquals("rally", record.commandType)
+        assertEquals(4, record.buildingId)
+        assertEquals(GroundPingKind.BUILD, runtime.currentGroundPing()?.kind)
+        assertNull(runtime.rallyModeBuildingId)
         assertEquals(CommandSoundKind.BUILD, runtime.consumeCommandSoundKind())
     }
 

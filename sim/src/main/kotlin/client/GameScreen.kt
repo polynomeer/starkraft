@@ -1277,6 +1277,7 @@ internal class GameScreen(
     private fun buildCenterFooterLine(): String =
         when {
             runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
+            runtime.rallyModeBuildingId != null -> "LMB/RMB rally  Esc cancel"
             runtime.groundMode != null -> "LMB/RMB confirm  Shift queue  Esc cancel"
             runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add/queue"
             else -> "Drag select  RMB order  MMB pan"
@@ -1994,6 +1995,7 @@ internal class GameScreen(
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}"
+            runtime.rallyModeBuildingId != null -> "Set rally point"
             runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()} ready"
             selectionCount > 0 -> ""
             else -> ""
@@ -2011,6 +2013,7 @@ internal class GameScreen(
         runtime.hoverHintLine()?.let(::compactHint)
             ?: when {
                 runtime.buildModeTypeId != null -> "Build armed"
+                runtime.rallyModeBuildingId != null -> "Rally armed"
                 runtime.groundMode != null -> "Order armed"
                 runtime.session.state.selectedIds.isNotEmpty() -> "Cmd ready"
                 else -> "Select to unlock orders"
@@ -2020,6 +2023,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> panel.cpy().lerp(command, 0.18f).also { it.a = 0.76f }
+                runtime.rallyModeBuildingId != null -> panel.cpy().lerp(production, 0.18f).also { it.a = 0.76f }
                 runtime.groundMode != null -> panel.cpy().lerp(selection, 0.18f).also { it.a = 0.76f }
                 runtime.noticeKind() == NoticeKind.TRADE -> panel.cpy().lerp(production, 0.20f).also { it.a = 0.80f }
                 runtime.noticeKind() == NoticeKind.LOSS -> panel.cpy().lerp(danger, 0.24f).also { it.a = 0.80f }
@@ -2038,6 +2042,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.24f).also { it.a = 0.96f }
+                runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.96f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.noticeKind() == NoticeKind.TRADE -> production.cpy().lerp(textPrimary, 0.32f).also { it.a = 0.98f }
                 runtime.noticeKind() == NoticeKind.LOSS -> dangerSoft.cpy().lerp(textPrimary, 0.22f).also { it.a = 0.98f }
@@ -2070,6 +2075,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.98f }
+                runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.98f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.98f }
                 runtime.pauseOverlayVisible || runtime.playControlState.paused -> commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.98f }
                 else -> selectionSoft.cpy().also { it.a = 0.96f }
@@ -2107,6 +2113,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> panelStrong.cpy().lerp(production, 0.24f).also { it.a = 0.92f }
+                runtime.rallyModeBuildingId != null -> panelStrong.cpy().lerp(production, 0.22f).also { it.a = 0.92f }
                 runtime.groundMode != null -> panelStrong.cpy().lerp(selection, 0.22f).also { it.a = 0.92f }
                 else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
             }
@@ -2121,6 +2128,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> panel.cpy().lerp(production, 0.16f).also { it.a = 0.86f }
+                runtime.rallyModeBuildingId != null -> panel.cpy().lerp(production, 0.14f).also { it.a = 0.86f }
                 runtime.groundMode != null -> panel.cpy().lerp(selection, 0.16f).also { it.a = 0.86f }
                 runtime.session.state.selectedIds.isNotEmpty() -> panel.cpy().lerp(command, 0.16f).also { it.a = 0.84f }
                 else -> panelSoft.cpy().also { it.a = 0.82f }
@@ -2136,6 +2144,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
                 runtime.session.state.selectedIds.isNotEmpty() -> commandSoft.cpy().lerp(textPrimary, 0.14f).also { it.a = 0.96f }
                 else -> textMuted.cpy().also { it.a = 0.94f }
@@ -2325,6 +2334,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.groundMode != null -> selectionSoft.cpy().also { it.a = 0.94f }
+                runtime.rallyModeBuildingId != null -> production.cpy().also { it.a = 0.94f }
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.94f }
                 else -> textMuted.cpy().also { it.a = 0.90f }
             }
@@ -2334,6 +2344,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
                 groups.any { it.first == "Production" && it.second.isNotEmpty() } -> commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
                 else -> textSecondary.cpy().also { it.a = 0.94f }
@@ -2527,6 +2538,7 @@ internal class GameScreen(
                 "move" -> "M"
                 "attackMove" -> "A"
                 "patrol" -> "P"
+                "rally" -> "S"
                 "hold" -> "H"
                 "clear" -> "E"
                 "centerSelection" -> "Hm"
@@ -2550,7 +2562,7 @@ internal class GameScreen(
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
-        val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "hold", "clear", "centerSelection") }
+        val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "rally", "hold", "clear", "centerSelection") }
         val allProduction = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
         val productionPageSize = 6
         val productionPageCount = ((allProduction.size + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
@@ -2783,7 +2795,7 @@ internal class GameScreen(
                             pauseVisible = runtime.pauseOverlayVisible,
                             helpVisible = runtime.helpOverlayVisible,
                             hasSelection = runtime.session.state.selectedIds.isNotEmpty(),
-                            hasArmedMode = runtime.groundMode != null || runtime.buildModeTypeId != null
+                            hasArmedMode = runtime.isGameplayCommandArmed()
                         )
                     ) {
                         EscapeAction.CLOSE_PAUSE -> runtime.togglePauseOverlay()
@@ -2815,6 +2827,7 @@ internal class GameScreen(
                 Input.Keys.M -> runActionWithPulse("move")
                 Input.Keys.A -> runActionWithPulse("attackMove")
                 Input.Keys.P -> runActionWithPulse("patrol")
+                Input.Keys.S -> runActionWithPulse("rally")
                 Input.Keys.H -> runActionWithPulse("hold")
                 Input.Keys.B -> runActionWithPulse("build:Depot")
                 Input.Keys.R -> runActionWithPulse("build:ResourceDepot")
