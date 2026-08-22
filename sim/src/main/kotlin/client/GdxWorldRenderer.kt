@@ -728,7 +728,8 @@ internal class GdxWorldRenderer(
     ) {
         if (entity.orderQueueSize <= 0 || !isOnScreen(startX, startY)) return
         val queueTone = resolveQueueMarkerTone(entity)
-        val activeTarget = resolveQueuedMarkerTarget(runtime, entity) ?: return drawQueuePips(shape, entity, startX, startY)
+        val queueShape = resolveQueueMarkerShape(entity)
+        val activeTarget = resolveQueuedMarkerTarget(runtime, entity) ?: return drawQueuePips(shape, entity, startX, startY, queueTone, queueShape)
         val pulse = ambientPulse(820L)
         val totalOrders = entity.orderQueueSize.coerceAtLeast(1)
         val queuedTail = (totalOrders - 1).coerceAtLeast(0)
@@ -741,13 +742,13 @@ internal class GdxWorldRenderer(
             val beadX = startX + ((activeTarget.first - startX) * t)
             val beadY = startY + ((activeTarget.second - startY) * t)
             shape.color = scratchColorA.set(queueTone.dot).also { it.a = 0.40f + (pulse * 0.08f) }
-            shape.circle(beadX, beadY, 1.5f + (pulse * 0.35f))
+            drawQueueGlyph(shape, queueShape, beadX, beadY, 2f + (pulse * 0.35f), filled = true)
         }
         shape.color = scratchColorA.set(queueTone.accent).also { it.a = 0.54f + (pulse * 0.10f) }
-        shape.circle(activeTarget.first, activeTarget.second, 7.5f + (queuedTail.coerceAtMost(5) * 0.9f))
+        drawQueueGlyph(shape, queueShape, activeTarget.first, activeTarget.second, 7.5f + (queuedTail.coerceAtMost(5) * 0.9f), filled = false)
         shape.color = queueTone.accent
-        shape.circle(activeTarget.first, activeTarget.second, 2.8f)
-        drawQueuePips(shape, entity, startX, startY, queueTone)
+        drawQueueGlyph(shape, queueShape, activeTarget.first, activeTarget.second, 3.1f, filled = true)
+        drawQueuePips(shape, entity, startX, startY, queueTone, queueShape)
     }
 
     private fun resolveQueuedMarkerTarget(runtime: GdxClientRuntime, entity: EntitySnapshot): Pair<Float, Float>? {
@@ -764,7 +765,14 @@ internal class GdxWorldRenderer(
         return null
     }
 
-    private fun drawQueuePips(shape: ShapeRenderer, entity: EntitySnapshot, startX: Float, startY: Float, tone: QueueMarkerTone = resolveQueueMarkerTone(entity)) {
+    private fun drawQueuePips(
+        shape: ShapeRenderer,
+        entity: EntitySnapshot,
+        startX: Float,
+        startY: Float,
+        tone: QueueMarkerTone = resolveQueueMarkerTone(entity),
+        markerShape: QueueMarkerShape = resolveQueueMarkerShape(entity)
+    ) {
         val visiblePips = entity.orderQueueSize.coerceIn(1, 4)
         val pulse = ambientPulse(720L)
         val baseY = startY + 18f
@@ -773,9 +781,9 @@ internal class GdxWorldRenderer(
         for (index in 0 until visiblePips) {
             val pipX = startX - startOffset + (index * spacing)
             shape.color = scratchColorA.set(tone.fill).also { it.a = 0.84f + (pulse * 0.04f) }
-            shape.circle(pipX, baseY, 2.8f)
+            drawQueueGlyph(shape, markerShape, pipX, baseY, 2.8f, filled = true)
             shape.color = scratchColorA.set(tone.accent).also { it.a = 0.92f }
-            shape.circle(pipX, baseY, 1.4f)
+            drawQueueGlyph(shape, markerShape, pipX, baseY, 1.4f, filled = true)
         }
         if (entity.orderQueueSize > visiblePips) {
             val extraX = startX - startOffset + (visiblePips * spacing)
@@ -785,12 +793,90 @@ internal class GdxWorldRenderer(
         }
     }
 
+    private fun drawQueueGlyph(
+        shape: ShapeRenderer,
+        markerShape: QueueMarkerShape,
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        filled: Boolean
+    ) {
+        when (markerShape) {
+            QueueMarkerShape.MOVE -> shape.circle(centerX, centerY, radius)
+            QueueMarkerShape.ATTACK -> drawAttackQueueGlyph(shape, centerX, centerY, radius, filled)
+            QueueMarkerShape.HARVEST -> drawHarvestQueueGlyph(shape, centerX, centerY, radius, filled)
+            QueueMarkerShape.PATROL -> drawPatrolQueueGlyph(shape, centerX, centerY, radius, filled)
+            QueueMarkerShape.HOLD -> drawHoldQueueGlyph(shape, centerX, centerY, radius, filled)
+            QueueMarkerShape.BUILD -> drawBuildQueueGlyph(shape, centerX, centerY, radius, filled)
+        }
+    }
+
+    private fun drawAttackQueueGlyph(shape: ShapeRenderer, centerX: Float, centerY: Float, radius: Float, filled: Boolean) {
+        val arm = radius * 0.92f
+        val thickness = (radius * 0.26f).coerceAtLeast(1.1f)
+        shape.rect(centerX - thickness * 0.5f, centerY - arm, thickness, arm * 2f)
+        shape.rect(centerX - arm, centerY - thickness * 0.5f, arm * 2f, thickness)
+        if (!filled) {
+            shape.rect(centerX - arm * 0.74f, centerY - thickness * 0.38f, arm * 1.48f, thickness * 0.76f)
+            shape.rect(centerX - thickness * 0.38f, centerY - arm * 0.74f, thickness * 0.76f, arm * 1.48f)
+        }
+    }
+
+    private fun drawHarvestQueueGlyph(shape: ShapeRenderer, centerX: Float, centerY: Float, radius: Float, filled: Boolean) {
+        val inner = if (filled) radius * 0.52f else radius * 0.34f
+        shape.triangle(centerX, centerY + radius, centerX + radius, centerY, centerX, centerY - radius)
+        shape.triangle(centerX, centerY + radius, centerX - radius, centerY, centerX, centerY - radius)
+        if (!filled) {
+            shape.triangle(centerX, centerY + inner, centerX + inner, centerY, centerX, centerY - inner)
+            shape.triangle(centerX, centerY + inner, centerX - inner, centerY, centerX, centerY - inner)
+        }
+    }
+
+    private fun drawPatrolQueueGlyph(shape: ShapeRenderer, centerX: Float, centerY: Float, radius: Float, filled: Boolean) {
+        val topY = centerY + radius
+        val leftX = centerX - (radius * 0.9f)
+        val rightX = centerX + (radius * 0.9f)
+        val baseY = centerY - (radius * 0.72f)
+        shape.triangle(centerX, topY, rightX, baseY, leftX, baseY)
+        if (!filled) {
+            val inner = radius * 0.45f
+            shape.triangle(centerX, centerY + inner, centerX + (inner * 0.9f), centerY - (inner * 0.72f), centerX - (inner * 0.9f), centerY - (inner * 0.72f))
+        }
+    }
+
+    private fun drawHoldQueueGlyph(shape: ShapeRenderer, centerX: Float, centerY: Float, radius: Float, filled: Boolean) {
+        val size = radius * 0.82f
+        shape.rect(centerX - size, centerY - size, size * 2f, size * 2f)
+        if (!filled) {
+            val inner = size * 0.52f
+            shape.rect(centerX - inner, centerY - inner, inner * 2f, inner * 2f)
+        }
+    }
+
+    private fun drawBuildQueueGlyph(shape: ShapeRenderer, centerX: Float, centerY: Float, radius: Float, filled: Boolean) {
+        val size = radius * 0.9f
+        shape.rect(centerX - size, centerY - size * 0.22f, size * 2f, size * 0.44f)
+        shape.rect(centerX - size * 0.22f, centerY - size, size * 0.44f, size * 2f)
+        if (!filled) {
+            shape.circle(centerX, centerY, radius * 0.34f)
+        }
+    }
+
     private data class QueueMarkerTone(
         val fill: Color,
         val accent: Color,
         val line: Color,
         val dot: Color
     )
+
+    private enum class QueueMarkerShape {
+        MOVE,
+        ATTACK,
+        HARVEST,
+        PATROL,
+        HOLD,
+        BUILD
+    }
 
     private fun resolveQueueMarkerTone(entity: EntitySnapshot): QueueMarkerTone {
         val order = entity.activeOrder?.lowercase()
@@ -829,6 +915,19 @@ internal class GdxWorldRenderer(
             line = fill.cpy().lerp(accent, 0.34f).also { it.a = 0.44f },
             dot = accent.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.86f }
         )
+    }
+
+    private fun resolveQueueMarkerShape(entity: EntitySnapshot): QueueMarkerShape {
+        val order = entity.activeOrder?.lowercase()
+        val phase = entity.harvestPhase?.lowercase()
+        return when {
+            order == "attack" || order == "attackmove" -> QueueMarkerShape.ATTACK
+            phase == "gather" || phase == "return" || order == "construct" -> QueueMarkerShape.HARVEST
+            order == "patrol" -> QueueMarkerShape.PATROL
+            order == "hold" -> QueueMarkerShape.HOLD
+            entity.buildTargetId != null || entity.rallyX != null || entity.rallyY != null -> QueueMarkerShape.BUILD
+            else -> QueueMarkerShape.MOVE
+        }
     }
 
     private fun drawActivityMarkers(shape: ShapeRenderer, runtime: GdxClientRuntime) {
