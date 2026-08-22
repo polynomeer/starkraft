@@ -292,7 +292,27 @@ internal class GameScreen(
         minimapFrame.apply {
             background = null
             pad(0f)
+            top()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.12f).also { it.a = 0.62f })
+                    pad(1f, 4f, 1f, 4f)
+                    add(Table().apply { background = assets.panelDrawable(colors.selectionSoft.cpy().also { it.a = 0.74f }) }).width(2f).expandY().fillY().padRight(4f)
+                    add(minimapTitle).left()
+                    add().expandX().fillX()
+                    add(minimapHint).right()
+                }
+            ).expandX().fillX().pad(3f, 3f, 0f, 3f).row()
+            add().expand().fill().row()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.48f })
+                    pad(1f, 4f, 1f, 4f)
+                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.66f }) }).width(1f).expandY().fillY().padRight(4f)
+                    add(footerLabel).left().expandX().fillX()
+                }
+            ).expandX().fillX().pad(0f, 3f, 3f, 3f)
         }
 
         statusCard.apply {
@@ -519,9 +539,9 @@ internal class GameScreen(
             background = null
             pad(0f, 18f, 8f, 18f)
             leftHudSpacerCell = add().width(208f).bottom()
-            centerHudCell = add(wrapHudPanel(centerCard, colors.borderDefault.cpy().also { it.a = 0.92f })).width(266f).bottom().padRight(10f)
+            centerHudCell = add(wrapHudPanel(centerCard, colors.selection.cpy().lerp(colors.borderDefault, 0.60f).also { it.a = 0.92f })).width(266f).bottom().padRight(10f)
             add().expandX().fillX()
-            commandHudCell = add(wrapHudPanel(commandCard, colors.command.cpy().lerp(colors.panelStrong, 0.35f).also { it.a = 0.92f })).width(278f).right().bottom()
+            commandHudCell = add(wrapHudPanel(commandCard, colors.command.cpy().lerp(colors.borderDefault, 0.44f).also { it.a = 0.92f })).width(278f).right().bottom()
         }
 
         root.top()
@@ -534,7 +554,7 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(minimapFrame).padLeft(20f).padBottom(12f)
+            add(wrapHudPanel(minimapFrame, colors.selection.cpy().lerp(colors.borderDefault, 0.68f).also { it.a = 0.92f }, innerPad = 0f, contentFillAlpha = 0.04f)).padLeft(20f).padBottom(12f)
         }
         stage.addActor(leftHudColumn)
 
@@ -1025,7 +1045,12 @@ internal class GameScreen(
         }
     }
 
-    private fun wrapHudPanel(content: Table, tone: Color): Table =
+    private fun wrapHudPanel(
+        content: Table,
+        tone: Color,
+        innerPad: Float = 4f,
+        contentFillAlpha: Float = 0f
+    ): Table =
         Table().apply {
             background = null
             add(Table().apply { background = assets.panelDrawable(tone.cpy().apply { a *= 0.76f }) }).height(1f).expandX().fillX().row()
@@ -1034,8 +1059,13 @@ internal class GameScreen(
                     add(Table().apply { background = assets.panelDrawable(tone.cpy().lerp(Color.WHITE, 0.08f).apply { a *= 0.72f }) }).width(1f).expandY().fillY()
                     add(
                         Table().apply {
-                            background = null
-                            pad(2f, 4f, 4f, 4f)
+                            background =
+                                if (contentFillAlpha > 0f) {
+                                    assets.panelDrawable(assets.theme.colors.panelAlt.cpy().also { it.a = contentFillAlpha })
+                                } else {
+                                    null
+                                }
+                            pad(2f, innerPad, innerPad, innerPad)
                             add(content).expand().fill()
                         }
                     ).expand().fill()
