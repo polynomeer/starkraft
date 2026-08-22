@@ -21,6 +21,7 @@ import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.formatCommandButtonText
+import starkraft.sim.client.formatDeckCommandButtonText
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatQueueStatusLine
@@ -101,6 +102,14 @@ class GameScreenInputRulesTest {
         assertEquals(22, computeCommandHintRowHeight(1920))
         assertEquals("f2", compactCommandHint("Switch to faction 2 view"))
         assertEquals("prod queue sel", compactCommandHint("production queue current selection"))
+    }
+
+    @Test
+    fun `structure command labels stay compact and readable`() {
+        assertEquals("Trn Mar", formatDeckCommandButtonText("train:Marine", "Train Marine"))
+        assertEquals("Tech Adv", formatDeckCommandButtonText("research:AdvancedTraining", "Research Advanced"))
+        assertEquals("Stop T", formatDeckCommandButtonText("cancelTrain", "Cancel Train"))
+        assertEquals("Rally", formatDeckCommandButtonText("rally", "Rally"))
     }
 
     @Test

@@ -151,6 +151,33 @@ internal fun formatCommandButtonText(actionId: String, fallbackLabel: String): S
         else -> fallbackLabel
     }
 
+internal fun formatDeckCommandButtonText(actionId: String, fallbackLabel: String): String =
+    when {
+        actionId.startsWith("train:") -> "Trn ${compactDeckTypeName(actionId.removePrefix("train:"), 5)}"
+        actionId.startsWith("research:") -> "Tech ${compactDeckTypeName(actionId.removePrefix("research:"), 5)}"
+        actionId == "rally" -> "Rally"
+        actionId == "cancelBuild" -> "Stop B"
+        actionId == "cancelTrain" -> "Stop T"
+        actionId == "cancelResearch" -> "Stop R"
+        actionId == "pause" -> "Pse"
+        actionId == "help" -> "Hlp"
+        actionId == "debug" -> "Dbg"
+        actionId == "observer" -> "Obs"
+        actionId == "centerSelection" -> "Ctr"
+        else -> formatCommandButtonText(actionId, fallbackLabel)
+    }
+
+internal fun compactDeckTypeName(typeId: String, maxChars: Int): String {
+    val cleaned = typeId.replace('_', ' ').replace("Resource", "Res").replace("Advanced", "Adv").trim()
+    if (cleaned.length <= maxChars) return cleaned
+    val compact =
+        cleaned
+            .split(' ')
+            .filter { it.isNotBlank() }
+            .joinToString("") { token -> token.take(3) }
+    return if (compact.length <= maxChars) compact else compact.take(maxChars)
+}
+
 internal fun compactCommandHint(raw: String): String {
     val cleaned =
         raw

@@ -1063,8 +1063,10 @@ internal class GameScreen(
                 disabled -> colors.textPrimary.cpy().also { it.a = 0.04f }
                 checked -> colors.production.cpy().also { it.a = 0.18f }
                 actionId == "attackMove" -> colors.warning.cpy().also { it.a = 0.22f }
+                actionId == "rally" -> colors.build.cpy().also { it.a = 0.20f }
                 actionId.startsWith("build:") -> colors.production.cpy().also { it.a = 0.18f }
-                actionId.startsWith("train:") || actionId.startsWith("research:") -> colors.research.cpy().also { it.a = 0.18f }
+                actionId.startsWith("train:") -> colors.production.cpy().also { it.a = 0.18f }
+                actionId.startsWith("research:") -> colors.research.cpy().also { it.a = 0.18f }
                 else -> colors.textPrimary.cpy().also { it.a = 0.10f }
             }
         return Table().apply {
@@ -1082,11 +1084,19 @@ internal class GameScreen(
                             add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = if (disabled) 0.14f else 0.78f }) }).width(6f).height(2f).row()
                             add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = if (disabled) 0.14f else 0.78f }) }).width(2f).height(5f)
                         }
+                        actionId == "rally" -> {
+                            add(Table().apply { background = assets.panelDrawable(colors.build.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(7f, 2f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.build.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(2f, 2f).padTop(1f)
+                        }
                         actionId.startsWith("build:") -> {
                             add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(6f, 2f).row()
                             add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).size(2f, 6f)
                         }
-                        actionId.startsWith("train:") || actionId.startsWith("research:") -> {
+                        actionId.startsWith("train:") -> {
+                            add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(7f).height(2f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(3f).height(5f)
+                        }
+                        actionId.startsWith("research:") -> {
                             add(Table().apply { background = assets.panelDrawable(colors.research.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(7f).height(2f).row()
                             add(Table().apply { background = assets.panelDrawable(colors.research.cpy().also { it.a = if (disabled) 0.14f else 0.82f }) }).width(5f).height(2f)
                         }
@@ -2520,8 +2530,10 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.74f)
+                actionId == "rally" -> build.cpy().lerp(commandSoft, 0.30f).also { it.a = 0.72f }
                 actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
-                actionId.startsWith("train:") || actionId.startsWith("research:") -> research.cpy().lerp(commandSoft, 0.44f).also { it.a = 0.72f }
+                actionId.startsWith("train:") -> production.cpy().lerp(commandSoft, 0.40f).also { it.a = 0.72f }
+                actionId.startsWith("research:") -> research.cpy().lerp(commandSoft, 0.44f).also { it.a = 0.72f }
                 actionId == "move" || actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
                 else -> commandSoft.cpy().also { it.a = 0.66f }
             }
@@ -2531,8 +2543,10 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 actionId == "attackMove" -> dangerSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId == "rally" -> build.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 actionId.startsWith("build:") -> selectionSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId.startsWith("train:") || actionId.startsWith("research:") -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId.startsWith("train:") -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                actionId.startsWith("research:") -> research.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 actionId == "move" || actionId == "hold" -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
                 else -> commandSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
             }
@@ -2542,8 +2556,10 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 actionId == "attackMove" -> danger.cpy().also { it.a = 0.92f }
+                actionId == "rally" -> build.cpy().also { it.a = 0.92f }
                 actionId.startsWith("build:") -> command.cpy().also { it.a = 0.92f }
-                actionId.startsWith("train:") || actionId.startsWith("research:") -> production.cpy().also { it.a = 0.92f }
+                actionId.startsWith("train:") -> production.cpy().also { it.a = 0.92f }
+                actionId.startsWith("research:") -> research.cpy().also { it.a = 0.92f }
                 actionId == "move" || actionId == "hold" -> selection.cpy().also { it.a = 0.92f }
                 else -> build.cpy().also { it.a = 0.92f }
             }
@@ -2552,59 +2568,15 @@ internal class GameScreen(
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
         when {
             actionId == "pause" || actionId == "help" || actionId == "debug" -> assets.secondaryButtonStyle()
+            actionId == "rally" -> assets.primaryButtonStyle()
             actionId.startsWith("build:") || actionId.startsWith("train:") || actionId.startsWith("research:") -> assets.primaryButtonStyle()
             actionId == "move" || actionId == "attackMove" || actionId == "patrol" || actionId == "hold" -> assets.primaryButtonStyle()
             else -> assets.subtleButtonStyle()
         }
 
     private fun commandButtonLabel(button: ClientCommandButton): String {
-        val baseLabel =
-            when (button.actionId) {
-                "attackMove" -> "Attack"
-                "centerSelection" -> "Ctr"
-                "viewF1" -> "F1"
-                "viewF2" -> "F2"
-                "observer" -> "Obs"
-                "pause" -> "Pse"
-                "help" -> "Hlp"
-                "debug" -> "Dbg"
-                "build:Depot" -> "Depot"
-                "build:ResourceDepot" -> "Exp"
-                "build:GasDepot" -> "Gas"
-                "cancelBuild" -> "Stop B"
-                "cancelTrain" -> "Stop T"
-                "cancelResearch" -> "Stop R"
-                "patrol" -> "Pat"
-                "rally" -> "Rally"
-                "move" -> "Move"
-                "hold" -> "Hold"
-                else -> button.label
-            }
-        val hotkey =
-            when (button.actionId) {
-                "move" -> "M"
-                "attackMove" -> "A"
-                "patrol" -> "P"
-                "rally" -> "S"
-                "hold" -> "H"
-                "clear" -> "E"
-                "centerSelection" -> "Hm"
-                "viewF1" -> "1"
-                "viewF2" -> "2"
-                "observer" -> "3"
-                "pause" -> "Sp"
-                "help" -> "F1"
-                "debug" -> "Tb"
-                "selectViewedFaction" -> "F2"
-                "selectType" -> "F3"
-                "selectRole" -> "F4"
-                "selectAll" -> "F11"
-                "selectIdleWorkers" -> "F12"
-                "build:Depot" -> "B"
-                "build:ResourceDepot" -> "R"
-                "build:GasDepot" -> "G"
-                else -> null
-            }
+        val baseLabel = formatDeckCommandButtonText(button.actionId, button.label)
+        val hotkey = resolveCommandButtonHotkey(button.actionId)
         return if (hotkey == null) baseLabel else "$baseLabel $hotkey"
     }
 
