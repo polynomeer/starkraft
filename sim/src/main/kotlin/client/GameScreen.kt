@@ -66,6 +66,7 @@ internal class GameScreen(
     private val portraitFrame = Table()
     private val portraitLabel = Label("NO\nUNIT", assets.titleLabelStyle)
     private val healthLabel = Label("", assets.bodyLabelStyle)
+    private val portraitHealthLabel = Label("", assets.bodyLabelStyle)
     private val healthBarBack = Table()
     private val healthBarFill = Table()
     private val selectionGrid = Table()
@@ -139,14 +140,18 @@ internal class GameScreen(
         modeLabel.setFontScale(0.88f)
         statusBadgeLabel.setFontScale(0.88f)
         commandHintLabel.setFontScale(0.84f)
+        healthLabel.setFontScale(0.82f)
+        portraitHealthLabel.setFontScale(0.78f)
         commandHintLabel.setWrap(false)
         commandHintLabel.setEllipsis(true)
         commandHintLabel.setAlignment(Align.left)
-        selectionMetaLabel.setFontScale(0.84f)
+        selectionMetaLabel.setFontScale(0.80f)
         factionOverviewLabel.setFontScale(0.84f)
-        selectionRosterLabel.setFontScale(0.84f)
+        selectionRosterLabel.setFontScale(0.82f)
         footerLabel.setFontScale(0.84f)
-        centerFooterLabel.setFontScale(0.84f)
+        centerFooterLabel.setFontScale(0.78f)
+        selectionPageLabel.setFontScale(0.78f)
+        controlGroupsLabel.setFontScale(0.78f)
         minimapHint.setFontScale(0.82f)
         buildHud()
     }
@@ -398,7 +403,7 @@ internal class GameScreen(
 
         centerCard.apply {
             background = null
-            pad(1f)
+            pad(0f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             val initialCenterLayout = computeCenterPanelLayout(1280)
             add(
@@ -407,22 +412,22 @@ internal class GameScreen(
                     add().expandX().fillX()
                     add(healthLabel).right()
                 }
-            ).expandX().fillX().padBottom(1f).row()
-            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(2f).row()
+            ).expandX().fillX().padBottom(0f).row()
+            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(1f).row()
             add(
                 selectionHeadlineCard.apply {
                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.10f).also { it.a = 0.70f })
-                    pad(1f, 4f, 1f, 4f)
+                    pad(1f, 3f, 1f, 3f)
                     add(selectionLabel).left().expandX().fillX()
                 }
-            ).left().expandX().fillX().padTop(2f).row()
+            ).left().expandX().fillX().padTop(1f).row()
             add(Table().apply { background = assets.panelDrawable(colors.borderSubtle.cpy().also { it.a = 0.60f }) }).height(1f).expandX().fillX().padTop(1f).row()
             add(
                 Table().apply {
                     add(
                         portraitFrame.apply {
                             background = assets.panelDrawable(colors.panel.cpy().lerp(colors.build, 0.08f).also { it.a = 0.80f })
-                            pad(2f)
+                            pad(1f)
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.production.cpy().lerp(colors.textPrimary, 0.20f).also { it.a = 0.76f })
@@ -431,17 +436,17 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.76f })
-                                    pad(5f, 4f, 3f, 4f)
+                                    pad(4f, 3f, 2f, 3f)
                                     add(portraitLabel).center().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.14f).also { it.a = 0.58f })
-                                            pad(1f, 4f, 1f, 4f)
-                                            add(healthLabel).center()
+                                            pad(1f, 3f, 1f, 3f)
+                                            add(portraitHealthLabel).center()
                                         }
-                                    ).padTop(3f)
+                                    ).padTop(2f)
                                 }
-                            ).expand().fill().padTop(3f)
+                            ).expand().fill().padTop(2f)
                         }
                     ).size(initialCenterLayout.portraitSize.toFloat(), initialCenterLayout.portraitSize.toFloat()).top().left().padRight(4f)
                     add(
@@ -449,7 +454,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
-                                    pad(1f, 4f, 1f, 4f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
@@ -468,45 +473,45 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(initialCenterLayout.healthBarWidth.toFloat()).height(7f).left().padTop(1f).row()
+                            ).width(initialCenterLayout.healthBarWidth.toFloat()).height(6f).left().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
-                                    pad(1f, 5f, 1f, 5f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.68f }) }).width(1f).expandY().fillY().padRight(4f)
+                                    pad(1f, 4f, 1f, 4f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.68f }) }).width(1f).expandY().fillY().padRight(3f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
-                            ).left().expandX().fillX().padTop(2f).row()
+                            ).left().expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.38f })
-                                    pad(2f, 3f, 2f, 3f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(2f).row()
+                            ).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
-                                    pad(2f, 3f, 2f, 3f)
+                                    pad(1f, 3f, 1f, 3f)
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
-                                            pad(1f, 4f, 1f, 4f)
+                                            pad(1f, 3f, 1f, 3f)
                                             add(queueHeaderLabel).left()
                                         }
-                                    ).left().padRight(4f)
+                                    ).left().padRight(3f)
                                     add(queueStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
-                                    pad(1f, 4f, 1f, 4f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(4f)
+                                    pad(1f, 3f, 1f, 3f)
+                                    add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(3f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
-                            ).left().expandX().fillX().padTop(2f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(2f).row()
+                            ).left().expandX().fillX().padTop(1f).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(1f).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
@@ -722,7 +727,9 @@ internal class GameScreen(
         selectionRosterLabel.color = currentRosterTone()
         factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
-        healthLabel.setText(buildHealthLine())
+        val healthLine = buildHealthLine()
+        healthLabel.setText(healthLine)
+        portraitHealthLabel.setText(healthLine)
         updateHealthBar()
         rebuildSelectionGrid()
         hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
