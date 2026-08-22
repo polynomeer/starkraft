@@ -1148,14 +1148,9 @@ internal class GameScreen(
         }
 
     private fun buildCommandHeader(groups: List<Pair<String, List<ClientCommandButton>>>): String {
-        val productionGroup = groups.firstOrNull { it.first == "Production" }?.second.orEmpty()
-        val pageCount = ((productionGroup.size + 5) / 6).coerceAtLeast(1)
-        productionPage = productionPage.coerceIn(0, pageCount - 1)
-        return if (productionGroup.size > 6) {
-            "Cmd ${runtime.overlayModeLabel()} ${productionPage + 1}/$pageCount"
-        } else {
-            "Cmd ${runtime.overlayModeLabel()}"
-        }
+        val snapshot = runtime.snapshot
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        return resolveCommandDeckHeader(runtime.overlayModeLabel(), groups, selected, productionPage)
     }
 
     private fun buildCenterStatusLine(): String {
@@ -2360,7 +2355,8 @@ internal class GameScreen(
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
-                groups.any { it.first == "Production" && it.second.isNotEmpty() } -> commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                groups.any { it.first in setOf("Production", "Train", "Research", "Build") && it.second.isNotEmpty() } ->
+                    commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
                 else -> textSecondary.cpy().also { it.a = 0.94f }
             }
         }
@@ -2378,7 +2374,11 @@ internal class GameScreen(
             when (group) {
                 "Orders" -> panel.cpy().lerp(command, 0.22f).also { it.a = 0.86f }
                 "Production" -> panel.cpy().lerp(production, 0.22f).also { it.a = 0.86f }
+                "Train" -> panel.cpy().lerp(production, 0.22f).also { it.a = 0.86f }
+                "Research" -> panel.cpy().lerp(research, 0.22f).also { it.a = 0.86f }
+                "Build" -> panel.cpy().lerp(build, 0.22f).also { it.a = 0.86f }
                 "Utility" -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.86f }
+                "System" -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.86f }
                 else -> panel.cpy().lerp(commandSoft, 0.18f).also { it.a = 0.82f }
             }
         }
@@ -2388,7 +2388,11 @@ internal class GameScreen(
             when (group) {
                 "Orders" -> commandSoft.cpy().also { it.a = 0.82f }
                 "Production" -> production.cpy().also { it.a = 0.78f }
+                "Train" -> production.cpy().also { it.a = 0.78f }
+                "Research" -> research.cpy().also { it.a = 0.78f }
+                "Build" -> build.cpy().also { it.a = 0.78f }
                 "Utility" -> selectionSoft.cpy().also { it.a = 0.78f }
+                "System" -> selectionSoft.cpy().also { it.a = 0.78f }
                 else -> commandSoft.cpy().also { it.a = 0.72f }
             }
         }
@@ -2398,7 +2402,11 @@ internal class GameScreen(
             when (group) {
                 "Orders" -> panelAlt.cpy().lerp(command, 0.08f).also { it.a = 0.98f }
                 "Production" -> panelAlt.cpy().lerp(production, 0.08f).also { it.a = 0.98f }
+                "Train" -> panelAlt.cpy().lerp(production, 0.08f).also { it.a = 0.98f }
+                "Research" -> panelAlt.cpy().lerp(research, 0.08f).also { it.a = 0.98f }
+                "Build" -> panelAlt.cpy().lerp(build, 0.08f).also { it.a = 0.98f }
                 "Utility" -> panelAlt.cpy().lerp(selection, 0.08f).also { it.a = 0.98f }
+                "System" -> panelAlt.cpy().lerp(selection, 0.08f).also { it.a = 0.98f }
                 else -> panelAlt.cpy().also { it.a = 0.98f }
             }
         }
@@ -2543,6 +2551,7 @@ internal class GameScreen(
                 "cancelTrain" -> "Stop T"
                 "cancelResearch" -> "Stop R"
                 "patrol" -> "Pat"
+                "rally" -> "Rally"
                 "move" -> "Move"
                 "hold" -> "Hold"
                 else -> button.label
@@ -2576,21 +2585,18 @@ internal class GameScreen(
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
-        val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "rally", "hold", "clear", "centerSelection") }
-        val allProduction = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
-        val productionPageSize = 6
-        val productionPageCount = ((allProduction.size + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
-        productionPage = productionPage.coerceIn(0, productionPageCount - 1)
-        val production = allProduction.drop(productionPage * productionPageSize).take(productionPageSize)
-        val utility =
-            buttons.filter {
-                it.actionId in setOf("viewF1", "viewF2", "observer", "pause", "help") ||
-                    (runtime.debugVisible && it.actionId == "debug")
-        }
-        return listOf("Orders" to primary, "Production" to production, "Utility" to utility)
+        val snapshot = runtime.snapshot
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        return resolveCommandDeckGroups(buttons, selected, runtime.debugVisible)
     }
 
     private fun shiftProductionPage(direction: Int) {
+        val snapshot = runtime.snapshot
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        if (usesStructureCommandDeck(selected)) {
+            productionPage = 0
+            return
+        }
         val productionButtons =
             runtime.buttonModels().count {
                 it.actionId.startsWith("build:") ||

@@ -78,6 +78,56 @@ internal fun formatCommandHeaderLine(
     return if (productionCount > productionPageSize) "$base · ${normalizedPage + 1}/$pageCount" else base
 }
 
+internal fun usesStructureCommandDeck(selected: List<EntitySnapshot>): Boolean =
+    selected.any { entity ->
+        entity.footprintWidth != null &&
+            entity.footprintHeight != null &&
+            (entity.supportsTraining == true || entity.supportsResearch == true || entity.supportsRally == true)
+    }
+
+internal fun resolveCommandDeckGroups(
+    buttons: List<ClientCommandButton>,
+    selected: List<EntitySnapshot>,
+    debugVisible: Boolean
+): List<Pair<String, List<ClientCommandButton>>> {
+    val utility =
+        buttons.filter {
+            it.actionId in setOf("viewF1", "viewF2", "observer", "pause", "help") ||
+                (debugVisible && it.actionId == "debug")
+        }
+    if (!usesStructureCommandDeck(selected)) {
+        val primary = buttons.filter { it.actionId in setOf("move", "attackMove", "patrol", "rally", "hold", "clear", "centerSelection") }
+        val production = buttons.filter { it.actionId.startsWith("build:") || it.actionId.startsWith("train:") || it.actionId.startsWith("research:") || it.actionId.startsWith("cancel") }
+        return listOf("Orders" to primary, "Production" to production, "Utility" to utility)
+    }
+    val structureOrders = buttons.filter { it.actionId in setOf("rally", "clear", "centerSelection") }
+    val train = buttons.filter { it.actionId.startsWith("train:") || it.actionId == "cancelTrain" }
+    val research = buttons.filter { it.actionId.startsWith("research:") || it.actionId == "cancelResearch" }
+    val build = buttons.filter { it.actionId.startsWith("build:") || it.actionId == "cancelBuild" }
+    return listOf(
+        "Orders" to structureOrders,
+        "Train" to train,
+        "Research" to research,
+        "Build" to build,
+        "System" to utility
+    )
+}
+
+internal fun resolveCommandDeckHeader(
+    overlayModeLabel: String,
+    groups: List<Pair<String, List<ClientCommandButton>>>,
+    selected: List<EntitySnapshot>,
+    productionPage: Int,
+    productionPageSize: Int = 6
+): String {
+    if (usesStructureCommandDeck(selected)) {
+        val focus = selected.firstOrNull()?.typeId ?: overlayModeLabel
+        return "Cmd ${focus.lowercase()}"
+    }
+    val productionCount = groups.firstOrNull { it.first == "Production" }?.second?.size ?: 0
+    return formatCommandHeaderLine(overlayModeLabel, productionCount, productionPage, productionPageSize)
+}
+
 internal fun formatCommandButtonText(actionId: String, fallbackLabel: String): String =
     when (actionId) {
         "attackMove" -> "Attack"

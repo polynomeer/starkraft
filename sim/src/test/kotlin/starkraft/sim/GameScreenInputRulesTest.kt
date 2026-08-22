@@ -37,6 +37,8 @@ import starkraft.sim.client.shouldRenderCompletionOverlay
 import starkraft.sim.client.resolveQueueHeaderLine
 import starkraft.sim.client.compactCommandHint
 import starkraft.sim.client.resolveMiniMapSampleStep
+import starkraft.sim.client.resolveCommandDeckGroups
+import starkraft.sim.client.resolveCommandDeckHeader
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveFallbackTeamTintStrength
@@ -46,6 +48,8 @@ import starkraft.sim.client.resolveSilhouetteTrimColor
 import starkraft.sim.client.resolveStructureRoofColor
 import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
+import starkraft.sim.client.ClientCommandButton
+import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -117,6 +121,80 @@ class GameScreenInputRulesTest {
         assertTrue(compact.hpBarHeight < wide.hpBarHeight, "compact slots should use thinner hp bars")
         assertTrue(compact.glyphScale < wide.glyphScale, "compact slots should use smaller glyphs")
         assertTrue(compact.markerSize < wide.markerSize, "compact slots should use smaller markers")
+    }
+
+    @Test
+    fun `structure selection uses split command deck groups`() {
+        val buttons =
+            listOf(
+                ClientCommandButton("Rally", "rally"),
+                ClientCommandButton("Train Marine", "train:Marine"),
+                ClientCommandButton("Research Advanced", "research:AdvancedTraining"),
+                ClientCommandButton("Build Depot", "build:Depot"),
+                ClientCommandButton("Cancel Train", "cancelTrain"),
+                ClientCommandButton("Pause", "pause"),
+                ClientCommandButton("Help", "help")
+            )
+        val selected =
+            listOf(
+                EntitySnapshot(
+                    id = 4,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 5f,
+                    y = 6f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    footprintWidth = 2,
+                    footprintHeight = 2,
+                    supportsTraining = true,
+                    supportsResearch = true,
+                    supportsRally = true
+                )
+            )
+
+        val groups = resolveCommandDeckGroups(buttons, selected, debugVisible = false)
+
+        assertEquals(listOf("Orders", "Train", "Research", "Build", "System"), groups.map { it.first })
+        assertEquals(listOf("rally"), groups.first { it.first == "Orders" }.second.map { it.actionId })
+        assertEquals(listOf("train:Marine", "cancelTrain"), groups.first { it.first == "Train" }.second.map { it.actionId })
+        assertEquals("Cmd depot", resolveCommandDeckHeader("default", groups, selected, productionPage = 0))
+    }
+
+    @Test
+    fun `unit selection keeps compact shared command deck groups`() {
+        val buttons =
+            listOf(
+                ClientCommandButton("Move", "move"),
+                ClientCommandButton("Attack", "attackMove"),
+                ClientCommandButton("Patrol", "patrol"),
+                ClientCommandButton("Train Marine", "train:Marine"),
+                ClientCommandButton("Pause", "pause")
+            )
+        val selected =
+            listOf(
+                EntitySnapshot(
+                    id = 5,
+                    faction = 1,
+                    typeId = "Marine",
+                    archetype = "infantry",
+                    x = 8f,
+                    y = 7f,
+                    dir = 0f,
+                    hp = 45,
+                    maxHp = 45,
+                    armor = 0,
+                    weaponId = "Gauss"
+                )
+            )
+
+        val groups = resolveCommandDeckGroups(buttons, selected, debugVisible = false)
+
+        assertEquals(listOf("Orders", "Production", "Utility"), groups.map { it.first })
+        assertEquals("Orders · DEFAULT", resolveCommandDeckHeader("default", groups, selected, productionPage = 0))
     }
 
     @Test
