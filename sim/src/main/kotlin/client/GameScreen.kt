@@ -2000,8 +2000,9 @@ internal class GameScreen(
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         val focused = resolveFocusedEntity(snapshot, selected) ?: selected.firstOrNull()
-        val summary = formatSelectionMetaSummary(selected)
-        val detail = formatFocusedEntityStatus(focused)
+        val structureDeck = usesStructureCommandDeck(selected)
+        val summary = formatSelectionMetaSummary(selected, includeCapabilities = !structureDeck)
+        val detail = if (structureDeck) null else formatFocusedEntityStatus(focused)
         return if (detail == null) summary else "$summary · $detail"
     }
 

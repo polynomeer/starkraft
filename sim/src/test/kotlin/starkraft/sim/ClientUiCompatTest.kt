@@ -46,6 +46,7 @@ class ClientUiCompatTest {
             )
 
         assertEquals("2 sel · c1 · w0 · s1 · prod 1 · tech 1 · rally 1/1", formatSelectionMetaSummary(selected))
+        assertEquals("2 sel · c1 · w0 · s1", formatSelectionMetaSummary(selected, includeCapabilities = false))
     }
 
     @Test

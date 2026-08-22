@@ -271,7 +271,7 @@ internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCo
 internal fun formatControlGroupDeckLine(groups: List<Pair<Int, Int>>): String =
     if (groups.isEmpty()) "Groups idle" else groups.take(3).joinToString("  ") { (group, count) -> "$group:$count" }
 
-internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>): String {
+internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>, includeCapabilities: Boolean = true): String {
     if (selected.isEmpty()) return "No live selection"
     val combat = selected.count { it.weaponId != null }
     val workers = selected.count { it.archetype == "worker" }
@@ -285,9 +285,11 @@ internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>): String 
         add("c$combat")
         add("w$workers")
         add("s$structures")
-        if (trainers > 0) add("prod $trainers")
-        if (researchers > 0) add("tech $researchers")
-        if (rallyCapable > 0) add("rally $rallyConfigured/$rallyCapable")
+        if (includeCapabilities) {
+            if (trainers > 0) add("prod $trainers")
+            if (researchers > 0) add("tech $researchers")
+            if (rallyCapable > 0) add("rally $rallyConfigured/$rallyCapable")
+        }
     }.joinToString(" · ")
 }
 
