@@ -929,33 +929,16 @@ internal class GdxClientRuntime(
 
     fun isActionEnabled(actionId: String): Boolean =
         isCommandButtonEnabled(
-            actionId =
-                when (actionId) {
-                    "pause" -> "play:pause"
-                    "slower" -> "play:slower"
-                    "faster" -> "play:faster"
-                    "centerSelection" -> "view:centerSelection"
-                    "centerFaction" -> "view:centerFaction"
-                    "viewF1" -> "view:faction1"
-                    "viewF2" -> "view:faction2"
-                    "observer" -> "view:observer"
-                    "selectViewedFaction" -> "select:viewFaction"
-                    "selectType" -> "select:selectedType"
-                    "selectRole" -> "select:selectedArchetype"
-                    "selectAll" -> "select:all"
-                    "selectIdleWorkers" -> "select:idleWorkers"
-                    "selectDamaged" -> "select:damaged"
-                    "selectCombat" -> "select:combat"
-                    "selectProducers" -> "select:producers"
-                    "selectTrainers" -> "select:trainers"
-                    "selectResearchers" -> "select:researchers"
-                    "selectConstruction" -> "select:construction"
-                    "selectHarvesters" -> "select:harvesters"
-                    "selectReturning" -> "select:returningHarvesters"
-                    "selectCargo" -> "select:cargoHarvesters"
-                    "selectDropoffs" -> "select:dropoffs"
-                    else -> actionId
-                },
+            actionId = normalizeUiActionId(actionId),
+            hasSelection = session.state.viewState.hasSelection,
+            canTrain = session.state.viewState.canTrain,
+            canResearch = session.state.viewState.canResearch,
+            viewedFaction = session.state.viewedFaction
+        )
+
+    fun disabledActionHint(actionId: String): String? =
+        resolveCommandButtonDisabledReason(
+            actionId = normalizeUiActionId(actionId),
             hasSelection = session.state.viewState.hasSelection,
             canTrain = session.state.viewState.canTrain,
             canResearch = session.state.viewState.canResearch,
@@ -1023,6 +1006,34 @@ internal class GdxClientRuntime(
                     actionId.startsWith("research:") -> "Queue ${actionId.removePrefix("research:")}"
                     else -> null
                 }
+        }
+
+    private fun normalizeUiActionId(actionId: String): String =
+        when (actionId) {
+            "pause" -> "play:pause"
+            "slower" -> "play:slower"
+            "faster" -> "play:faster"
+            "centerSelection" -> "view:centerSelection"
+            "centerFaction" -> "view:centerFaction"
+            "viewF1" -> "view:faction1"
+            "viewF2" -> "view:faction2"
+            "observer" -> "view:observer"
+            "selectViewedFaction" -> "select:viewFaction"
+            "selectType" -> "select:selectedType"
+            "selectRole" -> "select:selectedArchetype"
+            "selectAll" -> "select:all"
+            "selectIdleWorkers" -> "select:idleWorkers"
+            "selectDamaged" -> "select:damaged"
+            "selectCombat" -> "select:combat"
+            "selectProducers" -> "select:producers"
+            "selectTrainers" -> "select:trainers"
+            "selectResearchers" -> "select:researchers"
+            "selectConstruction" -> "select:construction"
+            "selectHarvesters" -> "select:harvesters"
+            "selectReturning" -> "select:returningHarvesters"
+            "selectCargo" -> "select:cargoHarvesters"
+            "selectDropoffs" -> "select:dropoffs"
+            else -> actionId
         }
 
     fun mainMenuSummaryLines(): List<String> =

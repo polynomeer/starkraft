@@ -466,6 +466,28 @@ internal fun isCommandButtonEnabled(
         else -> true
     }
 
+internal fun resolveCommandButtonDisabledReason(
+    actionId: String,
+    hasSelection: Boolean,
+    canTrain: Boolean,
+    canResearch: Boolean,
+    viewedFaction: Int?
+): String? =
+    when {
+        isCommandButtonEnabled(actionId, hasSelection, canTrain, canResearch, viewedFaction) -> null
+        actionId.startsWith("train:") -> "Select training structure"
+        actionId.startsWith("research:") -> "Select research structure"
+        actionId == "move" || actionId == "attackMove" || actionId == "patrol" || actionId == "hold" -> "Select units first"
+        actionId == "cancelBuild" -> "Select building site"
+        actionId == "cancelTrain" -> "Select production queue"
+        actionId == "cancelResearch" -> "Select research queue"
+        actionId == "select:selectedType" || actionId == "select:selectedArchetype" -> "Select reference unit"
+        actionId == "select:viewFaction" -> "Switch to faction view"
+        actionId == "view:centerSelection" -> "Select units first"
+        actionId == "view:centerFaction" -> "Switch to faction view"
+        else -> "Unavailable"
+    }
+
 internal fun buildStartOverlayLines(tick: Int, overlayLines: List<String>): List<String> {
     if (tick > 50) return emptyList()
     val status = buildCommandPanelStatusLines(overlayLines)

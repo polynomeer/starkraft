@@ -45,6 +45,7 @@ import starkraft.sim.client.compactCommandHint
 import starkraft.sim.client.resolveMiniMapSampleStep
 import starkraft.sim.client.resolveCommandDeckGroups
 import starkraft.sim.client.resolveCommandDeckHeader
+import starkraft.sim.client.resolveCommandButtonDisabledReason
 import starkraft.sim.client.resolveResourceCoreColor
 import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveFallbackTeamTintStrength
@@ -259,6 +260,30 @@ class GameScreenInputRulesTest {
         assertEquals("f2", formatFixedHudHintSlot("Switch to faction 2 view"))
         assertEquals("cmd standby", formatFixedHudHintSlot(null))
         assertEquals("prod queue sel", formatFixedHudHintSlot("production queue current selection"))
+    }
+
+    @Test
+    fun `disabled command reasons stay player-readable`() {
+        assertEquals(
+            "Select units first",
+            resolveCommandButtonDisabledReason("move", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = 1)
+        )
+        assertEquals(
+            "Select training structure",
+            resolveCommandButtonDisabledReason("train:Marine", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1)
+        )
+        assertEquals(
+            "Select research structure",
+            resolveCommandButtonDisabledReason("research:AdvancedTraining", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1)
+        )
+        assertEquals(
+            "Switch to faction view",
+            resolveCommandButtonDisabledReason("select:viewFaction", hasSelection = false, canTrain = false, canResearch = false, viewedFaction = null)
+        )
+        assertEquals(
+            null,
+            resolveCommandButtonDisabledReason("move", hasSelection = true, canTrain = false, canResearch = false, viewedFaction = 1)
+        )
     }
 
     @Test

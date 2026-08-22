@@ -801,7 +801,8 @@ internal class GameScreen(
                         val actor = makeButton(
                             commandButtonLabel(button, snapshot),
                             runtime.actionHint(button.actionId),
-                            commandButtonStyle(button.actionId)
+                            commandButtonStyle(button.actionId),
+                            runtime.disabledActionHint(button.actionId)
                         ) {
                             runActionWithPulse(button.actionId)
                         }
@@ -2628,6 +2629,7 @@ internal class GameScreen(
         text: String,
         hint: String? = null,
         style: TextButton.TextButtonStyle = assets.primaryButtonStyle(),
+        disabledHint: String? = null,
         onClick: () -> Unit
     ): TextButton =
         TextButton(text, style).apply {
@@ -2638,7 +2640,7 @@ internal class GameScreen(
                     }
 
                     override fun enter(event: InputEvent?, x: Float, y: Float, pointer: Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
-                        runtime.setHoverHint(hint ?: text)
+                        runtime.setHoverHint(if (isDisabled) (disabledHint ?: "Unavailable") else (hint ?: text))
                     }
 
                     override fun exit(event: InputEvent?, x: Float, y: Float, pointer: Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor?) {
