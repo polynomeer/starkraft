@@ -633,17 +633,20 @@ internal class GameScreen(
         val minimapBounds = gdxMiniMapBounds(width, height)
         val bottomHudLayout = computeBottomHudLayout(width, height)
         val commandDeckLayout = computeCommandDeckLayout(width, height)
+        val selectedEntities = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+        val structureDeck = usesStructureCommandDeck(selectedEntities)
+        val commandDeckPresentation = computeCommandDeckPresentation(commandDeckLayout, structureDeck)
         val centerPanelLayout = computeCenterPanelLayout(width)
         val topBarLayout = computeTopBarLayout(width)
         val minimapWidth = minimapBounds.width
         val minimapHeight = minimapBounds.height
         val centerWidth = bottomHudLayout.centerWidth.toFloat()
         val commandWidth = bottomHudLayout.commandWidth.toFloat()
-        val commandHeight = commandDeckLayout.scrollHeight.toFloat()
-        val commandButtonHeight = commandDeckLayout.buttonHeight.toFloat()
-        val commandColumns = 3
+        val commandHeight = commandDeckPresentation.scrollHeight.toFloat()
+        val commandButtonHeight = commandDeckPresentation.buttonHeight.toFloat()
+        val commandColumns = commandDeckPresentation.columns
         val commandCellWidth = (commandWidth / commandColumns) - 2f
-        val commandActorWidth = commandCellWidth - commandDeckLayout.actorInset.toFloat()
+        val commandActorWidth = commandCellWidth - commandDeckPresentation.actorInset.toFloat()
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
@@ -749,10 +752,18 @@ internal class GameScreen(
         actionBanner.isVisible = showActionBanner
         actionBanner.background = if (showActionBanner) assets.panelDrawable(currentActionBannerPulseTone(bannerPulse)) else null
         actionBanner.pad(if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f, if (showActionBanner) 3f else 0f, if (showActionBanner) 6f else 0f)
-        val commandPanelSignature = buildCommandPanelSignature(groupedButtons, snapshot, commandDeckLayout, commandWidth, commandButtonHeight)
+        val commandPanelSignature =
+            buildCommandPanelSignature(
+                groupedButtons,
+                snapshot,
+                commandDeckLayout,
+                commandDeckPresentation,
+                commandWidth,
+                commandButtonHeight
+            )
         if (commandPanelSignature != lastCommandPanelSignature) {
             lastCommandPanelSignature = commandPanelSignature
-            rebuildCommandPanel(groupedButtons, snapshot, commandDeckLayout, commandColumns, commandCellWidth, commandActorWidth, commandButtonHeight)
+            rebuildCommandPanel(groupedButtons, snapshot, commandDeckLayout, commandDeckPresentation, commandColumns, commandCellWidth, commandActorWidth, commandButtonHeight)
             bottomHud.invalidateHierarchy()
         }
     }
@@ -761,6 +772,7 @@ internal class GameScreen(
         groupedButtons: List<Pair<String, List<ClientCommandButton>>>,
         snapshot: ClientSnapshot?,
         commandDeckLayout: CommandDeckLayout,
+        commandDeckPresentation: CommandDeckPresentation,
         commandColumns: Int,
         commandCellWidth: Float,
         commandActorWidth: Float,
@@ -832,7 +844,10 @@ internal class GameScreen(
                                                 disabled = actor.isDisabled,
                                                 checked = actor.isChecked
                                             )
-                                        ).size(if (commandDeckLayout.buttonHeight <= 17) 9f else 10f, if (commandDeckLayout.buttonHeight <= 17) 9f else 10f).left().padRight(3f)
+                                        ).size(
+                                            if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f,
+                                            if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f
+                                        ).left().padRight(3f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
                                         add(
                                             Table().apply {
@@ -868,6 +883,7 @@ internal class GameScreen(
         groupedButtons: List<Pair<String, List<ClientCommandButton>>>,
         snapshot: ClientSnapshot?,
         commandDeckLayout: CommandDeckLayout,
+        commandDeckPresentation: CommandDeckPresentation,
         commandWidth: Float,
         commandButtonHeight: Float
     ): String =
@@ -879,6 +895,14 @@ internal class GameScreen(
             append(commandDeckLayout.scrollHeight)
             append('|')
             append(commandDeckLayout.buttonHeight)
+            append('|')
+            append(commandDeckPresentation.columns)
+            append('|')
+            append(commandDeckPresentation.buttonHeight)
+            append('|')
+            append(commandDeckPresentation.scrollHeight)
+            append('|')
+            append(commandDeckPresentation.actorInset)
             append('|')
             append(commandWidth.toInt())
             append('|')
@@ -2921,6 +2945,13 @@ internal data class CommandDeckLayout(
     val actorInset: Int
 )
 
+internal data class CommandDeckPresentation(
+    val columns: Int,
+    val buttonHeight: Int,
+    val scrollHeight: Int,
+    val actorInset: Int
+)
+
 internal data class CenterPanelLayout(
     val portraitSize: Int,
     val rosterSlotSize: Int,
@@ -2981,6 +3012,26 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
         actorInset = if (compact) 10 else 12
     )
 }
+
+internal fun computeCommandDeckPresentation(
+    base: CommandDeckLayout,
+    structureDeck: Boolean
+): CommandDeckPresentation =
+    if (structureDeck) {
+        CommandDeckPresentation(
+            columns = 2,
+            buttonHeight = base.buttonHeight + 2,
+            scrollHeight = base.scrollHeight + 10,
+            actorInset = (base.actorInset - 2).coerceAtLeast(8)
+        )
+    } else {
+        CommandDeckPresentation(
+            columns = 3,
+            buttonHeight = base.buttonHeight,
+            scrollHeight = base.scrollHeight,
+            actorInset = base.actorInset
+        )
+    }
 
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1440

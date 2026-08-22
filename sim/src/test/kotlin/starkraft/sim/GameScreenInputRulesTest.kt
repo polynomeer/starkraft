@@ -9,6 +9,7 @@ import com.badlogic.gdx.Input
 import starkraft.sim.client.computeBottomHudLayout
 import starkraft.sim.client.computeCenterPanelLayout
 import starkraft.sim.client.computeCommandDeckLayout
+import starkraft.sim.client.computeCommandDeckPresentation
 import starkraft.sim.client.computeCommandHintRowHeight
 import starkraft.sim.client.computeSelectionSlotVisualLayout
 import starkraft.sim.client.computeTopBarLayout
@@ -79,6 +80,19 @@ class GameScreenInputRulesTest {
         assertTrue(compact.scrollHeight < wide.scrollHeight, "small screens should use shorter command deck")
         assertTrue(compact.buttonHeight < wide.buttonHeight, "small screens should use shorter command buttons")
         assertTrue(compact.actorInset < wide.actorInset, "small screens should reduce command button chrome")
+    }
+
+    @Test
+    fun `structure command deck uses larger two column presentation`() {
+        val base = computeCommandDeckLayout(1280, 720)
+        val standard = computeCommandDeckPresentation(base, structureDeck = false)
+        val structure = computeCommandDeckPresentation(base, structureDeck = true)
+
+        assertEquals(3, standard.columns)
+        assertEquals(2, structure.columns)
+        assertTrue(structure.buttonHeight > standard.buttonHeight, "structure deck should use taller buttons")
+        assertTrue(structure.scrollHeight > standard.scrollHeight, "structure deck should expose more vertical space")
+        assertTrue(structure.actorInset < standard.actorInset, "structure deck should dedicate more width to button labels")
     }
 
     @Test
