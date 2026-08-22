@@ -223,6 +223,12 @@ internal fun compactCommandHint(raw: String): String {
     return if (cleaned.length <= 16) cleaned else cleaned.take(13).trimEnd() + "..."
 }
 
+internal fun formatFixedHudHintSlot(raw: String?): String =
+    raw
+        ?.takeIf { it.isNotBlank() }
+        ?.let(::compactCommandHint)
+        ?: "cmd standby"
+
 internal fun resolveCommandButtonHotkey(actionId: String): String? =
     when (actionId) {
         "move" -> "M"

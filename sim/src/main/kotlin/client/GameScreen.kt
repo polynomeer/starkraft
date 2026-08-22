@@ -139,6 +139,9 @@ internal class GameScreen(
         modeLabel.setFontScale(0.88f)
         statusBadgeLabel.setFontScale(0.88f)
         commandHintLabel.setFontScale(0.84f)
+        commandHintLabel.setWrap(false)
+        commandHintLabel.setEllipsis(true)
+        commandHintLabel.setAlignment(Align.left)
         selectionMetaLabel.setFontScale(0.84f)
         factionOverviewLabel.setFontScale(0.84f)
         selectionRosterLabel.setFontScale(0.84f)
@@ -345,11 +348,11 @@ internal class GameScreen(
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.72f })
                                     pad(2f, 4f, 2f, 4f)
                                     add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
-                                    add(commandHintLabel).left().expandX().fillX()
+                                    add(commandHintLabel).width(140f).left().fillX()
                                 }
-                            ).expandX().fillX()
+                            ).width(156f).height(computeCommandHintRowHeight(1280).toFloat()).left()
                         }
-                    ).expandX().fillX()
+                    ).width(160f).left()
                 }
             ).expandX().fillX().padTop(3f).row()
             add(actionBanner).left().expandX().fillX().padTop(3f).row()
@@ -720,7 +723,7 @@ internal class GameScreen(
         val actionBannerText = buildActionBannerLine()
         actionBannerLabel.setText(actionBannerText)
         actionBannerLabel.color = currentActionBannerTextTone()
-        val commandHintText = buildCommandHintLine()
+        val commandHintText = formatFixedHudHintSlot(buildCommandHintLine())
         commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
         val bannerPulse = bannerPulse()

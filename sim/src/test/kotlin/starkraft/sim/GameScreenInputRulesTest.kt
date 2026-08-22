@@ -25,6 +25,7 @@ import starkraft.sim.client.formatDeckCommandButtonText
 import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
+import starkraft.sim.client.formatFixedHudHintSlot
 import starkraft.sim.client.formatSelectionHeadline
 import starkraft.sim.client.formatFocusedEntityStatus
 import starkraft.sim.client.formatQueueStatusLine
@@ -251,6 +252,13 @@ class GameScreenInputRulesTest {
             "Observer · 14 live",
             formatSelectionHeadline(emptyList(), null, viewedFaction = null, totalEntities = 14)
         )
+    }
+
+    @Test
+    fun `fixed hud hint slot stays compact and stable`() {
+        assertEquals("f2", formatFixedHudHintSlot("Switch to faction 2 view"))
+        assertEquals("cmd standby", formatFixedHudHintSlot(null))
+        assertEquals("prod queue sel", formatFixedHudHintSlot("production queue current selection"))
     }
 
     @Test
