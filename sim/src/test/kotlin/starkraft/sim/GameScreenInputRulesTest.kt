@@ -25,6 +25,7 @@ import starkraft.sim.client.formatDeckCommandButtonText
 import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
+import starkraft.sim.client.formatSelectionHeadline
 import starkraft.sim.client.formatFocusedEntityStatus
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
@@ -199,6 +200,57 @@ class GameScreenInputRulesTest {
             formatFocusedEntityStatus(entity)
         )
         assertEquals(null, formatFocusedEntityStatus(null))
+    }
+
+    @Test
+    fun `selection headline favors player-readable unit and state summary`() {
+        val focused =
+            EntitySnapshot(
+                id = 7,
+                faction = 1,
+                typeId = "Depot",
+                archetype = "producer",
+                x = 4f,
+                y = 5f,
+                dir = 0f,
+                hp = 400,
+                maxHp = 400,
+                armor = 1,
+                activeProductionType = "Marine",
+                activeProductionRemainingTicks = 11,
+                rallyX = 12f,
+                rallyY = 9f
+            )
+        val other =
+            EntitySnapshot(
+                id = 8,
+                faction = 1,
+                typeId = "Marine",
+                archetype = "infantry",
+                x = 6f,
+                y = 5f,
+                dir = 0f,
+                hp = 40,
+                maxHp = 40,
+                armor = 0
+            )
+
+        assertEquals(
+            "Depot x2 · prod Marine 11t · rally set",
+            formatSelectionHeadline(listOf(focused, other), focused, viewedFaction = 1, totalEntities = 14)
+        )
+        assertEquals(
+            "Depot · producer · prod Marine 11t · rally set",
+            formatSelectionHeadline(listOf(focused), focused, viewedFaction = 1, totalEntities = 14)
+        )
+        assertEquals(
+            "F1 view · 14 live",
+            formatSelectionHeadline(emptyList(), null, viewedFaction = 1, totalEntities = 14)
+        )
+        assertEquals(
+            "Observer · 14 live",
+            formatSelectionHeadline(emptyList(), null, viewedFaction = null, totalEntities = 14)
+        )
     }
 
     @Test

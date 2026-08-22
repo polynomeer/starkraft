@@ -961,15 +961,14 @@ internal class GameScreen(
     private fun buildSelectionHeadline(): String {
         val raw = runtime.session.state.viewState.selectionHudLine
         if (!raw.isNullOrBlank() && !raw.equals("selection hud: none", ignoreCase = true)) {
-            return raw
+            val snapshot = runtime.snapshot
+            val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+            if (selected.isEmpty()) return raw
         }
         val snapshot = runtime.snapshot ?: return "Awaiting"
-        return if (runtime.session.state.selectedIds.isEmpty()) {
-            val faction = runtime.session.state.viewedFaction?.let { "f$it" } ?: "observer"
-            "$faction · ${snapshot.entities.size} up"
-        } else {
-            "#${runtime.session.state.selectedIds.first()} · ${runtime.session.state.selectedIds.size}"
-        }
+        val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
+        val focused = resolveFocusedEntity(snapshot, selected)
+        return formatSelectionHeadline(selected, focused, runtime.session.state.viewedFaction, snapshot.entities.size)
     }
 
     private fun buildPortraitText(): String {

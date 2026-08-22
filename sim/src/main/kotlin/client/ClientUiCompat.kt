@@ -313,6 +313,36 @@ internal fun formatFocusedEntityStatus(entity: EntitySnapshot?): String? {
     return details.takeIf { it.isNotEmpty() }?.joinToString(" · ")
 }
 
+internal fun formatSelectionHeadline(
+    selected: List<EntitySnapshot>,
+    focused: EntitySnapshot?,
+    viewedFaction: Int?,
+    totalEntities: Int
+): String {
+    if (selected.isEmpty()) {
+        val view = viewedFaction?.let { "F$it view" } ?: "Observer"
+        return "$view · $totalEntities live"
+    }
+    val lead = focused ?: selected.first()
+    val type = lead.typeId.replace('_', ' ')
+    val role = lead.archetype?.replace('_', ' ')?.takeIf { it.isNotBlank() }
+    val status = formatFocusedEntityStatus(lead)
+    return buildString {
+        append(type)
+        if (selected.size > 1) {
+            append(" x")
+            append(selected.size)
+        } else if (role != null) {
+            append(" · ")
+            append(role)
+        }
+        if (status != null) {
+            append(" · ")
+            append(status)
+        }
+    }
+}
+
 internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): String {
     if (selected.isEmpty()) return "No card"
     if (selected.size == 1) {
