@@ -825,6 +825,8 @@ internal class GameScreen(
                     ).colspan(commandColumns).left().padBottom(4f).row()
                     group.second.forEachIndexed { index, button ->
                         val activePulse = uiPulse()
+                        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
+                        val queued = isCommandButtonQueued(button.actionId, selected)
                         val actor = makeButton(
                             commandButtonLabel(button, snapshot),
                             runtime.actionHint(button.actionId),
@@ -839,12 +841,13 @@ internal class GameScreen(
                             when {
                                 actor.isDisabled -> assets.theme.colors.textDisabled.cpy().also { it.a = 0.55f }
                                 actor.isChecked -> assets.theme.colors.textPrimary.cpy().lerp(assets.theme.colors.warningSoft, 0.32f).also { it.a = 0.94f }
+                                queued -> assets.theme.colors.textPrimary.cpy().lerp(assets.theme.colors.selectionSoft, 0.16f).also { it.a = 0.94f }
                                 else -> Color.WHITE
                             }
                         val cardTone = commandButtonCardTone(button.actionId)
                         val clickPulse = commandClickPulse(button.actionId)
-                        val frameTone = commandButtonFrameTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse, cardTone)
-                        val shellTone = commandButtonShellTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse)
+                        val frameTone = commandButtonFrameTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse, clickPulse, cardTone)
+                        val shellTone = commandButtonShellTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse, clickPulse)
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(shellTone)
@@ -857,7 +860,7 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        commandButtonEdgeTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse, clickPulse)
+                                                        commandButtonEdgeTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse, clickPulse)
                                                     )
                                             }
                                         ).height(1.5f).expandX().fillX().colspan(4).padBottom(1f).row()
@@ -865,7 +868,7 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        commandButtonRailTone(button.actionId, actor.isDisabled, actor.isChecked, activePulse)
+                                                        commandButtonRailTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse)
                                                     )
                                             }
                                         ).width(2f).expandY().fillY().padRight(2f)
@@ -884,9 +887,9 @@ internal class GameScreen(
                                             Table().apply {
                                                 background =
                                                     assets.panelDrawable(
-                                                        commandButtonCornerTone(actor.isDisabled, actor.isChecked)
-                                                    )
-                                            }
+                                                            commandButtonCornerTone(actor.isDisabled, actor.isChecked)
+                                                        )
+                                                    }
                                         ).size(4f, 4f).padLeft(3f)
                                     }
                                 ).expand().fill()
@@ -2508,6 +2511,7 @@ internal class GameScreen(
         actionId: String,
         disabled: Boolean,
         checked: Boolean,
+        queued: Boolean,
         activePulse: Float,
         clickPulse: Float,
         cardTone: Color
@@ -2516,6 +2520,7 @@ internal class GameScreen(
             when {
                 disabled -> panelAlt.cpy().also { it.a = 0.94f }
                 checked -> panel.cpy().lerp(warning, 0.28f + (activePulse * 0.06f)).also { it.a = 0.90f }
+                queued -> panel.cpy().lerp(commandButtonQueueTone(actionId), 0.24f).also { it.a = 0.92f }
                 else -> cardTone.cpy().lerp(commandButtonPulseAccentTone(actionId), clickPulse * 0.26f)
             }
         }
@@ -2524,6 +2529,7 @@ internal class GameScreen(
         actionId: String,
         disabled: Boolean,
         checked: Boolean,
+        queued: Boolean,
         activePulse: Float,
         clickPulse: Float
     ): Color =
@@ -2531,6 +2537,7 @@ internal class GameScreen(
             when {
                 disabled -> scrim.cpy().also { it.a = 0.88f }
                 checked -> panelStrong.cpy().lerp(warning, 0.24f + (activePulse * 0.04f)).also { it.a = 0.86f }
+                queued -> panelStrong.cpy().lerp(commandButtonQueueTone(actionId), 0.18f).also { it.a = 0.88f }
                 else -> panelAlt.cpy().lerp(commandButtonShellAccentTone(actionId), clickPulse * 0.22f).also { it.a = 0.90f }
             }
         }
@@ -2539,6 +2546,7 @@ internal class GameScreen(
         actionId: String,
         disabled: Boolean,
         checked: Boolean,
+        queued: Boolean,
         activePulse: Float,
         clickPulse: Float
     ): Color =
@@ -2546,6 +2554,7 @@ internal class GameScreen(
             when {
                 disabled -> textPrimary.cpy().also { it.a = 0.06f }
                 checked -> warningSoft.cpy().lerp(textPrimary, 0.12f).also { it.a = 0.64f }
+                queued -> commandButtonQueueTone(actionId).cpy().lerp(textPrimary, 0.12f).also { it.a = 0.66f }
                 else -> commandButtonAccentTone(actionId).lerp(selectionSoft.cpy().also { it.a = 0.88f }, clickPulse * 0.18f)
             }
         }
@@ -2554,13 +2563,26 @@ internal class GameScreen(
         actionId: String,
         disabled: Boolean,
         checked: Boolean,
+        queued: Boolean,
         activePulse: Float
     ): Color =
         with(assets.theme.colors) {
             when {
                 disabled -> textMuted.cpy().also { it.a = 0.28f }
                 checked -> warningSoft.cpy().also { it.a = 0.62f + (activePulse * 0.06f) }
+                queued -> commandButtonQueueTone(actionId).cpy().also { it.a = 0.72f }
                 else -> commandButtonAccentTone(actionId).cpy()
+            }
+        }
+
+    private fun commandButtonQueueTone(actionId: String): Color =
+        with(assets.theme.colors) {
+            when {
+                actionId.startsWith("train:") || actionId == "cancelTrain" -> production.cpy().lerp(selectionSoft, 0.18f)
+                actionId.startsWith("research:") || actionId == "cancelResearch" -> research.cpy().lerp(selectionSoft, 0.14f)
+                actionId == "cancelBuild" -> build.cpy().lerp(selectionSoft, 0.18f)
+                actionId == "rally" -> build.cpy().lerp(selectionSoft, 0.24f)
+                else -> selectionSoft.cpy()
             }
         }
 

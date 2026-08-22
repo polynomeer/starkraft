@@ -1,10 +1,13 @@
 package starkraft.sim
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionRosterSummary
+import starkraft.sim.client.isCommandButtonQueued
 
 class ClientUiCompatTest {
     @Test
@@ -141,5 +144,44 @@ class ClientUiCompatTest {
             "Ros Depot:1   Marine:1   Academy:1   prod:1   tech:1   rally:1",
             formatSelectionRosterSummary(selected)
         )
+    }
+
+    @Test
+    fun `detects queued command buttons from selected structure state`() {
+        val selected =
+            listOf(
+                EntitySnapshot(
+                    id = 4,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 5f,
+                    y = 6f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    footprintWidth = 2,
+                    footprintHeight = 2,
+                    supportsTraining = true,
+                    supportsResearch = true,
+                    supportsRally = true,
+                    activeProductionType = "Marine",
+                    productionQueueSize = 2,
+                    activeResearchTech = "AdvancedTraining",
+                    researchQueueSize = 1,
+                    rallyX = 14f,
+                    rallyY = 10f,
+                    underConstruction = true
+                )
+            )
+
+        assertTrue(isCommandButtonQueued("train:Marine", selected))
+        assertTrue(isCommandButtonQueued("research:AdvancedTraining", selected))
+        assertTrue(isCommandButtonQueued("cancelTrain", selected))
+        assertTrue(isCommandButtonQueued("cancelResearch", selected))
+        assertTrue(isCommandButtonQueued("cancelBuild", selected))
+        assertTrue(isCommandButtonQueued("rally", selected))
+        assertFalse(isCommandButtonQueued("attackMove", selected))
     }
 }

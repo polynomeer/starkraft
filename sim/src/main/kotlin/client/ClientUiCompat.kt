@@ -202,6 +202,25 @@ internal fun formatDeckCommandButtonStateSuffix(actionId: String, selected: List
     }
 }
 
+internal fun isCommandButtonQueued(actionId: String, selected: List<EntitySnapshot>): Boolean =
+    when {
+        actionId.startsWith("train:") ->
+            selected.any {
+                it.activeProductionType == actionId.removePrefix("train:") ||
+                    (it.supportsTraining == true && it.productionQueueSize > 0)
+            }
+        actionId.startsWith("research:") ->
+            selected.any {
+                it.activeResearchTech == actionId.removePrefix("research:") ||
+                    (it.supportsResearch == true && it.researchQueueSize > 0)
+            }
+        actionId == "cancelTrain" -> selected.any { it.productionQueueSize > 0 }
+        actionId == "cancelResearch" -> selected.any { it.researchQueueSize > 0 }
+        actionId == "cancelBuild" -> selected.any { it.underConstruction }
+        actionId == "rally" -> selected.any { it.supportsRally == true && it.rallyX != null && it.rallyY != null }
+        else -> false
+    }
+
 internal fun compactCommandHint(raw: String): String {
     val cleaned =
         raw
