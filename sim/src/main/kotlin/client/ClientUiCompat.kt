@@ -178,6 +178,30 @@ internal fun compactDeckTypeName(typeId: String, maxChars: Int): String {
     return if (compact.length <= maxChars) compact else compact.take(maxChars)
 }
 
+internal fun formatDeckCommandButtonStateSuffix(actionId: String, selected: List<EntitySnapshot>): String? {
+    val lead =
+        when {
+            actionId.startsWith("train:") || actionId == "cancelTrain" ->
+                selected.firstOrNull { it.supportsTraining == true || it.activeProductionType != null || it.productionQueueSize > 0 }
+            actionId.startsWith("research:") || actionId == "cancelResearch" ->
+                selected.firstOrNull { it.supportsResearch == true || it.activeResearchTech != null || it.researchQueueSize > 0 }
+            actionId == "rally" ->
+                selected.firstOrNull { it.supportsRally == true }
+            else -> selected.firstOrNull()
+        } ?: return null
+    return when {
+        actionId.startsWith("train:") && lead.activeProductionType == actionId.removePrefix("train:") && lead.activeProductionRemainingTicks > 0 ->
+            "${lead.activeProductionRemainingTicks}t"
+        actionId.startsWith("research:") && lead.activeResearchTech == actionId.removePrefix("research:") && lead.activeResearchRemainingTicks > 0 ->
+            "${lead.activeResearchRemainingTicks}t"
+        actionId == "cancelTrain" && lead.productionQueueSize > 0 -> "x${lead.productionQueueSize}"
+        actionId == "cancelResearch" && lead.researchQueueSize > 0 -> "x${lead.researchQueueSize}"
+        actionId == "cancelBuild" -> selected.count { it.underConstruction }.takeIf { it > 0 }?.let { "x$it" }
+        actionId == "rally" && lead.rallyX != null && lead.rallyY != null -> "set"
+        else -> null
+    }
+}
+
 internal fun compactCommandHint(raw: String): String {
     val cleaned =
         raw

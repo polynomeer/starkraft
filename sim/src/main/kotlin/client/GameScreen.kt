@@ -796,7 +796,7 @@ internal class GameScreen(
                     group.second.forEachIndexed { index, button ->
                         val activePulse = uiPulse()
                         val actor = makeButton(
-                            commandButtonLabel(button),
+                            commandButtonLabel(button, snapshot),
                             runtime.actionHint(button.actionId),
                             commandButtonStyle(button.actionId)
                         ) {
@@ -911,6 +911,7 @@ internal class GameScreen(
             append(snapshot?.entities?.size ?: -1)
             append('|')
             append(snapshot?.resourceNodes?.size ?: -1)
+            val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
             groupedButtons.forEach { (groupName, buttons) ->
                 append('|')
                 append(groupName)
@@ -923,6 +924,8 @@ internal class GameScreen(
                     append(runtime.isActionActive(button.actionId))
                     append(':')
                     append(commandPulseUntilMillis[button.actionId]?.let { it > System.currentTimeMillis() } == true)
+                    append(':')
+                    append(formatDeckCommandButtonStateSuffix(button.actionId, selected) ?: "-")
                 }
             }
         }
@@ -2574,10 +2577,22 @@ internal class GameScreen(
             else -> assets.subtleButtonStyle()
         }
 
-    private fun commandButtonLabel(button: ClientCommandButton): String {
+    private fun commandButtonLabel(button: ClientCommandButton, snapshot: ClientSnapshot?): String {
+        val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
         val baseLabel = formatDeckCommandButtonText(button.actionId, button.label)
         val hotkey = resolveCommandButtonHotkey(button.actionId)
-        return if (hotkey == null) baseLabel else "$baseLabel $hotkey"
+        val stateSuffix = formatDeckCommandButtonStateSuffix(button.actionId, selected)
+        return buildString {
+            append(baseLabel)
+            if (hotkey != null) {
+                append(' ')
+                append(hotkey)
+            }
+            if (stateSuffix != null) {
+                append(' ')
+                append(stateSuffix)
+            }
+        }
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {

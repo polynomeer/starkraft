@@ -22,6 +22,7 @@ import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.formatCommandButtonText
 import starkraft.sim.client.formatDeckCommandButtonText
+import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatQueueStatusLine
@@ -110,6 +111,58 @@ class GameScreenInputRulesTest {
         assertEquals("Tech Adv", formatDeckCommandButtonText("research:AdvancedTraining", "Research Advanced"))
         assertEquals("Stop T", formatDeckCommandButtonText("cancelTrain", "Cancel Train"))
         assertEquals("Rally", formatDeckCommandButtonText("rally", "Rally"))
+    }
+
+    @Test
+    fun `structure command labels expose active queue state`() {
+        val selected =
+            listOf(
+                EntitySnapshot(
+                    id = 7,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 4f,
+                    y = 5f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    footprintWidth = 2,
+                    footprintHeight = 2,
+                    supportsTraining = true,
+                    supportsResearch = true,
+                    supportsRally = true,
+                    productionQueueSize = 2,
+                    activeProductionType = "Marine",
+                    activeProductionRemainingTicks = 11,
+                    researchQueueSize = 1,
+                    activeResearchTech = "AdvancedTraining",
+                    activeResearchRemainingTicks = 7,
+                    rallyX = 12f,
+                    rallyY = 9f
+                ),
+                EntitySnapshot(
+                    id = 8,
+                    faction = 1,
+                    typeId = "Depot",
+                    archetype = "producer",
+                    x = 6f,
+                    y = 5f,
+                    dir = 0f,
+                    hp = 200,
+                    maxHp = 400,
+                    armor = 1,
+                    underConstruction = true
+                )
+            )
+
+        assertEquals("11t", formatDeckCommandButtonStateSuffix("train:Marine", selected))
+        assertEquals("7t", formatDeckCommandButtonStateSuffix("research:AdvancedTraining", selected))
+        assertEquals("x2", formatDeckCommandButtonStateSuffix("cancelTrain", selected))
+        assertEquals("x1", formatDeckCommandButtonStateSuffix("cancelResearch", selected))
+        assertEquals("x1", formatDeckCommandButtonStateSuffix("cancelBuild", selected))
+        assertEquals("set", formatDeckCommandButtonStateSuffix("rally", selected))
     }
 
     @Test
