@@ -164,6 +164,78 @@ internal fun formatSelectionPageLabel(selectedCount: Int, pageIndex: Int, pageCo
 internal fun formatControlGroupDeckLine(groups: List<Pair<Int, Int>>): String =
     if (groups.isEmpty()) "Groups idle" else groups.take(3).joinToString("  ") { (group, count) -> "$group:$count" }
 
+internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>): String {
+    if (selected.isEmpty()) return "No live selection"
+    val combat = selected.count { it.weaponId != null }
+    val workers = selected.count { it.archetype == "worker" }
+    val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
+    val trainers = selected.count { it.supportsTraining == true }
+    val researchers = selected.count { it.supportsResearch == true }
+    val rallyCapable = selected.count { it.supportsRally == true }
+    val rallyConfigured = selected.count { it.rallyX != null && it.rallyY != null }
+    return buildList {
+        add("${selected.size} sel")
+        add("c$combat")
+        add("w$workers")
+        add("s$structures")
+        if (trainers > 0) add("prod $trainers")
+        if (researchers > 0) add("tech $researchers")
+        if (rallyCapable > 0) add("rally $rallyConfigured/$rallyCapable")
+    }.joinToString(" · ")
+}
+
+internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): String {
+    if (selected.isEmpty()) return "No card"
+    if (selected.size == 1) {
+        val lead = selected.first()
+        val details =
+            buildList {
+                lead.archetype?.takeIf { it.isNotBlank() }?.let { add(it) }
+                if (lead.supportsTraining == true) add("train")
+                if (lead.supportsResearch == true) add("tech")
+                if (lead.supportsRally == true) {
+                    if (lead.rallyX != null && lead.rallyY != null) {
+                        add("rally ${lead.rallyX.toInt()},${lead.rallyY.toInt()}")
+                    } else {
+                        add("rally idle")
+                    }
+                }
+                lead.activeProductionType?.let {
+                    add("prod $it${if (lead.productionQueueSize > 0) " x${lead.productionQueueSize}" else ""}")
+                }
+                lead.activeResearchTech?.let {
+                    add("tech $it${if (lead.researchQueueSize > 0) " x${lead.researchQueueSize}" else ""}")
+                }
+                if (lead.underConstruction) {
+                    add("build ${lead.constructionRemainingTicks ?: 0}t")
+                }
+            }
+        return if (details.isEmpty()) {
+            "Ros ${lead.typeId}"
+        } else {
+            "${lead.typeId} · ${details.joinToString(" · ")}"
+        }
+    }
+    val counts =
+        selected
+            .groupingBy { it.typeId.ifBlank { "Unknown" } }
+            .eachCount()
+            .entries
+            .sortedByDescending { it.value }
+            .take(4)
+            .joinToString("   ") { "${it.key}:${it.value}" }
+    val activeProd = selected.count { it.activeProductionType != null || it.productionQueueSize > 0 }
+    val activeTech = selected.count { it.activeResearchTech != null || it.researchQueueSize > 0 }
+    val rallyConfigured = selected.count { it.rallyX != null && it.rallyY != null }
+    return buildString {
+        append("Ros ")
+        append(counts)
+        if (activeProd > 0) append("   prod:$activeProd")
+        if (activeTech > 0) append("   tech:$activeTech")
+        if (rallyConfigured > 0) append("   rally:$rallyConfigured")
+    }
+}
+
 internal fun resolveQueueHeaderLine(hasProduction: Boolean, hasResearch: Boolean, underConstruction: Boolean): String =
     when {
         hasProduction && hasResearch -> "PIPELINE"

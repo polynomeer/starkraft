@@ -983,18 +983,7 @@ internal class GameScreen(
     private fun buildSelectionRosterLine(): String {
         val snapshot = runtime.snapshot ?: return "No ros"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        if (selected.isEmpty()) {
-            return "No card"
-        }
-        val counts =
-            selected
-                .groupingBy { it.typeId ?: "Unknown" }
-                .eachCount()
-                .entries
-                .sortedByDescending { it.value }
-                .take(4)
-                .joinToString("   ") { "${it.key}:${it.value}" }
-        return "Ros $counts"
+        return formatSelectionRosterSummary(selected)
     }
 
     private fun buildFactionOverviewLine(): String {
@@ -1341,6 +1330,24 @@ internal class GameScreen(
                     add(StatusChip("${it}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
                 }
             }
+            if (lead.supportsRally == true) {
+                add(
+                    StatusChip(
+                        "RLY",
+                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.20f).also { it.a = 0.90f },
+                        assets.theme.colors.build.cpy().also { it.a = 0.90f }
+                    )
+                )
+                if (lead.rallyX != null && lead.rallyY != null) {
+                    add(
+                        StatusChip(
+                            "${lead.rallyX.toInt()}:${lead.rallyY.toInt()}",
+                            assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.16f).also { it.a = 0.88f },
+                            assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }
+                        )
+                    )
+                }
+            }
         }.take(6)
     }
 
@@ -1378,6 +1385,15 @@ internal class GameScreen(
                     }
                 )
             }
+            if (lead.supportsRally == true) {
+                add(
+                    if (lead.rallyX != null && lead.rallyY != null) {
+                        "Rally ${lead.rallyX.toInt()},${lead.rallyY.toInt()}"
+                    } else {
+                        "Rally idle"
+                    }
+                )
+            }
         }
         return if (parts.isEmpty()) "Idle" else parts.joinToString("  |  ")
     }
@@ -1391,6 +1407,7 @@ internal class GameScreen(
             lead.activeResearchTech != null || lead.researchQueueSize > 0 -> "RESEARCH"
             lead.activeProductionType != null || lead.productionQueueSize > 0 -> "PRODUCTION"
             lead.underConstruction -> "CONSTRUCT"
+            lead.supportsRally == true -> "RALLY"
             else -> "QUEUE"
         }
     }
@@ -1947,10 +1964,7 @@ internal class GameScreen(
             return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        val combat = selected.count { it.weaponId != null }
-        val workers = selected.count { it.archetype == "worker" }
-        val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
-        return "${selected.size} sel · c$combat · w$workers · s$structures"
+        return formatSelectionMetaSummary(selected)
     }
 
     private fun buildTopEconomyLine(): String {
