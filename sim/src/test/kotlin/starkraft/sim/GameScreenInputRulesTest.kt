@@ -25,6 +25,7 @@ import starkraft.sim.client.formatDeckCommandButtonText
 import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
+import starkraft.sim.client.formatFocusedEntityStatus
 import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
@@ -163,6 +164,41 @@ class GameScreenInputRulesTest {
         assertEquals("x1", formatDeckCommandButtonStateSuffix("cancelResearch", selected))
         assertEquals("x1", formatDeckCommandButtonStateSuffix("cancelBuild", selected))
         assertEquals("set", formatDeckCommandButtonStateSuffix("rally", selected))
+    }
+
+    @Test
+    fun `focused entity status summarizes live structure state`() {
+        val entity =
+            EntitySnapshot(
+                id = 7,
+                faction = 1,
+                typeId = "Depot",
+                archetype = "producer",
+                x = 4f,
+                y = 5f,
+                dir = 0f,
+                hp = 400,
+                maxHp = 400,
+                armor = 1,
+                underConstruction = true,
+                constructionRemainingTicks = 18,
+                productionQueueSize = 2,
+                activeProductionType = "Marine",
+                activeProductionRemainingTicks = 11,
+                researchQueueSize = 1,
+                activeResearchTech = "AdvancedTraining",
+                activeResearchRemainingTicks = 7,
+                activeOrder = "attackMove",
+                orderQueueSize = 3,
+                rallyX = 12f,
+                rallyY = 9f
+            )
+
+        assertEquals(
+            "build 18t · prod Marine 11t · tech Adv 7t · ord attackmo · q3 · rally set",
+            formatFocusedEntityStatus(entity)
+        )
+        assertEquals(null, formatFocusedEntityStatus(null))
     }
 
     @Test

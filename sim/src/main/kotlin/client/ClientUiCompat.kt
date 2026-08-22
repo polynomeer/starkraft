@@ -285,6 +285,34 @@ internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>): String 
     }.joinToString(" · ")
 }
 
+internal fun formatFocusedEntityStatus(entity: EntitySnapshot?): String? {
+    entity ?: return null
+    val details =
+        buildList {
+            if (entity.underConstruction) {
+                val remaining = entity.constructionRemainingTicks?.let { " ${it}t" } ?: ""
+                add("build$remaining")
+            }
+            if (entity.activeProductionType != null) {
+                val remaining = entity.activeProductionRemainingTicks.takeIf { it > 0 }?.let { " ${it}t" } ?: ""
+                add("prod ${compactDeckTypeName(entity.activeProductionType, 6)}$remaining")
+            } else if (entity.productionQueueSize > 0) {
+                add("prod q${entity.productionQueueSize}")
+            }
+            if (entity.activeResearchTech != null) {
+                val remaining = entity.activeResearchRemainingTicks.takeIf { it > 0 }?.let { " ${it}t" } ?: ""
+                add("tech ${compactDeckTypeName(entity.activeResearchTech, 6)}$remaining")
+            } else if (entity.researchQueueSize > 0) {
+                add("tech q${entity.researchQueueSize}")
+            }
+            entity.harvestPhase?.lowercase()?.takeIf { it.isNotBlank() }?.let { add("harv ${it.take(6)}") }
+            entity.activeOrder?.lowercase()?.takeIf { it.isNotBlank() }?.let { add("ord ${it.take(8)}") }
+            if (entity.orderQueueSize > 0) add("q${entity.orderQueueSize}")
+            if (entity.rallyX != null && entity.rallyY != null) add("rally set")
+        }
+    return details.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+}
+
 internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): String {
     if (selected.isEmpty()) return "No card"
     if (selected.size == 1) {

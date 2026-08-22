@@ -1996,7 +1996,10 @@ internal class GameScreen(
             return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
         }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        return formatSelectionMetaSummary(selected)
+        val focused = resolveFocusedEntity(snapshot, selected) ?: selected.firstOrNull()
+        val summary = formatSelectionMetaSummary(selected)
+        val detail = formatFocusedEntityStatus(focused)
+        return if (detail == null) summary else "$summary · $detail"
     }
 
     private fun buildTopEconomyLine(): String {
