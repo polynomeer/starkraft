@@ -1579,20 +1579,9 @@ internal class GameScreen(
         val impactKind = runtime.damageImpactKind(entity.id)
         val focusPulse = if (focused) uiPulse(900L) else 0f
         val clickPulse = slotClickPulse(entity.id)
-        val isWorker = (entity.typeId ?: "").contains("worker", ignoreCase = true)
-        val tone =
-            when {
-                entity.weaponId != null -> colors.panel.cpy().lerp(colors.command, 0.24f).also { it.a = 0.96f }
-                entity.footprintWidth != null -> colors.panel.cpy().lerp(colors.production, 0.24f).also { it.a = 0.96f }
-                else -> colors.panel.cpy().lerp(colors.build, 0.22f).also { it.a = 0.96f }
-            }
-        val badgeTone =
-            when {
-                entity.footprintWidth != null -> colors.production.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
-                isWorker -> colors.build.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
-                entity.weaponId != null -> colors.commandSoft.cpy().lerp(colors.panelStrong, 0.18f).also { it.a = 0.96f }
-                else -> colors.textMuted.cpy().lerp(colors.panelStrong, 0.20f).also { it.a = 0.96f }
-            }
+        val isWorker = isWorkerEntity(entity)
+        val tone = selectionSlotRoleTone(colors, entity)
+        val badgeTone = selectionSlotBadgeTone(colors, entity)
         val hpColor =
             when {
                 impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE ->
@@ -1610,9 +1599,9 @@ internal class GameScreen(
             background =
                 assets.panelDrawable(
                     if (focused) selectionFocusShellTone(focusPulse)
-                    else if (clickPulse > 0f) colors.panelStrong.cpy().lerp(colors.selection, 0.24f + (clickPulse * 0.10f)).also { it.a = 0.94f }
-                    else if (damaged) colors.panelStrong.cpy().lerp(colors.danger, 0.26f).also { it.a = 0.94f }
-                    else colors.panelAlt.cpy().also { it.a = 0.92f }
+                    else if (clickPulse > 0f) selectionSlotShellTone(colors, entity, damaged, clickPulse)
+                    else if (damaged) selectionSlotShellTone(colors, entity, damaged, 0f)
+                    else selectionSlotShellTone(colors, entity, damaged = false, clickPulse = 0f)
                 )
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             pad(1f)
@@ -1621,9 +1610,7 @@ internal class GameScreen(
                     background =
                         assets.panelDrawable(
                             if (focused) selectionFocusCardTone(focusPulse)
-                            else if (clickPulse > 0f) tone.cpy().lerp(colors.selectionSoft, clickPulse * 0.28f)
-                            else if (damaged) tone.cpy().lerp(Color.SCARLET, 0.28f)
-                            else tone
+                            else selectionSlotCardTone(colors, entity, damaged, clickPulse)
                         )
                     pad(if (focused) 2f else 1.5f)
                     add(
@@ -3118,6 +3105,59 @@ internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlo
         glyphScale = if (compact) 0.72f else 0.86f,
         markerSize = if (compact) 3.2f else 4.1f
     )
+}
+
+internal fun isWorkerEntity(entity: EntitySnapshot): Boolean =
+    (entity.typeId ?: "").contains("worker", ignoreCase = true) || entity.archetype.equals("worker", ignoreCase = true)
+
+internal fun selectionSlotRoleTone(colors: PresentationColorTokens, entity: EntitySnapshot): Color =
+    when {
+        entity.weaponId != null -> colors.panel.cpy().lerp(colors.command, 0.32f).also { it.a = 0.98f }
+        entity.footprintWidth != null || entity.footprintHeight != null -> colors.panel.cpy().lerp(colors.production, 0.32f).also { it.a = 0.98f }
+        isWorkerEntity(entity) -> colors.panel.cpy().lerp(colors.build, 0.28f).also { it.a = 0.98f }
+        else -> colors.panel.cpy().lerp(colors.textMuted, 0.24f).also { it.a = 0.98f }
+    }
+
+internal fun selectionSlotBadgeTone(colors: PresentationColorTokens, entity: EntitySnapshot): Color =
+    when {
+        entity.footprintWidth != null || entity.footprintHeight != null -> colors.production.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.98f }
+        isWorkerEntity(entity) -> colors.build.cpy().lerp(colors.textPrimary, 0.14f).also { it.a = 0.98f }
+        entity.weaponId != null -> colors.commandSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.98f }
+        else -> colors.textMuted.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.96f }
+    }
+
+internal fun selectionSlotShellTone(
+    colors: PresentationColorTokens,
+    entity: EntitySnapshot,
+    damaged: Boolean,
+    clickPulse: Float
+): Color {
+    val base =
+        when {
+            entity.weaponId != null -> colors.panelStrong.cpy().lerp(colors.command, 0.14f)
+            entity.footprintWidth != null || entity.footprintHeight != null -> colors.panelStrong.cpy().lerp(colors.production, 0.16f)
+            isWorkerEntity(entity) -> colors.panelStrong.cpy().lerp(colors.build, 0.14f)
+            else -> colors.panelStrong.cpy().lerp(colors.textMuted, 0.10f)
+        }
+    return when {
+        damaged -> base.lerp(colors.danger, 0.30f).also { it.a = 0.96f }
+        clickPulse > 0f -> base.lerp(colors.selection, 0.18f + (clickPulse * 0.12f)).also { it.a = 0.96f }
+        else -> base.also { it.a = 0.94f }
+    }
+}
+
+internal fun selectionSlotCardTone(
+    colors: PresentationColorTokens,
+    entity: EntitySnapshot,
+    damaged: Boolean,
+    clickPulse: Float
+): Color {
+    val base = selectionSlotRoleTone(colors, entity)
+    return when {
+        damaged -> base.lerp(colors.dangerSoft, 0.22f).also { it.a = 0.98f }
+        clickPulse > 0f -> base.lerp(colors.selectionSoft, 0.18f + (clickPulse * 0.14f)).also { it.a = 0.98f }
+        else -> base
+    }
 }
 
 internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight: Int): Int {

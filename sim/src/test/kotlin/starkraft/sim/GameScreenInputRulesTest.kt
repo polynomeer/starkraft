@@ -3,6 +3,7 @@ package starkraft.sim
 import com.badlogic.gdx.graphics.Color
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import com.badlogic.gdx.Input
@@ -60,6 +61,12 @@ import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.ClientCommandButton
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.defaultPresentationTheme
+import starkraft.sim.client.isWorkerEntity
+import starkraft.sim.client.selectionSlotBadgeTone
+import starkraft.sim.client.selectionSlotCardTone
+import starkraft.sim.client.selectionSlotRoleTone
+import starkraft.sim.client.selectionSlotShellTone
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -67,6 +74,72 @@ import starkraft.sim.client.shouldIssueSelectionBox
 import starkraft.sim.client.CameraView
 
 class GameScreenInputRulesTest {
+    @Test
+    fun `selection slot tones separate combat worker and structure roles`() {
+        val colors = defaultPresentationTheme().colors
+        val combat =
+            EntitySnapshot(
+                id = 1,
+                faction = 1,
+                typeId = "Marine",
+                archetype = "infantry",
+                x = 3f,
+                y = 4f,
+                dir = 0f,
+                hp = 40,
+                maxHp = 40,
+                armor = 0,
+                weaponId = "Rifle"
+            )
+        val worker =
+            EntitySnapshot(
+                id = 2,
+                faction = 1,
+                typeId = "Worker",
+                archetype = "worker",
+                x = 4f,
+                y = 4f,
+                dir = 0f,
+                hp = 35,
+                maxHp = 35,
+                armor = 0
+            )
+        val structure =
+            EntitySnapshot(
+                id = 3,
+                faction = 1,
+                typeId = "Depot",
+                archetype = "producer",
+                x = 5f,
+                y = 4f,
+                dir = 0f,
+                hp = 400,
+                maxHp = 400,
+                armor = 1,
+                footprintWidth = 2,
+                footprintHeight = 2
+            )
+
+        assertTrue(isWorkerEntity(worker))
+        assertFalse(isWorkerEntity(combat))
+
+        assertNotEquals(selectionSlotRoleTone(colors, combat), selectionSlotRoleTone(colors, worker))
+        assertNotEquals(selectionSlotRoleTone(colors, structure), selectionSlotRoleTone(colors, worker))
+        assertNotEquals(selectionSlotBadgeTone(colors, combat), selectionSlotBadgeTone(colors, structure))
+
+        val damagedShell = selectionSlotShellTone(colors, combat, damaged = true, clickPulse = 0f)
+        val activeShell = selectionSlotShellTone(colors, combat, damaged = false, clickPulse = 1f)
+        val idleShell = selectionSlotShellTone(colors, combat, damaged = false, clickPulse = 0f)
+        assertNotEquals(idleShell, damagedShell)
+        assertNotEquals(idleShell, activeShell)
+
+        val damagedCard = selectionSlotCardTone(colors, structure, damaged = true, clickPulse = 0f)
+        val activeCard = selectionSlotCardTone(colors, structure, damaged = false, clickPulse = 1f)
+        val idleCard = selectionSlotCardTone(colors, structure, damaged = false, clickPulse = 0f)
+        assertNotEquals(idleCard, damagedCard)
+        assertNotEquals(idleCard, activeCard)
+    }
+
     @Test
     fun `bottom hud layout scales down at supported resolutions`() {
         val compact = computeBottomHudLayout(1280, 720)
