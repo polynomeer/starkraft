@@ -318,7 +318,7 @@ class GameScreenInputRulesTest {
             formatSelectionHeadline(listOf(focused, other), focused, viewedFaction = 1, totalEntities = 14)
         )
         assertEquals(
-            "Depot · producer · prod Marine 11t · rally set",
+            "Depot · Producer · prod Marine 11t · rally set",
             formatSelectionHeadline(listOf(focused), focused, viewedFaction = 1, totalEntities = 14)
         )
         assertEquals(

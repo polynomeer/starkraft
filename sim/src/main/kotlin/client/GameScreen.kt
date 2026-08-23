@@ -145,9 +145,9 @@ internal class GameScreen(
         commandHintLabel.setWrap(false)
         commandHintLabel.setEllipsis(true)
         commandHintLabel.setAlignment(Align.left)
-        selectionMetaLabel.setFontScale(0.80f)
+        selectionMetaLabel.setFontScale(0.84f)
         factionOverviewLabel.setFontScale(0.84f)
-        selectionRosterLabel.setFontScale(0.82f)
+        selectionRosterLabel.setFontScale(0.84f)
         footerLabel.setFontScale(0.84f)
         centerFooterLabel.setFontScale(0.78f)
         selectionPageLabel.setFontScale(0.78f)
@@ -1699,12 +1699,7 @@ internal class GameScreen(
     }
 
     private fun buildSelectionSlotCode(entity: EntitySnapshot): String {
-        val type = (entity.typeId ?: "?").uppercase()
-        return when {
-            type.length <= 2 -> type
-            "_" in type -> type.split("_").mapNotNull { it.firstOrNull()?.toString() }.joinToString("").take(2)
-            else -> type.take(2)
-        }
+        return formatEntityBadgeCode(entity.typeId)
     }
 
     private fun buildSelectionSlotGlyph(entity: EntitySnapshot, badgeTone: Color, focused: Boolean, damaged: Boolean, layout: SelectionSlotVisualLayout): Table {

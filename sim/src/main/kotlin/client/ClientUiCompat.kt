@@ -293,17 +293,19 @@ internal fun formatControlGroupDeckLine(groups: List<Pair<Int, Int>>): String =
 internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>, includeCapabilities: Boolean = true): String {
     if (selected.isEmpty()) return "No live selection"
     val combat = selected.count { it.weaponId != null }
-    val workers = selected.count { it.archetype == "worker" }
+    val workers = selected.count { isWorkerEntity(it) }
     val structures = selected.count { it.footprintWidth != null && it.footprintHeight != null }
+    val support = (selected.size - combat - workers - structures).coerceAtLeast(0)
     val trainers = selected.count { it.supportsTraining == true }
     val researchers = selected.count { it.supportsResearch == true }
     val rallyCapable = selected.count { it.supportsRally == true }
     val rallyConfigured = selected.count { it.rallyX != null && it.rallyY != null }
     return buildList {
-        add("${selected.size} sel")
-        add("c$combat")
-        add("w$workers")
-        add("s$structures")
+        add("${selected.size} selected")
+        if (combat > 0) add("combat $combat")
+        if (workers > 0) add("workers $workers")
+        if (structures > 0) add("structures $structures")
+        if (support > 0) add("support $support")
         if (includeCapabilities) {
             if (trainers > 0) add("prod $trainers")
             if (researchers > 0) add("tech $researchers")
@@ -352,7 +354,7 @@ internal fun formatSelectionHeadline(
     }
     val lead = focused ?: selected.first()
     val type = lead.typeId.replace('_', ' ')
-    val role = lead.archetype?.replace('_', ' ')?.takeIf { it.isNotBlank() }
+    val role = lead.archetype?.replace('_', ' ')?.takeIf { it.isNotBlank() }?.let(::formatUiTitleCase)
     val status = formatFocusedEntityStatus(lead)
     return buildString {
         append(type)
@@ -369,6 +371,34 @@ internal fun formatSelectionHeadline(
         }
     }
 }
+
+internal fun formatEntityBadgeCode(typeId: String?, maxChars: Int = 3): String {
+    val normalized =
+        (typeId ?: "?")
+            .replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
+            .replace('_', ' ')
+            .trim()
+    if (normalized.isBlank()) return "?"
+    val words = normalized.split(Regex("\\s+")).filter { it.isNotBlank() }
+    val upper = normalized.uppercase().filter { it.isLetterOrDigit() }
+    if (upper.length <= maxChars) return upper
+    if (words.size > 1) {
+        return words.joinToString("") { it.first().uppercase() }.take(maxChars)
+    }
+    val head = upper.first().toString()
+    val consonants = upper.drop(1).filterNot { it in "AEIOU" }
+    val compact = (head + consonants).take(maxChars)
+    if (compact.length == maxChars) return compact
+    return (compact + upper.drop(compact.length)).take(maxChars)
+}
+
+internal fun formatUiTitleCase(raw: String): String =
+    raw
+        .split(' ')
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { token ->
+            token.lowercase().replaceFirstChar { char -> char.titlecase() }
+        }
 
 internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): String {
     if (selected.isEmpty()) return "No card"

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.formatEntityBadgeCode
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionRosterSummary
 import starkraft.sim.client.isCommandButtonQueued
@@ -48,8 +49,16 @@ class ClientUiCompatTest {
                 )
             )
 
-        assertEquals("2 sel · c1 · w0 · s1 · prod 1 · tech 1 · rally 1/1", formatSelectionMetaSummary(selected))
-        assertEquals("2 sel · c1 · w0 · s1", formatSelectionMetaSummary(selected, includeCapabilities = false))
+        assertEquals("2 selected · combat 1 · structures 1 · prod 1 · tech 1 · rally 1/1", formatSelectionMetaSummary(selected))
+        assertEquals("2 selected · combat 1 · structures 1", formatSelectionMetaSummary(selected, includeCapabilities = false))
+    }
+
+    @Test
+    fun `formats compact entity badge codes for roster slots`() {
+        assertEquals("MRN", formatEntityBadgeCode("Marine"))
+        assertEquals("WRK", formatEntityBadgeCode("Worker"))
+        assertEquals("RD", formatEntityBadgeCode("ResourceDepot"))
+        assertEquals("GD", formatEntityBadgeCode("Gas_Depot"))
     }
 
     @Test
