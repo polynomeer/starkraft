@@ -68,9 +68,16 @@ import starkraft.sim.client.selectionUnitRadius
 import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.ClientCommandButton
+import starkraft.sim.client.ClientGroundCommandMode
+import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.ResourceNodeSnapshot
+import starkraft.sim.client.ArmedPreviewKind
+import starkraft.sim.client.PreviewTargetRelation
 import starkraft.sim.client.defaultPresentationTheme
 import starkraft.sim.client.isWorkerEntity
+import starkraft.sim.client.resolveArmedPreviewKind
+import starkraft.sim.client.resolvePreviewTargetRelation
 import starkraft.sim.client.selectionSlotBadgeTone
 import starkraft.sim.client.selectionSlotCardTone
 import starkraft.sim.client.selectionSlotRoleTone
@@ -82,6 +89,85 @@ import starkraft.sim.client.shouldIssueSelectionBox
 import starkraft.sim.client.CameraView
 
 class GameScreenInputRulesTest {
+    @Test
+    fun `armed command preview resolves by active command mode`() {
+        assertEquals(ArmedPreviewKind.MOVE, resolveArmedPreviewKind(ClientGroundCommandMode.MOVE, null))
+        assertEquals(ArmedPreviewKind.ATTACK, resolveArmedPreviewKind(ClientGroundCommandMode.ATTACK_MOVE, null))
+        assertEquals(ArmedPreviewKind.PATROL, resolveArmedPreviewKind(ClientGroundCommandMode.PATROL, null))
+        assertEquals(ArmedPreviewKind.RALLY, resolveArmedPreviewKind(null, 17))
+        assertEquals(null, resolveArmedPreviewKind(null, null))
+    }
+
+    @Test
+    fun `preview target relation distinguishes friendly hostile and resource targets`() {
+        val snapshot =
+            ClientSnapshot(
+                tick = 10,
+                mapId = "test",
+                buildVersion = "dev",
+                mapWidth = 64,
+                mapHeight = 64,
+                factions = emptyList(),
+                entities =
+                    listOf(
+                        EntitySnapshot(
+                            id = 1,
+                            faction = 1,
+                            typeId = "Marine",
+                            archetype = "infantry",
+                            x = 5f,
+                            y = 5f,
+                            dir = 0f,
+                            hp = 40,
+                            maxHp = 40,
+                            armor = 0,
+                            weaponId = "Rifle"
+                        ),
+                        EntitySnapshot(
+                            id = 2,
+                            faction = 2,
+                            typeId = "Zergling",
+                            archetype = "melee",
+                            x = 8f,
+                            y = 8f,
+                            dir = 0f,
+                            hp = 35,
+                            maxHp = 35,
+                            armor = 0,
+                            weaponId = "Claw"
+                        )
+                    ),
+                resourceNodes =
+                    listOf(
+                        ResourceNodeSnapshot(
+                            id = 9,
+                            kind = "mineral",
+                            x = 11f,
+                            y = 11f,
+                            remaining = 250,
+                            yieldPerTick = 1
+                        )
+                    )
+            )
+
+        assertEquals(
+            PreviewTargetRelation.FRIENDLY,
+            resolvePreviewTargetRelation(snapshot, selectedIds = setOf(1), worldX = 5.1f, worldY = 5.1f)
+        )
+        assertEquals(
+            PreviewTargetRelation.HOSTILE,
+            resolvePreviewTargetRelation(snapshot, selectedIds = setOf(1), worldX = 8.1f, worldY = 8.1f)
+        )
+        assertEquals(
+            PreviewTargetRelation.RESOURCE,
+            resolvePreviewTargetRelation(snapshot, selectedIds = setOf(1), worldX = 11.1f, worldY = 11.1f)
+        )
+        assertEquals(
+            PreviewTargetRelation.NONE,
+            resolvePreviewTargetRelation(snapshot, selectedIds = setOf(1), worldX = 20f, worldY = 20f)
+        )
+    }
+
     @Test
     fun `overlay alpha helpers prioritize readability by event type`() {
         assertTrue(

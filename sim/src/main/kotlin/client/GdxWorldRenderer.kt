@@ -242,6 +242,7 @@ internal class GdxWorldRenderer(
         drawDeathRemains(shape, runtime)
         drawDeathBursts(shape, runtime)
         drawBuildPreview(shape, runtime)
+        drawArmedCommandPreview(shape, runtime)
         drawSelectionBox(shape, dragBox)
         shape.end()
 
@@ -1600,6 +1601,98 @@ internal class GdxWorldRenderer(
         }
     }
 
+    private fun drawArmedCommandPreview(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        if (runtime.buildModeTypeId != null) return
+        val snapshot = runtime.snapshot ?: return
+        val previewKind = resolveArmedPreviewKind(runtime.groundMode, runtime.rallyModeBuildingId) ?: return
+        val screenX = Gdx.input.x.toFloat()
+        val screenY = Gdx.input.y.toFloat()
+        val worldX = runtime.camera.screenToWorldX(screenX)
+        val worldY = runtime.camera.screenToWorldY(screenY)
+        val x = runtime.camera.worldToScreenX(worldX)
+        val y = runtime.camera.worldToScreenY(worldY)
+        if (!isOnScreen(x, y)) return
+        val relation =
+            resolvePreviewTargetRelation(
+                snapshot = snapshot,
+                selectedIds = runtime.session.state.selectedIds,
+                worldX = worldX,
+                worldY = worldY
+            )
+        val tone =
+            when {
+                previewKind == ArmedPreviewKind.ATTACK && relation == PreviewTargetRelation.FRIENDLY -> pingTone(GroundPingKind.INVALID)
+                previewKind == ArmedPreviewKind.ATTACK -> pingTone(GroundPingKind.ATTACK)
+                previewKind == ArmedPreviewKind.RALLY -> pingTone(GroundPingKind.BUILD)
+                else -> pingTone(GroundPingKind.MOVE)
+            }
+        val pulse = ambientPulse(840L)
+        shape.color = tone.cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.05f))
+        shape.circle(x, y, 11f + (pulse * 4f))
+        shape.color = tone.cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.06f))
+        shape.circle(x, y, 5f + (pulse * 2f))
+        when (previewKind) {
+            ArmedPreviewKind.MOVE -> {
+                shape.color = Color(0.76f, 1.00f, 0.84f, 0.94f)
+                shape.rect(x - 0.75f, y - 7f, 1.5f, 14f)
+                shape.rect(x - 7f, y - 0.75f, 14f, 1.5f)
+                shape.circle(x, y, 2f)
+            }
+            ArmedPreviewKind.ATTACK -> {
+                shape.color =
+                    if (relation == PreviewTargetRelation.FRIENDLY) {
+                        Color(1.00f, 0.76f, 0.76f, 0.98f)
+                    } else {
+                        Color(1.00f, 0.84f, 0.58f, 0.98f)
+                    }
+                shape.rectLine(x - 7f, y - 7f, x + 7f, y + 7f, 1.6f)
+                shape.rectLine(x - 7f, y + 7f, x + 7f, y - 7f, 1.6f)
+                shape.rect(x - 0.75f, y - 9f, 1.5f, 18f)
+                shape.rect(x - 9f, y - 0.75f, 18f, 1.5f)
+                shape.circle(x, y, 2.5f)
+            }
+            ArmedPreviewKind.PATROL -> {
+                shape.color = Color(0.72f, 0.96f, 0.88f, 0.96f)
+                shape.rectLine(x, y - 8f, x + 8f, y, 1.6f)
+                shape.rectLine(x + 8f, y, x, y + 8f, 1.6f)
+                shape.rectLine(x, y + 8f, x - 8f, y, 1.6f)
+                shape.rectLine(x - 8f, y, x, y - 8f, 1.6f)
+                shape.circle(x - 7f, y + 7f, 1.4f)
+                shape.circle(x + 7f, y - 7f, 1.4f)
+            }
+            ArmedPreviewKind.RALLY -> {
+                shape.color = Color(0.84f, 0.96f, 1.00f, 0.96f)
+                shape.rect(x - 7f, y - 7f, 14f, 14f)
+                shape.rect(x - 7f, y - 1f, 14f, 2f)
+                shape.rect(x - 1f, y - 7f, 2f, 14f)
+                shape.rect(x - 10f, y - 10f, 3f, 3f)
+                shape.rect(x + 7f, y - 10f, 3f, 3f)
+                shape.rect(x - 10f, y + 7f, 3f, 3f)
+                shape.rect(x + 7f, y + 7f, 3f, 3f)
+            }
+        }
+        val hoveredEntity =
+            nearestEntity(snapshot, worldX, worldY) {
+                distance(it.x, it.y, worldX, worldY) <= 0.8f
+            }
+        if (hoveredEntity != null && (previewKind == ArmedPreviewKind.ATTACK || previewKind == ArmedPreviewKind.RALLY)) {
+            val hoveredX = runtime.camera.worldToScreenX(hoveredEntity.x)
+            val hoveredY = runtime.camera.worldToScreenY(hoveredEntity.y)
+            val markerColor =
+                when {
+                    previewKind == ArmedPreviewKind.ATTACK && relation == PreviewTargetRelation.FRIENDLY -> Color(1.00f, 0.74f, 0.74f, 0.90f)
+                    previewKind == ArmedPreviewKind.ATTACK -> Color(1.00f, 0.90f, 0.64f, 0.92f)
+                    else -> Color(0.84f, 0.96f, 1.00f, 0.90f)
+                }
+            val hoveredRadius = selectionUnitRadius(runtime.camera.tileSize) + 3f
+            shape.color = markerColor.cpy().apply { a = markerColor.a * 0.34f }
+            shape.circle(hoveredX, hoveredY, hoveredRadius + 2f + (pulse * 1.5f))
+            shape.color = markerColor
+            shape.rect(hoveredX - hoveredRadius, hoveredY - 1f, hoveredRadius * 2f, 2f)
+            shape.rect(hoveredX - 1f, hoveredY - hoveredRadius, 2f, hoveredRadius * 2f)
+        }
+    }
+
     private fun drawGroundPing(shape: ShapeRenderer, runtime: GdxClientRuntime) {
         val ping = runtime.currentGroundPing() ?: return
         val x = runtime.camera.worldToScreenX(ping.worldX)
@@ -2578,6 +2671,20 @@ internal enum class MiniMapMarkerKind {
     SUPPORT
 }
 
+internal enum class ArmedPreviewKind {
+    MOVE,
+    ATTACK,
+    PATROL,
+    RALLY
+}
+
+internal enum class PreviewTargetRelation {
+    NONE,
+    FRIENDLY,
+    HOSTILE,
+    RESOURCE
+}
+
 internal fun gdxMiniMapBounds(screenWidth: Int, screenHeight: Int): GdxMiniMapBounds =
     GdxMiniMapBounds(
         left = 16f,
@@ -2593,6 +2700,41 @@ internal fun resolveMiniMapMarkerKind(entity: EntitySnapshot): MiniMapMarkerKind
         entity.weaponId != null -> MiniMapMarkerKind.COMBAT
         else -> MiniMapMarkerKind.SUPPORT
     }
+
+internal fun resolveArmedPreviewKind(
+    groundMode: ClientGroundCommandMode?,
+    rallyModeBuildingId: Int?
+): ArmedPreviewKind? =
+    when {
+        rallyModeBuildingId != null -> ArmedPreviewKind.RALLY
+        groundMode == ClientGroundCommandMode.MOVE -> ArmedPreviewKind.MOVE
+        groundMode == ClientGroundCommandMode.ATTACK_MOVE -> ArmedPreviewKind.ATTACK
+        groundMode == ClientGroundCommandMode.PATROL -> ArmedPreviewKind.PATROL
+        else -> null
+    }
+
+internal fun resolvePreviewTargetRelation(
+    snapshot: ClientSnapshot,
+    selectedIds: Set<Int>,
+    worldX: Float,
+    worldY: Float
+): PreviewTargetRelation {
+    val controlledFaction = selectedIds.asSequence().mapNotNull { id -> snapshot.entities.firstOrNull { it.id == id }?.faction }.firstOrNull()
+    val hoveredEntity = nearestEntity(snapshot, worldX, worldY) { distance(it.x, it.y, worldX, worldY) <= 0.8f }
+    if (hoveredEntity != null) {
+        return if (controlledFaction != null && hoveredEntity.faction == controlledFaction) {
+            PreviewTargetRelation.FRIENDLY
+        } else {
+            PreviewTargetRelation.HOSTILE
+        }
+    }
+    val hoveredNode = nearestResourceNode(snapshot, worldX, worldY)
+    return if (hoveredNode != null && distance(hoveredNode.x, hoveredNode.y, worldX, worldY) <= 0.8f) {
+        PreviewTargetRelation.RESOURCE
+    } else {
+        PreviewTargetRelation.NONE
+    }
+}
 
 internal fun resolveMiniMapMarkerSize(entity: EntitySnapshot, selected: Boolean): Float =
     when (resolveMiniMapMarkerKind(entity)) {
