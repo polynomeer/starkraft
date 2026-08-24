@@ -285,18 +285,7 @@ internal class GdxWorldRenderer(
             for (y in visibleRange.startY until visibleRange.endYExclusive) {
                 val sx = runtime.camera.worldToScreenX(x.toFloat())
                 val sy = runtime.camera.worldToScreenY(y.toFloat())
-                val macroPatch = ((x / 10) + (y / 8)) % 3
-                val ridgeBand = ((x * 3) + (y * 2)) % 17
-                val terrainDrift = ((x / 14) - (y / 11)) % 4
-                val base =
-                    when {
-                        x in 40..56 && y in 40..56 -> terrainDust
-                        ridgeBand < 3 -> terrainRidge
-                        macroPatch == 0 -> terrainA
-                        macroPatch == 1 && terrainDrift != 0 -> terrainB
-                        terrainDrift == 0 -> scratchColorA.set(terrainA).lerp(terrainDust, 0.18f)
-                        else -> terrainB
-                    }
+                val base = resolveTerrainTileColor(x, y, terrainA, terrainB, terrainDust, terrainRidge)
                 shape.color = base
                 shape.rect(sx, sy, tileSize, tileSize)
                 if (renderDetail) {
@@ -315,6 +304,17 @@ internal class GdxWorldRenderer(
                     if ((x + y) % 5 == 0) {
                         shape.color = scratchColorA.set(base).lerp(Color.WHITE, 0.14f).also { it.a = 0.18f }
                         shape.rect(sx + 2f, sy + 2f, 2f, 2f)
+                    }
+                    if (((x / 4) + (y / 3)) % 5 == 0) {
+                        shape.color = scratchColorA.set(base).lerp(Color.BLACK, 0.10f).also { it.a = 0.12f }
+                        shape.rect(sx + (tileSize * 0.18f), sy + (tileSize * 0.18f), tileSize * 0.20f, tileSize * 0.20f)
+                        shape.rect(sx + (tileSize * 0.64f), sy + (tileSize * 0.56f), tileSize * 0.16f, tileSize * 0.16f)
+                    }
+                    if (x in 40..56 && y in 40..56) {
+                        shape.color = scratchColorA.set(base).lerp(Color.WHITE, 0.10f).also { it.a = 0.16f }
+                        shape.rect(sx + (tileSize * 0.12f), sy + (tileSize * 0.58f), tileSize * 0.28f, tileSize * 0.10f)
+                        shape.color = scratchColorA.set(base).lerp(Color.BLACK, 0.12f).also { it.a = 0.16f }
+                        shape.rect(sx + (tileSize * 0.56f), sy + (tileSize * 0.18f), tileSize * 0.22f, tileSize * 0.10f)
                     }
                 }
             }
@@ -388,27 +388,38 @@ internal class GdxWorldRenderer(
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
+                val coreRadius = resourceCoreRadius(node.kind)
                 shape.color = gasNodeShadowColor
-                shape.circle(sx + 1.5f, sy + 1.5f, 10f)
+                shape.circle(sx + 1.5f, sy + 1.5f, coreRadius + 1f)
                 shape.color = scratchColorA.set(gasNodeAuraColor).also { it.a = 0.12f + (pulse * 0.10f) }
-                shape.circle(sx, sy, 12f + (pulse * 2f))
+                shape.circle(sx, sy, coreRadius + 3f + (pulse * 2f))
                 shape.color = gasNodeCoreColor
-                shape.circle(sx, sy, 9f)
+                shape.circle(sx, sy, coreRadius)
+                shape.color = scratchColorA.set(gasNodeCoreColor).lerp(Color.WHITE, 0.16f).also { it.a = 0.84f }
+                shape.circle(sx, sy - 1.5f, coreRadius * 0.54f)
                 shape.color = gasNodeSparkColor
-                shape.circle(sx - 2f, sy - 2f, 4f)
-                shape.rect(sx - 2.5f, sy - 9f, 5f, 4f)
+                shape.circle(sx - 2f, sy - 2f, coreRadius * 0.44f)
+                shape.rect(sx - 2.5f, sy - (coreRadius + 0.5f), 5f, 4f)
+                shape.color = scratchColorA.set(gasNodeSparkColor).also { it.a = 0.22f + (pulse * 0.08f) }
+                shape.rectLine(sx - 5f, sy + 5f, sx + 4f, sy - 4f, 1.2f)
+                shape.rectLine(sx - 4f, sy - 5f, sx + 5f, sy + 4f, 1.2f)
             } else {
                 shape.color = mineralNodeShadowColor
-                shape.circle(sx + 1.5f, sy + 1.5f, 9f)
+                shape.circle(sx + 1.5f, sy + 1.5f, resourceCoreRadius(node.kind) + 1f)
                 shape.color = neutralColor
                 shape.rect(sx - 7f, sy - 5f, 6f, 5f)
                 shape.rect(sx - 1f, sy - 8f, 7f, 6f)
                 shape.rect(sx - 6f, sy + 1f, 8f, 5f)
+                shape.color = scratchColorA.set(neutralColor).lerp(Color.WHITE, 0.20f).also { it.a = 0.78f }
+                shape.rect(sx - 6f, sy - 5f, 4f, 2f)
+                shape.rect(sx + 1f, sy - 8f, 4f, 2f)
+                shape.rect(sx - 5f, sy + 1f, 5f, 2f)
                 shape.color = scratchColorA.set(mineralNodeGlowColor).also { it.a = 0.12f + (pulse * 0.12f) }
                 shape.rect(sx - 5f, sy - 4f, 3f, 2f)
                 shape.rect(sx, sy - 6f, 3f, 2f)
                 shape.color = scratchColorA.set(mineralNodeSparkColor).also { it.a = 0.16f + (pulse * 0.12f) }
                 shape.rect(sx - 2f, sy + 2f, 4f, 2f)
+                shape.rectLine(sx - 6f, sy + 1f, sx + 5f, sy - 7f, 1.2f)
             }
         }
     }
@@ -2777,6 +2788,30 @@ internal fun resolveMiniMapMarkerSize(entity: EntitySnapshot, selected: Boolean)
         MiniMapMarkerKind.WORKER -> if (selected) 5f else 4f
         MiniMapMarkerKind.SUPPORT -> if (selected) 4.75f else 4f
     }
+
+internal fun resolveTerrainTileColor(
+    x: Int,
+    y: Int,
+    terrainA: Color,
+    terrainB: Color,
+    terrainDust: Color,
+    terrainRidge: Color
+): Color {
+    val macroPatch = ((x / 10) + (y / 8)) % 3
+    val ridgeBand = ((x * 3) + (y * 2)) % 17
+    val terrainDrift = ((x / 14) - (y / 11)) % 4
+    return when {
+        x in 40..56 && y in 40..56 -> terrainDust.cpy()
+        ridgeBand < 3 -> terrainRidge.cpy()
+        macroPatch == 0 -> terrainA.cpy()
+        macroPatch == 1 && terrainDrift != 0 -> terrainB.cpy()
+        terrainDrift == 0 -> terrainA.cpy().lerp(terrainDust, 0.18f)
+        else -> terrainB.cpy()
+    }
+}
+
+internal fun resourceCoreRadius(kind: String): Float =
+    if (kind.equals("gas", ignoreCase = true)) 9f else 8f
 
 internal fun overlayDamageFlashAlpha(selected: Boolean, kind: CombatSoundKind?): Float =
     when (kind) {

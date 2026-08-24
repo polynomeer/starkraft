@@ -47,10 +47,12 @@ import starkraft.sim.client.MiniMapMarkerKind
 import starkraft.sim.client.resolveMiniMapMarkerKind
 import starkraft.sim.client.resolveMiniMapMarkerSize
 import starkraft.sim.client.resolveMiniMapSampleStep
+import starkraft.sim.client.resolveTerrainTileColor
 import starkraft.sim.client.resolveCommandDeckGroups
 import starkraft.sim.client.resolveCommandDeckHeader
 import starkraft.sim.client.resolveCommandButtonDisabledReason
 import starkraft.sim.client.resolveResourceCoreColor
+import starkraft.sim.client.resourceCoreRadius
 import starkraft.sim.client.resolveResourceGlowColor
 import starkraft.sim.client.resolveFallbackTeamTintStrength
 import starkraft.sim.client.resolveSilhouetteBodyColor
@@ -194,6 +196,24 @@ class GameScreenInputRulesTest {
         assertEquals(20f, deathBurstCoreRadius(12f / 14f, structure = true))
         assertEquals(11f, deathBurstOuterRadius(0f, structure = false))
         assertEquals(44f, deathBurstOuterRadius(1f, structure = true))
+    }
+
+    @Test
+    fun `terrain and resource helpers preserve biome identity`() {
+        val a = Color(0.10f, 0.20f, 0.30f, 1f)
+        val b = Color(0.20f, 0.30f, 0.40f, 1f)
+        val dust = Color(0.30f, 0.24f, 0.18f, 1f)
+        val ridge = Color(0.18f, 0.18f, 0.20f, 1f)
+
+        val dustTile = resolveTerrainTileColor(44, 44, a, b, dust, ridge)
+        val ridgeTile = resolveTerrainTileColor(0, 0, a, b, dust, ridge)
+        val patchTile = resolveTerrainTileColor(10, 8, a, b, dust, ridge)
+
+        assertEquals(dust, dustTile)
+        assertEquals(ridge, ridgeTile)
+        assertTrue(patchTile != dust, "non-dust tiles should not collapse to dust biome")
+        assertEquals(9f, resourceCoreRadius("gas"))
+        assertEquals(8f, resourceCoreRadius("mineral"))
     }
 
     @Test
