@@ -36,9 +36,9 @@ internal class GdxWorldRenderer(
             else -> colors.textSecondary.cpy().also { it.a = 0.92f }
         }
 
-    private fun damageFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.14f
+    private fun damageFlashAlpha(selected: Boolean, kind: CombatSoundKind?): Float = overlayDamageFlashAlpha(selected, kind)
 
-    private fun completionFlashAlpha(selected: Boolean): Float = if (selected) 0.10f else 0.12f
+    private fun completionFlashAlpha(selected: Boolean, kind: CompletionFlashKind?): Float = overlayCompletionFlashAlpha(selected, kind)
     private val fogColor = colors.fog.cpy()
     private val shroudColor = colors.shroud.cpy()
     private val minimapFogColor = colors.fog.cpy().also { it.a = 0.14f }
@@ -438,7 +438,7 @@ internal class GdxWorldRenderer(
                 shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
                 if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
-                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
+                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected, runtime.damageImpactKind(entity.id)))
                     shape.rect(left - 8f, top - 8f, w + 16f, h + 16f)
                     shape.color = flashColor
                     shape.rect(left - 5f, top - 5f, w + 10f, h + 10f)
@@ -446,7 +446,7 @@ internal class GdxWorldRenderer(
                 if (runtime.isCompletionFlashActive(entity.id)) {
                     val completionColor = completionFlashColor(runtime, entity.id)
                     val sparkColor = completionSparkColor(runtime, entity.id)
-                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
+                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected, runtime.completionFlashKind(entity.id)) }
                     shape.rect(left - 9f, top - 9f, w + 18f, h + 18f)
                     shape.color = completionColor
                     when (runtime.completionFlashKind(entity.id)) {
@@ -490,7 +490,7 @@ internal class GdxWorldRenderer(
                 if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
                     val sparkColor = impactSparkForEntity(runtime, entity.id)
-                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected))
+                    shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected, runtime.damageImpactKind(entity.id)))
                     shape.circle(screenX, screenY, if (selected) 16f else 14f)
                     shape.color = flashColor
                     shape.circle(screenX, screenY, if (selected) 13.5f else 12f)
@@ -501,7 +501,7 @@ internal class GdxWorldRenderer(
                 if (runtime.isCompletionFlashActive(entity.id)) {
                     val completionColor = completionFlashColor(runtime, entity.id)
                     val sparkColor = completionSparkColor(runtime, entity.id)
-                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected) }
+                    shape.color = completionColor.cpy().apply { a = completionFlashAlpha(selected, runtime.completionFlashKind(entity.id)) }
                     shape.circle(screenX, screenY, if (selected) 17f else 15f)
                     shape.color = completionColor
                     when (runtime.completionFlashKind(entity.id)) {
@@ -1674,11 +1674,13 @@ internal class GdxWorldRenderer(
         val pulse = runtime.currentSelectionClickPulse() ?: return
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
-        drawConfirmPulse(shape, x, y, scale = 0.82f, periodMillis = 720L, alphaScale = 0.72f)
+        drawConfirmPulse(shape, x, y, scale = 0.92f, periodMillis = 720L, alphaScale = 0.86f)
     }
 
     private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long, alphaScale: Float = 1f) {
         val phase = ambientPulse(periodMillis)
+        shape.color = Color(0.58f, 0.98f, 0.70f, (0.07f + (phase * 0.05f)) * alphaScale)
+        shape.circle(x, y, (13f + (phase * 6f)) * scale)
         shape.color = Color(0.66f, 1.00f, 0.74f, (0.10f + (phase * 0.06f)) * alphaScale)
         shape.circle(x, y, (9f + (phase * 4f)) * scale)
         shape.color = Color(0.74f, 1.00f, 0.82f, (0.18f + (phase * 0.06f)) * alphaScale)
@@ -1686,6 +1688,9 @@ internal class GdxWorldRenderer(
         shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f * alphaScale)
         shape.rect(x - (0.75f * scale), y - (4.5f * scale), 1.5f * scale, 9f * scale)
         shape.rect(x - (4.5f * scale), y - (0.75f * scale), 9f * scale, 1.5f * scale)
+        shape.color = Color(0.90f, 1.00f, 0.94f, 0.54f * alphaScale)
+        shape.rect(x - (8f * scale), y - (0.5f * scale), 16f * scale, 1f * scale)
+        shape.rect(x - (0.5f * scale), y - (8f * scale), 1f * scale, 16f * scale)
         shape.circle(x, y, 1.7f * scale)
     }
 
@@ -1697,14 +1702,24 @@ internal class GdxWorldRenderer(
         val height = abs(dragBox.currentY - dragBox.startY)
         val right = minX + width
         val bottom = minY + height
-        val corner = minOf(14f, width * 0.28f, height * 0.28f)
+        val corner = selectionBoxCorner(width, height)
         val pulse = ambientPulse(1200L)
 
-        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.10f + (pulse * 0.05f) }
+        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.12f + (pulse * 0.05f) }
+        shape.rect(minX, minY, width, height)
+        shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.05f + (pulse * 0.03f) }
+        shape.rect(minX + 2f, minY + 2f, (width - 4f).coerceAtLeast(0f), (height - 4f).coerceAtLeast(0f))
+        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.18f + (pulse * 0.05f) }
         shape.line(minX, minY, right, minY)
         shape.line(minX, bottom, right, bottom)
         shape.line(minX, minY, minX, bottom)
         shape.line(right, minY, right, bottom)
+
+        shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.30f + (pulse * 0.08f) }
+        shape.line(minX - 2f, minY - 2f, right + 2f, minY - 2f)
+        shape.line(minX - 2f, bottom + 2f, right + 2f, bottom + 2f)
+        shape.line(minX - 2f, minY - 2f, minX - 2f, bottom + 2f)
+        shape.line(right + 2f, minY - 2f, right + 2f, bottom + 2f)
 
         shape.color = selectionBoxFrameColor
         shape.line(minX, minY, minX + corner, minY)
@@ -1719,6 +1734,13 @@ internal class GdxWorldRenderer(
         shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.34f + (pulse * 0.10f) }
         shape.rect(minX + (width * 0.24f), minY - 0.75f, width * 0.52f, 1.2f)
         shape.rect(minX + (width * 0.24f), bottom - 0.45f, width * 0.52f, 1.2f)
+        val centerX = minX + (width * 0.5f)
+        val centerY = minY + (height * 0.5f)
+        shape.color = scratchColorA.set(selectionColor).also { it.a = 0.42f + (pulse * 0.10f) }
+        shape.rect(centerX - 6f, minY - 1f, 12f, 2f)
+        shape.rect(centerX - 6f, bottom - 1f, 12f, 2f)
+        shape.rect(minX - 1f, centerY - 6f, 2f, 12f)
+        shape.rect(right - 1f, centerY - 6f, 2f, 12f)
     }
 
     private fun drawDeathBursts(shape: ShapeRenderer, runtime: GdxClientRuntime) {
@@ -2540,6 +2562,26 @@ internal fun resolveMiniMapMarkerSize(entity: EntitySnapshot, selected: Boolean)
         MiniMapMarkerKind.WORKER -> if (selected) 5f else 4f
         MiniMapMarkerKind.SUPPORT -> if (selected) 4.75f else 4f
     }
+
+internal fun overlayDamageFlashAlpha(selected: Boolean, kind: CombatSoundKind?): Float =
+    when (kind) {
+        CombatSoundKind.MELEE,
+        CombatSoundKind.ZERGLING_MELEE -> if (selected) 0.12f else 0.18f
+        CombatSoundKind.MARINE_RANGED,
+        CombatSoundKind.RANGED,
+        null -> if (selected) 0.10f else 0.15f
+    }
+
+internal fun overlayCompletionFlashAlpha(selected: Boolean, kind: CompletionFlashKind?): Float =
+    when (kind) {
+        CompletionFlashKind.CONSTRUCTION -> if (selected) 0.13f else 0.19f
+        CompletionFlashKind.PRODUCTION -> if (selected) 0.12f else 0.17f
+        CompletionFlashKind.RESEARCH,
+        null -> if (selected) 0.11f else 0.16f
+    }
+
+internal fun selectionBoxCorner(width: Float, height: Float): Float =
+    minOf(18f, width * 0.24f, height * 0.24f).coerceAtLeast(6f)
 
 internal fun gdxMiniMapWorldPosition(
     screenX: Float,

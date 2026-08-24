@@ -57,6 +57,11 @@ import starkraft.sim.client.resolveSilhouetteBodyColor
 import starkraft.sim.client.resolveSilhouetteStripeColor
 import starkraft.sim.client.resolveSilhouetteTrimColor
 import starkraft.sim.client.resolveStructureRoofColor
+import starkraft.sim.client.overlayCompletionFlashAlpha
+import starkraft.sim.client.overlayDamageFlashAlpha
+import starkraft.sim.client.CombatSoundKind
+import starkraft.sim.client.CompletionFlashKind
+import starkraft.sim.client.selectionBoxCorner
 import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.ClientCommandButton
@@ -74,6 +79,28 @@ import starkraft.sim.client.shouldIssueSelectionBox
 import starkraft.sim.client.CameraView
 
 class GameScreenInputRulesTest {
+    @Test
+    fun `overlay alpha helpers prioritize readability by event type`() {
+        assertTrue(
+            overlayDamageFlashAlpha(selected = false, kind = CombatSoundKind.MELEE) >
+                overlayDamageFlashAlpha(selected = false, kind = CombatSoundKind.RANGED)
+        )
+        assertTrue(
+            overlayDamageFlashAlpha(selected = false, kind = CombatSoundKind.RANGED) >
+                overlayDamageFlashAlpha(selected = true, kind = CombatSoundKind.RANGED)
+        )
+        assertTrue(
+            overlayCompletionFlashAlpha(selected = false, kind = CompletionFlashKind.CONSTRUCTION) >
+                overlayCompletionFlashAlpha(selected = false, kind = CompletionFlashKind.PRODUCTION)
+        )
+        assertTrue(
+            overlayCompletionFlashAlpha(selected = false, kind = CompletionFlashKind.PRODUCTION) >
+                overlayCompletionFlashAlpha(selected = true, kind = CompletionFlashKind.PRODUCTION)
+        )
+        assertEquals(6f, selectionBoxCorner(8f, 10f))
+        assertEquals(18f, selectionBoxCorner(300f, 220f))
+    }
+
     @Test
     fun `selection slot tones separate combat worker and structure roles`() {
         val colors = defaultPresentationTheme().colors
