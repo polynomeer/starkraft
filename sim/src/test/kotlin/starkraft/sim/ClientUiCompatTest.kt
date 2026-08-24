@@ -8,8 +8,12 @@ import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.formatDeckCommandCaption
 import starkraft.sim.client.formatEntityBadgeCode
 import starkraft.sim.client.formatGroundPingBanner
+import starkraft.sim.client.formatOverlayReadyBanner
+import starkraft.sim.client.formatOverlayHintLine
+import starkraft.sim.client.formatCenterFooterInstruction
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionRosterSummary
+import starkraft.sim.client.ClientGroundCommandMode
 import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.isCommandButtonQueued
 
@@ -78,6 +82,18 @@ class ClientUiCompatTest {
         assertEquals("Attack ordered", formatGroundPingBanner(GroundPingKind.ATTACK, queued = false))
         assertEquals("Build queued", formatGroundPingBanner(GroundPingKind.BUILD, queued = true))
         assertEquals("Command rejected", formatGroundPingBanner(GroundPingKind.INVALID, queued = false))
+    }
+
+    @Test
+    fun `formats armed overlay copy consistently across banner hint and footer`() {
+        assertEquals("Move target ready", formatOverlayReadyBanner(null, null, ClientGroundCommandMode.MOVE))
+        assertEquals("Attack target ready", formatOverlayReadyBanner(null, null, ClientGroundCommandMode.ATTACK_MOVE))
+        assertEquals("Set rally point", formatOverlayReadyBanner(null, 7, null))
+        assertEquals("Pick move point", formatOverlayHintLine(null, null, null, ClientGroundCommandMode.MOVE, hasSelection = true))
+        assertEquals("Pick attack target", formatOverlayHintLine(null, null, null, ClientGroundCommandMode.ATTACK_MOVE, hasSelection = true))
+        assertEquals("Place footprint", formatOverlayHintLine(null, "Depot", null, null, hasSelection = true))
+        assertEquals("LMB/RMB attack  Shift queue  Esc cancel", formatCenterFooterInstruction(null, null, ClientGroundCommandMode.ATTACK_MOVE, hasSelection = true))
+        assertEquals("LMB/RMB place  Shift queue  Esc cancel", formatCenterFooterInstruction("Depot", null, null, hasSelection = true))
     }
 
     @Test

@@ -1340,13 +1340,12 @@ internal class GameScreen(
         }
 
     private fun buildCenterFooterLine(): String =
-        when {
-            runtime.buildModeTypeId != null -> "LMB/RMB place  Esc cancel"
-            runtime.rallyModeBuildingId != null -> "LMB/RMB rally  Esc cancel"
-            runtime.groundMode != null -> "LMB/RMB confirm  Shift queue  Esc cancel"
-            runtime.session.state.selectedIds.isNotEmpty() -> "Home center  Esc clear  Shift add/queue"
-            else -> "Drag select  RMB order  MMB pan"
-        }
+        formatCenterFooterInstruction(
+            buildModeTypeId = runtime.buildModeTypeId,
+            rallyModeBuildingId = runtime.rallyModeBuildingId,
+            groundMode = runtime.groundMode,
+            hasSelection = runtime.session.state.selectedIds.isNotEmpty()
+        )
 
     private fun rebuildQueueStatusStrip() {
         queueStatusStrip.clearChildren()
@@ -2069,14 +2068,11 @@ internal class GameScreen(
     private fun buildActionBannerLine(): String {
         runtime.noticeLine()?.removePrefix("notice: ")?.let(::compactNotice)?.let { return it }
         runtime.currentGroundPing()?.let { return formatGroundPingBanner(it.kind, it.queued) }
-        val selectionCount = runtime.session.state.selectedIds.size
-        return when {
-            runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}"
-            runtime.rallyModeBuildingId != null -> "Set rally point"
-            runtime.groundMode != null -> "${runtime.overlayModeLabel().uppercase()} ready"
-            selectionCount > 0 -> ""
-            else -> ""
-        }
+        return formatOverlayReadyBanner(
+            buildModeTypeId = runtime.buildModeTypeId,
+            rallyModeBuildingId = runtime.rallyModeBuildingId,
+            groundMode = runtime.groundMode
+        )
     }
 
     private fun buildAttackWarningText(): String =
@@ -2087,14 +2083,13 @@ internal class GameScreen(
         }
 
     private fun buildCommandHintLine(): String =
-        runtime.hoverHintLine()?.let(::compactHint)
-            ?: when {
-                runtime.buildModeTypeId != null -> "Build armed"
-                runtime.rallyModeBuildingId != null -> "Rally armed"
-                runtime.groundMode != null -> "Order armed"
-                runtime.session.state.selectedIds.isNotEmpty() -> "Cmd ready"
-                else -> "Select to unlock orders"
-            }
+        formatOverlayHintLine(
+            hoverHint = runtime.hoverHintLine(),
+            buildModeTypeId = runtime.buildModeTypeId,
+            rallyModeBuildingId = runtime.rallyModeBuildingId,
+            groundMode = runtime.groundMode,
+            hasSelection = runtime.session.state.selectedIds.isNotEmpty()
+        )
 
     private fun currentActionBannerTone(): Color =
         with(assets.theme.colors) {

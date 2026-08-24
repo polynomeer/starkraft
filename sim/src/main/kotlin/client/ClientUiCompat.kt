@@ -228,6 +228,54 @@ internal fun formatGroundPingBanner(kind: GroundPingKind, queued: Boolean): Stri
         GroundPingKind.INVALID -> "Command rejected"
     }
 
+internal fun formatOverlayReadyBanner(
+    buildModeTypeId: String?,
+    rallyModeBuildingId: Int?,
+    groundMode: ClientGroundCommandMode?
+): String =
+    when {
+        buildModeTypeId != null -> "Place $buildModeTypeId"
+        rallyModeBuildingId != null -> "Set rally point"
+        groundMode == ClientGroundCommandMode.MOVE -> "Move target ready"
+        groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "Attack target ready"
+        groundMode == ClientGroundCommandMode.PATROL -> "Patrol point ready"
+        else -> ""
+    }
+
+internal fun formatOverlayHintLine(
+    hoverHint: String?,
+    buildModeTypeId: String?,
+    rallyModeBuildingId: Int?,
+    groundMode: ClientGroundCommandMode?,
+    hasSelection: Boolean
+): String =
+    hoverHint?.let(::compactCommandHint)
+        ?: when {
+            buildModeTypeId != null -> "Place footprint"
+            rallyModeBuildingId != null -> "Pick rally point"
+            groundMode == ClientGroundCommandMode.MOVE -> "Pick move point"
+            groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "Pick attack target"
+            groundMode == ClientGroundCommandMode.PATROL -> "Pick patrol route"
+            hasSelection -> "Cmd ready"
+            else -> "Select to unlock orders"
+        }
+
+internal fun formatCenterFooterInstruction(
+    buildModeTypeId: String?,
+    rallyModeBuildingId: Int?,
+    groundMode: ClientGroundCommandMode?,
+    hasSelection: Boolean
+): String =
+    when {
+        buildModeTypeId != null -> "LMB/RMB place  Shift queue  Esc cancel"
+        rallyModeBuildingId != null -> "LMB/RMB rally  Esc cancel"
+        groundMode == ClientGroundCommandMode.MOVE -> "LMB/RMB move  Shift queue  Esc cancel"
+        groundMode == ClientGroundCommandMode.ATTACK_MOVE -> "LMB/RMB attack  Shift queue  Esc cancel"
+        groundMode == ClientGroundCommandMode.PATROL -> "LMB/RMB patrol  Shift queue  Esc cancel"
+        hasSelection -> "Home center  Esc clear  Shift add/queue"
+        else -> "Drag select  RMB order  MMB pan"
+    }
+
 internal fun isCommandButtonQueued(actionId: String, selected: List<EntitySnapshot>): Boolean =
     when {
         actionId.startsWith("train:") ->
