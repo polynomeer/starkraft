@@ -339,6 +339,7 @@ internal class GameScreen(
             background = null
             pad(3f)
             top()
+            val initialCommandLayout = computeCommandDeckLayout(1280, 720)
             add(
                 Table().apply {
                     add(
@@ -348,16 +349,16 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.78f })
-                                    pad(2f, 6f, 2f, 6f)
+                                    pad(initialCommandLayout.headerPadY.toFloat(), 6f, initialCommandLayout.headerPadY.toFloat(), 6f)
                                     add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHeaderLabel).left()
                                 }
                             )
                         }
-                    ).left().padRight(4f)
+                    ).left().padRight(initialCommandLayout.sectionGap.toFloat())
                     add().expandX().fillX()
-                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(22f).height(18f).padRight(3f)
-                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(22f).height(18f)
+                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat()).padRight(initialCommandLayout.buttonGap.toFloat())
+                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat())
                 }
             ).expandX().fillX().row()
             add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(5f).row()
@@ -371,16 +372,16 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.72f })
-                                    pad(2f, 4f, 2f, 4f)
+                                    pad(initialCommandLayout.headerPadY.toFloat(), 4f, initialCommandLayout.headerPadY.toFloat(), 4f)
                                     add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
                                     add(commandHintLabel).width(140f).left().fillX()
                                 }
-                            ).width(156f).height(computeCommandHintRowHeight(1280).toFloat()).left()
+                            ).width((initialCommandLayout.hintWidth - 4).toFloat()).height(computeCommandHintRowHeight(1280).toFloat()).left()
                         }
-                    ).width(160f).left()
+                    ).width(initialCommandLayout.hintWidth.toFloat()).left()
                 }
-            ).expandX().fillX().padTop(3f).row()
-            add(actionBanner).left().expandX().fillX().padTop(3f).row()
+            ).expandX().fillX().padTop(initialCommandLayout.sectionGap.toFloat()).row()
+            add(actionBanner).left().expandX().fillX().padTop(initialCommandLayout.sectionGap.toFloat()).row()
         }
         buttonTable.top().left()
         buttonTable.defaults().left()
@@ -710,7 +711,7 @@ internal class GameScreen(
         commandScroll.setSize(commandWidth - 8f, commandHeight)
         portraitFrame.setSize(centerPanelLayout.portraitSize.toFloat(), centerPanelLayout.portraitSize.toFloat())
         bottomHud.setHeight(hudShellHeight)
-        buttonTable.defaults().pad(0f, 0f, 3f, 3f)
+        buttonTable.defaults().pad(0f, 0f, commandDeckLayout.buttonGap.toFloat(), commandDeckLayout.buttonGap.toFloat())
         selectionLabel.setText(buildSelectionHeadline())
         selectionMetaLabel.setText(buildSelectionMetaLine())
         centerStatusLabel.setText(buildCenterStatusLine())
@@ -818,11 +819,11 @@ internal class GameScreen(
                     add(
                         Table().apply {
                             background = assets.panelDrawable(commandGroupHeaderTone(group.first))
-                            pad(2f, commandDeckLayout.headerPadX.toFloat(), 2f, commandDeckLayout.headerPadX.toFloat())
+                            pad(commandDeckLayout.headerPadY.toFloat(), commandDeckLayout.headerPadX.toFloat(), commandDeckLayout.headerPadY.toFloat(), commandDeckLayout.headerPadX.toFloat())
                             add(Table().apply { background = assets.panelDrawable(commandGroupAccentTone(group.first)) }).width(2f).expandY().fillY().padRight(4f)
                             add(Label(group.first.uppercase(), assets.accentLabelStyle)).left()
                         }
-                    ).colspan(commandColumns).left().padBottom(4f).row()
+                    ).colspan(commandColumns).left().padBottom(commandDeckLayout.sectionGap.toFloat()).row()
                     group.second.forEachIndexed { index, button ->
                         val activePulse = uiPulse()
                         val selected = snapshot?.entities?.filter { it.id in runtime.session.state.selectedIds }.orEmpty()
@@ -881,7 +882,7 @@ internal class GameScreen(
                                         ).size(
                                             if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f,
                                             if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f
-                                        ).left().padRight(3f)
+                                        ).left().padRight(commandDeckLayout.buttonGap.toFloat() + 1f)
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
                                         add(
                                             Table().apply {
@@ -890,7 +891,7 @@ internal class GameScreen(
                                                             commandButtonCornerTone(actor.isDisabled, actor.isChecked)
                                                         )
                                                     }
-                                        ).size(4f, 4f).padLeft(3f)
+                                        ).size(4f, 4f).padLeft(commandDeckLayout.buttonGap.toFloat() + 1f)
                                     }
                                 ).expand().fill()
                             }
@@ -2630,17 +2631,7 @@ internal class GameScreen(
         val baseLabel = formatDeckCommandButtonText(button.actionId, button.label)
         val hotkey = resolveCommandButtonHotkey(button.actionId)
         val stateSuffix = formatDeckCommandButtonStateSuffix(button.actionId, selected)
-        return buildString {
-            append(baseLabel)
-            if (hotkey != null) {
-                append(' ')
-                append(hotkey)
-            }
-            if (stateSuffix != null) {
-                append(' ')
-                append(stateSuffix)
-            }
-        }
+        return formatDeckCommandCaption(baseLabel, hotkey, stateSuffix)
     }
 
     private fun commandGroups(buttons: List<ClientCommandButton>): List<Pair<String, List<ClientCommandButton>>> {
@@ -2978,7 +2969,13 @@ internal data class CommandDeckLayout(
     val buttonHeight: Int,
     val groupPad: Int,
     val headerPadX: Int,
-    val actorInset: Int
+    val actorInset: Int,
+    val sectionGap: Int,
+    val buttonGap: Int,
+    val headerPadY: Int,
+    val pagerButtonWidth: Int,
+    val pagerButtonHeight: Int,
+    val hintWidth: Int
 )
 
 internal data class CommandDeckPresentation(
@@ -3051,7 +3048,13 @@ internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): Comm
         buttonHeight = if (compact) 14 else 16,
         groupPad = if (compact) 1 else 2,
         headerPadX = if (compact) 3 else 4,
-        actorInset = if (compact) 10 else 12
+        actorInset = if (compact) 10 else 12,
+        sectionGap = if (compact) 3 else 4,
+        buttonGap = if (compact) 2 else 3,
+        headerPadY = if (compact) 2 else 3,
+        pagerButtonWidth = if (compact) 20 else 22,
+        pagerButtonHeight = if (compact) 16 else 18,
+        hintWidth = if (compact) 148 else 160
     )
 }
 

@@ -162,6 +162,11 @@ class GameScreenInputRulesTest {
         assertTrue(compact.scrollHeight < wide.scrollHeight, "small screens should use shorter command deck")
         assertTrue(compact.buttonHeight < wide.buttonHeight, "small screens should use shorter command buttons")
         assertTrue(compact.actorInset < wide.actorInset, "small screens should reduce command button chrome")
+        assertTrue(compact.sectionGap < wide.sectionGap, "small screens should tighten command sections")
+        assertTrue(compact.buttonGap < wide.buttonGap, "small screens should tighten command button gaps")
+        assertTrue(compact.headerPadY < wide.headerPadY, "small screens should reduce header padding height")
+        assertTrue(compact.pagerButtonWidth < wide.pagerButtonWidth, "small screens should use narrower pager buttons")
+        assertTrue(compact.hintWidth < wide.hintWidth, "small screens should use narrower command hints")
     }
 
     @Test

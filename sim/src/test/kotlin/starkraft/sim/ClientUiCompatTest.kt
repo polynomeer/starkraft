@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import starkraft.sim.client.EntitySnapshot
+import starkraft.sim.client.formatDeckCommandCaption
 import starkraft.sim.client.formatEntityBadgeCode
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionRosterSummary
@@ -59,6 +60,13 @@ class ClientUiCompatTest {
         assertEquals("WRK", formatEntityBadgeCode("Worker"))
         assertEquals("RD", formatEntityBadgeCode("ResourceDepot"))
         assertEquals("GD", formatEntityBadgeCode("Gas_Depot"))
+    }
+
+    @Test
+    fun `formats command captions with stable hotkey and state sections`() {
+        assertEquals("Move [M]", formatDeckCommandCaption("Move", "M", null))
+        assertEquals("Train [B] · 11t", formatDeckCommandCaption("Train", "B", "11t"))
+        assertEquals("Cancel · x2", formatDeckCommandCaption("Cancel", null, "x2"))
     }
 
     @Test

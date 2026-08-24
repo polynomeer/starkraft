@@ -202,6 +202,24 @@ internal fun formatDeckCommandButtonStateSuffix(actionId: String, selected: List
     }
 }
 
+internal fun formatDeckCommandCaption(
+    baseLabel: String,
+    hotkey: String?,
+    stateSuffix: String?
+): String =
+    buildString {
+        append(baseLabel)
+        hotkey?.takeIf { it.isNotBlank() }?.let {
+            append(" [")
+            append(it)
+            append(']')
+        }
+        stateSuffix?.takeIf { it.isNotBlank() }?.let {
+            append(" · ")
+            append(it)
+        }
+    }
+
 internal fun isCommandButtonQueued(actionId: String, selected: List<EntitySnapshot>): Boolean =
     when {
         actionId.startsWith("train:") ->
