@@ -2140,9 +2140,9 @@ internal class GdxWorldRenderer(
         val recoilBack = attackRecovery * 1.4f
         val x = screenX + directionDy(entity.dir, stride * 1.2f) + directionDx(entity.dir, (lead * 0.9f) - (recoilBack * 0.45f))
         val y = screenY + bobY + directionDy(entity.dir, (lead * 0.5f) - (recoilBack * 0.30f))
-        val body = unitBodyColor
-        val teamStripe = factionColor.cpy().lerp(Color.WHITE, 0.08f)
-        val trim = factionColor.cpy().lerp(Color.WHITE, 0.30f)
+        val body = resolveSilhouetteBodyColor(entity.typeId, isStructure = false, factionColor = factionColor)
+        val teamStripe = resolveSilhouetteStripeColor(entity.typeId, isStructure = false, factionColor = factionColor)
+        val trim = resolveSilhouetteTrimColor(entity.typeId, isStructure = false, factionColor = factionColor)
         val shadowRadius = if (selected) 9f else 7f
         val typeName = entity.typeId.orEmpty()
         shape.color = unitShadowColor
@@ -2169,6 +2169,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 5f, y - 2f + (toolSwing * 0.15f), 10f, 4f)
                 shape.color = trim
                 shape.circle(x + bodyLean * 0.4f, y, 2.8f)
+                shape.rect(x - 2.8f + bodyLean * 0.25f, y - 5.5f, 5.6f, 2.1f)
                 shape.rectLine(x - 4f - bodyLean, y + 4f + toolSwing, x + 4f + bodyLean, y + 4f - toolSwing, 1.2f)
                 shape.rect(x - 6.2f - bodyLean, y - 0.7f + toolSwing, 1.6f, 1.4f)
                 shape.rect(x + 4.6f + bodyLean, y - 0.7f - toolSwing, 1.6f, 1.4f)
@@ -2182,6 +2183,9 @@ internal class GdxWorldRenderer(
                 )
                 shape.color = unitSpecularColor
                 shape.circle(x - 1f + bodyLean * 0.3f, y - 1f, 2.2f)
+                shape.color = scratchColorA.set(teamStripe).also { it.a = 0.24f }
+                shape.circle(x - 4.2f, y + 0.4f, 1.6f)
+                shape.circle(x + 4.2f, y - 0.6f, 1.5f)
             }
             typeName.contains("Zergling", ignoreCase = true) -> {
                 val lunge = stride * 1.8f
@@ -2206,6 +2210,20 @@ internal class GdxWorldRenderer(
                     1.1f
                 )
                 shape.rectLine(
+                    x - 5.8f - directionDx(entity.dir, 1.8f),
+                    y + 0.4f + crouch,
+                    x - 9.2f - directionDx(entity.dir, 4.2f),
+                    y + 2.6f + crouch,
+                    1.0f
+                )
+                shape.rectLine(
+                    x + 5.8f - directionDx(entity.dir, 1.8f),
+                    y - 0.2f + crouch,
+                    x + 9.4f - directionDx(entity.dir, 4.2f),
+                    y + 2.2f + crouch,
+                    1.0f
+                )
+                shape.rectLine(
                     x - 4.5f - clawSpread,
                     y - 2.4f + attackLunge + crouch,
                     x - 6.8f - clawSpread,
@@ -2227,6 +2245,8 @@ internal class GdxWorldRenderer(
                     y + directionDy(entity.dir, 9.2f + (aimBias * 0.9f)) + crouch,
                     1.6f
                 )
+                shape.color = scratchColorA.set(trim).also { it.a = 0.44f }
+                shape.circle(x + directionDx(entity.dir, 5.5f), y + directionDy(entity.dir, 5.5f) + crouch, 1.7f)
             }
             typeName.contains("Marine", ignoreCase = true) -> {
                 val march = stride * 0.8f
@@ -2237,9 +2257,12 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 6.8f, y - 1.4f + (march * 0.7f), 13.6f, 2.8f)
                 shape.color = teamStripe
                 shape.rect(x - 2.6f + aimLean, y - 5.8f, 5.2f, 11.6f)
+                shape.rect(x - 6.0f, y - 3.8f + (march * 0.25f), 2.3f, 6.2f)
+                shape.rect(x + 3.7f, y - 3.8f - (march * 0.25f), 2.3f, 6.2f)
                 shape.color = trim
                 shape.rect(x - 1.5f + aimLean, y - 6.8f, 3f, 2.8f)
                 shape.rectLine(x - 5.6f, y - 0.8f + march, x + 5.6f, y - 0.8f - march, 1.2f)
+                shape.rect(x - 1.8f + aimLean, y - 4.2f, 3.6f, 1.5f)
                 shape.color = deathBurstSparkColor.cpy().also { it.a = 0.72f }
                 shape.rectLine(
                     x + aimLean,
@@ -2271,6 +2294,8 @@ internal class GdxWorldRenderer(
                         2.0f + (attackRecovery * 1.4f)
                     )
                 }
+                shape.color = scratchColorA.set(trim).also { it.a = 0.52f }
+                shape.rect(x - 0.9f + aimLean, y - 6.1f, 1.8f, 1.2f)
             }
             entity.weaponId != null -> {
                 val brace = (sway * 0.35f) + (damageTilt * 0.35f)
@@ -2284,6 +2309,7 @@ internal class GdxWorldRenderer(
                 shape.rect(x - 1.4f + aimBrace, y - 6.5f, 2.8f, 2.8f)
                 shape.rect(x - 6.5f, y - 0.8f, 2.4f, 1.6f)
                 shape.rect(x + 4.1f, y - 0.8f, 2.4f, 1.6f)
+                shape.rect(x - 3.2f + aimBrace, y - 3.8f, 6.4f, 1.6f)
                 shape.color = deathBurstSparkColor.cpy().also { it.a = 0.72f }
                 shape.rectLine(
                     x + aimBrace,
@@ -2344,8 +2370,10 @@ internal class GdxWorldRenderer(
         val settleDrop = collapseSeverity * 1.4f
         val left = runtime.camera.worldToScreenX(tileX.toFloat()) + collapseWobble
         val top = runtime.camera.worldToScreenY(tileY.toFloat()) + settleDrop
-        val shell = structureShellColor
-        val roof = structureRoofColor
+        val shell = resolveSilhouetteBodyColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val stripe = resolveSilhouetteStripeColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val trim = resolveSilhouetteTrimColor(entity.typeId, isStructure = true, factionColor = factionColor)
+        val roof = resolveStructureRoofColor(entity.typeId, factionColor)
         val isResourceDepot = entity.typeId.contains("ResourceDepot", ignoreCase = true)
         val isGasDepot = entity.typeId.contains("GasDepot", ignoreCase = true)
         val isDepot = entity.typeId.contains("Depot", ignoreCase = true) && !isResourceDepot && !isGasDepot
@@ -2357,6 +2385,9 @@ internal class GdxWorldRenderer(
         shape.rect(left, top, width, height)
         shape.color = roof
         shape.rect(left + 3f, top + 3f, width - 6f, height - 6f)
+        shape.color = scratchColorA.set(stripe).also { it.a = 0.28f }
+        shape.rect(left + 4f, top + height * 0.22f, width - 8f, (height * 0.12f).coerceAtLeast(4f))
+        shape.rect(left + 4f, top + height * 0.68f, width - 8f, (height * 0.08f).coerceAtLeast(3f))
         shape.color = structureGlossColor
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.16f).coerceAtLeast(4f))
         shape.color = structureCutColor
@@ -2368,10 +2399,13 @@ internal class GdxWorldRenderer(
                 else -> factionColor.cpy().lerp(Color.WHITE, 0.10f)
             }
         shape.rect(left + 4f, top + 4f, width - 8f, (height * 0.22f).coerceAtLeast(5f))
-        shape.color = factionColor.cpy().lerp(Color.WHITE, 0.26f).apply { a = 0.42f }
+        shape.color = scratchColorA.set(trim).also { it.a = 0.42f }
         shape.rect(left + width - 6f, top + 5f, 2f, height - 10f)
+        shape.rect(left + 4f, top + 5f, 2f, height - 10f)
         shape.color = structureLineColor
         shape.rect(left + 6f, top + height - 10f, width * 0.22f, 3f)
+        shape.rect(left + width * 0.28f, top + height - 10f, width * 0.18f, 2f)
+        shape.rect(left + width * 0.56f, top + height - 10f, width * 0.18f, 2f)
         shape.color = structureWindowColor
         shape.rect(left + 6f, top + 6f, (width * 0.32f).coerceAtLeast(6f), (height * 0.18f).coerceAtLeast(4f))
         if (isDepot) {
