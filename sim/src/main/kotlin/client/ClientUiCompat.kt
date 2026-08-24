@@ -220,6 +220,14 @@ internal fun formatDeckCommandCaption(
         }
     }
 
+internal fun formatGroundPingBanner(kind: GroundPingKind, queued: Boolean): String =
+    when (kind) {
+        GroundPingKind.MOVE -> if (queued) "Move queued" else "Move confirmed"
+        GroundPingKind.ATTACK -> if (queued) "Attack queued" else "Attack ordered"
+        GroundPingKind.BUILD -> if (queued) "Build queued" else "Build confirmed"
+        GroundPingKind.INVALID -> "Command rejected"
+    }
+
 internal fun isCommandButtonQueued(actionId: String, selected: List<EntitySnapshot>): Boolean =
     when {
         actionId.startsWith("train:") ->

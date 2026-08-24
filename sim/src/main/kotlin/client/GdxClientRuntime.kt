@@ -336,7 +336,7 @@ internal class GdxClientRuntime(
                 )
             )
         )
-        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.BUILD)
+        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.BUILD, queued = false)
         recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
         if (markMinimap) {
             recentMinimapConfirm = MinimapConfirm(worldX, worldY, subtle = true)
@@ -377,7 +377,13 @@ internal class GdxClientRuntime(
             ) ?: return false
         if (intent is ClientIntent.Command) {
             session.append(intent)
-            recentGroundPing = GroundPing(worldX, worldY, if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE)
+            recentGroundPing =
+                GroundPing(
+                    worldX,
+                    worldY,
+                    if (attackMoveModifier || groundMode == ClientGroundCommandMode.ATTACK_MOVE) GroundPingKind.ATTACK else GroundPingKind.MOVE,
+                    queued = queuedCommand
+                )
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
             if (markMinimap) {
                 recentMinimapConfirm = MinimapConfirm(worldX, worldY, subtle = true)
@@ -396,7 +402,7 @@ internal class GdxClientRuntime(
     }
 
     private fun rejectGroundCommand(worldX: Float, worldY: Float, notice: String) {
-        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.INVALID)
+        recentGroundPing = GroundPing(worldX, worldY, GroundPingKind.INVALID, queued = false)
         recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
         pendingCommandSoundKind = CommandSoundKind.INVALID
         showNotice(notice)
@@ -422,7 +428,7 @@ internal class GdxClientRuntime(
         val tileX = floor(camera.screenToWorldX(screenX)).toInt()
         val tileY = floor(camera.screenToWorldY(screenY)).toInt()
         if (!isBuildPreviewValid(mapState, snapshot, spec, tileX, tileY)) {
-            recentGroundPing = GroundPing(tileX + 0.5f, tileY + 0.5f, GroundPingKind.INVALID)
+            recentGroundPing = GroundPing(tileX + 0.5f, tileY + 0.5f, GroundPingKind.INVALID, queued = false)
             recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
             pendingCommandSoundKind = CommandSoundKind.INVALID
             showNotice("invalid build placement")
@@ -441,7 +447,7 @@ internal class GdxClientRuntime(
                 )
             )
         )
-        recentGroundPing = GroundPing(tileX + (spec.width / 2f), tileY + (spec.height / 2f), GroundPingKind.BUILD)
+        recentGroundPing = GroundPing(tileX + (spec.width / 2f), tileY + (spec.height / 2f), GroundPingKind.BUILD, queued = false)
         recentGroundPingUntilMillis = System.currentTimeMillis() + GROUND_PING_DURATION_MS
         pendingCommandSoundKind = CommandSoundKind.BUILD
         buildModeTypeId = null
@@ -1385,7 +1391,8 @@ internal enum class CompletionFlashKind {
 internal data class GroundPing(
     val worldX: Float,
     val worldY: Float,
-    val kind: GroundPingKind
+    val kind: GroundPingKind,
+    val queued: Boolean = false
 )
 
 internal data class MinimapConfirm(

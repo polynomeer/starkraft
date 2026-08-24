@@ -1595,6 +1595,14 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, outer)
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
                 shape.circle(x, y, inner)
+                if (ping.queued) {
+                    shape.color = Color(0.82f, 1.00f, 0.88f, 0.34f + (pulse * 0.06f))
+                    shape.circle(x, y, 15f + (pulse * 5f))
+                    shape.rect(x - 11f, y - 1f, 3f, 2f)
+                    shape.rect(x + 8f, y - 1f, 3f, 2f)
+                    shape.rect(x - 1f, y - 11f, 2f, 3f)
+                    shape.rect(x - 1f, y + 8f, 2f, 3f)
+                }
                 shape.color = Color(0.74f, 1.00f, 0.82f, 0.92f)
                 shape.circle(x, y, 2.2f + (pulse * 1.0f))
                 shape.color = Color(0.78f, 1.00f, 0.86f, 0.16f + (pulse * 0.06f))
@@ -1607,6 +1615,14 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, 14f + (pulse * 5f))
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.circle(x, y, 8f + (pulse * 3f))
+                if (ping.queued) {
+                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.30f + (pulse * 0.06f))
+                    shape.circle(x, y, 18f + (pulse * 4f))
+                    shape.rectLine(x - 11f, y, x - 7f, y, 1.2f)
+                    shape.rectLine(x + 7f, y, x + 11f, y, 1.2f)
+                    shape.rectLine(x, y - 11f, x, y - 7f, 1.2f)
+                    shape.rectLine(x, y + 7f, x, y + 11f, 1.2f)
+                }
                 shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
                 shape.rectLine(x - 7f, y - 7f, x + 7f, y + 7f, 1.6f)
                 shape.rectLine(x - 7f, y + 7f, x + 7f, y - 7f, 1.6f)
@@ -1621,6 +1637,14 @@ internal class GdxWorldRenderer(
                 shape.rect(x - outer, y - outer, outer * 2f, outer * 2f)
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.rect(x - 7f, y - 7f, 14f, 14f)
+                if (ping.queued) {
+                    shape.color = Color(0.86f, 0.96f, 1.00f, 0.32f + (pulse * 0.06f))
+                    shape.rect(x - 16f, y - 16f, 32f, 32f)
+                    shape.rect(x - 12f, y - 1f, 4f, 2f)
+                    shape.rect(x + 8f, y - 1f, 4f, 2f)
+                    shape.rect(x - 1f, y - 12f, 2f, 4f)
+                    shape.rect(x - 1f, y + 8f, 2f, 4f)
+                }
                 shape.color = Color(0.84f, 0.96f, 1.00f, 0.96f)
                 shape.rect(x - 6f, y - 6f, 12f, 2f)
                 shape.rect(x - 6f, y + 4f, 12f, 2f)

@@ -2068,6 +2068,7 @@ internal class GameScreen(
 
     private fun buildActionBannerLine(): String {
         runtime.noticeLine()?.removePrefix("notice: ")?.let(::compactNotice)?.let { return it }
+        runtime.currentGroundPing()?.let { return formatGroundPingBanner(it.kind, it.queued) }
         val selectionCount = runtime.session.state.selectedIds.size
         return when {
             runtime.buildModeTypeId != null -> "Place ${runtime.buildModeTypeId}"
@@ -2101,6 +2102,10 @@ internal class GameScreen(
                 runtime.buildModeTypeId != null -> panel.cpy().lerp(command, 0.18f).also { it.a = 0.76f }
                 runtime.rallyModeBuildingId != null -> panel.cpy().lerp(production, 0.18f).also { it.a = 0.76f }
                 runtime.groundMode != null -> panel.cpy().lerp(selection, 0.18f).also { it.a = 0.76f }
+                runtime.currentGroundPing()?.kind == GroundPingKind.MOVE -> panel.cpy().lerp(selection, 0.22f).also { it.a = 0.80f }
+                runtime.currentGroundPing()?.kind == GroundPingKind.ATTACK -> panel.cpy().lerp(warning, 0.26f).also { it.a = 0.82f }
+                runtime.currentGroundPing()?.kind == GroundPingKind.BUILD -> panel.cpy().lerp(command, 0.22f).also { it.a = 0.80f }
+                runtime.currentGroundPing()?.kind == GroundPingKind.INVALID -> panel.cpy().lerp(danger, 0.28f).also { it.a = 0.82f }
                 runtime.noticeKind() == NoticeKind.TRADE -> panel.cpy().lerp(production, 0.20f).also { it.a = 0.80f }
                 runtime.noticeKind() == NoticeKind.LOSS -> panel.cpy().lerp(danger, 0.24f).also { it.a = 0.80f }
                 runtime.noticeKind() == NoticeKind.KILL -> panel.cpy().lerp(build, 0.18f).also { it.a = 0.80f }

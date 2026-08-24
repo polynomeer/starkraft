@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.formatDeckCommandCaption
 import starkraft.sim.client.formatEntityBadgeCode
+import starkraft.sim.client.formatGroundPingBanner
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionRosterSummary
+import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.isCommandButtonQueued
 
 class ClientUiCompatTest {
@@ -67,6 +69,15 @@ class ClientUiCompatTest {
         assertEquals("Move [M]", formatDeckCommandCaption("Move", "M", null))
         assertEquals("Train [B] · 11t", formatDeckCommandCaption("Train", "B", "11t"))
         assertEquals("Cancel · x2", formatDeckCommandCaption("Cancel", null, "x2"))
+    }
+
+    @Test
+    fun `formats ground ping confirmations for action banner`() {
+        assertEquals("Move confirmed", formatGroundPingBanner(GroundPingKind.MOVE, queued = false))
+        assertEquals("Move queued", formatGroundPingBanner(GroundPingKind.MOVE, queued = true))
+        assertEquals("Attack ordered", formatGroundPingBanner(GroundPingKind.ATTACK, queued = false))
+        assertEquals("Build queued", formatGroundPingBanner(GroundPingKind.BUILD, queued = true))
+        assertEquals("Command rejected", formatGroundPingBanner(GroundPingKind.INVALID, queued = false))
     }
 
     @Test
