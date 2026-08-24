@@ -371,6 +371,11 @@ class GameScreenInputRulesTest {
         assertTrue(compact.rosterSlotSize < wide.rosterSlotSize, "small screens should use smaller roster slots")
         assertTrue(compact.pagerButtonSize < wide.pagerButtonSize, "small screens should use smaller pager buttons")
         assertTrue(compact.healthBarWidth < wide.healthBarWidth, "small screens should use narrower health bars")
+        assertTrue(compact.portraitGap < wide.portraitGap, "small screens should tighten portrait spacing")
+        assertTrue(compact.sectionGap < wide.sectionGap, "small screens should tighten section spacing")
+        assertTrue(compact.headerPadX < wide.headerPadX, "small screens should reduce header padding")
+        assertTrue(compact.bodyPadX < wide.bodyPadX, "small screens should reduce body padding")
+        assertTrue(compact.healthBarHeight < wide.healthBarHeight, "small screens should use shorter health bars")
     }
 
     @Test

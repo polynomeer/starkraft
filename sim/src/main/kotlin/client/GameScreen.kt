@@ -417,7 +417,7 @@ internal class GameScreen(
             add(
                 selectionHeadlineCard.apply {
                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.10f).also { it.a = 0.70f })
-                    pad(1f, 3f, 1f, 3f)
+                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                     add(selectionLabel).left().expandX().fillX()
                 }
             ).left().expandX().fillX().padTop(1f).row()
@@ -436,34 +436,34 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.76f })
-                                    pad(4f, 3f, 2f, 3f)
+                                    pad(4f, initialCenterLayout.bodyPadX.toFloat(), 2f, initialCenterLayout.bodyPadX.toFloat())
                                     add(portraitLabel).center().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.14f).also { it.a = 0.58f })
-                                            pad(1f, 3f, 1f, 3f)
+                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                             add(portraitHealthLabel).center()
                                         }
-                                    ).padTop(2f)
+                                    ).padTop(initialCenterLayout.sectionGap.toFloat())
                                 }
-                            ).expand().fill().padTop(2f)
+                            ).expand().fill().padTop(initialCenterLayout.sectionGap.toFloat())
                         }
-                    ).size(initialCenterLayout.portraitSize.toFloat(), initialCenterLayout.portraitSize.toFloat()).top().left().padRight(4f)
+                    ).size(initialCenterLayout.portraitSize.toFloat(), initialCenterLayout.portraitSize.toFloat()).top().left().padRight(initialCenterLayout.portraitGap.toFloat())
                     add(
                         Table().apply {
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
-                            add(Table().apply { background = assets.panelDrawable(colors.borderSubtle.cpy().also { it.a = 0.58f }) }).height(1f).expandX().fillX().padTop(1f).row()
+                            add(Table().apply { background = assets.panelDrawable(colors.borderSubtle.cpy().also { it.a = 0.58f }) }).height(1f).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.command.cpy().lerp(colors.panelStrong, 0.44f).also { it.a = 0.30f })
                                 }
-                            ).height(2f).expandX().fillX().padTop(1f).row()
+                            ).height(2f).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 healthBarBack.apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy())
@@ -473,71 +473,71 @@ internal class GameScreen(
                                     }).expandY().fillY().left()
                                     add().expandX().fillX()
                                 }
-                            ).width(initialCenterLayout.healthBarWidth.toFloat()).height(6f).left().padTop(1f).row()
+                            ).width(initialCenterLayout.healthBarWidth.toFloat()).height(initialCenterLayout.healthBarHeight.toFloat()).left().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
-                                    pad(1f, 4f, 1f, 4f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.68f }) }).width(1f).expandY().fillY().padRight(3f)
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.68f }) }).width(1f).expandY().fillY().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
                                     add(Label("STATUS", assets.mutedLabelStyle)).left()
                                 }
-                            ).left().expandX().fillX().padTop(1f).row()
+                            ).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.38f })
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat(), initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat())
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(1f).row()
+                            ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
-                                    pad(1f, 3f, 1f, 3f)
+                                    pad(initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat(), initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat())
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
-                                            pad(1f, 3f, 1f, 3f)
+                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                             add(queueHeaderLabel).left()
                                         }
-                                    ).left().padRight(3f)
+                                    ).left().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
                                     add(queueStatusStrip).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(1f).row()
+                            ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
-                                    pad(1f, 3f, 1f, 3f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(3f)
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
-                            ).left().expandX().fillX().padTop(1f).row()
-                            add(selectionGrid).left().expandX().fillX().padTop(1f).row()
+                            ).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
+                            add(selectionGrid).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 selectionPager.apply {
                                     clearChildren()
-                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat()).padRight(2f)
+                                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftSelectionPage(-1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat()).padRight(initialCenterLayout.sectionGap.toFloat())
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
-                                            pad(1f, 4f, 1f, 4f)
+                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                             add(selectionPageLabel).left()
                                         }
-                                    ).width(initialCenterLayout.pagerLabelWidth.toFloat()).left().padRight(2f)
-                                    add(controlGroupButtons).minWidth(56f).right().padRight(2f)
+                                    ).width(initialCenterLayout.pagerLabelWidth.toFloat()).left().padRight(initialCenterLayout.sectionGap.toFloat())
+                                    add(controlGroupButtons).minWidth(56f).right().padRight(initialCenterLayout.sectionGap.toFloat())
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
-                                            pad(1f, 4f, 1f, 4f)
+                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                             add(controlGroupsLabel).right()
                                         }
-                                    ).width(initialCenterLayout.groupSummaryWidth.toFloat()).right().padRight(2f)
+                                    ).width(initialCenterLayout.groupSummaryWidth.toFloat()).right().padRight(initialCenterLayout.sectionGap.toFloat())
                                     add(makeButton(">", style = assets.subtleButtonStyle()) { shiftSelectionPage(1) }).width(initialCenterLayout.pagerButtonSize.toFloat()).height(initialCenterLayout.pagerButtonSize.toFloat())
                                 }
                             ).expandX().fillX()
                         }
                     ).expandX().fillX().top()
                 }
-            ).expandX().fillX().padTop(2f).row()
+            ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
         }
 
         bottomHud.apply {
@@ -2994,7 +2994,13 @@ internal data class CenterPanelLayout(
     val pagerButtonSize: Int,
     val pagerLabelWidth: Int,
     val groupSummaryWidth: Int,
-    val healthBarWidth: Int
+    val healthBarWidth: Int,
+    val portraitGap: Int,
+    val sectionGap: Int,
+    val headerPadX: Int,
+    val bodyPadX: Int,
+    val bodyPadY: Int,
+    val healthBarHeight: Int
 )
 
 internal data class TopBarLayout(
@@ -3077,7 +3083,13 @@ internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
         pagerButtonSize = if (compact) 14 else 16,
         pagerLabelWidth = if (compact) 38 else 44,
         groupSummaryWidth = if (compact) 42 else 50,
-        healthBarWidth = if (compact) 76 else 88
+        healthBarWidth = if (compact) 76 else 88,
+        portraitGap = if (compact) 5 else 6,
+        sectionGap = if (compact) 2 else 3,
+        headerPadX = if (compact) 4 else 5,
+        bodyPadX = if (compact) 4 else 5,
+        bodyPadY = if (compact) 2 else 3,
+        healthBarHeight = if (compact) 7 else 8
     )
 }
 
