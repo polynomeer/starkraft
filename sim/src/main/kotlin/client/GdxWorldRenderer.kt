@@ -576,8 +576,26 @@ internal class GdxWorldRenderer(
             val startX = runtime.camera.worldToScreenX(entity.x)
             val startY = runtime.camera.worldToScreenY(entity.y)
             if (!isOnScreen(startX, startY)) continue
-            shape.color = selectionOverlayColor
-            shape.circle(startX, startY, 8f)
+            val pulse = selectionPulse()
+            if (entity.footprintWidth != null && entity.footprintHeight != null) {
+                val tileX = floor(entity.x).toInt()
+                val tileY = floor(entity.y).toInt()
+                val left = runtime.camera.worldToScreenX(tileX.toFloat()) - 2f
+                val top = runtime.camera.worldToScreenY(tileY.toFloat()) - 2f
+                val width = (entity.footprintWidth * runtime.camera.tileSize) + 4f
+                val height = (entity.footprintHeight * runtime.camera.tileSize) + 4f
+                shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.08f + (pulse * 0.04f) }
+                shape.rect(left, top, width, 2f)
+                shape.rect(left, top + height - 2f, width, 2f)
+                shape.rect(left, top, 2f, height)
+                shape.rect(left + width - 2f, top, 2f, height)
+            } else {
+                val radius = selectionUnitRadius(runtime.camera.tileSize)
+                shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.09f + (pulse * 0.04f) }
+                shape.circle(startX, startY, radius + 2.5f)
+                shape.color = scratchColorA.set(selectionColor).also { it.a = 0.05f + (pulse * 0.03f) }
+                shape.circle(startX, startY, radius - 2.5f)
+            }
         }
     }
 
@@ -646,7 +664,7 @@ internal class GdxWorldRenderer(
                 shape.rect(left + (width * 0.22f), top - 4f, width * 0.56f, 1.5f)
                 shape.rect(left + (width * 0.22f), top + height + 2.5f, width * 0.56f, 1.5f)
             } else {
-                val radius = 11f
+                val radius = selectionUnitRadius(runtime.camera.tileSize)
                 val pulse = selectionPulse()
                 shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.12f + (pulse * 0.06f) }
                 shape.circle(screenX, screenY, radius + 1.5f)
@@ -1753,14 +1771,16 @@ internal class GdxWorldRenderer(
             if (!isOnScreen(x, y)) continue
             val progress = (1f - ((burst.expiresAtMillis - now).toFloat() / 980f)).coerceIn(0f, 1f)
             val fade = (1f - progress).coerceIn(0f, 1f)
-            val core = if (burst.isStructure) 8f + (progress * 14f) else 5f + (progress * 9f)
-            val outer = if (burst.isStructure) 16f + (progress * 28f) else 11f + (progress * 18f)
+            val core = deathBurstCoreRadius(progress, burst.isStructure)
+            val outer = deathBurstOuterRadius(progress, burst.isStructure)
             shape.color = scratchColorA.set(deathBurstOuterColor).also { it.a = deathBurstOuterColor.a * fade }
             shape.circle(x, y, outer)
             shape.color = scratchColorA.set(deathBurstCoreColor).also { it.a = deathBurstCoreColor.a * fade }
             shape.circle(x, y, core)
             shape.color = scratchColorA.set(deathBurstSparkColor).also { it.a = deathBurstSparkColor.a * fade }
             shape.circle(x, y, core * 0.42f)
+            shape.color = scratchColorA.set(deathBurstSparkColor).also { it.a = 0.34f * fade }
+            shape.circle(x, y, outer * (0.58f + (progress * 0.12f)))
             shape.color = scratchColorA.set(deathBurstSmokeColor).also { it.a = deathBurstSmokeColor.a * fade }
             shape.circle(x + (progress * 6f), y - (progress * 10f), outer * 0.82f)
             shape.circle(x - (progress * 8f), y - (progress * 6f), outer * 0.64f)
@@ -1774,6 +1794,25 @@ internal class GdxWorldRenderer(
             shape.rectLine(x + (shard * 0.72f), y - (shard * 0.72f), x + (shard * 0.22f), y - (shard * 0.22f), 1.6f)
             shape.rectLine(x - (shard * 0.72f), y + (shard * 0.72f), x - (shard * 0.22f), y + (shard * 0.22f), 1.6f)
             shape.rectLine(x + (shard * 0.72f), y + (shard * 0.72f), x + (shard * 0.22f), y + (shard * 0.22f), 1.6f)
+            val burstDir = ((burst.entityId % 16).toFloat() / 16f) * 6.2831855f
+            val streakReach = if (burst.isStructure) outer * 1.22f else outer * 1.12f
+            val streakWidth = if (burst.isStructure) 2.4f else 1.8f
+            shape.color = scratchColorA.set(deathBurstSparkColor).also { it.a = 0.54f * fade }
+            shape.rectLine(x, y, x + directionDx(burstDir, streakReach), y + directionDy(burstDir, streakReach), streakWidth)
+            shape.rectLine(
+                x,
+                y,
+                x + directionDx(burstDir + 1.9f, streakReach * 0.78f),
+                y + directionDy(burstDir + 1.9f, streakReach * 0.78f),
+                streakWidth * 0.86f
+            )
+            shape.rectLine(
+                x,
+                y,
+                x + directionDx(burstDir - 2.2f, streakReach * 0.64f),
+                y + directionDy(burstDir - 2.2f, streakReach * 0.64f),
+                streakWidth * 0.76f
+            )
             val debrisColor =
                 when {
                     burst.typeId.contains("Zergling", ignoreCase = true) -> scratchColorA.set(deathBurstZergDebrisColor).also { it.a = deathBurstZergDebrisColor.a * fade }
@@ -2580,8 +2619,17 @@ internal fun overlayCompletionFlashAlpha(selected: Boolean, kind: CompletionFlas
         null -> if (selected) 0.11f else 0.16f
     }
 
+internal fun selectionUnitRadius(tileSize: Float): Float =
+    (tileSize * 0.34f).coerceIn(10f, 13f)
+
 internal fun selectionBoxCorner(width: Float, height: Float): Float =
     minOf(18f, width * 0.24f, height * 0.24f).coerceAtLeast(6f)
+
+internal fun deathBurstCoreRadius(progress: Float, structure: Boolean): Float =
+    if (structure) 8f + (progress * 14f) else 5f + (progress * 9f)
+
+internal fun deathBurstOuterRadius(progress: Float, structure: Boolean): Float =
+    if (structure) 16f + (progress * 28f) else 11f + (progress * 18f)
 
 internal fun gdxMiniMapWorldPosition(
     screenX: Float,

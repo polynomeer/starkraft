@@ -61,7 +61,10 @@ import starkraft.sim.client.overlayCompletionFlashAlpha
 import starkraft.sim.client.overlayDamageFlashAlpha
 import starkraft.sim.client.CombatSoundKind
 import starkraft.sim.client.CompletionFlashKind
+import starkraft.sim.client.deathBurstCoreRadius
+import starkraft.sim.client.deathBurstOuterRadius
 import starkraft.sim.client.selectionBoxCorner
+import starkraft.sim.client.selectionUnitRadius
 import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.ClientCommandButton
@@ -99,6 +102,12 @@ class GameScreenInputRulesTest {
         )
         assertEquals(6f, selectionBoxCorner(8f, 10f))
         assertEquals(18f, selectionBoxCorner(300f, 220f))
+        assertEquals(10f, selectionUnitRadius(18f))
+        assertEquals(13f, selectionUnitRadius(64f))
+        assertEquals(5f, deathBurstCoreRadius(0f, structure = false))
+        assertEquals(20f, deathBurstCoreRadius(12f / 14f, structure = true))
+        assertEquals(11f, deathBurstOuterRadius(0f, structure = false))
+        assertEquals(44f, deathBurstOuterRadius(1f, structure = true))
     }
 
     @Test
