@@ -2012,15 +2012,14 @@ internal class GameScreen(
 
     private fun buildSelectionMetaLine(): String {
         val snapshot = runtime.snapshot ?: return "No live snapshot"
-        if (runtime.session.state.selectedIds.isEmpty()) {
-            return "${runtime.session.state.viewedFaction?.let { "f$it" } ?: "obs"} · ${snapshot.entities.size}"
-        }
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
-        val focused = resolveFocusedEntity(snapshot, selected) ?: selected.firstOrNull()
         val structureDeck = usesStructureCommandDeck(selected)
-        val summary = formatSelectionMetaSummary(selected, includeCapabilities = !structureDeck)
-        val detail = if (structureDeck) null else formatFocusedEntityStatus(focused)
-        return if (detail == null) summary else "$summary · $detail"
+        return formatSelectionMetaLine(
+            selected = selected,
+            viewedFaction = runtime.session.state.viewedFaction,
+            totalEntities = snapshot.entities.size,
+            includeCapabilities = !structureDeck
+        )
     }
 
     private fun buildTopEconomyLine(): String {

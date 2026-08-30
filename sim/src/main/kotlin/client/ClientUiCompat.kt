@@ -406,6 +406,18 @@ internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>, includeC
     }.joinToString(" · ")
 }
 
+internal fun formatSelectionMetaLine(
+    selected: List<EntitySnapshot>,
+    viewedFaction: Int?,
+    totalEntities: Int,
+    includeCapabilities: Boolean = true
+): String {
+    if (selected.isEmpty()) {
+        return "${viewedFaction?.let { "f$it" } ?: "obs"} · $totalEntities"
+    }
+    return formatSelectionMetaSummary(selected, includeCapabilities = includeCapabilities)
+}
+
 internal fun formatFocusedEntityStatus(entity: EntitySnapshot?): String? {
     entity ?: return null
     val details =
@@ -498,30 +510,30 @@ internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): Strin
         val lead = selected.first()
         val details =
             buildList {
-                lead.archetype?.takeIf { it.isNotBlank() }?.let { add(it) }
+                lead.archetype?.takeIf { it.isNotBlank() }?.let { add(it.take(4)) }
                 if (lead.supportsTraining == true) add("train")
                 if (lead.supportsResearch == true) add("tech")
                 if (lead.supportsRally == true) {
                     if (lead.rallyX != null && lead.rallyY != null) {
-                        add("rally ${lead.rallyX.toInt()},${lead.rallyY.toInt()}")
+                        add("ral ${lead.rallyX.toInt()},${lead.rallyY.toInt()}")
                     } else {
-                        add("rally idle")
+                        add("ral idle")
                     }
                 }
                 lead.activeProductionType?.let {
-                    add("prod $it${if (lead.productionQueueSize > 0) " x${lead.productionQueueSize}" else ""}")
+                    add("prod ${compactDeckTypeName(it, 6)}${if (lead.productionQueueSize > 0) " x${lead.productionQueueSize}" else ""}")
                 }
                 lead.activeResearchTech?.let {
-                    add("tech $it${if (lead.researchQueueSize > 0) " x${lead.researchQueueSize}" else ""}")
+                    add("tech ${compactDeckTypeName(it, 6)}${if (lead.researchQueueSize > 0) " x${lead.researchQueueSize}" else ""}")
                 }
                 if (lead.underConstruction) {
-                    add("build ${lead.constructionRemainingTicks ?: 0}t")
+                    add("bld ${lead.constructionRemainingTicks ?: 0}t")
                 }
             }
         return if (details.isEmpty()) {
-            "Ros ${lead.typeId}"
+            "Ros ${compactDeckTypeName(lead.typeId, 6)}"
         } else {
-            "${lead.typeId} · ${details.joinToString(" · ")}"
+            "${compactDeckTypeName(lead.typeId, 6)} · ${details.joinToString(" · ")}"
         }
     }
     val counts =
@@ -531,7 +543,7 @@ internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): Strin
             .entries
             .sortedByDescending { it.value }
             .take(4)
-            .joinToString("   ") { "${it.key}:${it.value}" }
+            .joinToString("   ") { "${compactDeckTypeName(it.key, 5)}:${it.value}" }
     val activeProd = selected.count { it.activeProductionType != null || it.productionQueueSize > 0 }
     val activeTech = selected.count { it.activeResearchTech != null || it.researchQueueSize > 0 }
     val rallyConfigured = selected.count { it.rallyX != null && it.rallyY != null }
@@ -540,7 +552,7 @@ internal fun formatSelectionRosterSummary(selected: List<EntitySnapshot>): Strin
         append(counts)
         if (activeProd > 0) append("   prod:$activeProd")
         if (activeTech > 0) append("   tech:$activeTech")
-        if (rallyConfigured > 0) append("   rally:$rallyConfigured")
+        if (rallyConfigured > 0) append("   ral:$rallyConfigured")
     }
 }
 

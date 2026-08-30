@@ -29,6 +29,7 @@ import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatFixedHudHintSlot
+import starkraft.sim.client.formatSelectionMetaLine
 import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionHeadline
 import starkraft.sim.client.formatFocusedEntityStatus
@@ -36,6 +37,7 @@ import starkraft.sim.client.formatQueueStatusLine
 import starkraft.sim.client.formatSelectionPageLabel
 import starkraft.sim.client.formatControlGroupDeckLine
 import starkraft.sim.client.formatPerfMillis
+import starkraft.sim.client.formatSelectionRosterSummary
 import starkraft.sim.client.gdxMiniMapBounds
 import starkraft.sim.client.overlayBlocksWorldInput
 import starkraft.sim.client.resolveEffectAccentColor
@@ -1047,6 +1049,49 @@ class GameScreenInputRulesTest {
             )
 
         assertEquals("3 sel · cmb 1 · wrk 1 · bld 1 · prod 1 · tech 1 · ral 1/1", formatSelectionMetaSummary(selected))
+        assertEquals("3 sel · cmb 1 · wrk 1 · bld 1 · prod 1 · tech 1 · ral 1/1", formatSelectionMetaLine(selected, viewedFaction = 1, totalEntities = 14))
+        assertEquals("f1 · 14", formatSelectionMetaLine(emptyList(), viewedFaction = 1, totalEntities = 14))
+        assertEquals("obs · 14", formatSelectionMetaLine(emptyList(), viewedFaction = null, totalEntities = 14))
+    }
+
+    @Test
+    fun `selection roster summary stays concise for single and mixed selections`() {
+        val single =
+            listOf(
+                EntitySnapshot(
+                    id = 7,
+                    faction = 1,
+                    typeId = "ResourceDepot",
+                    archetype = "producer",
+                    x = 4f,
+                    y = 5f,
+                    dir = 0f,
+                    hp = 400,
+                    maxHp = 400,
+                    armor = 1,
+                    supportsTraining = true,
+                    supportsResearch = true,
+                    supportsRally = true,
+                    rallyX = 12f,
+                    rallyY = 9f,
+                    activeProductionType = "Marine",
+                    productionQueueSize = 2,
+                    activeResearchTech = "AdvancedTraining",
+                    researchQueueSize = 1,
+                    underConstruction = true,
+                    constructionRemainingTicks = 18
+                )
+            )
+        val mixed =
+            listOf(
+                EntitySnapshot(id = 1, faction = 1, typeId = "Marine", archetype = "infantry", x = 0f, y = 0f, dir = 0f, hp = 40, maxHp = 40, armor = 0, weaponId = "Rifle"),
+                EntitySnapshot(id = 2, faction = 1, typeId = "Marine", archetype = "infantry", x = 0f, y = 0f, dir = 0f, hp = 40, maxHp = 40, armor = 0, weaponId = "Rifle"),
+                EntitySnapshot(id = 3, faction = 1, typeId = "Worker", archetype = "worker", x = 0f, y = 0f, dir = 0f, hp = 35, maxHp = 35, armor = 0),
+                EntitySnapshot(id = 4, faction = 1, typeId = "ResourceDepot", archetype = "producer", x = 0f, y = 0f, dir = 0f, hp = 400, maxHp = 400, armor = 1, rallyX = 9f, rallyY = 8f)
+            )
+
+        assertEquals("Res · prod · train · tech · ral 12,9 · prod Marine x2 · tech Adv x1 · bld 18t", formatSelectionRosterSummary(single))
+        assertEquals("Ros Mar:2   Wor:1   Res:1   ral:1", formatSelectionRosterSummary(mixed))
     }
 
     @Test
