@@ -24,10 +24,12 @@ import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.FactionSnapshot
 import starkraft.sim.client.formatCommandButtonText
 import starkraft.sim.client.formatDeckCommandButtonText
+import starkraft.sim.client.formatDeckCommandCaption
 import starkraft.sim.client.formatDeckCommandButtonStateSuffix
 import starkraft.sim.client.formatCommandHeaderLine
 import starkraft.sim.client.formatFactionOverviewLine
 import starkraft.sim.client.formatFixedHudHintSlot
+import starkraft.sim.client.formatSelectionMetaSummary
 import starkraft.sim.client.formatSelectionHeadline
 import starkraft.sim.client.formatFocusedEntityStatus
 import starkraft.sim.client.formatQueueStatusLine
@@ -799,7 +801,7 @@ class GameScreenInputRulesTest {
         val groups = resolveCommandDeckGroups(buttons, selected, debugVisible = false)
 
         assertEquals(listOf("Orders", "Production", "Utility"), groups.map { it.first })
-        assertEquals("Orders · DEFAULT", resolveCommandDeckHeader("default", groups, selected, productionPage = 0))
+        assertEquals("Orders · DEF", resolveCommandDeckHeader("default", groups, selected, productionPage = 0))
     }
 
     @Test
@@ -966,7 +968,7 @@ class GameScreenInputRulesTest {
     @Test
     fun `queue status line formats compact readable summaries`() {
         assertEquals(
-            "Train Marine x2 · 18t  |  Tech Stim x1 · 30t  |  Build · 12t",
+            "Trn Marine x2 · 18t  |  Tech Stim x1 · 30t  |  Bld · 12t",
             formatQueueStatusLine(
                 productionType = "Marine",
                 productionQueueSize = 2,
@@ -1018,9 +1020,9 @@ class GameScreenInputRulesTest {
 
     @Test
     fun `command header shows true production paging`() {
-        assertEquals("Orders · DEFAULT", formatCommandHeaderLine("default", productionCount = 6, productionPage = 0))
-        assertEquals("Orders · DEFAULT · 2/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 1))
-        assertEquals("Orders · DEFAULT · 3/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 9))
+        assertEquals("Orders · DEF", formatCommandHeaderLine("default", productionCount = 6, productionPage = 0))
+        assertEquals("Orders · DEF · 2/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 1))
+        assertEquals("Orders · DEF · 3/3", formatCommandHeaderLine("default", productionCount = 14, productionPage = 9))
     }
 
     @Test
@@ -1028,9 +1030,23 @@ class GameScreenInputRulesTest {
         assertEquals("Attack", formatCommandButtonText("attackMove", "Attack Move"))
         assertEquals("Expand", formatCommandButtonText("build:ResourceDepot", "Build ResourceDepot"))
         assertEquals("Cancel T", formatCommandButtonText("cancelTrain", "Cancel Train"))
+        assertEquals("Attack · A · 11t", formatDeckCommandCaption("Attack", "A", "11t"))
+        assertEquals("Move · M", formatDeckCommandCaption("Move", "M", null))
         assertEquals("A", resolveCommandButtonHotkey("attackMove"))
         assertEquals("Esc", resolveCommandButtonHotkey("clear"))
         assertEquals("F1", resolveCommandButtonHotkey("help"))
+    }
+
+    @Test
+    fun `selection meta summary stays compact under dense hud`() {
+        val selected =
+            listOf(
+                EntitySnapshot(id = 1, faction = 1, typeId = "Marine", archetype = "infantry", x = 0f, y = 0f, dir = 0f, hp = 40, maxHp = 40, armor = 0, weaponId = "Rifle"),
+                EntitySnapshot(id = 2, faction = 1, typeId = "Worker", archetype = "worker", x = 0f, y = 0f, dir = 0f, hp = 35, maxHp = 35, armor = 0),
+                EntitySnapshot(id = 3, faction = 1, typeId = "Depot", archetype = "producer", x = 0f, y = 0f, dir = 0f, hp = 400, maxHp = 400, armor = 1, footprintWidth = 2, footprintHeight = 2, supportsTraining = true, supportsResearch = true, supportsRally = true, rallyX = 8f, rallyY = 9f)
+            )
+
+        assertEquals("3 sel · cmb 1 · wrk 1 · bld 1 · prod 1 · tech 1 · ral 1/1", formatSelectionMetaSummary(selected))
     }
 
     @Test

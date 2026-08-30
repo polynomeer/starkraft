@@ -74,7 +74,7 @@ internal fun formatCommandHeaderLine(
 ): String {
     val pageCount = ((productionCount + productionPageSize - 1) / productionPageSize).coerceAtLeast(1)
     val normalizedPage = productionPage.coerceIn(0, pageCount - 1)
-    val base = "Orders · ${overlayModeLabel.uppercase()}"
+    val base = "Orders · ${compactOverlayModeLabel(overlayModeLabel)}"
     return if (productionCount > productionPageSize) "$base · ${normalizedPage + 1}/$pageCount" else base
 }
 
@@ -210,15 +210,33 @@ internal fun formatDeckCommandCaption(
     buildString {
         append(baseLabel)
         hotkey?.takeIf { it.isNotBlank() }?.let {
-            append(" [")
+            append(" · ")
             append(it)
-            append(']')
         }
         stateSuffix?.takeIf { it.isNotBlank() }?.let {
             append(" · ")
             append(it)
         }
     }
+
+internal fun compactOverlayModeLabel(raw: String): String =
+    raw
+        .replace('_', ' ')
+        .replace('-', ' ')
+        .trim()
+        .split(Regex("\\s+"))
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { token ->
+            when (token.lowercase()) {
+                "default" -> "DEF"
+                "observer" -> "OBS"
+                "attack" -> "ATK"
+                "attackmove" -> "ATK"
+                "move" -> "MOVE"
+                "patrol" -> "PATROL"
+                else -> token.uppercase().take(6)
+            }
+        }
 
 internal fun formatGroundPingBanner(kind: GroundPingKind, queued: Boolean): String =
     when (kind) {
@@ -375,15 +393,15 @@ internal fun formatSelectionMetaSummary(selected: List<EntitySnapshot>, includeC
     val rallyCapable = selected.count { it.supportsRally == true }
     val rallyConfigured = selected.count { it.rallyX != null && it.rallyY != null }
     return buildList {
-        add("${selected.size} selected")
-        if (combat > 0) add("combat $combat")
-        if (workers > 0) add("workers $workers")
-        if (structures > 0) add("structures $structures")
-        if (support > 0) add("support $support")
+        add("${selected.size} sel")
+        if (combat > 0) add("cmb $combat")
+        if (workers > 0) add("wrk $workers")
+        if (structures > 0) add("bld $structures")
+        if (support > 0) add("sup $support")
         if (includeCapabilities) {
             if (trainers > 0) add("prod $trainers")
             if (researchers > 0) add("tech $researchers")
-            if (rallyCapable > 0) add("rally $rallyConfigured/$rallyCapable")
+            if (rallyCapable > 0) add("ral $rallyConfigured/$rallyCapable")
         }
     }.joinToString(" · ")
 }
@@ -548,8 +566,8 @@ internal fun formatQueueStatusLine(
     val parts = buildList {
         if (productionQueueSize > 0 || productionType != null) {
             add(buildString {
-                append("Train ")
-                append(productionType ?: "queue")
+                append("Trn ")
+                append(compactDeckTypeName(productionType ?: "queue", 6))
                 if (productionQueueSize > 0) append(" x$productionQueueSize")
                 if (productionRemainingTicks > 0) append(" · ${productionRemainingTicks}t")
             })
@@ -557,14 +575,14 @@ internal fun formatQueueStatusLine(
         if (researchQueueSize > 0 || researchTech != null) {
             add(buildString {
                 append("Tech ")
-                append(researchTech ?: "queue")
+                append(compactDeckTypeName(researchTech ?: "queue", 6))
                 if (researchQueueSize > 0) append(" x$researchQueueSize")
                 if (researchRemainingTicks > 0) append(" · ${researchRemainingTicks}t")
             })
         }
         if (underConstruction) {
             add(buildString {
-                append("Build")
+                append("Bld")
                 constructionRemainingTicks?.takeIf { it > 0 }?.let { append(" · ${it}t") }
             })
         }
