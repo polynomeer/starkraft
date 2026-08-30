@@ -323,18 +323,31 @@ internal class GameScreen(
         }
 
         statusCard.apply {
-            background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.72f })
-            pad(10f)
+            background = null
+            pad(0f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
+                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.10f).also { it.a = 0.62f })
+                    pad(1f, 4f, 1f, 4f)
                     add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(5f)
                     add(statusHeader).left()
                 }
-            ).left().row()
-            add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(5f).row()
-            add(factionOverviewLabel).left().expandX().fillX().padTop(6f).row()
-            add(hudLinesLabel).left().expandX().fillX().padTop(8f)
+            ).expandX().fillX().row()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.34f })
+                    pad(4f, 5f, 4f, 5f)
+                    add(factionOverviewLabel).left().expandX().fillX()
+                }
+            ).expandX().fillX().padTop(3f).row()
+            add(
+                Table().apply {
+                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.28f })
+                    pad(4f, 5f, 4f, 5f)
+                    add(hudLinesLabel).left().expandX().fillX()
+                }
+            ).expandX().fillX().padTop(3f)
         }
 
         commandCard.apply {
@@ -583,7 +596,12 @@ internal class GameScreen(
             setFillParent(true)
             bottom().left()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(wrapHudPanel(minimapFrame, colors.selection.cpy().lerp(colors.borderDefault, 0.68f).also { it.a = 0.92f }, innerPad = 0f, contentFillAlpha = 0.04f)).padLeft(20f).padBottom(12f)
+            add(
+                Table().apply {
+                    add(wrapHudPanel(minimapFrame, colors.selection.cpy().lerp(colors.borderDefault, 0.68f).also { it.a = 0.92f }, innerPad = 0f, contentFillAlpha = 0.04f)).left().row()
+                    add(wrapHudPanel(statusCard, colors.command.cpy().lerp(colors.borderDefault, 0.52f).also { it.a = 0.90f }, innerPad = 3f, contentFillAlpha = 0.03f)).left().padTop(6f)
+                }
+            ).padLeft(20f).padBottom(12f)
         }
         stage.addActor(leftHudColumn)
 
@@ -723,9 +741,10 @@ internal class GameScreen(
         selectionMetaLabel.setWidth(centerWidth)
         queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
-        hudLinesLabel.setWidth(minimapWidth)
-        factionOverviewLabel.setWidth(minimapWidth)
-        footerLabel.setWidth(minimapWidth)
+        val leftInfoWidth = (minimapWidth - 18f).coerceAtLeast(108f)
+        hudLinesLabel.setWidth(leftInfoWidth)
+        factionOverviewLabel.setWidth(leftInfoWidth)
+        footerLabel.setWidth(minimapWidth - 12f)
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
         minimapFrame.setSize(minimapWidth, minimapHeight)
@@ -757,8 +776,8 @@ internal class GameScreen(
         updateHealthBar()
         rebuildSelectionGrid()
         hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
-        footerLabel.setText("LMB select  RMB order  drag box select")
-        statusHeader.setText("Battlefield")
+        footerLabel.setText(buildMinimapHintLine(runtime.isGameplayCommandArmed()))
+        statusHeader.setText("Field Intel")
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
         commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
