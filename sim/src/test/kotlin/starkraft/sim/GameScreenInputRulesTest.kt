@@ -92,17 +92,29 @@ import starkraft.sim.client.commandButtonQueueBackgroundTone
 import starkraft.sim.client.commandButtonShellBackgroundTone
 import starkraft.sim.client.resolveCommandButtonRole
 import starkraft.sim.client.CommandButtonRole
+import starkraft.sim.client.minimapFooterAccentTone
+import starkraft.sim.client.minimapFooterCardTone
+import starkraft.sim.client.minimapHeaderAccentTone
+import starkraft.sim.client.minimapHeaderCardTone
 import starkraft.sim.client.selectionSlotBadgeTone
 import starkraft.sim.client.selectionSlotCardTone
+import starkraft.sim.client.selectionFocusAccentTone
+import starkraft.sim.client.selectionFocusCardBackgroundTone
+import starkraft.sim.client.selectionFocusShellBackgroundTone
 import starkraft.sim.client.selectionSlotRoleTone
 import starkraft.sim.client.selectionSlotShellTone
 import starkraft.sim.client.statusChipTonePair
 import starkraft.sim.client.StatusChipRole
+import starkraft.sim.client.WarningBannerState
+import starkraft.sim.client.warningBannerAccentTone
+import starkraft.sim.client.warningBannerCardTone
+import starkraft.sim.client.warningBannerState
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
 import starkraft.sim.client.shouldIssueSelectionBox
 import starkraft.sim.client.CameraView
+import starkraft.sim.client.NoticeKind
 
 class GameScreenInputRulesTest {
     @Test
@@ -327,6 +339,54 @@ class GameScreenInputRulesTest {
         assertNotEquals(ready.first, idle.first)
         assertNotEquals(ready.second, production.second)
         assertNotEquals(idle.first, production.first)
+    }
+
+    @Test
+    fun `selection focus tones stay aligned with green battlefield accent`() {
+        val colors = defaultPresentationTheme().colors
+        val accent = selectionFocusAccentTone(colors)
+
+        assertTrue(accent.g >= accent.r, "focus accent should lean green over red")
+        assertTrue(accent.g >= accent.b, "focus accent should lean green over blue")
+        assertNotEquals(
+            selectionFocusShellBackgroundTone(colors, 0f),
+            selectionFocusShellBackgroundTone(colors, 1f)
+        )
+        assertNotEquals(
+            selectionFocusCardBackgroundTone(colors, 0f),
+            selectionFocusCardBackgroundTone(colors, 1f)
+        )
+    }
+
+    @Test
+    fun `warning banner tones separate attack loss and trade states`() {
+        val colors = defaultPresentationTheme().colors
+
+        val attack = warningBannerState(hasAttackWarning = true, isStructureLoss = false, noticeKind = null)
+        val structureLoss = warningBannerState(hasAttackWarning = true, isStructureLoss = true, noticeKind = null)
+        val trade = warningBannerState(hasAttackWarning = false, isStructureLoss = false, noticeKind = NoticeKind.TRADE)
+
+        assertEquals(WarningBannerState.ATTACK, attack)
+        assertEquals(WarningBannerState.STRUCTURE_LOSS, structureLoss)
+        assertEquals(WarningBannerState.TRADE, trade)
+        assertNotEquals(warningBannerCardTone(colors, attack), warningBannerCardTone(colors, trade))
+        assertNotEquals(warningBannerAccentTone(colors, structureLoss), warningBannerAccentTone(colors, trade))
+    }
+
+    @Test
+    fun `minimap chrome reacts to armed and alert states`() {
+        val colors = defaultPresentationTheme().colors
+
+        val idleHeader = minimapHeaderCardTone(colors, hasAttackWarning = false, viewedFaction = 1, groundModeArmed = false, rallyModeArmed = false, buildModeArmed = false)
+        val alertHeader = minimapHeaderCardTone(colors, hasAttackWarning = true, viewedFaction = 1, groundModeArmed = false, rallyModeArmed = false, buildModeArmed = false)
+        val armedHeaderAccent = minimapHeaderAccentTone(colors, hasAttackWarning = false, groundModeArmed = true, rallyModeArmed = false, buildModeArmed = false)
+        val idleFooter = minimapFooterCardTone(colors, commandArmed = false)
+        val armedFooter = minimapFooterCardTone(colors, commandArmed = true)
+
+        assertNotEquals(idleHeader, alertHeader)
+        assertNotEquals(armedHeaderAccent, minimapHeaderAccentTone(colors, hasAttackWarning = true, groundModeArmed = false, rallyModeArmed = false, buildModeArmed = false))
+        assertNotEquals(idleFooter, armedFooter)
+        assertNotEquals(minimapFooterAccentTone(colors, commandArmed = false), minimapFooterAccentTone(colors, commandArmed = true))
     }
 
     @Test

@@ -82,8 +82,13 @@ internal class GameScreen(
     private val actionBannerLabel = Label("", assets.bodyLabelStyle)
     private val attackWarningTable = Table()
     private val attackWarningCard = Table()
+    private val attackWarningAccent = Table()
     private val attackWarningLabel = Label("", assets.alertLabelStyle)
     private val minimapFrame = Table()
+    private val minimapHeaderCard = Table()
+    private val minimapHeaderAccent = Table()
+    private val minimapFooterCard = Table()
+    private val minimapFooterAccent = Table()
     private val minimapTitle = Label("Tac Map", assets.titleLabelStyle)
     private val minimapHint = Label("map drag", assets.mutedLabelStyle)
     private val bottomHud = Table()
@@ -302,10 +307,10 @@ internal class GameScreen(
             top()
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
-                Table().apply {
+                minimapHeaderCard.apply {
                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.selection, 0.12f).also { it.a = 0.62f })
                     pad(1f, 4f, 1f, 4f)
-                    add(Table().apply { background = assets.panelDrawable(colors.selectionSoft.cpy().also { it.a = 0.74f }) }).width(2f).expandY().fillY().padRight(4f)
+                    add(minimapHeaderAccent.apply { background = assets.panelDrawable(colors.selectionSoft.cpy().also { it.a = 0.74f }) }).width(2f).expandY().fillY().padRight(4f)
                     add(minimapTitle).left()
                     add().expandX().fillX()
                     add(minimapHint).right()
@@ -313,10 +318,10 @@ internal class GameScreen(
             ).expandX().fillX().pad(3f, 3f, 0f, 3f).row()
             add().expand().fill().row()
             add(
-                Table().apply {
+                minimapFooterCard.apply {
                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.48f })
                     pad(1f, 4f, 1f, 4f)
-                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.66f }) }).width(1f).expandY().fillY().padRight(4f)
+                    add(minimapFooterAccent.apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.66f }) }).width(1f).expandY().fillY().padRight(4f)
                     add(footerLabel).left().expandX().fillX()
                 }
             ).expandX().fillX().pad(0f, 3f, 3f, 3f)
@@ -618,7 +623,7 @@ internal class GameScreen(
                         attackWarningCard.apply {
                             background = assets.panelDrawable(colors.panelStrong.cpy().lerp(colors.danger, 0.50f).also { it.a = 0.76f })
                             pad(6f, 14f, 6f, 14f)
-                            add(Table().apply { background = assets.panelDrawable(colors.warningSoft.cpy().also { it.a = 0.72f }) }).width(2f).expandY().fillY().padRight(6f)
+                            add(attackWarningAccent.apply { background = assets.panelDrawable(colors.warningSoft.cpy().also { it.a = 0.72f }) }).width(2f).expandY().fillY().padRight(6f)
                             add(attackWarningLabel).center()
                         }
                     )
@@ -798,6 +803,10 @@ internal class GameScreen(
         commandHintLabel.color = currentCommandHintTextTone()
         val bannerPulse = bannerPulse()
         commandHintCard.background = assets.panelDrawable(currentCommandHintPulseTone(bannerPulse))
+        minimapHeaderCard.background = assets.panelDrawable(currentMinimapHeaderCardTone())
+        minimapHeaderAccent.background = assets.panelDrawable(currentMinimapHeaderAccentTone())
+        minimapFooterCard.background = assets.panelDrawable(currentMinimapFooterCardTone())
+        minimapFooterAccent.background = assets.panelDrawable(currentMinimapFooterAccentTone())
         val selectionPulse = selectionHudPulse()
         topSelectionShell.background = assets.panelDrawable(currentTopSelectionShellTone(selectionPulse))
         topSelectionCard.background = assets.panelDrawable(currentTopSelectionCardTone(selectionPulse))
@@ -811,6 +820,7 @@ internal class GameScreen(
         portraitFrame.background = assets.panelDrawable(currentPortraitFrameTone(selectionPulse))
         attackWarningLabel.setText(buildAttackWarningText())
         attackWarningCard.background = assets.panelDrawable(currentAttackWarningCardTone())
+        attackWarningAccent.background = assets.panelDrawable(currentAttackWarningAccentTone())
         attackWarningTable.isVisible = runtime.attackWarningLine() != null
         centerFooterLabel.setText(buildCenterFooterLine())
         syncSelectionPage(snapshot)
@@ -2219,17 +2229,24 @@ internal class GameScreen(
         }
 
     private fun currentAttackWarningCardTone(): Color =
-        with(assets.theme.colors) {
-            when {
-                runtime.isStructureLossWarning() -> panelStrong.cpy().lerp(danger, 0.42f).also { it.a = 0.96f }
-                runtime.attackWarningLine() != null -> panelStrong.cpy().lerp(danger, 0.54f).also { it.a = 0.94f }
-                runtime.noticeKind() == NoticeKind.TRADE -> panelStrong.cpy().lerp(production, 0.28f).also { it.a = 0.92f }
-                runtime.noticeKind() == NoticeKind.LOSS -> panelStrong.cpy().lerp(danger, 0.32f).also { it.a = 0.92f }
-                runtime.noticeKind() == NoticeKind.KILL -> panelStrong.cpy().lerp(build, 0.26f).also { it.a = 0.92f }
-                runtime.noticeLine() != null -> panelStrong.cpy().lerp(warning, 0.30f).also { it.a = 0.92f }
-                else -> panelStrong.cpy().lerp(command, 0.20f).also { it.a = 0.92f }
-            }
-        }
+        warningBannerCardTone(
+            assets.theme.colors,
+            warningBannerState(
+                hasAttackWarning = runtime.attackWarningLine() != null,
+                isStructureLoss = runtime.isStructureLossWarning(),
+                noticeKind = runtime.noticeKind()
+            )
+        )
+
+    private fun currentAttackWarningAccentTone(): Color =
+        warningBannerAccentTone(
+            assets.theme.colors,
+            warningBannerState(
+                hasAttackWarning = runtime.attackWarningLine() != null,
+                isStructureLoss = runtime.isStructureLossWarning(),
+                noticeKind = runtime.noticeKind()
+            )
+        )
 
     private fun currentPauseHeaderTone(): Color =
         with(assets.theme.colors) {
@@ -2347,13 +2364,13 @@ internal class GameScreen(
             }
         }
 
-    private fun selectionFocusBaseTone(): Color = assets.theme.colors.production.cpy().lerp(assets.theme.colors.textPrimary, 0.18f).also { it.a = 0.96f }
+    private fun selectionFocusBaseTone(): Color = selectionFocusAccentTone(assets.theme.colors)
 
     private fun selectionFocusShellTone(pulse: Float): Color =
-        assets.theme.colors.panelStrong.cpy().lerp(assets.theme.colors.production, 0.30f + (pulse * 0.10f)).also { it.a = 0.96f }
+        selectionFocusShellBackgroundTone(assets.theme.colors, pulse)
 
     private fun selectionFocusCardTone(pulse: Float): Color =
-        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.40f + (pulse * 0.08f)).also { it.a = 0.98f }
+        selectionFocusCardBackgroundTone(assets.theme.colors, pulse)
 
     private fun currentSelectionMetaTone(): Color =
         if (runtime.session.state.selectedIds.isEmpty()) assets.theme.colors.textMuted.cpy().also { it.a = 0.92f }
@@ -2475,6 +2492,37 @@ internal class GameScreen(
                 else -> textMuted.cpy().also { it.a = 0.90f }
             }
         }
+
+    private fun currentMinimapHeaderCardTone(): Color =
+        minimapHeaderCardTone(
+            assets.theme.colors,
+            hasAttackWarning = runtime.attackWarningLine() != null,
+            viewedFaction = runtime.session.state.viewedFaction,
+            groundModeArmed = runtime.groundMode != null,
+            rallyModeArmed = runtime.rallyModeBuildingId != null,
+            buildModeArmed = runtime.buildModeTypeId != null
+        )
+
+    private fun currentMinimapHeaderAccentTone(): Color =
+        minimapHeaderAccentTone(
+            assets.theme.colors,
+            hasAttackWarning = runtime.attackWarningLine() != null,
+            groundModeArmed = runtime.groundMode != null,
+            rallyModeArmed = runtime.rallyModeBuildingId != null,
+            buildModeArmed = runtime.buildModeTypeId != null
+        )
+
+    private fun currentMinimapFooterCardTone(): Color =
+        minimapFooterCardTone(
+            assets.theme.colors,
+            commandArmed = runtime.isGameplayCommandArmed()
+        )
+
+    private fun currentMinimapFooterAccentTone(): Color =
+        minimapFooterAccentTone(
+            assets.theme.colors,
+            commandArmed = runtime.isGameplayCommandArmed()
+        )
 
     private fun currentCommandHeaderTone(groups: List<Pair<String, List<ClientCommandButton>>>): Color =
         with(assets.theme.colors) {
@@ -3138,6 +3186,16 @@ internal enum class CommandButtonRole {
     DEFAULT
 }
 
+internal enum class WarningBannerState {
+    DEFAULT,
+    NOTICE,
+    TRADE,
+    KILL,
+    LOSS,
+    ATTACK,
+    STRUCTURE_LOSS
+}
+
 internal fun statusChipTonePair(colors: PresentationColorTokens, role: StatusChipRole): Pair<Color, Color> =
     when (role) {
         StatusChipRole.READY ->
@@ -3159,6 +3217,90 @@ internal fun statusChipTonePair(colors: PresentationColorTokens, role: StatusChi
             colors.panel.cpy().lerp(colors.build, 0.24f).also { it.a = 0.92f } to
                 colors.build.cpy().also { it.a = 0.90f }
     }
+
+internal fun warningBannerState(
+    hasAttackWarning: Boolean,
+    isStructureLoss: Boolean,
+    noticeKind: NoticeKind?
+): WarningBannerState =
+    when {
+        isStructureLoss -> WarningBannerState.STRUCTURE_LOSS
+        hasAttackWarning -> WarningBannerState.ATTACK
+        noticeKind == NoticeKind.TRADE -> WarningBannerState.TRADE
+        noticeKind == NoticeKind.LOSS -> WarningBannerState.LOSS
+        noticeKind == NoticeKind.KILL -> WarningBannerState.KILL
+        noticeKind != null -> WarningBannerState.NOTICE
+        else -> WarningBannerState.DEFAULT
+    }
+
+internal fun warningBannerCardTone(colors: PresentationColorTokens, state: WarningBannerState): Color =
+    when (state) {
+        WarningBannerState.STRUCTURE_LOSS -> colors.panelStrong.cpy().lerp(colors.danger, 0.42f).also { it.a = 0.96f }
+        WarningBannerState.ATTACK -> colors.panelStrong.cpy().lerp(colors.danger, 0.54f).also { it.a = 0.94f }
+        WarningBannerState.TRADE -> colors.panelStrong.cpy().lerp(colors.production, 0.28f).also { it.a = 0.92f }
+        WarningBannerState.LOSS -> colors.panelStrong.cpy().lerp(colors.danger, 0.32f).also { it.a = 0.92f }
+        WarningBannerState.KILL -> colors.panelStrong.cpy().lerp(colors.build, 0.26f).also { it.a = 0.92f }
+        WarningBannerState.NOTICE -> colors.panelStrong.cpy().lerp(colors.warning, 0.30f).also { it.a = 0.92f }
+        WarningBannerState.DEFAULT -> colors.panelStrong.cpy().lerp(colors.command, 0.20f).also { it.a = 0.92f }
+    }
+
+internal fun warningBannerAccentTone(colors: PresentationColorTokens, state: WarningBannerState): Color =
+    when (state) {
+        WarningBannerState.STRUCTURE_LOSS -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.82f }
+        WarningBannerState.ATTACK -> colors.warningSoft.cpy().also { it.a = 0.76f }
+        WarningBannerState.TRADE -> colors.production.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.78f }
+        WarningBannerState.LOSS -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.80f }
+        WarningBannerState.KILL -> colors.build.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.78f }
+        WarningBannerState.NOTICE -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.76f }
+        WarningBannerState.DEFAULT -> colors.commandSoft.cpy().also { it.a = 0.74f }
+    }
+
+internal fun minimapHeaderCardTone(
+    colors: PresentationColorTokens,
+    hasAttackWarning: Boolean,
+    viewedFaction: Int?,
+    groundModeArmed: Boolean,
+    rallyModeArmed: Boolean,
+    buildModeArmed: Boolean
+): Color =
+    when {
+        hasAttackWarning -> colors.panel.cpy().lerp(colors.danger, 0.18f).also { it.a = 0.72f }
+        buildModeArmed || rallyModeArmed -> colors.panel.cpy().lerp(colors.production, 0.16f).also { it.a = 0.68f }
+        groundModeArmed -> colors.panel.cpy().lerp(colors.selection, 0.16f).also { it.a = 0.68f }
+        viewedFaction == null -> colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.64f }
+        else -> colors.panel.cpy().lerp(colors.selection, 0.12f).also { it.a = 0.62f }
+    }
+
+internal fun minimapHeaderAccentTone(
+    colors: PresentationColorTokens,
+    hasAttackWarning: Boolean,
+    groundModeArmed: Boolean,
+    rallyModeArmed: Boolean,
+    buildModeArmed: Boolean
+): Color =
+    when {
+        hasAttackWarning -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.82f }
+        buildModeArmed || rallyModeArmed -> colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.80f }
+        groundModeArmed -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.80f }
+        else -> colors.selectionSoft.cpy().also { it.a = 0.74f }
+    }
+
+internal fun minimapFooterCardTone(colors: PresentationColorTokens, commandArmed: Boolean): Color =
+    if (commandArmed) colors.panelAlt.cpy().lerp(colors.selection, 0.12f).also { it.a = 0.54f }
+    else colors.panelAlt.cpy().also { it.a = 0.48f }
+
+internal fun minimapFooterAccentTone(colors: PresentationColorTokens, commandArmed: Boolean): Color =
+    if (commandArmed) colors.selectionSoft.cpy().also { it.a = 0.74f }
+    else colors.commandSoft.cpy().also { it.a = 0.66f }
+
+internal fun selectionFocusAccentTone(colors: PresentationColorTokens): Color =
+    colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.96f }
+
+internal fun selectionFocusShellBackgroundTone(colors: PresentationColorTokens, pulse: Float): Color =
+    colors.panelStrong.cpy().lerp(colors.selection, 0.26f + (pulse * 0.10f)).also { it.a = 0.96f }
+
+internal fun selectionFocusCardBackgroundTone(colors: PresentationColorTokens, pulse: Float): Color =
+    colors.panel.cpy().lerp(colors.selection, 0.34f + (pulse * 0.08f)).also { it.a = 0.98f }
 
 internal fun commandGroupAccentBackgroundTone(colors: PresentationColorTokens, group: String): Color =
     when (group) {
