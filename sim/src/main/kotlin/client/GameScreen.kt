@@ -59,6 +59,9 @@ internal class GameScreen(
     private val queueStatusStrip = Table()
     private val queueHeaderLabel = Label("QUEUE", assets.mutedLabelStyle)
     private val selectionRosterLabel = Label("", assets.bodyLabelStyle)
+    private val centerStatusDetailCard = Table()
+    private val queueStatusDetailCard = Table()
+    private val rosterSummaryCard = Table()
     private val centerFooterLabel = Label("home center  esc clear  tab debug", assets.mutedLabelStyle)
     private val portraitFrame = Table()
     private val portraitLabel = Label("NO\nUNIT", assets.titleLabelStyle)
@@ -134,6 +137,9 @@ internal class GameScreen(
     private lateinit var commandHintCell: Cell<*>
     private lateinit var commandHintInnerCell: Cell<*>
     private lateinit var commandScrollCell: Cell<*>
+    private lateinit var centerStatusDetailCell: Cell<*>
+    private lateinit var queueStatusDetailCell: Cell<*>
+    private lateinit var rosterSummaryCell: Cell<*>
 
     init {
         centerHeaderLabel.setFontScale(0.94f)
@@ -485,13 +491,15 @@ internal class GameScreen(
                                     add(centerStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
-                            add(
-                                Table().apply {
+                            centerStatusDetailCell = add(
+                                centerStatusDetailCard.apply {
                                     background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
                                     pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
+                                    clearChildren()
                                     add(centerStatusLabel).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(1f).row()
+                            ).expandX().fillX().padTop(1f)
+                            row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
@@ -506,13 +514,15 @@ internal class GameScreen(
                                     add(queueStatusStrip).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
-                            add(
-                                Table().apply {
+                            queueStatusDetailCell = add(
+                                queueStatusDetailCard.apply {
                                     background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
                                     pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
+                                    clearChildren()
                                     add(queueStatusLabel).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(1f).row()
+                            ).expandX().fillX().padTop(1f)
+                            row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
@@ -521,13 +531,15 @@ internal class GameScreen(
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
-                            add(
-                                Table().apply {
+                            rosterSummaryCell = add(
+                                rosterSummaryCard.apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.30f })
                                     pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
+                                    clearChildren()
                                     add(selectionRosterLabel).left().expandX().fillX()
                                 }
-                            ).expandX().fillX().padTop(1f).row()
+                            ).expandX().fillX().padTop(1f)
+                            row()
                             add(selectionGrid).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 selectionPager.apply {
@@ -775,6 +787,17 @@ internal class GameScreen(
         commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
         commandHintLabel.setWidth((commandHintInnerWidth - 12f).coerceAtLeast(64f))
+        val centerStatusBits = buildCenterStatusBits()
+        val queueStatusBits = buildQueueStatusBits()
+        val showCenterDetail = shouldShowSelectionDetailLine(selectedEntities.size, centerStatusBits.size, centerStatusLabel.text.toString())
+        val showQueueDetail = shouldShowSelectionDetailLine(selectedEntities.size, queueStatusBits.size, queueStatusLabel.text.toString())
+        val showRosterDetail = shouldShowSelectionRosterLine(selectedEntities.size)
+        centerStatusDetailCard.isVisible = showCenterDetail
+        queueStatusDetailCard.isVisible = showQueueDetail
+        rosterSummaryCard.isVisible = showRosterDetail
+        centerStatusDetailCell.padTop(if (showCenterDetail) 1f else 0f).height(if (showCenterDetail) 12f else 0f)
+        queueStatusDetailCell.padTop(if (showQueueDetail) 1f else 0f).height(if (showQueueDetail) 12f else 0f)
+        rosterSummaryCell.padTop(if (showRosterDetail) 1f else 0f).height(if (showRosterDetail) 12f else 0f)
         val bannerPulse = bannerPulse()
         commandHintCard.background = assets.panelDrawable(currentCommandHintPulseTone(bannerPulse))
         minimapHeaderCard.background = assets.panelDrawable(currentMinimapHeaderCardTone())

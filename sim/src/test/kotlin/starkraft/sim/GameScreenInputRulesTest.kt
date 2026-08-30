@@ -121,6 +121,8 @@ import starkraft.sim.client.WarningBannerState
 import starkraft.sim.client.warningBannerAccentTone
 import starkraft.sim.client.warningBannerCardTone
 import starkraft.sim.client.warningBannerState
+import starkraft.sim.client.shouldShowSelectionDetailLine
+import starkraft.sim.client.shouldShowSelectionRosterLine
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -1092,6 +1094,18 @@ class GameScreenInputRulesTest {
 
         assertEquals("Res · prod · train · tech · ral 12,9 · prod Marine x2 · tech Adv x1 · bld 18t", formatSelectionRosterSummary(single))
         assertEquals("Ros Mar:2   Wor:1   Res:1   ral:1", formatSelectionRosterSummary(mixed))
+    }
+
+    @Test
+    fun `selection panel hides detail rows when chips already explain the state`() {
+        assertTrue(shouldShowSelectionDetailLine(selectedCount = 1, chipCount = 2, detailLine = "O move · Q2"))
+        assertFalse(shouldShowSelectionDetailLine(selectedCount = 3, chipCount = 2, detailLine = "O move · Q2"))
+        assertFalse(shouldShowSelectionDetailLine(selectedCount = 1, chipCount = 4, detailLine = "O move · Q2"))
+        assertFalse(shouldShowSelectionDetailLine(selectedCount = 1, chipCount = 1, detailLine = "Ready"))
+        assertTrue(shouldShowSelectionRosterLine(1))
+        assertTrue(shouldShowSelectionRosterLine(4))
+        assertFalse(shouldShowSelectionRosterLine(0))
+        assertFalse(shouldShowSelectionRosterLine(5))
     }
 
     @Test

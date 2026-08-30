@@ -418,6 +418,17 @@ internal fun formatSelectionMetaLine(
     return formatSelectionMetaSummary(selected, includeCapabilities = includeCapabilities)
 }
 
+internal fun shouldShowSelectionDetailLine(selectedCount: Int, chipCount: Int, detailLine: String): Boolean =
+    selectedCount <= 1 &&
+        chipCount < 4 &&
+        detailLine.isNotBlank() &&
+        !detailLine.equals("Ready", ignoreCase = true) &&
+        !detailLine.equals("Idle", ignoreCase = true) &&
+        !detailLine.startsWith("No ", ignoreCase = true)
+
+internal fun shouldShowSelectionRosterLine(selectedCount: Int): Boolean =
+    selectedCount in 1..4
+
 internal fun formatFocusedEntityStatus(entity: EntitySnapshot?): String? {
     entity ?: return null
     val details =
