@@ -47,6 +47,8 @@ import starkraft.sim.client.MiniMapMarkerKind
 import starkraft.sim.client.resolveMiniMapMarkerKind
 import starkraft.sim.client.resolveMiniMapMarkerSize
 import starkraft.sim.client.resolveMiniMapSampleStep
+import starkraft.sim.client.resolveMiniMapMarkerFillColor
+import starkraft.sim.client.resolveMiniMapMarkerAccentColor
 import starkraft.sim.client.resolveTerrainTileColor
 import starkraft.sim.client.resolveCommandDeckGroups
 import starkraft.sim.client.resolveCommandDeckHeader
@@ -690,6 +692,8 @@ class GameScreenInputRulesTest {
         val combat = EntitySnapshot(id = 2, faction = 1, typeId = "Marine", archetype = "infantry", x = 1f, y = 1f, dir = 0f, hp = 40, maxHp = 40, armor = 0, weaponId = "Gauss")
         val worker = EntitySnapshot(id = 3, faction = 1, typeId = "Worker", archetype = "worker", x = 1f, y = 1f, dir = 0f, hp = 20, maxHp = 20, armor = 0)
         val support = EntitySnapshot(id = 4, faction = 1, typeId = "Scout", archetype = "support", x = 1f, y = 1f, dir = 0f, hp = 30, maxHp = 30, armor = 0)
+        val colors = defaultPresentationTheme().colors
+        val faction = Color(0.30f, 0.60f, 1.00f, 1f)
 
         assertEquals(MiniMapMarkerKind.STRUCTURE, resolveMiniMapMarkerKind(structure))
         assertEquals(MiniMapMarkerKind.COMBAT, resolveMiniMapMarkerKind(combat))
@@ -697,6 +701,12 @@ class GameScreenInputRulesTest {
         assertEquals(MiniMapMarkerKind.SUPPORT, resolveMiniMapMarkerKind(support))
         assertTrue(resolveMiniMapMarkerSize(structure, selected = true) > resolveMiniMapMarkerSize(combat, selected = false))
         assertTrue(resolveMiniMapMarkerSize(combat, selected = true) > resolveMiniMapMarkerSize(worker, selected = false))
+        val structureFill = resolveMiniMapMarkerFillColor(colors, structure, faction, visible = true)
+        val combatFill = resolveMiniMapMarkerFillColor(colors, combat, faction, visible = true)
+        val hiddenWorkerAccent = resolveMiniMapMarkerAccentColor(colors, worker, faction, visible = false)
+        val visibleWorkerAccent = resolveMiniMapMarkerAccentColor(colors, worker, faction, visible = true)
+        assertNotEquals(structureFill, combatFill)
+        assertTrue(visibleWorkerAccent.a > hiddenWorkerAccent.a)
     }
 
     @Test

@@ -1279,17 +1279,7 @@ internal class GdxWorldRenderer(
         val sampleHeight = tileHeight * sampleStep
         for (x in 0 until snapshot.mapWidth step sampleStep) {
             for (y in 0 until snapshot.mapHeight step sampleStep) {
-                val macroPatch = ((x / 10) + (y / 8)) % 3
-                val ridgeBand = ((x * 3) + (y * 2)) % 17
-                val terrainDrift = ((x / 14) - (y / 11)) % 4
-                shape.color =
-                    when {
-                        x in 40..56 && y in 40..56 -> scratchColorA.set(terrainDust).lerp(Color.BLACK, 0.15f)
-                        ridgeBand < 3 -> scratchColorA.set(terrainRidge).lerp(Color.BLACK, 0.10f)
-                        macroPatch == 0 -> scratchColorA.set(terrainA).lerp(Color.BLACK, 0.10f)
-                        terrainDrift == 0 -> scratchColorA.set(terrainA).lerp(terrainDust, 0.16f).lerp(Color.BLACK, 0.08f)
-                        else -> scratchColorA.set(terrainB).lerp(Color.BLACK, 0.10f)
-                    }
+                shape.color = resolveTerrainTileColor(x, y, terrainA, terrainB, terrainDust, terrainRidge).lerp(Color.BLACK, 0.10f)
                 shape.rect(left + (x * tileWidth), top + (y * tileHeight), sampleWidth + 0.4f, sampleHeight + 0.4f)
             }
         }
@@ -1318,9 +1308,18 @@ internal class GdxWorldRenderer(
         for (node in snapshot.resourceNodes) {
             val nodeX = left + (node.x / snapshot.mapWidth) * boundsWidth
             val nodeY = top + (node.y / snapshot.mapHeight) * boundsHeight
-            shape.color =
-                if (node.kind == "gas") completionBuildSparkColor else completionProductionSparkColor
-            shape.rect(nodeX - 0.75f, nodeY - 0.75f, 2.5f, 2.5f)
+            shape.color = resolveResourceCoreColor(node.kind).also { it.a = 1f }
+            if (node.kind == "gas") {
+                shape.circle(nodeX, nodeY, 1.9f)
+                shape.color = resolveResourceGlowColor(node.kind).also { it.a = 0.84f }
+                shape.rect(nodeX - 0.55f, nodeY - 3f, 1.1f, 6f)
+                shape.rect(nodeX - 3f, nodeY - 0.55f, 6f, 1.1f)
+            } else {
+                shape.rect(nodeX - 1.2f, nodeY - 1.1f, 2.4f, 2.2f)
+                shape.color = resolveResourceGlowColor(node.kind).also { it.a = 0.82f }
+                shape.rect(nodeX - 2.2f, nodeY - 0.45f, 1.2f, 0.9f)
+                shape.rect(nodeX + 1f, nodeY - 1.25f, 1.2f, 0.9f)
+            }
         }
         for (entity in snapshot.entities) {
             val x = left + (entity.x / snapshot.mapWidth) * boundsWidth
@@ -1331,24 +1330,34 @@ internal class GdxWorldRenderer(
             val impactKind = runtime.damageImpactKind(entity.id)
             val meleeImpact = impactKind == CombatSoundKind.MELEE || impactKind == CombatSoundKind.ZERGLING_MELEE
             val markerKind = resolveMiniMapMarkerKind(entity)
-            shape.color = factionColor(entity.faction, viewedFaction).cpy().apply { a = if (visible) 1f else 0.28f }
+            val factionTone = factionColor(entity.faction, viewedFaction)
+            val markerFill = resolveMiniMapMarkerFillColor(colors, entity, factionTone, visible)
+            val markerAccent = resolveMiniMapMarkerAccentColor(colors, entity, factionTone, visible)
             val size = resolveMiniMapMarkerSize(entity, selected)
+            shape.color = markerFill
             when (markerKind) {
                 MiniMapMarkerKind.STRUCTURE -> {
                     shape.rect(x - (size / 2f), y - (size / 2f), size + 1f, size - 0.5f)
+                    shape.color = markerAccent
                     shape.rect(x - ((size - 1f) / 2f), y - ((size - 1.5f) / 2f), size - 1f, 1.25f)
+                    shape.rect(x - 0.55f, y - (size / 2f), 1.1f, size)
                 }
                 MiniMapMarkerKind.COMBAT -> {
                     shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+                    shape.color = markerAccent
                     shape.rect(x - 0.6f, y - (size / 2f) - 1f, 1.2f, size + 2f)
+                    shape.rect(x - (size / 2f), y - 0.55f, size, 1.1f)
                 }
                 MiniMapMarkerKind.WORKER -> {
                     shape.rect(x - (size / 2f), y - 0.8f, size, 1.6f)
                     shape.rect(x - 0.8f, y - (size / 2f), 1.6f, size)
+                    shape.color = markerAccent
                     shape.rect(x - 1.8f, y - 1.8f, 3.6f, 3.6f)
                 }
                 MiniMapMarkerKind.SUPPORT -> {
                     shape.rect(x - (size / 2f), y - (size / 2f), size, size)
+                    shape.color = markerAccent
+                    shape.rect(x - (size / 2f), y - 0.55f, size, 1.1f)
                 }
             }
             if (damaged) {
@@ -2788,6 +2797,36 @@ internal fun resolveMiniMapMarkerSize(entity: EntitySnapshot, selected: Boolean)
         MiniMapMarkerKind.WORKER -> if (selected) 5f else 4f
         MiniMapMarkerKind.SUPPORT -> if (selected) 4.75f else 4f
     }
+
+internal fun resolveMiniMapMarkerFillColor(
+    colors: PresentationColorTokens,
+    entity: EntitySnapshot,
+    factionTone: Color,
+    visible: Boolean
+): Color {
+    val roleTone = selectionSlotRoleTone(colors, entity)
+    val blended =
+        when (resolveMiniMapMarkerKind(entity)) {
+            MiniMapMarkerKind.STRUCTURE -> factionTone.cpy().lerp(roleTone, 0.60f)
+            MiniMapMarkerKind.COMBAT -> factionTone.cpy().lerp(roleTone, 0.44f)
+            MiniMapMarkerKind.WORKER -> factionTone.cpy().lerp(roleTone, 0.52f)
+            MiniMapMarkerKind.SUPPORT -> factionTone.cpy().lerp(roleTone, 0.58f)
+        }
+    blended.a = if (visible) 0.96f else 0.30f
+    return blended
+}
+
+internal fun resolveMiniMapMarkerAccentColor(
+    colors: PresentationColorTokens,
+    entity: EntitySnapshot,
+    factionTone: Color,
+    visible: Boolean
+): Color {
+    val badgeTone = selectionSlotBadgeTone(colors, entity)
+    val blended = badgeTone.cpy().lerp(factionTone, 0.18f)
+    blended.a = if (visible) 0.94f else 0.36f
+    return blended
+}
 
 internal fun resolveTerrainTileColor(
     x: Int,
