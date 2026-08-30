@@ -134,6 +134,10 @@ internal class GameScreen(
     private lateinit var leftHudSpacerCell: Cell<*>
     private lateinit var centerHudCell: Cell<*>
     private lateinit var commandHudCell: Cell<*>
+    private lateinit var commandHeaderCell: Cell<*>
+    private lateinit var commandHintCell: Cell<*>
+    private lateinit var commandHintInnerCell: Cell<*>
+    private lateinit var commandScrollCell: Cell<*>
 
     init {
         statusHeader.setFontScale(0.94f)
@@ -246,7 +250,7 @@ internal class GameScreen(
         topBar.apply {
             background = null
             pad(0f, 2f, 0f, 2f)
-            add(
+            commandHeaderCell = add(
                 Table().apply {
                     background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.60f })
                     pad(1f)
@@ -360,54 +364,59 @@ internal class GameScreen(
             pad(3f)
             top()
             val initialCommandLayout = computeCommandDeckLayout(1280, 720)
-            add(
-                Table().apply {
-                    add(
-                        Table().apply {
-                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.76f })
-                            pad(1f)
-                            add(
-                                Table().apply {
-                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.78f })
-                                    pad(initialCommandLayout.headerPadY.toFloat(), 6f, initialCommandLayout.headerPadY.toFloat(), 6f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
-                                    add(commandHeaderLabel).left()
-                                }
-                            )
-                        }
-                    ).left().padRight(initialCommandLayout.sectionGap.toFloat())
-                    add().expandX().fillX()
-                    add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat()).padRight(initialCommandLayout.buttonGap.toFloat())
-                    add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat())
-                }
-            ).expandX().fillX().row()
+            commandHeaderCell =
+                add(
+                    Table().apply {
+                        add(
+                            Table().apply {
+                                background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.76f })
+                                pad(1f)
+                                add(
+                                    Table().apply {
+                                        background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.18f).also { it.a = 0.78f })
+                                        pad(initialCommandLayout.headerPadY.toFloat(), 6f, initialCommandLayout.headerPadY.toFloat(), 6f)
+                                        add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
+                                        add(commandHeaderLabel).left()
+                                    }
+                                )
+                            }
+                        ).left().padRight(initialCommandLayout.sectionGap.toFloat())
+                        add().expandX().fillX()
+                        add(makeButton("<", style = assets.subtleButtonStyle()) { shiftProductionPage(-1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat()).padRight(initialCommandLayout.buttonGap.toFloat())
+                        add(makeButton(">", style = assets.subtleButtonStyle()) { shiftProductionPage(1) }).width(initialCommandLayout.pagerButtonWidth.toFloat()).height(initialCommandLayout.pagerButtonHeight.toFloat())
+                    }
+                ).expandX().fillX()
+            row()
             add(Table().apply { background = assets.panelDrawable(colors.borderDefault.cpy().also { it.a = 0.62f }) }).height(1f).expandX().fillX().padTop(5f).row()
-            add(
-                commandHintCard.apply {
-                    pad(2f, 2f, 0f, 2f)
-                    add(
-                        Table().apply {
-                            background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
-                            pad(1f)
+            commandHintCell =
+                add(
+                    commandHintCard.apply {
+                        pad(2f, 2f, 0f, 2f)
+                        commandHintInnerCell =
                             add(
                                 Table().apply {
-                                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.72f })
-                                    pad(initialCommandLayout.headerPadY.toFloat(), 4f, initialCommandLayout.headerPadY.toFloat(), 4f)
-                                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
-                                    add(commandHintLabel).width(140f).left().fillX()
+                                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.68f })
+                                    pad(1f)
+                                    add(
+                                        Table().apply {
+                                            background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.72f })
+                                            pad(initialCommandLayout.headerPadY.toFloat(), 4f, initialCommandLayout.headerPadY.toFloat(), 4f)
+                                            add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(4f)
+                                            add(commandHintLabel).width(140f).left().fillX()
+                                        }
+                                    ).width((initialCommandLayout.hintWidth - 4).toFloat()).height(computeCommandHintRowHeight(1280).toFloat()).left()
                                 }
-                            ).width((initialCommandLayout.hintWidth - 4).toFloat()).height(computeCommandHintRowHeight(1280).toFloat()).left()
-                        }
-                    ).width(initialCommandLayout.hintWidth.toFloat()).left()
-                }
-            ).expandX().fillX().padTop(initialCommandLayout.sectionGap.toFloat()).row()
+                            ).width(initialCommandLayout.hintWidth.toFloat()).left()
+                    }
+                ).expandX().fillX().padTop(initialCommandLayout.sectionGap.toFloat())
+            row()
             add(actionBanner).left().expandX().fillX().padTop(initialCommandLayout.sectionGap.toFloat()).row()
         }
         buttonTable.top().left()
         buttonTable.defaults().left()
         commandScroll.setFadeScrollBars(false)
         commandScroll.setScrollingDisabled(true, false)
-        commandCard.add(commandScroll).top().left().padTop(6f)
+        commandScrollCell = commandCard.add(commandScroll).top().left().padTop(6f)
 
         actionBanner.apply {
             background = null
@@ -722,6 +731,9 @@ internal class GameScreen(
         val commandColumns = commandDeckPresentation.columns
         val commandCellWidth = (commandWidth / commandColumns) - 2f
         val commandActorWidth = commandCellWidth - commandDeckPresentation.actorInset.toFloat()
+        val commandHintWidth = commandDeckLayout.hintWidth.toFloat()
+        val commandHintInnerWidth = (commandDeckLayout.hintWidth - 4).toFloat().coerceAtLeast(96f)
+        val commandHintHeight = computeCommandHintRowHeight(width).toFloat()
         val centerHeight = (height * 0.146f).coerceIn(120f, 152f)
         val hudShellHeight = computeBottomHudHeight(width, height).toFloat()
         val unifiedPanelHeight = hudShellHeight
@@ -731,6 +743,10 @@ internal class GameScreen(
         leftHudSpacerCell.width(bottomHudLayout.leftSlotWidth.toFloat())
         centerHudCell.width(centerWidth)
         commandHudCell.width(commandWidth)
+        commandHeaderCell.width(commandWidth)
+        commandHintCell.width(commandWidth)
+        commandHintInnerCell.width(commandHintWidth).height(commandHintHeight)
+        commandScrollCell.width(commandWidth - 8f).height(commandHeight)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
         factionOverviewLabel.setWrap(true)
@@ -801,6 +817,7 @@ internal class GameScreen(
         val commandHintText = formatFixedHudHintSlot(buildCommandHintLine())
         commandHintLabel.setText(commandHintText)
         commandHintLabel.color = currentCommandHintTextTone()
+        commandHintLabel.setWidth((commandHintInnerWidth - 12f).coerceAtLeast(64f))
         val bannerPulse = bannerPulse()
         commandHintCard.background = assets.panelDrawable(currentCommandHintPulseTone(bannerPulse))
         minimapHeaderCard.background = assets.panelDrawable(currentMinimapHeaderCardTone())
