@@ -50,11 +50,8 @@ internal class GameScreen(
     private val topSelectionLabel = Label("", assets.mutedLabelStyle)
     private val modeLabel = Label("", assets.accentLabelStyle)
     private val statusBadgeLabel = Label("", assets.bodyLabelStyle)
-    private val statusHeader = Label("Battlefield", assets.titleLabelStyle)
     private val centerHeaderLabel = Label("Selected", assets.titleLabelStyle)
     private val selectionMetaLabel = Label("", assets.mutedLabelStyle)
-    private val factionOverviewLabel = Label("", assets.mutedLabelStyle)
-    private val hudLinesLabel = Label("", assets.bodyLabelStyle)
     private val selectionLabel = Label("", assets.accentLabelStyle)
     private val centerStatusLabel = Label("", assets.bodyLabelStyle)
     private val centerStatusStrip = Table()
@@ -93,7 +90,6 @@ internal class GameScreen(
     private val minimapHint = Label("map drag", assets.mutedLabelStyle)
     private val bottomHud = Table()
     private val leftHudColumn = Table()
-    private val statusCard = Table()
     private val centerCard = Table()
     private val commandCard = Table()
     private val selectionHeadlineCard = Table()
@@ -140,7 +136,6 @@ internal class GameScreen(
     private lateinit var commandScrollCell: Cell<*>
 
     init {
-        statusHeader.setFontScale(0.94f)
         centerHeaderLabel.setFontScale(0.94f)
         commandHeaderLabel.setFontScale(0.94f)
         queueHeaderLabel.setFontScale(0.86f)
@@ -157,7 +152,6 @@ internal class GameScreen(
         selectionMetaLabel.setFontScale(0.84f)
         centerStatusLabel.setFontScale(0.76f)
         queueStatusLabel.setFontScale(0.76f)
-        factionOverviewLabel.setFontScale(0.84f)
         selectionRosterLabel.setFontScale(0.84f)
         footerLabel.setFontScale(0.84f)
         centerFooterLabel.setFontScale(0.78f)
@@ -329,34 +323,6 @@ internal class GameScreen(
                     add(footerLabel).left().expandX().fillX()
                 }
             ).expandX().fillX().pad(0f, 3f, 3f, 3f)
-        }
-
-        statusCard.apply {
-            background = null
-            pad(0f)
-            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-            add(
-                Table().apply {
-                    background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.10f).also { it.a = 0.62f })
-                    pad(1f, 4f, 1f, 4f)
-                    add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(2f).expandY().fillY().padRight(5f)
-                    add(statusHeader).left()
-                }
-            ).expandX().fillX().row()
-            add(
-                Table().apply {
-                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.34f })
-                    pad(4f, 5f, 4f, 5f)
-                    add(factionOverviewLabel).left().expandX().fillX()
-                }
-            ).expandX().fillX().padTop(3f).row()
-            add(
-                Table().apply {
-                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.28f })
-                    pad(4f, 5f, 4f, 5f)
-                    add(hudLinesLabel).left().expandX().fillX()
-                }
-            ).expandX().fillX().padTop(3f)
         }
 
         commandCard.apply {
@@ -612,10 +578,9 @@ internal class GameScreen(
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.disabled
             add(
                 Table().apply {
-                    add(wrapHudPanel(minimapFrame, colors.selection.cpy().lerp(colors.borderDefault, 0.68f).also { it.a = 0.92f }, innerPad = 0f, contentFillAlpha = 0.04f)).left().row()
-                    add(wrapHudPanel(statusCard, colors.command.cpy().lerp(colors.borderDefault, 0.52f).also { it.a = 0.90f }, innerPad = 3f, contentFillAlpha = 0.03f)).left().padTop(6f)
+                    add(wrapMinimapPanel(minimapFrame)).left()
                 }
-            ).padLeft(20f).padBottom(12f)
+            ).padLeft(16f).padBottom(14f)
         }
         stage.addActor(leftHudColumn)
 
@@ -749,10 +714,8 @@ internal class GameScreen(
         commandScrollCell.width(commandWidth - 8f).height(commandHeight)
         selectionLabel.setWrap(true)
         selectionMetaLabel.setWrap(true)
-        factionOverviewLabel.setWrap(true)
         queueStatusLabel.setWrap(true)
         selectionRosterLabel.setWrap(true)
-        hudLinesLabel.setWrap(true)
         footerLabel.setWrap(true)
         centerFooterLabel.setWrap(true)
         minimapTitle.setText("Tac Map  ${runtime.session.state.viewedFaction?.let { "F$it" } ?: "Obs"}")
@@ -762,9 +725,6 @@ internal class GameScreen(
         selectionMetaLabel.setWidth(centerWidth)
         queueStatusLabel.setWidth(centerWidth)
         selectionRosterLabel.setWidth(centerWidth)
-        val leftInfoWidth = (minimapWidth - 18f).coerceAtLeast(108f)
-        hudLinesLabel.setWidth(leftInfoWidth)
-        factionOverviewLabel.setWidth(leftInfoWidth)
         footerLabel.setWidth(minimapWidth - 12f)
         centerFooterLabel.setWidth(centerWidth)
         minimapHint.setWidth(minimapWidth - 20f)
@@ -789,16 +749,13 @@ internal class GameScreen(
         queueStatusLabel.color = currentQueueStatusTone()
         selectionRosterLabel.setText(buildSelectionRosterLine())
         selectionRosterLabel.color = currentRosterTone()
-        factionOverviewLabel.setText(buildFactionOverviewLine())
         portraitLabel.setText(buildPortraitText())
         val healthLine = buildHealthLine()
         healthLabel.setText(healthLine)
         portraitHealthLabel.setText(healthLine)
         updateHealthBar()
         rebuildSelectionGrid()
-        hudLinesLabel.setText(buildStatusSummaryLines().joinToString("\n"))
         footerLabel.setText(buildMinimapHintLine(runtime.isGameplayCommandArmed()))
-        statusHeader.setText("Field Intel")
         centerHeaderLabel.setText(if (runtime.session.state.selectedIds.isEmpty()) "Selected" else "Selection")
         val groupedButtons = commandGroups(runtime.buttonModels())
         commandHeaderLabel.setText(buildCommandHeader(groupedButtons))
@@ -1034,34 +991,6 @@ internal class GameScreen(
             }
         }
 
-    private fun buildStatusSummaryLines(): List<String> {
-        val lines = runtime.currentHudLines()
-        val preferredPrefixes =
-            listOf(
-                "economy:",
-                "selection classes:",
-                "selection health:",
-                "selection orders:",
-                "selection tasks:",
-                "selection path:",
-                "production:",
-                "research:",
-                "fog:",
-                "last ack:"
-            )
-        val picked = ArrayList<String>()
-        for (prefix in preferredPrefixes) {
-            lines.firstOrNull { it.startsWith(prefix) }?.let(picked::add)
-        }
-        if (runtime.session.state.viewedFaction != null && buildTopEconomyLine().contains("vis 0")) {
-            picked.add(0, "warning: no vision, press 1/2/3")
-        }
-        if (picked.isEmpty()) {
-            picked.addAll(lines.take(6))
-        }
-        return picked.distinct().take(if (runtime.debugVisible) 10 else 7)
-    }
-
     private fun buildSelectionHeadline(): String {
         val raw = runtime.session.state.viewState.selectionHudLine
         if (!raw.isNullOrBlank() && !raw.equals("selection hud: none", ignoreCase = true)) {
@@ -1114,15 +1043,6 @@ internal class GameScreen(
         val snapshot = runtime.snapshot ?: return "No ros"
         val selected = snapshot.entities.filter { it.id in runtime.session.state.selectedIds }
         return formatSelectionRosterSummary(selected)
-    }
-
-    private fun buildFactionOverviewLine(): String {
-        val snapshot = runtime.snapshot ?: return "No data"
-        if (snapshot.factions.isEmpty()) return "No factions"
-        return snapshot.factions.joinToString("\n") { faction ->
-            val viewed = if (runtime.session.state.viewedFaction == faction.faction) " <" else ""
-            "F${faction.faction}  M${faction.minerals}  G${faction.gas}  V${faction.visibleTiles}$viewed"
-        }
     }
 
     private fun wrapHudPanel(
