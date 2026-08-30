@@ -2992,9 +2992,9 @@ internal fun overlayBlocksWorldInput(pauseVisible: Boolean, helpVisible: Boolean
 internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
     val minimapHeight = gdxMiniMapBounds(screenWidth, screenHeight).height
     val compact = screenWidth < 1440
-    val centerHeight = if (compact) (screenHeight * 0.104f).coerceIn(88f, 112f) else (screenHeight * 0.110f).coerceIn(92f, 118f)
-    val commandHeight = if (compact) (screenHeight * 0.060f).coerceIn(44f, 58f) else (screenHeight * 0.064f).coerceIn(48f, 64f)
-    val commandShellHeight = commandHeight + if (compact) 14f else 16f
+    val centerHeight = if (compact) (screenHeight * 0.094f).coerceIn(78f, 98f) else (screenHeight * 0.098f).coerceIn(82f, 106f)
+    val commandHeight = if (compact) (screenHeight * 0.052f).coerceIn(36f, 48f) else (screenHeight * 0.056f).coerceIn(40f, 54f)
+    val commandShellHeight = commandHeight + if (compact) 12f else 14f
     return maxOf(minimapHeight, centerHeight, commandShellHeight).toInt()
 }
 
@@ -3002,8 +3002,8 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
     val compact = screenWidth < 1440
     val leftSlotWidth = minimapWidth
-    val centerWidth = if (compact) (screenWidth * 0.156f).coerceIn(208f, 254f).toInt() else (screenWidth * 0.164f).coerceIn(224f, 286f).toInt()
-    val commandWidth = if (compact) (screenWidth * 0.132f).coerceIn(182f, 214f).toInt() else (screenWidth * 0.136f).coerceIn(192f, 236f).toInt()
+    val centerWidth = if (compact) (screenWidth * 0.172f).coerceIn(226f, 286f).toInt() else (screenWidth * 0.182f).coerceIn(248f, 332f).toInt()
+    val commandWidth = if (compact) (screenWidth * 0.146f).coerceIn(196f, 238f).toInt() else (screenWidth * 0.154f).coerceIn(220f, 278f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
@@ -3013,19 +3013,19 @@ internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): Bottom
 
 internal fun computeCommandDeckLayout(screenWidth: Int, screenHeight: Int): CommandDeckLayout {
     val compact = screenWidth < 1440
-    val scrollHeight = if (compact) (screenHeight * 0.056f).coerceIn(40f, 54f) else (screenHeight * 0.060f).coerceIn(44f, 58f)
+    val scrollHeight = if (compact) (screenHeight * 0.048f).coerceIn(34f, 44f) else (screenHeight * 0.052f).coerceIn(38f, 50f)
     return CommandDeckLayout(
         scrollHeight = scrollHeight.toInt(),
-        buttonHeight = if (compact) 14 else 16,
+        buttonHeight = if (compact) 13 else 15,
         groupPad = if (compact) 1 else 2,
         headerPadX = if (compact) 3 else 4,
-        actorInset = if (compact) 10 else 12,
+        actorInset = if (compact) 8 else 10,
         sectionGap = if (compact) 3 else 4,
         buttonGap = if (compact) 2 else 3,
         headerPadY = if (compact) 2 else 3,
         pagerButtonWidth = if (compact) 20 else 22,
         pagerButtonHeight = if (compact) 16 else 18,
-        hintWidth = if (compact) 148 else 160
+        hintWidth = if (compact) 156 else 172
     )
 }
 
@@ -3038,7 +3038,7 @@ internal fun computeCommandDeckPresentation(
             columns = 2,
             buttonHeight = base.buttonHeight + 2,
             scrollHeight = base.scrollHeight + 10,
-            actorInset = (base.actorInset - 2).coerceAtLeast(8)
+            actorInset = (base.actorInset - 2).coerceAtLeast(6)
         )
     } else {
         CommandDeckPresentation(
@@ -3052,16 +3052,16 @@ internal fun computeCommandDeckPresentation(
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1440
     return CenterPanelLayout(
-        portraitSize = if (compact) 42 else 50,
-        rosterSlotSize = if (compact) 28 else 32,
+        portraitSize = if (compact) 40 else 48,
+        rosterSlotSize = if (compact) 26 else 30,
         pagerButtonSize = if (compact) 14 else 16,
         pagerLabelWidth = if (compact) 42 else 48,
         groupSummaryWidth = if (compact) 52 else 62,
-        healthBarWidth = if (compact) 94 else 112,
+        healthBarWidth = if (compact) 102 else 118,
         portraitGap = if (compact) 5 else 6,
         sectionGap = if (compact) 3 else 4,
         headerPadX = if (compact) 4 else 5,
-        bodyPadX = if (compact) 5 else 6,
+        bodyPadX = if (compact) 4 else 5,
         bodyPadY = if (compact) 2 else 3,
         healthBarHeight = if (compact) 7 else 8
     )
