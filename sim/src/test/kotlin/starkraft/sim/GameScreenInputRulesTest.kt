@@ -85,6 +85,12 @@ import starkraft.sim.client.resolvePreviewTargetRelation
 import starkraft.sim.client.commandGroupAccentBackgroundTone
 import starkraft.sim.client.commandGroupHeaderBackgroundTone
 import starkraft.sim.client.commandGroupShellBackgroundTone
+import starkraft.sim.client.commandButtonAccentBackgroundTone
+import starkraft.sim.client.commandButtonPulseBackgroundTone
+import starkraft.sim.client.commandButtonQueueBackgroundTone
+import starkraft.sim.client.commandButtonShellBackgroundTone
+import starkraft.sim.client.resolveCommandButtonRole
+import starkraft.sim.client.CommandButtonRole
 import starkraft.sim.client.selectionSlotBadgeTone
 import starkraft.sim.client.selectionSlotCardTone
 import starkraft.sim.client.selectionSlotRoleTone
@@ -320,6 +326,36 @@ class GameScreenInputRulesTest {
         assertNotEquals(ready.first, idle.first)
         assertNotEquals(ready.second, production.second)
         assertNotEquals(idle.first, production.first)
+    }
+
+    @Test
+    fun `command button role helpers keep action families visually distinct`() {
+        val colors = defaultPresentationTheme().colors
+
+        assertEquals(CommandButtonRole.ATTACK, resolveCommandButtonRole("attackMove"))
+        assertEquals(CommandButtonRole.MOVE, resolveCommandButtonRole("move"))
+        assertEquals(CommandButtonRole.BUILD, resolveCommandButtonRole("build:Depot"))
+        assertEquals(CommandButtonRole.TRAIN, resolveCommandButtonRole("train:Marine"))
+        assertEquals(CommandButtonRole.RESEARCH, resolveCommandButtonRole("research:Stim"))
+        assertEquals(CommandButtonRole.RALLY, resolveCommandButtonRole("rally"))
+        assertEquals(CommandButtonRole.SYSTEM, resolveCommandButtonRole("pause"))
+
+        assertNotEquals(
+            commandButtonAccentBackgroundTone(colors, "attackMove"),
+            commandButtonAccentBackgroundTone(colors, "train:Marine")
+        )
+        assertNotEquals(
+            commandButtonShellBackgroundTone(colors, "move"),
+            commandButtonShellBackgroundTone(colors, "build:Depot")
+        )
+        assertNotEquals(
+            commandButtonPulseBackgroundTone(colors, "research:Stim"),
+            commandButtonPulseBackgroundTone(colors, "rally")
+        )
+        assertNotEquals(
+            commandButtonQueueBackgroundTone(colors, "train:Marine"),
+            commandButtonQueueBackgroundTone(colors, "cancelBuild")
+        )
     }
 
     @Test

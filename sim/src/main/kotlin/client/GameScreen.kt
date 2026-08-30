@@ -2550,15 +2550,7 @@ internal class GameScreen(
         }
 
     private fun commandButtonQueueTone(actionId: String): Color =
-        with(assets.theme.colors) {
-            when {
-                actionId.startsWith("train:") || actionId == "cancelTrain" -> production.cpy().lerp(selectionSoft, 0.18f)
-                actionId.startsWith("research:") || actionId == "cancelResearch" -> research.cpy().lerp(selectionSoft, 0.14f)
-                actionId == "cancelBuild" -> build.cpy().lerp(selectionSoft, 0.18f)
-                actionId == "rally" -> build.cpy().lerp(selectionSoft, 0.24f)
-                else -> selectionSoft.cpy()
-            }
-        }
+        commandButtonQueueBackgroundTone(assets.theme.colors, actionId)
 
     private fun commandButtonCornerTone(disabled: Boolean, checked: Boolean): Color =
         with(assets.theme.colors) {
@@ -2570,43 +2562,13 @@ internal class GameScreen(
         }
 
     private fun commandButtonAccentTone(actionId: String): Color =
-        with(assets.theme.colors) {
-            when {
-                actionId == "attackMove" -> pingTone(GroundPingKind.ATTACK).cpy().mul(1f, 1f, 1f, 0.74f)
-                actionId == "rally" -> build.cpy().lerp(commandSoft, 0.30f).also { it.a = 0.72f }
-                actionId.startsWith("build:") -> pingTone(GroundPingKind.BUILD).cpy().mul(1f, 1f, 1f, 0.72f)
-                actionId.startsWith("train:") -> production.cpy().lerp(commandSoft, 0.40f).also { it.a = 0.72f }
-                actionId.startsWith("research:") -> research.cpy().lerp(commandSoft, 0.44f).also { it.a = 0.72f }
-                actionId == "move" || actionId == "hold" -> pingTone(GroundPingKind.MOVE).cpy().mul(1f, 1f, 1f, 0.70f)
-                else -> commandSoft.cpy().also { it.a = 0.66f }
-            }
-        }
+        commandButtonAccentBackgroundTone(assets.theme.colors, actionId)
 
     private fun commandButtonPulseAccentTone(actionId: String): Color =
-        with(assets.theme.colors) {
-            when {
-                actionId == "attackMove" -> dangerSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId == "rally" -> build.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId.startsWith("build:") -> selectionSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId.startsWith("train:") -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId.startsWith("research:") -> research.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-                actionId == "move" || actionId == "hold" -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
-                else -> commandSoft.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
-            }
-        }
+        commandButtonPulseBackgroundTone(assets.theme.colors, actionId)
 
     private fun commandButtonShellAccentTone(actionId: String): Color =
-        with(assets.theme.colors) {
-            when {
-                actionId == "attackMove" -> danger.cpy().also { it.a = 0.92f }
-                actionId == "rally" -> build.cpy().also { it.a = 0.92f }
-                actionId.startsWith("build:") -> command.cpy().also { it.a = 0.92f }
-                actionId.startsWith("train:") -> production.cpy().also { it.a = 0.92f }
-                actionId.startsWith("research:") -> research.cpy().also { it.a = 0.92f }
-                actionId == "move" || actionId == "hold" -> selection.cpy().also { it.a = 0.92f }
-                else -> build.cpy().also { it.a = 0.92f }
-            }
-        }
+        commandButtonShellBackgroundTone(assets.theme.colors, actionId)
 
     private fun commandButtonStyle(actionId: String): TextButton.TextButtonStyle =
         when {
@@ -3120,6 +3082,17 @@ internal enum class StatusChipRole {
     BUILD
 }
 
+internal enum class CommandButtonRole {
+    ATTACK,
+    MOVE,
+    BUILD,
+    TRAIN,
+    RESEARCH,
+    RALLY,
+    SYSTEM,
+    DEFAULT
+}
+
 internal fun statusChipTonePair(colors: PresentationColorTokens, role: StatusChipRole): Pair<Color, Color> =
     when (role) {
         StatusChipRole.READY ->
@@ -3171,6 +3144,63 @@ internal fun commandGroupShellBackgroundTone(colors: PresentationColorTokens, gr
     val accent = commandGroupAccentBackgroundTone(colors, group)
     return colors.panelAlt.cpy().lerp(accent, 0.08f).also { it.a = 0.98f }
 }
+
+internal fun resolveCommandButtonRole(actionId: String): CommandButtonRole =
+    when {
+        actionId == "attackMove" -> CommandButtonRole.ATTACK
+        actionId == "move" || actionId == "hold" || actionId == "patrol" -> CommandButtonRole.MOVE
+        actionId == "rally" -> CommandButtonRole.RALLY
+        actionId.startsWith("build:") || actionId == "cancelBuild" -> CommandButtonRole.BUILD
+        actionId.startsWith("train:") || actionId == "cancelTrain" -> CommandButtonRole.TRAIN
+        actionId.startsWith("research:") || actionId == "cancelResearch" -> CommandButtonRole.RESEARCH
+        actionId == "pause" || actionId == "help" || actionId == "debug" -> CommandButtonRole.SYSTEM
+        else -> CommandButtonRole.DEFAULT
+    }
+
+internal fun commandButtonAccentBackgroundTone(colors: PresentationColorTokens, actionId: String): Color =
+    when (resolveCommandButtonRole(actionId)) {
+        CommandButtonRole.ATTACK -> colors.warning.cpy().also { it.a = 0.96f }
+        CommandButtonRole.MOVE -> colors.selection.cpy().also { it.a = 0.94f }
+        CommandButtonRole.BUILD -> colors.commandSoft.cpy().also { it.a = 0.96f }
+        CommandButtonRole.TRAIN -> colors.production.cpy().lerp(colors.commandSoft, 0.40f).also { it.a = 0.72f }
+        CommandButtonRole.RESEARCH -> colors.research.cpy().lerp(colors.commandSoft, 0.44f).also { it.a = 0.72f }
+        CommandButtonRole.RALLY -> colors.build.cpy().lerp(colors.commandSoft, 0.30f).also { it.a = 0.72f }
+        CommandButtonRole.SYSTEM -> colors.selectionSoft.cpy().also { it.a = 0.72f }
+        CommandButtonRole.DEFAULT -> colors.commandSoft.cpy().also { it.a = 0.66f }
+    }
+
+internal fun commandButtonPulseBackgroundTone(colors: PresentationColorTokens, actionId: String): Color =
+    when (resolveCommandButtonRole(actionId)) {
+        CommandButtonRole.ATTACK -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.MOVE -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.96f }
+        CommandButtonRole.BUILD -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.TRAIN -> colors.production.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.RESEARCH -> colors.research.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.RALLY -> colors.build.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.SYSTEM -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+        CommandButtonRole.DEFAULT -> colors.commandSoft.cpy().lerp(colors.textPrimary, 0.18f).also { it.a = 0.96f }
+    }
+
+internal fun commandButtonShellBackgroundTone(colors: PresentationColorTokens, actionId: String): Color =
+    when (resolveCommandButtonRole(actionId)) {
+        CommandButtonRole.ATTACK -> colors.danger.cpy().also { it.a = 0.92f }
+        CommandButtonRole.MOVE -> colors.selection.cpy().also { it.a = 0.92f }
+        CommandButtonRole.BUILD -> colors.command.cpy().also { it.a = 0.92f }
+        CommandButtonRole.TRAIN -> colors.production.cpy().also { it.a = 0.92f }
+        CommandButtonRole.RESEARCH -> colors.research.cpy().also { it.a = 0.92f }
+        CommandButtonRole.RALLY -> colors.build.cpy().also { it.a = 0.92f }
+        CommandButtonRole.SYSTEM -> colors.selectionSoft.cpy().also { it.a = 0.92f }
+        CommandButtonRole.DEFAULT -> colors.build.cpy().also { it.a = 0.92f }
+    }
+
+internal fun commandButtonQueueBackgroundTone(colors: PresentationColorTokens, actionId: String): Color =
+    when (resolveCommandButtonRole(actionId)) {
+        CommandButtonRole.TRAIN -> colors.production.cpy().lerp(colors.selectionSoft, 0.18f)
+        CommandButtonRole.RESEARCH -> colors.research.cpy().lerp(colors.selectionSoft, 0.14f)
+        CommandButtonRole.BUILD -> colors.build.cpy().lerp(colors.selectionSoft, 0.18f)
+        CommandButtonRole.RALLY -> colors.build.cpy().lerp(colors.selectionSoft, 0.24f)
+        else -> colors.selectionSoft.cpy()
+    }
 
 internal fun selectionSlotRoleTone(colors: PresentationColorTokens, entity: EntitySnapshot): Color =
     when {
