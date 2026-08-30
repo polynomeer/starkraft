@@ -432,12 +432,12 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.76f })
-                                    pad(4f, initialCenterLayout.bodyPadX.toFloat(), 2f, initialCenterLayout.bodyPadX.toFloat())
+                                    pad(3f, initialCenterLayout.bodyPadX.toFloat(), 1f, initialCenterLayout.bodyPadX.toFloat())
                                     add(portraitLabel).center().row()
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.14f).also { it.a = 0.58f })
-                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                             add(portraitHealthLabel).center()
                                         }
                                     ).padTop(initialCenterLayout.sectionGap.toFloat())
@@ -450,7 +450,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.command, 0.12f).also { it.a = 0.62f })
-                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                     add(selectionMetaLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().row()
@@ -488,7 +488,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
-                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                     add(centerStatusLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
@@ -499,7 +499,7 @@ internal class GameScreen(
                                     add(
                                         Table().apply {
                                             background = assets.panelDrawable(currentQueueHeaderBackgroundTone())
-                                            pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                            pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                             add(queueHeaderLabel).left()
                                         }
                                     ).left().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
@@ -509,14 +509,14 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
-                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                     add(queueStatusLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
-                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                     add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
@@ -524,7 +524,7 @@ internal class GameScreen(
                             add(
                                 Table().apply {
                                     background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.30f })
-                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    pad(0.5f, initialCenterLayout.headerPadX.toFloat(), 0.5f, initialCenterLayout.headerPadX.toFloat())
                                     add(selectionRosterLabel).left().expandX().fillX()
                                 }
                             ).expandX().fillX().padTop(1f).row()
@@ -878,11 +878,11 @@ internal class GameScreen(
                         add(
                             Table().apply {
                                 background = assets.panelDrawable(shellTone)
-                                pad(1f)
+                                pad(0.5f)
                                 add(
                                     Table().apply {
                                         background = assets.panelDrawable(frameTone)
-                                        pad(1f)
+                                        pad(0.5f)
                                         add(
                                             Table().apply {
                                                 background =
@@ -890,7 +890,7 @@ internal class GameScreen(
                                                         commandButtonEdgeTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse, clickPulse)
                                                     )
                                             }
-                                        ).height(1.5f).expandX().fillX().colspan(4).padBottom(1f).row()
+                                        ).height(1f).expandX().fillX().colspan(4).padBottom(0.5f).row()
                                         add(
                                             Table().apply {
                                                 background =
@@ -898,7 +898,7 @@ internal class GameScreen(
                                                         commandButtonRailTone(button.actionId, actor.isDisabled, actor.isChecked, queued, activePulse)
                                                     )
                                             }
-                                        ).width(2f).expandY().fillY().padRight(2f)
+                                        ).width(1.5f).expandY().fillY().padRight(1.5f)
                                         add(
                                             buildCommandGlyph(
                                                 actionId = button.actionId,
@@ -906,9 +906,9 @@ internal class GameScreen(
                                                 checked = actor.isChecked
                                             )
                                         ).size(
-                                            if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f,
-                                            if (commandDeckPresentation.buttonHeight <= 17) 9f else 10f
-                                        ).left().padRight(commandDeckLayout.buttonGap.toFloat() + 1f)
+                                            if (commandDeckPresentation.buttonHeight <= 17) 8f else 9f,
+                                            if (commandDeckPresentation.buttonHeight <= 17) 8f else 9f
+                                        ).left().padRight(commandDeckLayout.buttonGap.toFloat())
                                         add(actor).width(commandActorWidth).height(commandButtonHeight).left().expandX().fillX()
                                         add(
                                             Table().apply {
@@ -917,7 +917,7 @@ internal class GameScreen(
                                                             commandButtonCornerTone(actor.isDisabled, actor.isChecked)
                                                         )
                                                     }
-                                        ).size(4f, 4f).padLeft(commandDeckLayout.buttonGap.toFloat() + 1f)
+                                        ).size(3f, 3f).padLeft(commandDeckLayout.buttonGap.toFloat())
                                     }
                                 ).expand().fill()
                             }
@@ -3052,18 +3052,18 @@ internal fun computeCommandDeckPresentation(
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1440
     return CenterPanelLayout(
-        portraitSize = if (compact) 40 else 48,
-        rosterSlotSize = if (compact) 26 else 30,
+        portraitSize = if (compact) 38 else 46,
+        rosterSlotSize = if (compact) 24 else 28,
         pagerButtonSize = if (compact) 14 else 16,
         pagerLabelWidth = if (compact) 42 else 48,
         groupSummaryWidth = if (compact) 52 else 62,
-        healthBarWidth = if (compact) 102 else 118,
-        portraitGap = if (compact) 5 else 6,
-        sectionGap = if (compact) 3 else 4,
-        headerPadX = if (compact) 4 else 5,
+        healthBarWidth = if (compact) 104 else 120,
+        portraitGap = if (compact) 4 else 5,
+        sectionGap = if (compact) 2 else 3,
+        headerPadX = if (compact) 3 else 4,
         bodyPadX = if (compact) 4 else 5,
-        bodyPadY = if (compact) 2 else 3,
-        healthBarHeight = if (compact) 7 else 8
+        bodyPadY = if (compact) 1 else 2,
+        healthBarHeight = if (compact) 6 else 7
     )
 }
 
@@ -3079,12 +3079,12 @@ internal fun computeTopBarLayout(screenWidth: Int): TopBarLayout {
 internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlotVisualLayout {
     val compact = rosterSlotSize <= 32
     return SelectionSlotVisualLayout(
-        topBarHeight = if (compact) 1.1f else 1.55f,
-        titleHeight = if (compact) 12f else 15f,
-        hpBarWidth = if (compact) 16f else 20f,
-        hpBarHeight = if (compact) 3f else 3.5f,
-        glyphScale = if (compact) 0.72f else 0.86f,
-        markerSize = if (compact) 3.2f else 4.1f
+        topBarHeight = if (compact) 1f else 1.35f,
+        titleHeight = if (compact) 10f else 13f,
+        hpBarWidth = if (compact) 15f else 18f,
+        hpBarHeight = if (compact) 2.5f else 3f,
+        glyphScale = if (compact) 0.66f else 0.78f,
+        markerSize = if (compact) 2.8f else 3.6f
     )
 }
 
