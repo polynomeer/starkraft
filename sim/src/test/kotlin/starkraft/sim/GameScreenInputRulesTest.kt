@@ -372,9 +372,10 @@ class GameScreenInputRulesTest {
         val compact = computeBottomHudLayout(1280, 720)
         val wide = computeBottomHudLayout(1920, 1080)
 
-        assertTrue(compact.centerWidth < 266, "1280 layout should shrink center panel")
-        assertTrue(compact.commandWidth < 278, "1280 layout should shrink command panel")
-        assertTrue(compact.leftSlotWidth <= 184, "1280 layout should keep minimap lane compact")
+        assertEquals(gdxMiniMapBounds(1280, 720).width.toInt(), compact.leftSlotWidth, "left HUD lane should match minimap width")
+        assertEquals(gdxMiniMapBounds(1920, 1080).width.toInt(), wide.leftSlotWidth, "wide left HUD lane should match minimap width")
+        assertTrue(compact.centerWidth in 208..254, "1280 layout should give center panel more readable width")
+        assertTrue(compact.commandWidth in 182..214, "1280 layout should keep command panel compact but readable")
         assertTrue(compact.centerWidth >= compact.commandWidth, "1280 layout should prioritize center selection deck")
         assertTrue(wide.centerWidth >= compact.centerWidth, "wider layout should not shrink center panel further")
         assertTrue(wide.commandWidth >= compact.commandWidth, "wider layout should not shrink command panel further")

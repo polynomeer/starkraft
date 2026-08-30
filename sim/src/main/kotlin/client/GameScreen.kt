@@ -146,6 +146,8 @@ internal class GameScreen(
         commandHintLabel.setEllipsis(true)
         commandHintLabel.setAlignment(Align.left)
         selectionMetaLabel.setFontScale(0.84f)
+        centerStatusLabel.setFontScale(0.76f)
+        queueStatusLabel.setFontScale(0.76f)
         factionOverviewLabel.setFontScale(0.84f)
         selectionRosterLabel.setFontScale(0.84f)
         footerLabel.setFontScale(0.84f)
@@ -492,6 +494,13 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
+                                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    add(centerStatusLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().padTop(1f).row()
+                            add(
+                                Table().apply {
                                     background = assets.panelDrawable(currentQueueCardTone())
                                     pad(initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat(), initialCenterLayout.bodyPadY.toFloat(), initialCenterLayout.bodyPadX.toFloat())
                                     add(
@@ -506,12 +515,26 @@ internal class GameScreen(
                             ).expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 Table().apply {
+                                    background = assets.panelDrawable(colors.panelSoft.cpy().also { it.a = 0.34f })
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    add(queueStatusLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().padTop(1f).row()
+                            add(
+                                Table().apply {
                                     background = assets.panelDrawable(colors.panel.cpy().lerp(colors.production, 0.10f).also { it.a = 0.62f })
                                     pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
                                     add(Table().apply { background = assets.panelDrawable(colors.production.cpy().also { it.a = 0.64f }) }).width(1f).expandY().fillY().padRight(initialCenterLayout.sectionGap.toFloat() + 1f)
                                     add(Label("ROSTER", assets.mutedLabelStyle)).left()
                                 }
                             ).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
+                            add(
+                                Table().apply {
+                                    background = assets.panelDrawable(colors.panelAlt.cpy().also { it.a = 0.30f })
+                                    pad(1f, initialCenterLayout.headerPadX.toFloat(), 1f, initialCenterLayout.headerPadX.toFloat())
+                                    add(selectionRosterLabel).left().expandX().fillX()
+                                }
+                            ).expandX().fillX().padTop(1f).row()
                             add(selectionGrid).left().expandX().fillX().padTop(initialCenterLayout.sectionGap.toFloat()).row()
                             add(
                                 selectionPager.apply {
@@ -2986,9 +3009,9 @@ internal fun computeBottomHudHeight(screenWidth: Int, screenHeight: Int): Int {
 internal fun computeBottomHudLayout(screenWidth: Int, screenHeight: Int): BottomHudLayout {
     val minimapWidth = gdxMiniMapBounds(screenWidth, screenHeight).width.toInt()
     val compact = screenWidth < 1440
-    val leftSlotWidth = minimapWidth.coerceAtLeast(if (compact) 132 else 144)
-    val centerWidth = if (compact) (screenWidth * 0.142f).coerceIn(188f, 228f).toInt() else (screenWidth * 0.148f).coerceIn(198f, 238f).toInt()
-    val commandWidth = if (compact) (screenWidth * 0.126f).coerceIn(170f, 206f).toInt() else (screenWidth * 0.130f).coerceIn(178f, 214f).toInt()
+    val leftSlotWidth = minimapWidth
+    val centerWidth = if (compact) (screenWidth * 0.156f).coerceIn(208f, 254f).toInt() else (screenWidth * 0.164f).coerceIn(224f, 286f).toInt()
+    val commandWidth = if (compact) (screenWidth * 0.132f).coerceIn(182f, 214f).toInt() else (screenWidth * 0.136f).coerceIn(192f, 236f).toInt()
     return BottomHudLayout(
         leftSlotWidth = leftSlotWidth,
         centerWidth = centerWidth,
@@ -3037,16 +3060,16 @@ internal fun computeCommandDeckPresentation(
 internal fun computeCenterPanelLayout(screenWidth: Int): CenterPanelLayout {
     val compact = screenWidth < 1440
     return CenterPanelLayout(
-        portraitSize = if (compact) 40 else 46,
-        rosterSlotSize = if (compact) 26 else 30,
+        portraitSize = if (compact) 42 else 50,
+        rosterSlotSize = if (compact) 28 else 32,
         pagerButtonSize = if (compact) 14 else 16,
-        pagerLabelWidth = if (compact) 38 else 44,
-        groupSummaryWidth = if (compact) 42 else 50,
-        healthBarWidth = if (compact) 76 else 88,
+        pagerLabelWidth = if (compact) 42 else 48,
+        groupSummaryWidth = if (compact) 52 else 62,
+        healthBarWidth = if (compact) 94 else 112,
         portraitGap = if (compact) 5 else 6,
-        sectionGap = if (compact) 2 else 3,
+        sectionGap = if (compact) 3 else 4,
         headerPadX = if (compact) 4 else 5,
-        bodyPadX = if (compact) 4 else 5,
+        bodyPadX = if (compact) 5 else 6,
         bodyPadY = if (compact) 2 else 3,
         healthBarHeight = if (compact) 7 else 8
     )
