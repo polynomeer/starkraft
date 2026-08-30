@@ -2493,7 +2493,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 disabled -> panelAlt.cpy().also { it.a = 0.94f }
-                checked -> panel.cpy().lerp(warning, 0.28f + (activePulse * 0.06f)).also { it.a = 0.90f }
+                checked -> panel.cpy().lerp(commandButtonCheckedBackgroundTone(actionId), 0.22f + (activePulse * 0.10f)).also { it.a = 0.92f }
                 queued -> panel.cpy().lerp(commandButtonQueueTone(actionId), 0.24f).also { it.a = 0.92f }
                 else -> cardTone.cpy().lerp(commandButtonPulseAccentTone(actionId), clickPulse * 0.26f)
             }
@@ -2510,7 +2510,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 disabled -> scrim.cpy().also { it.a = 0.88f }
-                checked -> panelStrong.cpy().lerp(warning, 0.24f + (activePulse * 0.04f)).also { it.a = 0.86f }
+                checked -> panelStrong.cpy().lerp(commandButtonCheckedBackgroundTone(actionId), 0.20f + (activePulse * 0.08f)).also { it.a = 0.90f }
                 queued -> panelStrong.cpy().lerp(commandButtonQueueTone(actionId), 0.18f).also { it.a = 0.88f }
                 else -> panelAlt.cpy().lerp(commandButtonShellAccentTone(actionId), clickPulse * 0.22f).also { it.a = 0.90f }
             }
@@ -2527,7 +2527,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 disabled -> textPrimary.cpy().also { it.a = 0.06f }
-                checked -> warningSoft.cpy().lerp(textPrimary, 0.12f).also { it.a = 0.64f }
+                checked -> commandButtonCheckedBackgroundTone(actionId).cpy().lerp(textPrimary, 0.18f).also { it.a = 0.72f }
                 queued -> commandButtonQueueTone(actionId).cpy().lerp(textPrimary, 0.12f).also { it.a = 0.66f }
                 else -> commandButtonAccentTone(actionId).lerp(selectionSoft.cpy().also { it.a = 0.88f }, clickPulse * 0.18f)
             }
@@ -2543,7 +2543,7 @@ internal class GameScreen(
         with(assets.theme.colors) {
             when {
                 disabled -> textMuted.cpy().also { it.a = 0.28f }
-                checked -> warningSoft.cpy().also { it.a = 0.62f + (activePulse * 0.06f) }
+                checked -> commandButtonCheckedBackgroundTone(actionId).cpy().also { it.a = 0.70f + (activePulse * 0.08f) }
                 queued -> commandButtonQueueTone(actionId).cpy().also { it.a = 0.72f }
                 else -> commandButtonAccentTone(actionId).cpy()
             }
@@ -2551,6 +2551,9 @@ internal class GameScreen(
 
     private fun commandButtonQueueTone(actionId: String): Color =
         commandButtonQueueBackgroundTone(assets.theme.colors, actionId)
+
+    private fun commandButtonCheckedBackgroundTone(actionId: String): Color =
+        commandButtonCheckedAccentTone(assets.theme.colors, actionId)
 
     private fun commandButtonCornerTone(disabled: Boolean, checked: Boolean): Color =
         with(assets.theme.colors) {
@@ -3167,6 +3170,18 @@ internal fun commandButtonAccentBackgroundTone(colors: PresentationColorTokens, 
         CommandButtonRole.RALLY -> colors.build.cpy().lerp(colors.commandSoft, 0.30f).also { it.a = 0.72f }
         CommandButtonRole.SYSTEM -> colors.selectionSoft.cpy().also { it.a = 0.72f }
         CommandButtonRole.DEFAULT -> colors.commandSoft.cpy().also { it.a = 0.66f }
+    }
+
+internal fun commandButtonCheckedAccentTone(colors: PresentationColorTokens, actionId: String): Color =
+    when (resolveCommandButtonRole(actionId)) {
+        CommandButtonRole.ATTACK -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.94f }
+        CommandButtonRole.MOVE -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.94f }
+        CommandButtonRole.BUILD -> colors.command.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.94f }
+        CommandButtonRole.TRAIN -> colors.production.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.94f }
+        CommandButtonRole.RESEARCH -> colors.research.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.94f }
+        CommandButtonRole.RALLY -> colors.build.cpy().lerp(colors.textPrimary, 0.16f).also { it.a = 0.94f }
+        CommandButtonRole.SYSTEM -> colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.14f).also { it.a = 0.94f }
+        CommandButtonRole.DEFAULT -> colors.commandSoft.cpy().lerp(colors.textPrimary, 0.14f).also { it.a = 0.94f }
     }
 
 internal fun commandButtonPulseBackgroundTone(colors: PresentationColorTokens, actionId: String): Color =

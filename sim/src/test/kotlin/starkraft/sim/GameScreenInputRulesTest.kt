@@ -86,6 +86,7 @@ import starkraft.sim.client.commandGroupAccentBackgroundTone
 import starkraft.sim.client.commandGroupHeaderBackgroundTone
 import starkraft.sim.client.commandGroupShellBackgroundTone
 import starkraft.sim.client.commandButtonAccentBackgroundTone
+import starkraft.sim.client.commandButtonCheckedAccentTone
 import starkraft.sim.client.commandButtonPulseBackgroundTone
 import starkraft.sim.client.commandButtonQueueBackgroundTone
 import starkraft.sim.client.commandButtonShellBackgroundTone
@@ -355,6 +356,14 @@ class GameScreenInputRulesTest {
         assertNotEquals(
             commandButtonQueueBackgroundTone(colors, "train:Marine"),
             commandButtonQueueBackgroundTone(colors, "cancelBuild")
+        )
+        assertNotEquals(
+            commandButtonCheckedAccentTone(colors, "attackMove"),
+            commandButtonCheckedAccentTone(colors, "move")
+        )
+        assertNotEquals(
+            commandButtonCheckedAccentTone(colors, "build:Depot"),
+            commandButtonCheckedAccentTone(colors, "research:Stim")
         )
     }
 
