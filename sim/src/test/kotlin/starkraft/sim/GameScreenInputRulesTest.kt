@@ -82,10 +82,15 @@ import starkraft.sim.client.defaultPresentationTheme
 import starkraft.sim.client.isWorkerEntity
 import starkraft.sim.client.resolveArmedPreviewKind
 import starkraft.sim.client.resolvePreviewTargetRelation
+import starkraft.sim.client.commandGroupAccentBackgroundTone
+import starkraft.sim.client.commandGroupHeaderBackgroundTone
+import starkraft.sim.client.commandGroupShellBackgroundTone
 import starkraft.sim.client.selectionSlotBadgeTone
 import starkraft.sim.client.selectionSlotCardTone
 import starkraft.sim.client.selectionSlotRoleTone
 import starkraft.sim.client.selectionSlotShellTone
+import starkraft.sim.client.statusChipTonePair
+import starkraft.sim.client.StatusChipRole
 import starkraft.sim.client.shouldAbortPointerGesture
 import starkraft.sim.client.shouldDispatchCommandUiAction
 import starkraft.sim.client.shouldHandleHotkeyWhileOverlayVisible
@@ -282,6 +287,39 @@ class GameScreenInputRulesTest {
         val idleCard = selectionSlotCardTone(colors, structure, damaged = false, clickPulse = 0f)
         assertNotEquals(idleCard, damagedCard)
         assertNotEquals(idleCard, activeCard)
+    }
+
+    @Test
+    fun `command group tones stay role aligned across shell header and accent`() {
+        val colors = defaultPresentationTheme().colors
+
+        val orderAccent = commandGroupAccentBackgroundTone(colors, "Orders")
+        val buildAccent = commandGroupAccentBackgroundTone(colors, "Build")
+        val utilityAccent = commandGroupAccentBackgroundTone(colors, "Utility")
+
+        assertNotEquals(orderAccent, buildAccent)
+        assertNotEquals(buildAccent, utilityAccent)
+        assertNotEquals(
+            commandGroupHeaderBackgroundTone(colors, "Production"),
+            commandGroupHeaderBackgroundTone(colors, "Research")
+        )
+        assertNotEquals(
+            commandGroupShellBackgroundTone(colors, "Production"),
+            commandGroupShellBackgroundTone(colors, "System")
+        )
+    }
+
+    @Test
+    fun `status chip tone pairs separate ready idle and production states`() {
+        val colors = defaultPresentationTheme().colors
+
+        val ready = statusChipTonePair(colors, StatusChipRole.READY)
+        val idle = statusChipTonePair(colors, StatusChipRole.IDLE)
+        val production = statusChipTonePair(colors, StatusChipRole.PRODUCTION)
+
+        assertNotEquals(ready.first, idle.first)
+        assertNotEquals(ready.second, production.second)
+        assertNotEquals(idle.first, production.first)
     }
 
     @Test

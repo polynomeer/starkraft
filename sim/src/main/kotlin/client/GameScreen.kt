@@ -1259,7 +1259,8 @@ internal class GameScreen(
         centerStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
         val bits = buildCenterStatusBits()
         if (bits.isEmpty()) {
-            centerStatusStrip.add(buildStatusChip("RDY", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.22f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.92f }))
+            val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.READY)
+            centerStatusStrip.add(buildStatusChip("RDY", tones.first, tones.second))
             return
         }
         bits.forEachIndexed { index, bit ->
@@ -1284,26 +1285,37 @@ internal class GameScreen(
         val queueChipTone = resolveQueueChipTone(lead)
         return buildList {
             lead.activeOrder?.takeIf { it.isNotBlank() }?.let {
-                add(StatusChip("O ${it.lowercase().take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.COMMAND)
+                add(StatusChip("O ${it.lowercase().take(4)}", tones.first, tones.second))
             }
             if (lead.orderQueueSize > 0) add(StatusChip("Q${lead.orderQueueSize}", queueChipTone.first, queueChipTone.second))
-            if (lead.pathRemainingNodes > 0) add(StatusChip("P${lead.pathRemainingNodes}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.command, 0.20f).also { it.a = 0.90f }, assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }))
+            if (lead.pathRemainingNodes > 0) {
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.COMMAND)
+                add(StatusChip("P${lead.pathRemainingNodes}", tones.first, tones.second))
+            }
             lead.activeProductionType?.let {
-                add(StatusChip("P ${it.take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.PRODUCTION)
+                add(StatusChip("P ${it.take(4)}", tones.first, tones.second))
             }
             lead.activeResearchTech?.let {
-                add(StatusChip("R ${it.take(4)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.RESEARCH)
+                add(StatusChip("R ${it.take(4)}", tones.first, tones.second))
             }
-            if (lead.underConstruction) add(StatusChip("BLD", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
+            if (lead.underConstruction) {
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.BUILD)
+                add(StatusChip("BLD", tones.first, tones.second))
+            }
             lead.harvestPhase?.let {
-                add(StatusChip("H ${it.lowercase().take(3)}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.BUILD)
+                add(StatusChip("H ${it.lowercase().take(3)}", tones.first, tones.second))
             }
             if (lead.harvestCargoAmount != null && lead.harvestCargoAmount > 0) {
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.BUILD)
                 add(
                     StatusChip(
                         "C ${(lead.harvestCargoKind ?: "res").take(1).uppercase()}${lead.harvestCargoAmount}",
-                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f },
-                        assets.theme.colors.build.cpy().also { it.a = 0.90f }
+                        tones.first,
+                        tones.second
                     )
                 )
             }
@@ -1352,7 +1364,8 @@ internal class GameScreen(
         queueStatusStrip.defaults().left().pad(0f, 0f, 0f, 3f)
         val bits = buildQueueStatusBits()
         if (bits.isEmpty()) {
-            queueStatusStrip.add(buildStatusChip("IDLE", assets.theme.colors.panelAlt.cpy().also { it.a = 0.86f }, assets.theme.colors.textMuted.cpy().also { it.a = 0.86f }))
+            val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.IDLE)
+            queueStatusStrip.add(buildStatusChip("IDLE", tones.first, tones.second))
             return
         }
         bits.forEachIndexed { index, bit ->
@@ -1370,55 +1383,60 @@ internal class GameScreen(
         val lead = resolveFocusedEntity(snapshot, selected) ?: selected.first()
         return buildList {
             if (lead.productionQueueSize > 0 || lead.activeProductionType != null) {
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.PRODUCTION)
                 add(
                     StatusChip(
                         "P ${(lead.activeProductionType ?: "Q").take(4)}",
-                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f },
-                        assets.theme.colors.production.cpy().also { it.a = 0.90f }
+                        tones.first,
+                        tones.second
                     )
                 )
                 if (lead.productionQueueSize > 0) {
-                    add(StatusChip("x${lead.productionQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
+                    add(StatusChip("x${lead.productionQueueSize}", tones.first.cpy(), tones.second.cpy()))
                 }
                 if (lead.activeProductionRemainingTicks > 0) {
-                    add(StatusChip("${lead.activeProductionRemainingTicks}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.production, 0.24f).also { it.a = 0.92f }, assets.theme.colors.production.cpy().also { it.a = 0.90f }))
+                    add(StatusChip("${lead.activeProductionRemainingTicks}t", tones.first.cpy(), tones.second.cpy()))
                 }
             }
             if (lead.researchQueueSize > 0 || lead.activeResearchTech != null) {
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.RESEARCH)
                 add(
                     StatusChip(
                         "R ${(lead.activeResearchTech ?: "Q").take(4)}",
-                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f },
-                        assets.theme.colors.research.cpy().also { it.a = 0.92f }
+                        tones.first,
+                        tones.second
                     )
                 )
                 if (lead.researchQueueSize > 0) {
-                    add(StatusChip("x${lead.researchQueueSize}", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
+                    add(StatusChip("x${lead.researchQueueSize}", tones.first.cpy(), tones.second.cpy()))
                 }
                 if (lead.activeResearchRemainingTicks > 0) {
-                    add(StatusChip("${lead.activeResearchRemainingTicks}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.research, 0.24f).also { it.a = 0.92f }, assets.theme.colors.research.cpy().also { it.a = 0.92f }))
+                    add(StatusChip("${lead.activeResearchRemainingTicks}t", tones.first.cpy(), tones.second.cpy()))
                 }
             }
             if (lead.underConstruction) {
-                add(StatusChip("BLD", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
+                val tones = statusChipTonePair(assets.theme.colors, StatusChipRole.BUILD)
+                add(StatusChip("BLD", tones.first, tones.second))
                 lead.constructionRemainingTicks?.takeIf { it > 0 }?.let {
-                    add(StatusChip("${it}t", assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.24f).also { it.a = 0.92f }, assets.theme.colors.build.cpy().also { it.a = 0.90f }))
+                    add(StatusChip("${it}t", tones.first.cpy(), tones.second.cpy()))
                 }
             }
             if (lead.supportsRally == true) {
+                val rallyTones = statusChipTonePair(assets.theme.colors, StatusChipRole.BUILD)
                 add(
                     StatusChip(
                         "RLY",
-                        assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.20f).also { it.a = 0.90f },
-                        assets.theme.colors.build.cpy().also { it.a = 0.90f }
+                        rallyTones.first,
+                        rallyTones.second
                     )
                 )
                 if (lead.rallyX != null && lead.rallyY != null) {
+                    val commandTones = statusChipTonePair(assets.theme.colors, StatusChipRole.COMMAND)
                     add(
                         StatusChip(
                             "${lead.rallyX.toInt()}:${lead.rallyY.toInt()}",
-                            assets.theme.colors.panel.cpy().lerp(assets.theme.colors.build, 0.16f).also { it.a = 0.88f },
-                            assets.theme.colors.commandSoft.cpy().also { it.a = 0.88f }
+                            commandTones.first,
+                            commandTones.second
                         )
                     )
                 }
@@ -2422,8 +2440,14 @@ internal class GameScreen(
                 runtime.buildModeTypeId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.rallyModeBuildingId != null -> production.cpy().lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 runtime.groundMode != null -> selectionSoft.cpy().lerp(textPrimary, 0.16f).also { it.a = 0.96f }
-                groups.any { it.first in setOf("Production", "Train", "Research", "Build") && it.second.isNotEmpty() } ->
-                    commandSoft.cpy().lerp(textPrimary, 0.20f).also { it.a = 0.96f }
+                groups.any { it.first in setOf("Production", "Train") && it.second.isNotEmpty() } ->
+                    commandGroupAccentTone("Production").lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                groups.any { it.first == "Research" && it.second.isNotEmpty() } ->
+                    commandGroupAccentTone("Research").lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                groups.any { it.first == "Build" && it.second.isNotEmpty() } ->
+                    commandGroupAccentTone("Build").lerp(textPrimary, 0.18f).also { it.a = 0.96f }
+                groups.any { it.first == "Orders" && it.second.isNotEmpty() } ->
+                    commandGroupAccentTone("Orders").lerp(textPrimary, 0.18f).also { it.a = 0.96f }
                 else -> textSecondary.cpy().also { it.a = 0.94f }
             }
         }
@@ -2437,46 +2461,13 @@ internal class GameScreen(
         }
 
     private fun commandGroupHeaderTone(group: String): Color =
-        with(assets.theme.colors) {
-            when (group) {
-                "Orders" -> panel.cpy().lerp(command, 0.22f).also { it.a = 0.86f }
-                "Production" -> panel.cpy().lerp(production, 0.22f).also { it.a = 0.86f }
-                "Train" -> panel.cpy().lerp(production, 0.22f).also { it.a = 0.86f }
-                "Research" -> panel.cpy().lerp(research, 0.22f).also { it.a = 0.86f }
-                "Build" -> panel.cpy().lerp(build, 0.22f).also { it.a = 0.86f }
-                "Utility" -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.86f }
-                "System" -> panel.cpy().lerp(selection, 0.12f).also { it.a = 0.86f }
-                else -> panel.cpy().lerp(commandSoft, 0.18f).also { it.a = 0.82f }
-            }
-        }
+        commandGroupHeaderBackgroundTone(assets.theme.colors, group)
 
     private fun commandGroupAccentTone(group: String): Color =
-        with(assets.theme.colors) {
-            when (group) {
-                "Orders" -> commandSoft.cpy().also { it.a = 0.82f }
-                "Production" -> production.cpy().also { it.a = 0.78f }
-                "Train" -> production.cpy().also { it.a = 0.78f }
-                "Research" -> research.cpy().also { it.a = 0.78f }
-                "Build" -> build.cpy().also { it.a = 0.78f }
-                "Utility" -> selectionSoft.cpy().also { it.a = 0.78f }
-                "System" -> selectionSoft.cpy().also { it.a = 0.78f }
-                else -> commandSoft.cpy().also { it.a = 0.72f }
-            }
-        }
+        commandGroupAccentBackgroundTone(assets.theme.colors, group)
 
     private fun commandGroupShellTone(group: String): Color =
-        with(assets.theme.colors) {
-            when (group) {
-                "Orders" -> panelAlt.cpy().lerp(command, 0.08f).also { it.a = 0.98f }
-                "Production" -> panelAlt.cpy().lerp(production, 0.08f).also { it.a = 0.98f }
-                "Train" -> panelAlt.cpy().lerp(production, 0.08f).also { it.a = 0.98f }
-                "Research" -> panelAlt.cpy().lerp(research, 0.08f).also { it.a = 0.98f }
-                "Build" -> panelAlt.cpy().lerp(build, 0.08f).also { it.a = 0.98f }
-                "Utility" -> panelAlt.cpy().lerp(selection, 0.08f).also { it.a = 0.98f }
-                "System" -> panelAlt.cpy().lerp(selection, 0.08f).also { it.a = 0.98f }
-                else -> panelAlt.cpy().also { it.a = 0.98f }
-            }
-        }
+        commandGroupShellBackgroundTone(assets.theme.colors, group)
 
     private fun commandButtonCardTone(actionId: String): Color =
         with(assets.theme.colors) {
@@ -3119,6 +3110,67 @@ internal fun computeSelectionSlotVisualLayout(rosterSlotSize: Int): SelectionSlo
 
 internal fun isWorkerEntity(entity: EntitySnapshot): Boolean =
     (entity.typeId ?: "").contains("worker", ignoreCase = true) || entity.archetype.equals("worker", ignoreCase = true)
+
+internal enum class StatusChipRole {
+    READY,
+    IDLE,
+    COMMAND,
+    PRODUCTION,
+    RESEARCH,
+    BUILD
+}
+
+internal fun statusChipTonePair(colors: PresentationColorTokens, role: StatusChipRole): Pair<Color, Color> =
+    when (role) {
+        StatusChipRole.READY ->
+            colors.panel.cpy().lerp(colors.command, 0.22f).also { it.a = 0.90f } to
+                colors.commandSoft.cpy().also { it.a = 0.92f }
+        StatusChipRole.IDLE ->
+            colors.panelAlt.cpy().also { it.a = 0.86f } to
+                colors.textMuted.cpy().also { it.a = 0.86f }
+        StatusChipRole.COMMAND ->
+            colors.panel.cpy().lerp(colors.command, 0.20f).also { it.a = 0.90f } to
+                colors.commandSoft.cpy().also { it.a = 0.88f }
+        StatusChipRole.PRODUCTION ->
+            colors.panel.cpy().lerp(colors.production, 0.24f).also { it.a = 0.92f } to
+                colors.production.cpy().also { it.a = 0.90f }
+        StatusChipRole.RESEARCH ->
+            colors.panel.cpy().lerp(colors.research, 0.24f).also { it.a = 0.92f } to
+                colors.research.cpy().also { it.a = 0.92f }
+        StatusChipRole.BUILD ->
+            colors.panel.cpy().lerp(colors.build, 0.24f).also { it.a = 0.92f } to
+                colors.build.cpy().also { it.a = 0.90f }
+    }
+
+internal fun commandGroupAccentBackgroundTone(colors: PresentationColorTokens, group: String): Color =
+    when (group) {
+        "Orders" -> colors.commandSoft.cpy().also { it.a = 0.82f }
+        "Production", "Train" -> colors.production.cpy().also { it.a = 0.78f }
+        "Research" -> colors.research.cpy().also { it.a = 0.78f }
+        "Build" -> colors.build.cpy().also { it.a = 0.78f }
+        "Utility", "System" -> colors.selectionSoft.cpy().also { it.a = 0.78f }
+        else -> colors.commandSoft.cpy().also { it.a = 0.72f }
+    }
+
+internal fun commandGroupHeaderBackgroundTone(colors: PresentationColorTokens, group: String): Color {
+    val accent = commandGroupAccentBackgroundTone(colors, group)
+    val ratio =
+        when (group) {
+            "Utility", "System" -> 0.12f
+            else -> 0.22f
+        }
+    val alpha =
+        when (group) {
+            "Orders", "Production", "Train", "Research", "Build", "Utility", "System" -> 0.86f
+            else -> 0.82f
+        }
+    return colors.panel.cpy().lerp(accent, ratio).also { it.a = alpha }
+}
+
+internal fun commandGroupShellBackgroundTone(colors: PresentationColorTokens, group: String): Color {
+    val accent = commandGroupAccentBackgroundTone(colors, group)
+    return colors.panelAlt.cpy().lerp(accent, 0.08f).also { it.a = 0.98f }
+}
 
 internal fun selectionSlotRoleTone(colors: PresentationColorTokens, entity: EntitySnapshot): Color =
     when {
