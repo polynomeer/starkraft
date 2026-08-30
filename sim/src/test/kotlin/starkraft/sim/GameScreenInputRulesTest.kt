@@ -18,6 +18,7 @@ import starkraft.sim.client.computeVisibleTileRange
 import starkraft.sim.client.EscapeAction
 import starkraft.sim.client.computeBottomHudHeight
 import starkraft.sim.client.computeWorldViewportHeightForLayout
+import starkraft.sim.client.feedbackPulseDecay
 import starkraft.sim.client.buildHudFooterLine
 import starkraft.sim.client.buildMinimapHintLine
 import starkraft.sim.client.FactionSnapshot
@@ -229,6 +230,15 @@ class GameScreenInputRulesTest {
         assertEquals(20f, deathBurstCoreRadius(12f / 14f, structure = true))
         assertEquals(11f, deathBurstOuterRadius(0f, structure = false))
         assertEquals(44f, deathBurstOuterRadius(1f, structure = true))
+    }
+
+    @Test
+    fun `feedback pulse decay clamps and eases remaining time`() {
+        assertEquals(0f, feedbackPulseDecay(remainingMillis = -1L, durationMillis = 260L))
+        assertEquals(0f, feedbackPulseDecay(remainingMillis = 42L, durationMillis = 0L))
+        assertEquals(1f, feedbackPulseDecay(remainingMillis = 260L, durationMillis = 260L))
+        assertEquals(0.25f, feedbackPulseDecay(remainingMillis = 130L, durationMillis = 260L))
+        assertEquals(1f, feedbackPulseDecay(remainingMillis = 520L, durationMillis = 260L))
     }
 
     @Test

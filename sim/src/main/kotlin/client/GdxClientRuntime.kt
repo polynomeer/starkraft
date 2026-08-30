@@ -15,15 +15,15 @@ internal class GdxClientRuntime(
 ) {
     private companion object {
         const val NOTICE_DURATION_MS = 2000L
-        const val ATTACK_WARNING_DURATION_MS = 1800L
+        const val ATTACK_WARNING_DURATION_MS = 1400L
         const val DAMAGE_FLASH_DURATION_MS = 820L
-        const val GROUND_PING_DURATION_MS = 720L
+        const val GROUND_PING_DURATION_MS = 560L
         const val MINIMAP_CONFIRM_DURATION_MS = 300L
         const val COMPLETION_FLASH_DURATION_MS = 1700L
         const val DEATH_BURST_DURATION_MS = 980L
         const val DEATH_REMAINS_DURATION_MS = 2600L
         const val SELECTION_CONFIRM_PULSE_DURATION_MS = 420L
-        const val SELECTION_CLICK_PULSE_DURATION_MS = 300L
+        const val SELECTION_CLICK_PULSE_DURATION_MS = 220L
     }
 
     private val requestIds = ClientCommandIds("gdx")

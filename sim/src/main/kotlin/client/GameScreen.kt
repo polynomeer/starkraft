@@ -1911,37 +1911,27 @@ internal class GameScreen(
 
     private fun selectionHudPulse(): Float {
         val remaining = selectionHudPulseUntilMillis - System.currentTimeMillis()
-        if (remaining <= 0L) return 0f
-        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, HUD_SELECTION_PULSE_DURATION_MS)
     }
 
     private fun topStatusPulse(): Float {
         val remaining = topStatusPulseUntilMillis - System.currentTimeMillis()
-        if (remaining <= 0L) return 0f
-        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, HUD_SELECTION_PULSE_DURATION_MS)
     }
 
     private fun topModePulse(): Float {
         val remaining = topModePulseUntilMillis - System.currentTimeMillis()
-        if (remaining <= 0L) return 0f
-        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, HUD_SELECTION_PULSE_DURATION_MS)
     }
 
     private fun overlayHeaderPulse(): Float {
         val remaining = overlayHeaderPulseUntilMillis - System.currentTimeMillis()
-        if (remaining <= 0L) return 0f
-        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, HUD_SELECTION_PULSE_DURATION_MS)
     }
 
     private fun bannerPulse(): Float {
         val remaining = bannerPulseUntilMillis - System.currentTimeMillis()
-        if (remaining <= 0L) return 0f
-        val normalized = remaining.toFloat() / HUD_SELECTION_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, HUD_SELECTION_PULSE_DURATION_MS)
     }
 
     private fun markCommandPulse(actionId: String) {
@@ -1963,8 +1953,7 @@ internal class GameScreen(
             commandPulseUntilMillis.remove(actionId)
             return 0f
         }
-        val normalized = remaining.toFloat() / COMMAND_CLICK_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, COMMAND_CLICK_PULSE_DURATION_MS)
     }
 
     private fun markSlotPulse(entityId: Int) {
@@ -1978,8 +1967,7 @@ internal class GameScreen(
             slotPulseUntilMillis.remove(entityId)
             return 0f
         }
-        val normalized = remaining.toFloat() / SLOT_CLICK_PULSE_DURATION_MS.toFloat()
-        return normalized * normalized
+        return feedbackPulseDecay(remaining, SLOT_CLICK_PULSE_DURATION_MS)
     }
 
     private fun updateSelectionPager(snapshot: ClientSnapshot?) {
@@ -3449,6 +3437,12 @@ internal fun selectionSlotCardTone(
         clickPulse > 0f -> base.lerp(colors.selectionSoft, 0.18f + (clickPulse * 0.14f)).also { it.a = 0.98f }
         else -> base
     }
+}
+
+internal fun feedbackPulseDecay(remainingMillis: Long, durationMillis: Long): Float {
+    if (remainingMillis <= 0L || durationMillis <= 0L) return 0f
+    val normalized = (remainingMillis.toFloat() / durationMillis.toFloat()).coerceIn(0f, 1f)
+    return normalized * normalized
 }
 
 internal fun computeWorldViewportHeightForLayout(screenWidth: Int, screenHeight: Int): Int {

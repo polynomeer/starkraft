@@ -1712,64 +1712,62 @@ internal class GdxWorldRenderer(
         val ping = runtime.currentGroundPing() ?: return
         val x = runtime.camera.worldToScreenX(ping.worldX)
         val y = runtime.camera.worldToScreenY(ping.worldY)
-        val pulse = ambientPulse(760L)
+        val pulse = ambientPulse(560L)
         when (ping.kind) {
             GroundPingKind.MOVE -> {
-                val outer = 10f + (pulse * 7f)
-                val inner = 4f + (pulse * 3.5f)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.06f))
+                val outer = 9f + (pulse * 5f)
+                val inner = 4f + (pulse * 2.5f)
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.08f + (pulse * 0.04f))
                 shape.circle(x, y, outer)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.16f + (pulse * 0.05f))
                 shape.circle(x, y, inner)
                 if (ping.queued) {
-                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.34f + (pulse * 0.06f) }
-                    shape.circle(x, y, 15f + (pulse * 5f))
-                    shape.rect(x - 11f, y - 1f, 3f, 2f)
-                    shape.rect(x + 8f, y - 1f, 3f, 2f)
-                    shape.rect(x - 1f, y - 11f, 2f, 3f)
-                    shape.rect(x - 1f, y + 8f, 2f, 3f)
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.28f + (pulse * 0.04f) }
+                    shape.circle(x, y, 13f + (pulse * 3f))
+                    shape.rect(x - 10f, y - 1f, 2.5f, 2f)
+                    shape.rect(x + 7.5f, y - 1f, 2.5f, 2f)
+                    shape.rect(x - 1f, y - 10f, 2f, 2.5f)
+                    shape.rect(x - 1f, y + 7.5f, 2f, 2.5f)
                 }
                 shape.color = groundPingCoreTone(colors, ping.kind)
-                shape.circle(x, y, 2.2f + (pulse * 1.0f))
-                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.16f + (pulse * 0.06f) }
-                shape.circle(x, y, 12f + (pulse * 4f))
-                shape.rect(x - 0.75f, y - 5f, 1.5f, 10f)
-                shape.rect(x - 5f, y - 0.75f, 10f, 1.5f)
+                shape.circle(x, y, 2f + (pulse * 0.8f))
+                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.12f + (pulse * 0.04f) }
+                shape.circle(x, y, 10.5f + (pulse * 2.8f))
             }
             GroundPingKind.ATTACK -> {
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 14f + (pulse * 5f))
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
-                shape.circle(x, y, 8f + (pulse * 3f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.06f))
+                shape.circle(x, y, 12f + (pulse * 4f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.06f))
+                shape.circle(x, y, 7f + (pulse * 2.2f))
                 if (ping.queued) {
-                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.30f + (pulse * 0.06f) }
-                    shape.circle(x, y, 18f + (pulse * 4f))
-                    shape.rectLine(x - 11f, y, x - 7f, y, 1.2f)
-                    shape.rectLine(x + 7f, y, x + 11f, y, 1.2f)
-                    shape.rectLine(x, y - 11f, x, y - 7f, 1.2f)
-                    shape.rectLine(x, y + 7f, x, y + 11f, 1.2f)
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.24f + (pulse * 0.04f) }
+                    shape.circle(x, y, 15f + (pulse * 3.2f))
+                    shape.rectLine(x - 10f, y, x - 7f, y, 1.1f)
+                    shape.rectLine(x + 7f, y, x + 10f, y, 1.1f)
+                    shape.rectLine(x, y - 10f, x, y - 7f, 1.1f)
+                    shape.rectLine(x, y + 7f, x, y + 10f, 1.1f)
                 }
                 shape.color = groundPingCoreTone(colors, ping.kind)
-                shape.rectLine(x - 7f, y - 7f, x + 7f, y + 7f, 1.6f)
-                shape.rectLine(x - 7f, y + 7f, x + 7f, y - 7f, 1.6f)
-                shape.rect(x - 0.75f, y - 8.5f, 1.5f, 17f)
-                shape.rect(x - 8.5f, y - 0.75f, 17f, 1.5f)
-                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.78f }
-                shape.circle(x, y, 3.2f)
+                shape.rectLine(x - 6f, y - 6f, x + 6f, y + 6f, 1.4f)
+                shape.rectLine(x - 6f, y + 6f, x + 6f, y - 6f, 1.4f)
+                shape.rect(x - 0.7f, y - 7f, 1.4f, 14f)
+                shape.rect(x - 7f, y - 0.7f, 14f, 1.4f)
+                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.66f }
+                shape.circle(x, y, 2.8f)
             }
             GroundPingKind.BUILD -> {
-                val outer = 12f + (pulse * 3f)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.14f + (pulse * 0.08f))
+                val outer = 11f + (pulse * 2.5f)
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.06f))
                 shape.rect(x - outer, y - outer, outer * 2f, outer * 2f)
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.18f + (pulse * 0.06f))
                 shape.rect(x - 7f, y - 7f, 14f, 14f)
                 if (ping.queued) {
-                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.32f + (pulse * 0.06f) }
-                    shape.rect(x - 16f, y - 16f, 32f, 32f)
-                    shape.rect(x - 12f, y - 1f, 4f, 2f)
-                    shape.rect(x + 8f, y - 1f, 4f, 2f)
-                    shape.rect(x - 1f, y - 12f, 2f, 4f)
-                    shape.rect(x - 1f, y + 8f, 2f, 4f)
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.28f + (pulse * 0.04f) }
+                    shape.rect(x - 14f, y - 14f, 28f, 28f)
+                    shape.rect(x - 10f, y - 1f, 3f, 2f)
+                    shape.rect(x + 7f, y - 1f, 3f, 2f)
+                    shape.rect(x - 1f, y - 10f, 2f, 3f)
+                    shape.rect(x - 1f, y + 7f, 2f, 3f)
                 }
                 shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.rect(x - 6f, y - 6f, 12f, 2f)
@@ -1782,10 +1780,10 @@ internal class GdxWorldRenderer(
                 shape.rect(x + 6f, y + 6f, 3f, 3f)
             }
             GroundPingKind.INVALID -> {
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.12f + (pulse * 0.08f))
-                shape.circle(x, y, 12f + (pulse * 4f))
-                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
-                shape.circle(x, y, 7f + (pulse * 2f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.10f + (pulse * 0.06f))
+                shape.circle(x, y, 10f + (pulse * 3f))
+                shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.16f + (pulse * 0.05f))
+                shape.circle(x, y, 6f + (pulse * 1.5f))
                 shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.rectLine(x - 6.5f, y - 6.5f, x + 6.5f, y + 6.5f, 1.6f)
                 shape.rectLine(x - 6.5f, y + 6.5f, x + 6.5f, y - 6.5f, 1.6f)
@@ -1800,24 +1798,19 @@ internal class GdxWorldRenderer(
         val pulse = runtime.currentSelectionClickPulse() ?: return
         val x = runtime.camera.worldToScreenX(pulse.worldX)
         val y = runtime.camera.worldToScreenY(pulse.worldY)
-        drawConfirmPulse(shape, x, y, scale = 0.92f, periodMillis = 720L, alphaScale = 0.86f)
+        drawConfirmPulse(shape, x, y, scale = 0.82f, periodMillis = 460L, alphaScale = 0.68f)
     }
 
     private fun drawConfirmPulse(shape: ShapeRenderer, x: Float, y: Float, scale: Float, periodMillis: Long, alphaScale: Float = 1f) {
         val phase = ambientPulse(periodMillis)
-        shape.color = Color(0.58f, 0.98f, 0.70f, (0.07f + (phase * 0.05f)) * alphaScale)
-        shape.circle(x, y, (13f + (phase * 6f)) * scale)
-        shape.color = Color(0.66f, 1.00f, 0.74f, (0.10f + (phase * 0.06f)) * alphaScale)
-        shape.circle(x, y, (9f + (phase * 4f)) * scale)
-        shape.color = Color(0.74f, 1.00f, 0.82f, (0.18f + (phase * 0.06f)) * alphaScale)
-        shape.circle(x, y, (4f + (phase * 2f)) * scale)
-        shape.color = Color(0.82f, 1.00f, 0.88f, 0.88f * alphaScale)
-        shape.rect(x - (0.75f * scale), y - (4.5f * scale), 1.5f * scale, 9f * scale)
-        shape.rect(x - (4.5f * scale), y - (0.75f * scale), 9f * scale, 1.5f * scale)
-        shape.color = Color(0.90f, 1.00f, 0.94f, 0.54f * alphaScale)
-        shape.rect(x - (8f * scale), y - (0.5f * scale), 16f * scale, 1f * scale)
-        shape.rect(x - (0.5f * scale), y - (8f * scale), 1f * scale, 16f * scale)
-        shape.circle(x, y, 1.7f * scale)
+        shape.color = Color(0.56f, 0.98f, 0.70f, (0.05f + (phase * 0.04f)) * alphaScale)
+        shape.circle(x, y, (11f + (phase * 4f)) * scale)
+        shape.color = Color(0.66f, 1.00f, 0.76f, (0.09f + (phase * 0.05f)) * alphaScale)
+        shape.circle(x, y, (7.2f + (phase * 2.8f)) * scale)
+        shape.color = Color(0.78f, 1.00f, 0.84f, (0.16f + (phase * 0.04f)) * alphaScale)
+        shape.circle(x, y, (3.6f + (phase * 1.4f)) * scale)
+        shape.color = Color(0.90f, 1.00f, 0.94f, 0.46f * alphaScale)
+        shape.circle(x, y, 1.4f * scale)
     }
 
     private fun drawSelectionBox(shape: ShapeRenderer, dragBox: DragSelectionBox?) {
