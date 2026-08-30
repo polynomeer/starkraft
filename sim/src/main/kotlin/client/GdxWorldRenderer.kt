@@ -21,12 +21,7 @@ internal class GdxWorldRenderer(
     private val selectionSoftColor = colors.selectionSoft.cpy().also { it.a = 0.14f }
 
     private fun pingTone(kind: GroundPingKind): Color =
-        when (kind) {
-            GroundPingKind.MOVE -> colors.selection.cpy().also { it.a = 0.94f }
-            GroundPingKind.ATTACK -> colors.warning.cpy().also { it.a = 0.96f }
-            GroundPingKind.BUILD -> colors.commandSoft.cpy().also { it.a = 0.96f }
-            GroundPingKind.INVALID -> colors.danger.cpy().also { it.a = 0.96f }
-        }
+        groundPingBaseTone(colors, kind)
 
     private fun activityTone(entity: EntitySnapshot): Color =
         when {
@@ -126,9 +121,9 @@ internal class GdxWorldRenderer(
     private val harvestMineralToneColor = colors.production.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.82f }
     private val harvestGasGlowColor = colors.build.cpy().also { it.a = 0.20f }
     private val harvestMineralGlowColor = colors.production.cpy().also { it.a = 0.18f }
-    private val selectionBoxFillColor = colors.selection.cpy().also { it.a = 0.10f }
-    private val selectionBoxFrameColor = colors.selectionSoft.cpy().also { it.a = 0.94f }
-    private val selectionBoxAccentColor = colors.selectionSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.34f }
+    private val selectionBoxFillColor = selectionBoxFillTone(colors)
+    private val selectionBoxFrameColor = selectionBoxFrameTone(colors)
+    private val selectionBoxAccentColor = selectionBoxAccentTone(colors)
     private val deathBurstOuterColor = colors.danger.cpy().lerp(colors.warning, 0.24f).also { it.a = 0.22f }
     private val deathBurstCoreColor = colors.warning.cpy().also { it.a = 0.40f }
     private val deathBurstSparkColor = colors.warningSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.62f }
@@ -1727,16 +1722,16 @@ internal class GdxWorldRenderer(
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
                 shape.circle(x, y, inner)
                 if (ping.queued) {
-                    shape.color = Color(0.82f, 1.00f, 0.88f, 0.34f + (pulse * 0.06f))
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.34f + (pulse * 0.06f) }
                     shape.circle(x, y, 15f + (pulse * 5f))
                     shape.rect(x - 11f, y - 1f, 3f, 2f)
                     shape.rect(x + 8f, y - 1f, 3f, 2f)
                     shape.rect(x - 1f, y - 11f, 2f, 3f)
                     shape.rect(x - 1f, y + 8f, 2f, 3f)
                 }
-                shape.color = Color(0.74f, 1.00f, 0.82f, 0.92f)
+                shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.circle(x, y, 2.2f + (pulse * 1.0f))
-                shape.color = Color(0.78f, 1.00f, 0.86f, 0.16f + (pulse * 0.06f))
+                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.16f + (pulse * 0.06f) }
                 shape.circle(x, y, 12f + (pulse * 4f))
                 shape.rect(x - 0.75f, y - 5f, 1.5f, 10f)
                 shape.rect(x - 5f, y - 0.75f, 10f, 1.5f)
@@ -1747,19 +1742,19 @@ internal class GdxWorldRenderer(
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.circle(x, y, 8f + (pulse * 3f))
                 if (ping.queued) {
-                    shape.color = Color(1.00f, 0.88f, 0.62f, 0.30f + (pulse * 0.06f))
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.30f + (pulse * 0.06f) }
                     shape.circle(x, y, 18f + (pulse * 4f))
                     shape.rectLine(x - 11f, y, x - 7f, y, 1.2f)
                     shape.rectLine(x + 7f, y, x + 11f, y, 1.2f)
                     shape.rectLine(x, y - 11f, x, y - 7f, 1.2f)
                     shape.rectLine(x, y + 7f, x, y + 11f, 1.2f)
                 }
-                shape.color = Color(1.00f, 0.82f, 0.50f, 0.98f)
+                shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.rectLine(x - 7f, y - 7f, x + 7f, y + 7f, 1.6f)
                 shape.rectLine(x - 7f, y + 7f, x + 7f, y - 7f, 1.6f)
                 shape.rect(x - 0.75f, y - 8.5f, 1.5f, 17f)
                 shape.rect(x - 8.5f, y - 0.75f, 17f, 1.5f)
-                shape.color = Color(1.00f, 0.92f, 0.72f, 0.78f)
+                shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.78f }
                 shape.circle(x, y, 3.2f)
             }
             GroundPingKind.BUILD -> {
@@ -1769,14 +1764,14 @@ internal class GdxWorldRenderer(
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.22f + (pulse * 0.08f))
                 shape.rect(x - 7f, y - 7f, 14f, 14f)
                 if (ping.queued) {
-                    shape.color = Color(0.86f, 0.96f, 1.00f, 0.32f + (pulse * 0.06f))
+                    shape.color = groundPingQueuedTone(colors, ping.kind).cpy().apply { a = 0.32f + (pulse * 0.06f) }
                     shape.rect(x - 16f, y - 16f, 32f, 32f)
                     shape.rect(x - 12f, y - 1f, 4f, 2f)
                     shape.rect(x + 8f, y - 1f, 4f, 2f)
                     shape.rect(x - 1f, y - 12f, 2f, 4f)
                     shape.rect(x - 1f, y + 8f, 2f, 4f)
                 }
-                shape.color = Color(0.84f, 0.96f, 1.00f, 0.96f)
+                shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.rect(x - 6f, y - 6f, 12f, 2f)
                 shape.rect(x - 6f, y + 4f, 12f, 2f)
                 shape.rect(x - 6f, y - 6f, 2f, 12f)
@@ -1791,7 +1786,7 @@ internal class GdxWorldRenderer(
                 shape.circle(x, y, 12f + (pulse * 4f))
                 shape.color = pingTone(ping.kind).cpy().mul(1f, 1f, 1f, 0.20f + (pulse * 0.08f))
                 shape.circle(x, y, 7f + (pulse * 2f))
-                shape.color = Color(1.00f, 0.76f, 0.76f, 0.98f)
+                shape.color = groundPingCoreTone(colors, ping.kind)
                 shape.rectLine(x - 6.5f, y - 6.5f, x + 6.5f, y + 6.5f, 1.6f)
                 shape.rectLine(x - 6.5f, y + 6.5f, x + 6.5f, y - 6.5f, 1.6f)
                 shape.rect(x - 7.5f, y - 0.75f, 15f, 1.5f)
@@ -1836,17 +1831,17 @@ internal class GdxWorldRenderer(
         val corner = selectionBoxCorner(width, height)
         val pulse = ambientPulse(1200L)
 
-        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.12f + (pulse * 0.05f) }
+        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.08f + (pulse * 0.04f) }
         shape.rect(minX, minY, width, height)
-        shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.05f + (pulse * 0.03f) }
+        shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.03f + (pulse * 0.02f) }
         shape.rect(minX + 2f, minY + 2f, (width - 4f).coerceAtLeast(0f), (height - 4f).coerceAtLeast(0f))
-        shape.color = scratchColorA.set(selectionBoxFillColor).also { it.a = 0.18f + (pulse * 0.05f) }
+        shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.18f + (pulse * 0.04f) }
         shape.line(minX, minY, right, minY)
         shape.line(minX, bottom, right, bottom)
         shape.line(minX, minY, minX, bottom)
         shape.line(right, minY, right, bottom)
 
-        shape.color = scratchColorA.set(selectionSoftColor).also { it.a = 0.30f + (pulse * 0.08f) }
+        shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.24f + (pulse * 0.08f) }
         shape.line(minX - 2f, minY - 2f, right + 2f, minY - 2f)
         shape.line(minX - 2f, bottom + 2f, right + 2f, bottom + 2f)
         shape.line(minX - 2f, minY - 2f, minX - 2f, bottom + 2f)
@@ -1862,12 +1857,12 @@ internal class GdxWorldRenderer(
         shape.line(right, bottom, right - corner, bottom)
         shape.line(right, bottom, right, bottom - corner)
 
-        shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.34f + (pulse * 0.10f) }
+        shape.color = scratchColorA.set(selectionBoxAccentColor).also { it.a = 0.40f + (pulse * 0.10f) }
         shape.rect(minX + (width * 0.24f), minY - 0.75f, width * 0.52f, 1.2f)
         shape.rect(minX + (width * 0.24f), bottom - 0.45f, width * 0.52f, 1.2f)
         val centerX = minX + (width * 0.5f)
         val centerY = minY + (height * 0.5f)
-        shape.color = scratchColorA.set(selectionColor).also { it.a = 0.42f + (pulse * 0.10f) }
+        shape.color = scratchColorA.set(selectionBoxFrameColor).also { it.a = 0.46f + (pulse * 0.10f) }
         shape.rect(centerX - 6f, minY - 1f, 12f, 2f)
         shape.rect(centerX - 6f, bottom - 1f, 12f, 2f)
         shape.rect(minX - 1f, centerY - 6f, 2f, 12f)
@@ -2871,6 +2866,39 @@ internal fun overlayCompletionFlashAlpha(selected: Boolean, kind: CompletionFlas
 
 internal fun selectionUnitRadius(tileSize: Float): Float =
     (tileSize * 0.34f).coerceIn(10f, 13f)
+
+internal fun selectionBoxFillTone(colors: PresentationColorTokens): Color =
+    colors.selection.cpy().lerp(colors.selectionSoft, 0.18f).also { it.a = 0.08f }
+
+internal fun selectionBoxFrameTone(colors: PresentationColorTokens): Color =
+    selectionFocusAccentTone(colors).cpy().also { it.a = 0.96f }
+
+internal fun selectionBoxAccentTone(colors: PresentationColorTokens): Color =
+    selectionFocusAccentTone(colors).cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.40f }
+
+internal fun groundPingBaseTone(colors: PresentationColorTokens, kind: GroundPingKind): Color =
+    when (kind) {
+        GroundPingKind.MOVE -> colors.selection.cpy().also { it.a = 0.94f }
+        GroundPingKind.ATTACK -> colors.warning.cpy().also { it.a = 0.96f }
+        GroundPingKind.BUILD -> colors.build.cpy().lerp(colors.commandSoft, 0.24f).also { it.a = 0.96f }
+        GroundPingKind.INVALID -> colors.danger.cpy().also { it.a = 0.96f }
+    }
+
+internal fun groundPingQueuedTone(colors: PresentationColorTokens, kind: GroundPingKind): Color =
+    when (kind) {
+        GroundPingKind.MOVE -> selectionFocusAccentTone(colors).cpy().also { it.a = 0.40f }
+        GroundPingKind.ATTACK -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.36f }
+        GroundPingKind.BUILD -> colors.commandSoft.cpy().lerp(colors.textPrimary, 0.10f).also { it.a = 0.36f }
+        GroundPingKind.INVALID -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.08f).also { it.a = 0.34f }
+    }
+
+internal fun groundPingCoreTone(colors: PresentationColorTokens, kind: GroundPingKind): Color =
+    when (kind) {
+        GroundPingKind.MOVE -> selectionFocusAccentTone(colors).cpy().also { it.a = 0.96f }
+        GroundPingKind.ATTACK -> colors.warningSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.98f }
+        GroundPingKind.BUILD -> colors.commandSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.96f }
+        GroundPingKind.INVALID -> colors.dangerSoft.cpy().lerp(colors.textPrimary, 0.12f).also { it.a = 0.98f }
+    }
 
 internal fun selectionBoxCorner(width: Float, height: Float): Float =
     minOf(18f, width * 0.24f, height * 0.24f).coerceAtLeast(6f)

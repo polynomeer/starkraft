@@ -61,6 +61,9 @@ import starkraft.sim.client.resolveSilhouetteBodyColor
 import starkraft.sim.client.resolveSilhouetteStripeColor
 import starkraft.sim.client.resolveSilhouetteTrimColor
 import starkraft.sim.client.resolveStructureRoofColor
+import starkraft.sim.client.groundPingBaseTone
+import starkraft.sim.client.groundPingCoreTone
+import starkraft.sim.client.groundPingQueuedTone
 import starkraft.sim.client.overlayCompletionFlashAlpha
 import starkraft.sim.client.overlayDamageFlashAlpha
 import starkraft.sim.client.CombatSoundKind
@@ -68,11 +71,15 @@ import starkraft.sim.client.CompletionFlashKind
 import starkraft.sim.client.deathBurstCoreRadius
 import starkraft.sim.client.deathBurstOuterRadius
 import starkraft.sim.client.selectionBoxCorner
+import starkraft.sim.client.selectionBoxAccentTone
+import starkraft.sim.client.selectionBoxFillTone
+import starkraft.sim.client.selectionBoxFrameTone
 import starkraft.sim.client.selectionUnitRadius
 import starkraft.sim.client.shouldRenderDetailedTerrainForTileSize
 import starkraft.sim.client.smoothMetricSample
 import starkraft.sim.client.ClientCommandButton
 import starkraft.sim.client.ClientGroundCommandMode
+import starkraft.sim.client.GroundPingKind
 import starkraft.sim.client.ClientSnapshot
 import starkraft.sim.client.EntitySnapshot
 import starkraft.sim.client.ResourceNodeSnapshot
@@ -387,6 +394,23 @@ class GameScreenInputRulesTest {
         assertNotEquals(armedHeaderAccent, minimapHeaderAccentTone(colors, hasAttackWarning = true, groundModeArmed = false, rallyModeArmed = false, buildModeArmed = false))
         assertNotEquals(idleFooter, armedFooter)
         assertNotEquals(minimapFooterAccentTone(colors, commandArmed = false), minimapFooterAccentTone(colors, commandArmed = true))
+    }
+
+    @Test
+    fun `world selection box and ping tones align with hud accents`() {
+        val colors = defaultPresentationTheme().colors
+
+        val fill = selectionBoxFillTone(colors)
+        val frame = selectionBoxFrameTone(colors)
+        val accent = selectionBoxAccentTone(colors)
+
+        assertTrue(frame.g >= frame.r, "selection frame should lean green")
+        assertTrue(accent.g >= accent.r, "selection accent should lean green")
+        assertTrue(fill.a < frame.a, "selection fill should stay subtler than frame")
+
+        assertNotEquals(groundPingBaseTone(colors, GroundPingKind.MOVE), groundPingBaseTone(colors, GroundPingKind.ATTACK))
+        assertNotEquals(groundPingCoreTone(colors, GroundPingKind.BUILD), groundPingCoreTone(colors, GroundPingKind.INVALID))
+        assertNotEquals(groundPingQueuedTone(colors, GroundPingKind.MOVE), groundPingQueuedTone(colors, GroundPingKind.ATTACK))
     }
 
     @Test
