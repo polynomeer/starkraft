@@ -4,11 +4,11 @@ Offline utility CLIs for replay/map/data workflows.
 
 ## Related docs
 
-- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
-- `/Users/hammac/Projects/starkraft/docs/map-format-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/data-schema-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/benchmark-report-template.md`
+- [replay-format-spec.md](../docs/replay-format-spec.md)
+- [replay-validation-checklist.md](../docs/replay-validation-checklist.md)
+- [map-format-spec.md](../docs/map-format-spec.md)
+- [data-schema-spec.md](../docs/data-schema-spec.md)
+- [benchmark-report-template.md](../docs/benchmark-report-template.md)
 
 ## Run
 

@@ -4,11 +4,11 @@ Headless websocket client tools.
 
 ## Related docs
 
-- `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/input-mapping-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`
-- `/Users/hammac/Projects/starkraft/docs/playtest-report-template.md`
+- [ui-ux-spec.md](../docs/ui-ux-spec.md)
+- [input-mapping-spec.md](../docs/input-mapping-spec.md)
+- [protocol-spec.md](../docs/protocol-spec.md)
+- [feature-backlog.md](../docs/feature-backlog.md)
+- [playtest-report-template.md](../docs/playtest-report-template.md)
 
 ## Current scope
 
@@ -93,6 +93,8 @@ go run ./cmd/bot --url ws://127.0.0.1:8080/ws --name bot-a --room default --simV
 
 ```bash
 cd client
+go build ./...
 go test ./...
+go vet ./...
 go mod verify
 ```

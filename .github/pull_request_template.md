@@ -18,7 +18,7 @@
 
 ## Documentation check
 
-- [ ] I reviewed `/Users/hammac/Projects/starkraft/docs/README.md`
+- [ ] I reviewed `docs/README.md`
 - [ ] I updated related docs if behavior/contracts changed
 - [ ] I checked module README links if the change affects developer workflows
 

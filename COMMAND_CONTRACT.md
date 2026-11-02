@@ -8,8 +8,13 @@ It exists to remove ambiguity from the libGDX client input layer and to provide
 clear acceptance criteria for regression tests and manual QA.
 
 Related documents:
-- [COMMERCIALIZATION_ROADMAP.md](/Users/hammac/Projects/starkraft/COMMERCIALIZATION_ROADMAP.md)
-- [PHASE1_STABILIZATION_PLAN.md](/Users/hammac/Projects/starkraft/PHASE1_STABILIZATION_PLAN.md)
+- [COMMERCIALIZATION_ROADMAP.md](COMMERCIALIZATION_ROADMAP.md)
+- [PHASE1_STABILIZATION_PLAN.md](PHASE1_STABILIZATION_PLAN.md)
+- [docs/input-mapping-spec.md](docs/input-mapping-spec.md) (full key map)
+
+Implementation: `sim/src/main/kotlin/client/GameScreen.kt` (`GameInputController`, `resolveEscapeAction`)
+and `sim/src/main/kotlin/client/GdxClientRuntime.kt` (`executeAction`, `issueLeftClick`, `issueRightClick`,
+`issueMinimapLeftClick`, `issueMinimapRightClick`, `placeBuildingAt`).
 
 ## Principles
 
@@ -28,8 +33,8 @@ Related documents:
 
 - `LMB` on a friendly unit selects it.
 - `LMB` drag performs box selection.
-- `Esc` clears armed command mode first, then clears selection if no armed mode is active.
-- Selecting a new set of units while armed should only be allowed if explicitly intended by the command mode.
+- `Esc` resolves in this order: close pause overlay, close help overlay, cancel armed command mode, clear selection, and only if none of those apply, open the pause overlay.
+- Selecting a new set of units while armed should only be allowed if explicitly intended by the command mode. Current client: while armed (and a selection exists), `LMB` is always consumed as a confirm and drag-box selection is disabled.
 
 ### Armed Command Rules
 
@@ -39,6 +44,7 @@ Armed command examples:
 - `move`
 - `attack`
 - `patrol`
+- `rally`
 - `build`
 
 Shared rules:
@@ -47,17 +53,22 @@ Shared rules:
 - `Esc` always cancels the armed mode
 - successful confirm exits the armed mode unless the command explicitly supports repeated placement
 - invalid confirm should not silently change selection state
+- holding `Shift` on confirm issues the command as queued (`queued = true`) for move/attack/patrol; rally and build ignore it
+- arming move/attack/patrol/build requires a selection; without one the client shows `select units first`, plays the invalid cue, and does not arm
 
 ### Confirm Surfaces
 
 Allowed confirm surfaces:
 - world terrain tile
 - entity in world
-- minimap, only for view movement, not gameplay commands
+- minimap, for `move`, `attack`, `patrol` and `rally` (`LMB` or `RMB` on the minimap issues the command at the mapped world point and shows a subtle minimap confirm mark)
 
 Forbidden confirm surfaces:
-- command confirm through unrelated HUD cards
+- command confirm through unrelated HUD cards (clicks on the top bar, bottom HUD, warning banner or overlays never reach world input)
+- `build` confirm on the minimap: rejected with `place build in main view` and the invalid cue; build mode stays armed
 - accidental entity selection when an armed gameplay command should consume the click
+
+Unarmed minimap input: `LMB` click/drag moves the camera; `RMB` issues the same context command as a world right-click (`Ctrl` = attack-move, `Shift` = queue).
 
 ## Command Matrix
 
@@ -71,6 +82,9 @@ Forbidden confirm surfaces:
 
 - `LMB` on a unit or structure updates selection
 - `LMB` on empty terrain clears selection unless modifier rules later exist
+- `Shift + LMB` toggles the clicked entity in the current selection
+
+Current client gap: click selection picks the nearest entity of the viewed faction (any faction in observer view) with no distance cutoff, so a terrain click normally reselects the nearest owned entity instead of clearing. Use `Esc` to clear.
 
 ### Cancel
 
@@ -91,10 +105,11 @@ Forbidden confirm surfaces:
 ### Confirm
 
 - on mouse release, all selectable owned units inside the box become selected
+- current client: every entity of the viewed faction inside the box (units and structures; all factions in observer view); `Shift` adds to the selection
 
 ### Cancel
 
-- releasing without meaningful drag falls back to click selection
+- releasing without meaningful drag falls back to click selection (box is drawn after 8px of drag and issued on release when the drag is at least 6px)
 
 ### Feedback
 
@@ -113,6 +128,8 @@ Forbidden confirm surfaces:
 
 - `LMB` or `RMB` on world terrain issues move
 - clicking another terrain tile while units are already moving retargets the move destination
+- the forced move ignores enemies and resource nodes under the cursor (no auto attack/harvest)
+- a successful confirm exits move mode
 
 ### Cancel
 
@@ -121,6 +138,7 @@ Forbidden confirm surfaces:
 ### Feedback
 
 - command button pulse
+- `move armed` notice and move cue when armed
 - move ground ping
 - command audio for move
 - HUD mode hint while armed
@@ -135,12 +153,13 @@ Forbidden confirm surfaces:
 ### Enter
 
 - hotkey `A`
-- command button `Attack`
+- command button `Attack` (action id `attackMove`)
 
 ### Confirm
 
 - `LMB` or `RMB` on enemy entity issues attack
-- `LMB` or `RMB` on terrain issues attack-move
+- `LMB` or `RMB` on terrain issues attack-move (resource nodes are treated as terrain)
+- outside armed mode, `Ctrl + RMB` on terrain issues attack-move directly
 
 ### Cancel
 
@@ -157,6 +176,7 @@ Forbidden confirm surfaces:
 
 - clicking a friendly entity should not quietly downgrade into selection if attack mode is armed
 - invalid attack surface should preserve command state or cancel explicitly, not fail ambiguously
+- current client: a friendly entity within 0.8 tiles of the click is rejected with `invalid attack target`, an invalid ground ping and the invalid cue; attack mode stays armed
 
 ## 5. Patrol
 
@@ -168,6 +188,7 @@ Forbidden confirm surfaces:
 ### Confirm
 
 - `LMB` or `RMB` on terrain issues patrol anchor/route behavior supported by current sim client flow
+- current client: a single click writes one `patrol` command with the clicked point; enemies and resource nodes under the cursor are ignored
 
 ### Cancel
 
@@ -183,15 +204,39 @@ Forbidden confirm surfaces:
 
 - if patrol later becomes multi-click, the client must explicitly define `first point`, `second point`, and `cancel after first point` behavior
 
-## 6. Build
+## 6. Rally
+
+### Enter
+
+- hotkey `S`
+- command button `Rally` (shown only when the selection contains an entity with `supportsRally`)
+- without a rally-capable selection the client shows `select rally building` and does not arm
+
+### Confirm
+
+- `LMB` or `RMB` on world terrain or the minimap writes a `rally` command for the first rally-capable selected building
+
+### Cancel
+
+- `Esc`
+
+### Feedback
+
+- build-style ground ping and build cue
+- `rally set` notice
+- rally cursor preview while armed
+
+## 7. Build
 
 ### Enter
 
 - build command button for a buildable structure
+- hotkeys `B` (`Depot`), `R` (`ResourceDepot`), `G` (`GasDepot`)
 
 ### Confirm
 
 - `LMB` or `RMB` on valid terrain places build order
+- a successful placement exits build mode
 
 ### Cancel
 
@@ -209,12 +254,16 @@ Forbidden confirm surfaces:
 - invalid placement must never place the order
 - invalid placement must visibly reject the action
 - invalid placement must not change selection
+- current client: invalid placement shows `invalid build placement`, an invalid ground ping and the invalid cue, and keeps build mode armed
 
-## 7. Cancel Build / Train / Research
+## 8. Cancel Build / Train / Research
 
 ### Enter
 
 - direct command button
+- hotkeys `X` (cancel build), `T` (cancel train), `Y` (cancel research)
+
+Train and research queueing follow the same immediate pattern: `Train <type>` / `Research <tech>` buttons, or hotkeys `U`/`I`/`O` (first three train options) and `L` (first research option).
 
 ### Confirm
 
@@ -229,7 +278,7 @@ Forbidden confirm surfaces:
 - command button pulse
 - queue/status card updates immediately
 
-## 8. View Switch
+## 9. View Switch
 
 ### Enter
 
@@ -249,13 +298,16 @@ Forbidden confirm surfaces:
 - top bar mode and status update
 - minimap title and view state update
 - camera recenter or view recovery should follow a deterministic rule
+- current client: switching view does not recenter the camera (`End` centers on the viewed faction); if the viewed faction has no visible tiles the client auto-switches to the faction with the most visible tiles (and centers on it) or to observer, with a `view auto-switched to ...` notice
 
-## 9. Pause
+## 10. Pause
+
+There are two separate pause concepts in the current client.
 
 ### Enter
 
-- `Space`
-- pause command button
+- sim pause: `Space` or the `Pause` command button toggles the sim play-control pause
+- pause overlay: `Esc` when no overlay, armed mode or selection is active
 
 ### Confirm
 
@@ -264,14 +316,17 @@ Forbidden confirm surfaces:
 ### Cancel
 
 - same input toggles or closes depending on current state
+- sim pause: `Space` / `Pause` again
+- pause overlay: `Esc` or the `Resume` button
 
 ### Feedback
 
-- top bar status update
-- pause overlay
+- top bar status update (`SIM HOLD` for sim pause, `PAUSED` for the overlay)
+- pause overlay (`Resume`, `Sim Pause`, `Restart`, quick/alt preset save/load, `Menu`, `Quit`)
 - pause card pulse
+- while the pause or help overlay is open, world pointer input, command buttons and all hotkeys except `Esc` (and `F1` for help) are blocked
 
-## 10. Help
+## 11. Help
 
 ### Enter
 
@@ -318,6 +373,9 @@ Minimum runtime regression coverage:
 7. `Esc` cancels armed mode
 8. selection change after armed-mode cancel
 9. hotkey path and button-click path produce the same runtime state
+
+Current coverage lives in `sim/src/test/kotlin/starkraft/sim/GdxClientRuntimeTest.kt` (arming, confirm, friendly-target rejection, build placement, rally, minimap commands, queued commands),
+`GameScreenInputRulesTest.kt` (drag vs armed, overlay blocking, `Esc` priority) and `ClientControllerContractTest.kt` (forced move/patrol/attack-move intents).
 
 ## Manual QA Checklist
 

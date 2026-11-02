@@ -40,6 +40,7 @@
 
 - Conventional Commits 사용
 - subject는 짧고 명령형으로 쓴다
+- subject는 72자 이하, 마침표 없이 쓴다 (`AGENTS.md` 기준)
 - 비사소한 변경은 body를 추가한다
 
 예시:
@@ -71,11 +72,17 @@
 
 ## 추천 검증 명령
 
-- `./gradlew :sim:test`
-- `cd /Users/hammac/Projects/starkraft/server && go test ./...`
-- `cd /Users/hammac/Projects/starkraft/client && go test ./...`
-- `/Users/hammac/Projects/starkraft/scripts/smoke_run.sh`
-- `/Users/hammac/Projects/starkraft/scripts/e2e_server_bots_smoke.sh`
+저장소 루트 기준:
+
+- `./gradlew :sim:build` (CI와 동일하게 build + test)
+- `./gradlew :tools:build`, `./gradlew :tools:smoke` (도구 변경 시)
+- `cd server && go build ./... && go test ./... && go vet ./...`
+- `cd client && go build ./... && go test ./... && go vet ./...`
+- `./scripts/smoke_run.sh`
+- `./scripts/e2e_server_bots_smoke.sh`
+- `./scripts/play_sim_smoke.sh` (그래픽 클라이언트/play 파이프라인 변경 시)
+
+프로토콜을 바꾸면 `shared-protocol/schema`, `shared-protocol/golden/*.json`, 그리고 세 모델 사본(`server/pkg/protocol`, `client/pkg/protocol`, `sim/src/main/kotlin/starkraft/sim/protocol/ProtocolModels.kt`)을 함께 갱신한다.
 
 ## PR 작성 기준
 
@@ -83,6 +90,8 @@
 - 왜 필요한지
 - 어떤 모듈에 영향이 있는지
 - 어떻게 검증했는지
+
+양식은 `.github/pull_request_template.md`를 따른다.
 
 ## 피해야 할 것
 

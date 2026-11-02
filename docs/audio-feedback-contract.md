@@ -10,21 +10,31 @@
 - 반복 재생으로 싸구려처럼 들리는 문제
 - 전투가 많아질수록 중요한 소리가 묻히는 문제
 
-## 현재 상태
+## 현재 구현 상태
 
-현재 사운드 재생은 주로 [`sim/src/main/kotlin/client/GameScreen.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GameScreen.kt)와 [`sim/src/main/kotlin/client/GdxClientRuntime.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxClientRuntime.kt)에서 이벤트 기반으로 처리된다.
+현재 사운드는 이벤트 기반으로 동작한다. [`GdxClientRuntime.kt`](../sim/src/main/kotlin/client/GdxClientRuntime.kt)가 `CommandSoundKind`/`CombatSoundKind`/`DeathSoundKind`와 attack alert/completion 플래그를 pending 상태로 남기고, [`GameScreen.kt`](../sim/src/main/kotlin/client/GameScreen.kt)의 `render()`가 매 프레임 이를 소비해 재생한다.
 
-장점:
+구현됨:
 
-- move/attack/build/invalid/alert/death 계열 기본 분리는 이미 있다
-- pitch variation과 cooldown이 일부 도입되어 있다
+- 음원: 오디오 파일이 없다. [`GdxUiAssets.kt`](../sim/src/main/kotlin/client/GdxUiAssets.kt)가 시작 시 `renderToneWav`로 짧은 tone WAV를 합성해 임시 파일로 쓰고 `Gdx.audio.newSound`로 로드한다 (dispose 시 삭제)
+- command: move / attack / build / invalid. 명령 확정뿐 아니라 armed 진입 시에도 해당 cue가 나고, 실패(선택 없음, invalid placement, invalid attack target, 미니맵 build 시도)는 invalid cue
+- combat: marine ranged / zergling melee / 일반 melee / 일반 ranged (공격자 기준 선택)
+- death: unit / marine / zergling / structure (structure는 main + tail 두 소리)
+- alert: viewed faction 피해 시 under attack, 아군 구조물 파괴 시 structure lost
+- completion: 건설/생산/연구 완료
+- variation: 이벤트당 단일 샘플. 재생할 때마다 결정론적 phase로 pitch(예: move 0.98~1.05)와 gain(약 ±5%)을 순환시킨다. sample rotation은 없다
+- cooldown: key별 cooldown이 command/death에만 있다 (아래 표 참고)
 
-한계:
+미구현:
 
-- bus 개념이 없다
-- priority 규칙이 명시적이지 않다
-- material/type variation이 제한적이다
-- world distance 기반 attenuation이 없다
+- UI click / selection confirm 사운드
+- bus, priority gate, ducking
+- 카메라 거리 attenuation (모든 소리 non-spatial)
+- ambience, music
+- `PresentationTheme.audio` gain 토큰은 정의만 되어 있고 재생 코드는 하드코딩 볼륨을 쓴다 (alert 0.70, move 0.48, attack 0.55, build 0.52, invalid 0.48, combat 0.42~0.46, death 0.56~0.60, structure tail 0.38, completion 0.55)
+- 카테고리별 pending 슬롯이 하나라서 한 프레임에 같은 카테고리 이벤트가 여러 개면 마지막 것만 재생된다
+
+아래 Bus / Priority / Spatial 절은 목표 규격이다.
 
 ## Audio Categories
 
@@ -107,6 +117,8 @@ variation 방식:
 | structure death | 80ms |
 | attack alert | 300ms 이상 |
 
+현재 구현값: move/attack 30ms, build/invalid 45ms, unit/marine death 55ms, zergling death 45ms, structure death 80ms (tail 120ms). UI click 사운드는 없고, combat/alert/completion에는 시간 cooldown이 없다 (attack alert는 damage tick당 한 번).
+
 규칙:
 
 - 같은 frame에 동일 그룹이 여러 번 발생해도 대표 샘플만 재생 가능
@@ -167,6 +179,8 @@ variation 방식:
 - 선택/명령 입력 반응이 느리게 들리지 않는다
 
 ## Implementation Plan
+
+현재 Phase 1~3 항목은 모두 미착수다. cooldown 값은 `GameScreen.render()`에 하드코딩되어 있다.
 
 Phase 1:
 

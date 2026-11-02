@@ -51,10 +51,12 @@
 | 데이터/맵 | `data-schema-spec.md`, `map-format-spec.md` | 콘텐츠 정의 구조와 검증 규칙 |
 | 밸런스/AI | `balance-spec.md`, `ai-behavior-spec.md` | 수치 정책과 봇 행동 기준 |
 | UX/입력 | `ui-ux-spec.md`, `input-mapping-spec.md`, `hud-layout-contract.md` | HUD, 조작, 피드백 기준 |
-| 표현 품질 | `presentation-quality-architecture.md`, `presentation-theme-spec.md`, `battlefield-visual-contract.md`, `hud-layout-contract.md`, `asset-manifest-v2-spec.md`, `audio-feedback-contract.md` | 상용 수준 presentation 구조와 시각/오디오 계약 |
+| 표현 품질 | `presentation-quality-architecture.md`, `presentation-quality-improvement-plan.md`, `presentation-theme-spec.md`, `battlefield-visual-contract.md`, `hud-layout-contract.md`, `asset-manifest-v2-spec.md`, `audio-feedback-contract.md` | 상용 수준 presentation 구조와 시각/오디오 계약 |
 | 아트/오디오 | `art-direction-brief.md`, `audio-direction-brief.md` | 시각/청각 방향성 |
-| 품질 전략 | `testing-strategy.md`, `desync-debugging-guide.md` | 테스트 계층과 디버깅 절차 |
+| 품질 전략 | `testing-strategy.md`, `desync-debugging-guide.md`, `performance-debugging-workflow.md` | 테스트 계층과 디버깅 절차 |
+| 보안/검증 | `security-validation-spec.md` | 서버 입력 검증과 하드닝 기준 |
 | 운영/릴리스 | `server-ops-runbook.md`, `release-artifact-spec.md` | 운영 절차와 배포 산출물 기준 |
+| 템플릿 | `benchmark-report-template.md`, `playtest-report-template.md` | 성능/플레이테스트 기록 양식 |
 | 협업 규칙 | `contribution-guide.md`, `document-maintenance-policy.md`, `glossary.md` | 협업, 용어, 문서 유지 기준 |
 
 ## 목적별 빠른 링크
@@ -142,6 +144,8 @@
   - 결정론 불일치 추적 절차
 - `server-ops-runbook.md`
   - 서버 실행, health, 장애 대응
+- `security-validation-spec.md`
+  - 서버 입력 검증, 크기/빈도 제한, 하드닝 기준
 - `release-artifact-spec.md`
   - 배포 아티팩트와 manifest/checksum 기준
 - `replay-validation-checklist.md`
@@ -154,6 +158,8 @@
   - 그래픽 플레이 지연/프레임 드랍 재현 및 계측 절차
 - `presentation-quality-architecture.md`
   - 현재 클라이언트 구조 위에서 presentation system을 재구성하는 상위 설계
+- `presentation-quality-improvement-plan.md`
+  - 아트/애니메이션/VFX/사운드/UI 연출 파이프라인 개선 방향 초안
 - `presentation-theme-spec.md`
   - 색상, 타이포, 간격, 모션 토큰 기준
 - `battlefield-visual-contract.md`
@@ -182,7 +188,11 @@
 - `OPERATIONS.md`
   - 실제 운영/실행 중심의 보조 문서
 - `COMMAND_CONTRACT.md`
-  - 명령 구조 상세 계약
+  - 클라이언트 명령 입력(armed command enter/confirm/cancel) 상세 계약
+- `PLAYTEST_CHECKLIST.md`
+  - 데스크톱 클라이언트 수동 플레이테스트 체크리스트
+- `PHASE1_STABILIZATION_PLAN.md`
+  - 상용화 로드맵 Phase 1 안정화 실행 계획
 - `CHANGELOG.md`
   - 변경 이력
 - `RELEASE_CHECKLIST.md`

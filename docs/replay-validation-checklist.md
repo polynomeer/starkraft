@@ -21,22 +21,31 @@ replay 산출물이 신뢰 가능한지 빠르게 점검하기 위한 운영용 
 
 ### 2. 메타데이터 확인
 
-- version 정보가 있는가
-- seed가 기록되었는가
-- protocol/sim version이 기록되었는가
+- sim replay (JSON): `schema`가 1인가, `seed`/`mapId`/`buildVersion`이 기록되었는가 (`replay meta`)
+- server replay (JSONL): 첫 줄이 `header` record이고 `protocolVersion`/`simVersion`/`tickMs`가 있는가 (server replay에는 seed 필드가 없다)
 
 ### 3. hash 확인
 
-- replay hash가 저장되었는가
-- strict mode에서 재계산 hash와 일치하는가
+- sim replay: `replayHash`가 저장되었는가, `--strictHash`에서 재계산 hash와 일치하는가
+- server replay: keyframe `worldHash`가 재계산 값과 일치하는가 (`replaycheck`, `verify-ndjson`)
+- 두 형식의 hash는 서로 비교할 수 없다. 서버 hash는 `room.go`의 자체 Go 모델 기준이다.
 
 ## 권장 검증 순서
 
+sim replay (JSON):
+
 1. `replay meta`
 2. `replay stats`
-3. `replay verify`
-4. 필요 시 `verify-ndjson`
-5. golden 또는 기대 world hash와 비교
+3. `replay verify --strictHash`
+4. golden 또는 기대 world hash와 비교
+
+server replay (JSONL):
+
+1. `go run ./cmd/replaycheck --replay <file>` (in `server/`)
+2. `replay stats` (server-ndjson로 자동 판별)
+3. `replay verify-ndjson`
+
+`replay meta` / `verify` / `fast-forward`는 sim replay 전용이며 server JSONL에는 사용할 수 없다.
 
 ## 실패 유형
 
@@ -75,7 +84,7 @@ replay 산출물이 신뢰 가능한지 빠르게 점검하기 위한 운영용 
 ## 릴리스 전 최소 기준
 
 - 대표 replay 샘플에 대해 verify 통과
-- authoritative stack smoke replay verify 통과
+- authoritative stack smoke replay verify 통과 (`e2e_server_bots_smoke.sh` 내 `replaycheck`, CI `e2e-smoke`의 `verify-ndjson`)
 - golden replay hash 회귀 없음
 
 ## 관련 명령
@@ -84,9 +93,12 @@ replay 산출물이 신뢰 가능한지 빠르게 점검하기 위한 운영용 
 - `./gradlew :tools:run --args="replay stats <file> --json"`
 - `./gradlew :tools:run --args="replay verify <file> --strictHash"`
 - `./gradlew :tools:run --args="replay verify-ndjson <file> --json"`
+- `cd server && go run ./cmd/replaycheck --replay <file>`
+
+결과 코드: `verify`의 `result`는 `ok` / `ok-legacy`(hash 없음, non-strict) / `missing-hash`(strict) / `mismatch` / `validation-error`, `verify-ndjson`/`stats`(server)는 `ok` / `mismatch` / `invalid`. 실패 시 exit code 2.
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/testing-strategy.md`
-- `/Users/hammac/Projects/starkraft/tools/README.md`
+- `docs/replay-format-spec.md`
+- `docs/testing-strategy.md`
+- `tools/README.md`

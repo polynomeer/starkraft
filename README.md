@@ -25,7 +25,7 @@
 - 결정론적 시뮬레이션을 고정 tick으로 유지하는 방법
 - authoritative server에서 클라이언트 입력을 검증하고 판정하는 방법
 - replay, world hash, golden schema로 회귀를 잡는 방법
-- Kotlin/JVM 시뮬레이션과 Go 네트워크 스택을 느슨하게 결합하는 방법
+- Kotlin/JVM 시뮬레이션과 Go 네트워크 스택을 공유 프로토콜 계약(schema + golden)으로만 느슨하게 결합하는 방법
 - 헤드리스 자동 검증 경로와 사람이 직접 플레이하는 경로를 동시에 유지하는 방법
 
 채용담당자나 첫 방문자가 보기 좋은 포인트는 "기능이 많다"보다 아래 세 가지다.
@@ -61,7 +61,7 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `sim/` | Kotlin 기반 결정론 RTS 시뮬레이션 코어와 로컬 플레이 파이프라인 |
+| `sim/` | Kotlin 기반 결정론 RTS 시뮬레이션 코어, libGDX 그래픽/콘솔 클라이언트, 로컬 플레이 파이프라인 |
 | `server/` | Go 기반 authoritative multiplayer host |
 | `client/` | Go 기반 CLI/봇 headless client |
 | `tools/` | replay/map/data 검증용 Kotlin CLI |
@@ -74,14 +74,15 @@
 ### 상위 구조
 
 1. 클라이언트는 명령만 보낸다.
-2. 서버는 handshake, room, validation, tick orchestration을 담당한다.
-3. 실제 규칙 판정은 `sim`이 수행한다.
-4. 서버는 snapshot, ack, replay를 기록/중계한다.
-5. 도구는 replay와 데이터 계약을 오프라인으로 검증한다.
+2. 로컬 플레이 경로(`:sim:play`)에서는 서버 없이 `sim`이 규칙을 판정하고 snapshot NDJSON을 기록하며, libGDX 클라이언트는 그 스트림을 읽고 명령을 input NDJSON으로 돌려준다.
+3. 네트워크 경로에서 Go 서버는 handshake, room, validation, tick orchestration을 담당한다.
+4. 현재 Go 서버(`server/pkg/authoritative/room.go`)는 Kotlin `sim`을 호출하지 않는다. move/attack/build/queue/surrender만 다루는 자체 최소 유닛 모델과 자체 world hash로 판정하므로, 서버 replay의 hash와 `sim` hash는 서로 비교 대상이 아니다.
+5. 서버는 snapshot, ack, replay를 기록/중계한다.
+6. 도구는 replay와 데이터 계약을 오프라인으로 검증한다.
 
 ### 핵심 설계 원칙
 
-- `sim`은 단일 진실 공급원이다.
+- 게임 규칙의 단일 진실 공급원은 `sim`이다. (Go 서버의 room 모델은 네트워크 경로 검증용 최소 구현이며 `sim` 규칙을 대체하지 않는다.)
 - 클라이언트는 입력과 렌더링 계층이다.
 - 프로토콜은 schema와 golden 파일로 고정한다.
 - replay는 디버깅 도구가 아니라 회귀 방지 자산이다.
@@ -120,8 +121,9 @@
 
 ### 요구 사항
 
-- JDK 21
-- Go 1.22 이상 권장
+- JDK 17 이상 (Gradle 8.10 실행용, CI는 Temurin 17 사용)
+  - `sim`/`tools`는 Kotlin `jvmToolchain(21)`로 빌드된다. 로컬에 JDK 21이 없으면 foojay toolchain resolver가 자동으로 내려받는다.
+- Go 1.22 이상 (`server/go.mod`, `client/go.mod` 기준 `go 1.22`, CI도 1.22)
 - macOS 또는 Linux 셸 환경 권장
 - `bash`, `curl`, `mktemp` 같은 기본 유틸리티
 
@@ -162,12 +164,19 @@
 - `--dumpWorldHash`: 최종 world hash 출력
 - `--snapshotEvery N`: snapshot NDJSON 주기 기록
 - `--snapshotOut <path>`: snapshot 기록 파일 지정
+- `--seed N`: 시드 지정
+- `--script <file>`: `.script` 명령 파일 실행 (예: `sim/scripts/sample.script`)
+- `--replayDump <path>` / `--replay <path>`: replay 기록 / 재생
+- `--inputTail <path>`: live input NDJSON tail
+- `--help`: 전체 옵션 출력
 
 ### 2. 로컬 그래픽 플레이
 
 ```bash
 ./scripts/play_sim_graphical.sh
 ```
+
+`STARKRAFT_SIM_PLAY_DIR`(기본 `/tmp/starkraft-play`), `STARKRAFT_SIM_PLAY_TICKS`(기본 `5000`), `STARKRAFT_SIM_PLAY_SCENARIO`(기본 `skirmish`)로 실행 인자를 바꿀 수 있다.
 
 또는:
 
@@ -190,6 +199,8 @@
 ./scripts/play_sim_profile.sh
 ```
 
+이 스크립트는 `STARKRAFT_SIM_DEBUG=1`로 `:sim:play`를 실행한다(기본 `10000` tick, 출력 디렉터리 `/tmp/starkraft-play-profile`).
+
 관련 절차 문서:
 
 - `docs/performance-debugging-workflow.md`
@@ -209,6 +220,8 @@
 - 사용자용 CLI 클라이언트 실행
 - replay 파일 기록
 
+주요 env: `STARKRAFT_PLAY_PORT`(기본 `18080`), `STARKRAFT_PLAY_ROOM`(기본 `local-play`), `STARKRAFT_PLAY_BOT`(`1`/`0`, 기본 `1`), `STARKRAFT_PLAY_SIM_VERSION`(기본 `dev`, 공백만 있는 값은 거부), `STARKRAFT_PLAY_TMP_DIR`, `STARKRAFT_PLAY_REPLAY`.
+
 ### 4. 서버 기반 종단 스모크
 
 ```bash
@@ -223,27 +236,45 @@
 - replay에 `header`, `command`, `matchEnd` 포함
 - `replaycheck` 검증 통과
 
+주요 env: `STARKRAFT_E2E_PORT`(기본 `18080`), `STARKRAFT_E2E_TMP_DIR`, `STARKRAFT_E2E_SIM_VERSION`(기본 `dev`, 공백만 있는 값은 거부).
+
 ## 자주 쓰는 개발 명령
 
 ### Gradle / Kotlin
 
 ```bash
+./gradlew :sim:build
 ./gradlew :sim:test
+./gradlew :sim:test --tests starkraft.sim.DeterminismTest
 ./gradlew :sim:benchmark
 ./gradlew :sim:pathfindingBenchmark
 ./gradlew :sim:soak --args="--minutes 30 --units 120 --seed 1234 --reportEverySec 10"
+./gradlew :tools:build
 ./gradlew :tools:test
+./gradlew :tools:smoke
 ./gradlew :tools:run --args="replay stats /tmp/example.replay.jsonl --json"
+```
+
+보조 클라이언트/브리지 태스크 (`sim/build.gradle.kts`):
+
+```bash
+./gradlew :sim:graphicalClient --args="--headless --headlessTicks 20 <snapshots.ndjson> <input.ndjson>"
+./gradlew :sim:consoleClient --args="<input.ndjson|tcp://host:port> [snapshot.ndjson|tcp://host:port|-]"
+./gradlew :sim:consumeSnapshotStream --args="<snapshots.ndjson>"
+./gradlew :sim:tcpClientBridge --args="<snapshots.ndjson> <input.ndjson> <snapshotPort> <inputPort>"
+./gradlew :sim:webSocketClientBridge --args="<snapshots.ndjson> <input.ndjson> <snapshotPort> <inputPort>"
 ```
 
 ### Go
 
 ```bash
-cd server && go test ./... && go mod verify
-cd client && go test ./... && go mod verify
+cd server && go build ./... && go test ./... && go mod verify
+cd client && go build ./... && go test ./... && go mod verify
 cd server && go vet ./...
 cd client && go vet ./...
 ```
+
+CI는 추가로 `go mod tidy` 후 `go.mod`/`go.sum`에 diff가 없는지 확인한다.
 
 ### 운영/도구 스모크
 
@@ -251,6 +282,19 @@ cd client && go vet ./...
 ./scripts/play_sim_smoke.sh
 ./scripts/tools_health.sh
 ```
+
+### 릴리스 패키징
+
+```bash
+./scripts/release_package.sh [outDir] [version]
+```
+
+`:sim:distZip` 결과물, (Go가 있으면) 서버/CLI/봇 바이너리, `manifest-<version>.txt`를 `outDir`(기본 `dist/release`)에 만든다.
+
+### CI
+
+- `.github/workflows/ci.yml` (push/PR): `sim-build-test`, `tools-build-test`, `server-build-test`, `client-build-test`, `e2e-smoke`
+- `.github/workflows/nightly.yml` (매일, 수동 실행 가능): `go-quality`, `sim-soak`(1분 soak + play smoke), `replay-compat`(`DeterminismTest`/`ReplayHashTest`/`ReplayIOTest`), `tools-health`
 
 ## 품질 보증 방식
 

@@ -9,7 +9,23 @@ control, visibility, runtime, and reliability problems so the client becomes a
 stable base for later polish.
 
 Related document:
-- [COMMERCIALIZATION_ROADMAP.md](/Users/hammac/Projects/starkraft/COMMERCIALIZATION_ROADMAP.md)
+- [COMMERCIALIZATION_ROADMAP.md](COMMERCIALIZATION_ROADMAP.md)
+
+## Status (as of 2026-11-02)
+
+Derived from the code and `git log`. Items marked **[done]** below have code,
+tests, or documents in the repo; unmarked items are still open.
+
+- Done: command behavior matrix ([COMMAND_CONTRACT.md](COMMAND_CONTRACT.md)),
+  manual checklist ([PLAYTEST_CHECKLIST.md](PLAYTEST_CHECKLIST.md)), armed-command
+  and input-rule regression tests (`GdxClientRuntimeTest`, `GameScreenInputRulesTest`),
+  partial-line / concurrent-append / atomic-write regression tests
+  (`ClientSessionTest`, `PlayLauncherTest`), and the 2026-08-13/14 client fix
+  series (armed-mode cancel/selection rules, HUD input blocking, overlay escape
+  order, session reset on match entry/restart, small-screen HUD compaction).
+- Open: no recorded 30-minute session, resolution-matrix pass, long-session
+  issue list, or formal checklist signoff exists in the repo, so the exit
+  criteria are not yet met.
 
 ## Phase 1 Goal
 
@@ -77,9 +93,9 @@ The project already surfaced inconsistency between:
 
 ### Immediate Tasks
 
-1. Document current command behavior matrix in code comments or a dedicated md file.
-2. Add regression tests for all armed command transitions.
-3. Sweep command cancel paths and remove special-case drift.
+1. **[done]** Document current command behavior matrix in code comments or a dedicated md file. (`COMMAND_CONTRACT.md`)
+2. **[done]** Add regression tests for all armed command transitions. (`GdxClientRuntimeTest`, `GameScreenInputRulesTest`)
+3. **[done]** Sweep command cancel paths and remove special-case drift. (e.g. `fix(client): keep selection when canceling armed mode`, `prioritize overlays in escape flow`)
 4. Validate mixed-input flows:
    - hotkey then left click
    - hotkey then right click
@@ -128,7 +144,7 @@ This project already had regressions around:
 
 ### Immediate Tasks
 
-1. Define supported test resolutions.
+1. **[done]** Define supported test resolutions. (see Resolution Matrix below and `PLAYTEST_CHECKLIST.md`)
 2. Validate HUD layout at each resolution.
 3. Verify battlefield bounds at all screen corners.
 4. Verify minimap click, drag, and viewport box readability.
@@ -170,8 +186,8 @@ Real bugs already appeared here:
 ### Immediate Tasks
 
 1. Audit all file append and poll loops.
-2. Add regression coverage for partial-tail and interrupted-write cases.
-3. Verify restart and scenario-switch behavior with fresh files.
+2. **[done]** Add regression coverage for partial-tail and interrupted-write cases. (`ClientSessionTest`: trailing partial NDJSON, concurrent appends; `PlayLauncherTest`: partial initial snapshot, atomic play-control writes)
+3. **[done]** Verify restart and scenario-switch behavior with fresh files. (`GdxClientRuntimeTest` restart/scenario cases; `fix(client): clear session state on match entry`, `write play state files atomically`)
 4. Add defensive logging for malformed line rejection.
 
 ## Workstream D: Long-Session Bug Sweep
@@ -218,7 +234,7 @@ Replace ad-hoc validation with a repeatable checklist.
 
 ### Deliverables
 
-- one manual playtest checklist
+- **[done]** one manual playtest checklist (`PLAYTEST_CHECKLIST.md`)
 - one per-build validation flow
 
 ### Checklist Sections
@@ -347,7 +363,7 @@ Phase 1 is done when:
 
 ## Immediate Next Actions
 
-1. Create the command behavior matrix.
-2. Create the manual playtest checklist.
+1. **[done]** Create the command behavior matrix.
+2. **[done]** Create the manual playtest checklist.
 3. Run the first long-session stabilization sweep.
 4. Fix blocker issues before any new broad feature work.

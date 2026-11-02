@@ -3,7 +3,7 @@
 ## 목적
 
 이 문서는 `starkraft`의 세부 수치 밸런스를 어떻게 관리할지 정의한다.  
-핵심 규칙 문서는 `/Users/hammac/Projects/starkraft/docs/game-design-document.md`이고, 이 문서는 그 위에 올라가는 수치 운영 문서다.
+핵심 규칙 문서는 [`game-design-document.md`](game-design-document.md)이고, 이 문서는 그 위에 올라가는 수치 운영 문서다.
 
 ## 범위
 
@@ -14,6 +14,8 @@
 - 건물 비용, 건설 시간, footprint 가치
 - 생산 시간, 연구 시간
 - 자원 채집량, 반환 주기, supply 효율
+
+주의: 현재 데이터/코드에는 유닛 `vision` 필드와 `supply` 개념이 없다(아래 "현재 데이터 수치" 참고). 시야와 supply는 계획 항목이다.
 
 ## 설계 원칙
 
@@ -62,36 +64,84 @@
 
 ### 유닛 시트
 
-각 유닛은 최소한 다음을 관리한다.
+각 유닛은 최소한 다음을 관리한다. (괄호는 `units.json` 실제 필드명)
 
-- `typeId`
-- role/archetype
-- hp
-- armor
-- speed
-- vision
-- weapon profile
-- mineral/gas cost
-- build time
-- supply cost
+- `typeId` (`id`)
+- role/archetype (`archetype`)
+- hp (`hp`)
+- armor (`armor`)
+- speed (`speed`, tile/tick)
+- vision (미구현: 데이터 필드 없음)
+- weapon profile (`weaponId` → `weapons.json`)
+- mineral/gas cost (`mineralCost`, `gasCost`)
+- build time (`buildTicks`)
+- supply cost (미구현)
 
 ### 건물 시트
 
-- `typeId`
-- 역할
-- footprint
-- placement clearance
-- mineral/gas cost
-- build time
-- unlock effect
+- `typeId` (`id`)
+- 역할 (`archetype`, `supportsTraining`/`supportsResearch`/`supportsRally`/`supportsDropoff`)
+- footprint (`footprintWidth`, `footprintHeight`)
+- placement clearance (`placementClearance`)
+- mineral/gas cost (`mineralCost`, `gasCost`)
+- build time (`buildTicks`)
+- unlock effect (다른 정의의 `requiredBuildingTypes`로 표현)
 
 ### 연구 시트
 
-- `techId`
-- prerequisite
-- cost
-- duration
-- effect
+- `techId` (`id`)
+- prerequisite (`requiredBuildingTypes`, `requiredResearchIds`)
+- cost (`mineralCost`, `gasCost`)
+- duration (`buildTicks`)
+- effect (현재는 faction unlock 집합에 추가되는 것뿐이며, 수치 효과 필드는 없다)
+
+## 현재 데이터 수치
+
+`sim/src/main/resources/data/*.json` 기준. 1 tick = 20ms.
+
+### 유닛 (`units.json`)
+
+| id | archetype | hp | armor | speed | weaponId | minerals | gas | buildTicks | producerTypes |
+|---|---|---|---|---|---|---|---|---|---|
+| Worker | worker | 40 | 0 | 0.095 | - | 50 | 0 | 50 | Depot |
+| Marine | infantry | 45 | 0 | 0.09 | Gauss | 50 | 0 | 75 | Depot |
+| Zergling | lightMelee | 35 | 0 | 0.115 | Claw | 25 | 0 | 55 | Depot |
+
+### 무기 (`weapons.json`)
+
+| id | damage | range | cooldownTicks |
+|---|---|---|---|
+| Gauss | 6 | 4.5 | 12 |
+| Claw | 5 | 0.6 | 8 |
+
+- 실제 피해는 `max(0, damage - 대상 armor)`.
+- 공격 후 쿨다운이 `cooldownTicks`로 설정되고 매 tick 1씩 감소해 0인 tick에 다시 공격하므로, 실제 공격 간격은 `cooldownTicks + 1` tick이다.
+
+### 건물 (`buildings.json`)
+
+| id | archetype | hp | armor | footprint | clearance | 기능 | dropoff | queueLimit | rallyOffset | minerals | gas |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Depot | producer | 400 | 1 | 2x2 | 1 | train, research, rally, dropoff | minerals | 3 | (4.0, 0.0) | 100 | 0 |
+| ResourceDepot | econDepot | 350 | 1 | 2x2 | 1 | dropoff | minerals | 0 | - | 75 | 0 |
+| GasDepot | gasDepot | 325 | 1 | 2x2 | 1 | dropoff | gas | 0 | - | 90 | 0 |
+
+- 세 건물 모두 `buildTicks`를 지정하지 않아 기본값 0이 적용된다. 따라서 현재 데이터에서는 배치 즉시 완성되며 construction site 단계가 생기지 않는다.
+
+### 연구 (`techs.json`)
+
+| id | buildTicks | minerals | gas | producerTypes | 선행 조건 |
+|---|---|---|---|---|---|
+| AdvancedTraining | 60 | 75 | 0 | Depot | 없음 |
+
+- 현재 어떤 유닛/건물/연구도 `AdvancedTraining`을 `requiredResearchIds`로 요구하지 않으므로, 연구 완료의 게임플레이 효과는 아직 없다.
+
+### 코드 상수 (데이터 외부)
+
+- 시야: 데이터 필드가 없다. 생산 완료 유닛은 `Vision(6)` 고정, `spawn` 명령은 선택 `vision` 값을 사용한다.
+- 채집(`Harvester` 기본값): `harvestPerTick` 1, 채집 사거리 1.25, 반환 사거리 1.5, cargo 용량 제한 없음. 한 번 채집하면 즉시 반환 이동하므로 1회 운반량은 `min(harvestPerTick, 노드 잔량, 노드 yieldPerTick(0이면 제한 없음))`이다. 데모 시작 worker는 `harvestPerTick` 2.
+- 건설 범위: footprint 경계에서 1.5 이내의 worker가 tick당 1씩 진행시킨다(worker 수만큼 가속).
+- attack-move leash: 3.0.
+- 데모 시나리오 시작 자원: faction 1/2 모두 minerals 500, gas 0.
 
 ## 변경 절차
 
@@ -114,13 +164,15 @@
 
 ## 관련 코드
 
-- `/Users/hammac/Projects/starkraft/sim/src/main/resources/data`
-- `/Users/hammac/Projects/starkraft/sim/src/main/kotlin/ecs`
-- `/Users/hammac/Projects/starkraft/tools`
+- [`sim/src/main/resources/data`](../sim/src/main/resources/data)
+- [`sim/src/main/kotlin/data/Schema.kt`](../sim/src/main/kotlin/data/Schema.kt) (필드 기본값)
+- [`sim/src/main/kotlin/ecs`](../sim/src/main/kotlin/ecs)
+- [`tools`](../tools)
 
 ## 현재 상태
 
 2026-08-19 기준:
 
 - 핵심 규칙 구조는 성숙했지만, 수치 밸런스 운영 체계는 아직 제품 수준으로 고정되지 않았다.
+- 데이터는 유닛 3종, 무기 2종, 건물 3종, 연구 1종의 최소 세트이며 supply/시야 데이터와 연구 효과는 미구현이다.
 - 따라서 이 문서는 구현 완료 문서가 아니라 운영 기준 초안이다.

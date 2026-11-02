@@ -9,12 +9,13 @@
 ### authoritative server
 
 게임 상태를 최종 판정하는 서버 계층.  
-클라이언트는 상태를 직접 확정하지 못하고 명령만 제안한다.
+클라이언트는 상태를 직접 확정하지 못하고 명령만 제안한다.  
+현재 Go 서버(`server/pkg/authoritative`)는 Kotlin `sim`이 아닌 자체 최소 Go 유닛 모델로 상태를 판정한다.
 
 ### tick
 
 고정 시간 단위의 시뮬레이션 스텝.  
-`starkraft`는 20ms 고정 tick 기반으로 동작한다.
+`starkraft`는 20ms 고정 tick 기반으로 동작한다 (`sim`의 `Time.TICK_MS = 20`, 서버 `TickInterval` 20ms).
 
 ### deterministic simulation
 
@@ -22,11 +23,23 @@
 
 ### world hash
 
-특정 tick 또는 최종 상태를 요약하는 결정론 검증용 해시.
+특정 tick 또는 최종 상태를 요약하는 결정론 검증용 해시.  
+`sim`의 world hash(`--dumpWorldHash`)와 Go 서버 snapshot/keyframe의 `worldHash`는 계산 공식과 대상 모델이 달라 서로 비교할 수 없다.
 
 ### replay hash
 
-replay command stream 또는 replay payload 자체를 기준으로 계산한 검증용 해시.
+replay command stream을 기준으로 계산한 검증용 해시 (`ReplayHashRecorder`, 64-bit FNV-1a).  
+`sim` replay 파일에 저장되고 로드 시 검증된다.
+
+### keyframe
+
+서버 replay JSONL에 주기적으로(`STARKRAFT_KEYFRAME_EVERY`, 기본 50 tick) 기록되는 tick, world hash, 유닛 목록 레코드.  
+`tools replay verify-ndjson`과 `server/cmd/replaycheck`가 hash를 재계산해 검증한다.
+
+### resume token
+
+handshake 성공 시 서버가 발급하는 1회용 재접속 토큰.  
+resume window(`STARKRAFT_RESUME_WINDOW`, 기본 15초) 안에 다시 handshake하면 같은 client id/room으로 복귀한다.
 
 ### snapshot
 
@@ -50,16 +63,18 @@ faction별 시야에 따라 보이는 정보와 숨겨지는 정보를 구분하
 
 ### producer
 
-유닛이나 연구를 큐에 넣을 수 있는 건물 또는 엔티티.
+유닛이나 연구를 큐에 넣을 수 있는 건물 또는 엔티티.  
+데이터상 `supportsTraining`/`supportsResearch` 건물이며, 유닛/기술 정의의 `producerTypes`가 어떤 건물에서 생산 가능한지 지정한다.
 
 ### drop-off
 
-worker가 채집 cargo를 반환해 faction stockpile로 전환하는 건물.
+worker가 채집 cargo를 반환해 faction stockpile로 전환하는 건물.  
+데이터상 `supportsDropoff`와 `dropoffResourceKinds`로 지정한다.
 
 ### archetype
 
-엔티티의 대략적인 역할 분류.  
-예: worker, producer, combat.
+엔티티의 대략적인 역할 분류 (유닛/건물 데이터의 `archetype` 필드).  
+현재 데이터 예: `worker`, `infantry`, `lightMelee`(유닛), `producer`, `econDepot`, `gasDepot`(건물). 기본값은 `genericUnit`/`genericBuilding`.
 
 ### golden test
 
@@ -75,6 +90,6 @@ worker가 채집 cargo를 반환해 faction stockpile로 전환하는 건물.
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/architecture-overview.md`
-- `/Users/hammac/Projects/starkraft/docs/simulation-architecture.md`
-- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
+- [architecture-overview.md](architecture-overview.md)
+- [simulation-architecture.md](simulation-architecture.md)
+- [protocol-spec.md](protocol-spec.md)

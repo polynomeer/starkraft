@@ -2,13 +2,13 @@
 
 ## 목적
 
-[`docs/presentation-quality-improvement-plan.md`](/Users/hammac/Projects/starkraft/docs/presentation-quality-improvement-plan.md)의 문제의식을 현재 `starkraft` 코드베이스에 맞는 실행 설계로 변환한다.
+[`docs/presentation-quality-improvement-plan.md`](presentation-quality-improvement-plan.md)의 문제의식을 현재 `starkraft` 코드베이스에 맞는 실행 설계로 변환한다.
 
 관련 하위 계약 문서:
 
-- [`docs/presentation-theme-spec.md`](/Users/hammac/Projects/starkraft/docs/presentation-theme-spec.md)
-- [`docs/hud-layout-contract.md`](/Users/hammac/Projects/starkraft/docs/hud-layout-contract.md)
-- [`docs/battlefield-visual-contract.md`](/Users/hammac/Projects/starkraft/docs/battlefield-visual-contract.md)
+- [`docs/presentation-theme-spec.md`](presentation-theme-spec.md)
+- [`docs/hud-layout-contract.md`](hud-layout-contract.md)
+- [`docs/battlefield-visual-contract.md`](battlefield-visual-contract.md)
 
 이 문서는 다음을 전제로 한다.
 
@@ -35,12 +35,12 @@
 
 현재 presentation 관련 핵심 진입점은 다음이다.
 
-- [`sim/src/main/kotlin/client/GameScreen.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GameScreen.kt)
-- [`sim/src/main/kotlin/client/GdxWorldRenderer.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxWorldRenderer.kt)
-- [`sim/src/main/kotlin/client/GdxClientRuntime.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxClientRuntime.kt)
-- [`sim/src/main/kotlin/client/GdxUiAssets.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxUiAssets.kt)
-- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/VisualAssetCatalog.kt)
-- [`sim/src/main/kotlin/client/GdxSpriteAssets.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxSpriteAssets.kt)
+- [`sim/src/main/kotlin/client/GameScreen.kt`](../sim/src/main/kotlin/client/GameScreen.kt)
+- [`sim/src/main/kotlin/client/GdxWorldRenderer.kt`](../sim/src/main/kotlin/client/GdxWorldRenderer.kt)
+- [`sim/src/main/kotlin/client/GdxClientRuntime.kt`](../sim/src/main/kotlin/client/GdxClientRuntime.kt)
+- [`sim/src/main/kotlin/client/GdxUiAssets.kt`](../sim/src/main/kotlin/client/GdxUiAssets.kt)
+- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](../sim/src/main/kotlin/client/VisualAssetCatalog.kt)
+- [`sim/src/main/kotlin/client/GdxSpriteAssets.kt`](../sim/src/main/kotlin/client/GdxSpriteAssets.kt)
 
 현재 상태의 강점:
 
@@ -55,7 +55,26 @@
 - 유닛 표현이 상태 기반 silhouette 수준에 머물러 있어 type fantasy가 약하다.
 - HUD는 기능은 많지만 정보 계층, 텍스트 리듬, 고정 슬롯 전략이 약하다.
 - 효과/사운드가 이벤트 반응형 수준이지 연출 규칙 기반은 아니다.
-- 화면 전체를 관통하는 style token 체계가 아직 없다.
+- style token은 색상만 중앙화되어 있고 typography/spacing/motion/audio 토큰은 실제 코드에서 쓰이지 않는다.
+
+## 현재 구현 상태
+
+코드와 git 이력(`git log -- sim/src/main/kotlin/client`) 기준 요약이다.
+
+| 영역 | 상태 | 근거 |
+| --- | --- | --- |
+| 색상 토큰 (`PresentationTheme`) | 완료 | `GdxUiAssets.kt`, 커밋 `d27a2f5` 이후 HUD/렌더러 색 토큰화 |
+| HUD 고정 슬롯 / 계약 폭 | 완료 | `computeTopBarLayout`, `computeBottomHudLayout`, 고정 hint 슬롯(`formatFixedHudHintSlot`) |
+| disabled reason 표준화 | 완료 | `resolveCommandButtonDisabledReason` |
+| command deck 재구성 | 완료 | 유닛 3열 / 건물 2열 그룹 deck (`resolveCommandDeckGroups`) |
+| selection card 계층 재배치 | 완료 | headline / status / queue / roster 분리, 중복 상세 줄 숨김 |
+| silhouette / selection / effect / minimap 통일 | 대부분 완료 | procedural silhouette, lime bracket, ground ping, death burst, minimap 마커 |
+| world renderer pass 분리 | 미착수 | `GdxWorldRenderer` 단일 클래스 안의 `draw*` 함수 순서로만 분리 |
+| asset manifest 확장 / atlas | 미착수 | `SpriteAssetRef`는 v1 필드만. sprite draw 경로는 커밋 `5149344`에서 제거되어 현재 procedural만 렌더 |
+| shader / post-processing | 미착수 | ShapeRenderer/SpriteBatch 기본 셰이더만 사용 |
+| audio bus / priority / spatial | 미착수 | 합성 tone + pitch/gain 순환 + key별 cooldown만 존재 |
+
+후속 산출물 5종(theme spec, battlefield contract, HUD layout contract, asset manifest v2 spec, audio feedback contract)은 모두 작성되어 있다.
 
 ## 비주얼 타깃
 
@@ -334,9 +353,9 @@ Audio
 
 지금 이미 아래 기반은 존재한다.
 
-- [`sim/src/main/resources/data/visuals.json`](/Users/hammac/Projects/starkraft/sim/src/main/resources/data/visuals.json)
-- [`sim/src/main/resources/assets/`](/Users/hammac/Projects/starkraft/sim/src/main/resources/assets/)
-- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/VisualAssetCatalog.kt)
+- [`sim/src/main/resources/data/visuals.json`](../sim/src/main/resources/data/visuals.json)
+- [`sim/src/main/resources/assets/`](../sim/src/main/resources/assets/)
+- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](../sim/src/main/kotlin/client/VisualAssetCatalog.kt)
 
 이 기반을 production-ready asset pipeline으로 바꾼다.
 
@@ -460,6 +479,8 @@ PresentationTheme
 
 - 새로운 시각 요소를 넣을 때 하드코딩 색이 아니라 토큰을 사용한다.
 
+현재: 토큰 추출(색상)과 문서화는 완료, pass 분리는 미착수, 폰트/간격 토큰은 미구현.
+
 ## Phase B. Battlefield Readability
 
 목표:
@@ -476,6 +497,8 @@ PresentationTheme
 완료 기준:
 
 - 유닛 역할, 선택 상태, 전투 상태를 1초 이내 판독 가능
+
+현재: 작업 항목 4개 모두 1차 구현 완료 (silhouette, selection bracket, effect palette, minimap 마커/viewport).
 
 ## Phase C. Command and HUD Cohesion
 
@@ -495,6 +518,8 @@ PresentationTheme
 - HUD가 정보는 많아도 산만하지 않다.
 - hover/tooltip로 패널 폭이 흔들리지 않는다.
 
+현재: 작업 항목 4개 모두 구현 완료.
+
 ## Phase D. Asset and Motion Upgrade
 
 목표:
@@ -511,6 +536,8 @@ PresentationTheme
 완료 기준:
 
 - 플레이 영상을 정지시켜도 placeholder 느낌이 크게 줄어든다.
+
+현재: 상태 모션(bob, stride, recoil, death remains)만 일부 구현. 스프라이트 교체와 atlas 로딩은 미착수.
 
 ## Phase E. Audio and FX Finish
 
@@ -529,15 +556,17 @@ PresentationTheme
 
 - 반복 명령과 전투가 덜 싸구려처럼 들린다.
 
+현재: 미착수.
+
 ## 구현 우선순위
 
 가장 먼저 해야 할 것:
 
-1. presentation token 문서화
-2. HUD 고정 슬롯/고정 크기 전략
-3. unit/structure/effect 색상 계약
-4. world renderer pass 분리
-5. asset manifest 확장
+1. presentation token 문서화 (완료)
+2. HUD 고정 슬롯/고정 크기 전략 (완료)
+3. unit/structure/effect 색상 계약 (완료)
+4. world renderer pass 분리 (미착수)
+5. asset manifest 확장 (스펙 문서만 작성)
 
 이후:
 
@@ -558,11 +587,11 @@ PresentationTheme
 
 이 문서 다음에 바로 만들어야 할 후속 산출물:
 
-1. `presentation-theme-spec.md`
-2. `battlefield-visual-contract.md`
-3. `hud-layout-contract.md`
-4. `asset-manifest-v2-spec.md`
-5. `audio-feedback-contract.md`
+1. [`presentation-theme-spec.md`](presentation-theme-spec.md) (작성됨)
+2. [`battlefield-visual-contract.md`](battlefield-visual-contract.md) (작성됨)
+3. [`hud-layout-contract.md`](hud-layout-contract.md) (작성됨)
+4. [`asset-manifest-v2-spec.md`](asset-manifest-v2-spec.md) (작성됨)
+5. [`audio-feedback-contract.md`](audio-feedback-contract.md) (작성됨)
 
 ## 결론
 

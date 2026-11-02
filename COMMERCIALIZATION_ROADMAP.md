@@ -24,6 +24,26 @@ What is still below commercial quality:
 - bug surface is still too high for a reliable retail build
 - content depth and onboarding are not yet strong enough for player retention
 
+## Progress Snapshot (as of 2026-11-02)
+
+Derived from the code and `git log`. **[done]** marks items with code, tests,
+or documents in the repo; **[in progress]** marks items with partial work.
+
+- Phase 1: command contract, playtest checklist, and runtime/input/snapshot
+  regression tests are in place; the 30-minute session and resolution-matrix
+  exit checks have no recorded result yet. See
+  [PHASE1_STABILIZATION_PLAN.md](PHASE1_STABILIZATION_PLAN.md).
+- Phase 2: queued command chaining, rally command flow, armed-command cursor
+  previews, disabled-command reasons, attack windup / hit / recoil / death
+  transition effects, and camera drag / edge-pan smoothing have landed.
+- Phase 3: presentation specs (`docs/presentation-theme-spec.md`,
+  `docs/battlefield-visual-contract.md`, `docs/hud-layout-contract.md`,
+  `docs/art-direction-brief.md`) exist, and HUD/renderer colors were moved onto
+  theme tokens (2026-08-21 `refactor(hud|renderer): theme ...` commits).
+- Phase 6: `scripts/release_package.sh`, `RELEASE_CHECKLIST.md`, the soak
+  harness (`:sim:soak`, nightly), and the play smoke in CI exist.
+- Phases 4 and 5: no tutorial, options/settings screen, or difficulty presets yet.
+
 ## Primary Problem Areas
 
 ### 1. Control Feel
@@ -121,8 +141,8 @@ Scope:
 - crash and rendering regression sweep
 
 Deliverables:
-- command behavior matrix with explicit expected outcomes
-- regression tests for client runtime state transitions
+- **[done]** command behavior matrix with explicit expected outcomes (`COMMAND_CONTRACT.md`)
+- **[done]** regression tests for client runtime state transitions (`GdxClientRuntimeTest`, `GameScreenInputRulesTest`, `ClientSessionTest`, `PlayLauncherTest`)
 - long-play bug list with fixes
 - stable default play scenario with no known control blockers
 
@@ -144,8 +164,8 @@ Scope:
 - refine camera glide, edge pan, and minimap drag behavior through playtests
 
 Deliverables:
-- command feedback spec
-- control feel pass with tuned timings and thresholds
+- **[in progress]** command feedback spec (feedback rules in `COMMAND_CONTRACT.md`, `docs/audio-feedback-contract.md`)
+- **[in progress]** control feel pass with tuned timings and thresholds
 - audio response tuning for move, attack, build, invalid, damage, kill, and collapse events
 
 Exit criteria:
@@ -166,8 +186,8 @@ Scope:
 - refine typography hierarchy and spacing
 
 Deliverables:
-- visual style guide for UI and world
-- finalized color system for command, selection, warning, damage, build, and queue states
+- **[in progress]** visual style guide for UI and world (`docs/presentation-theme-spec.md`, `docs/battlefield-visual-contract.md`, `docs/hud-layout-contract.md`)
+- **[in progress]** finalized color system for command, selection, warning, damage, build, and queue states (theme token refactors)
 - silhouette pass for all primary unit and building types
 
 Exit criteria:
@@ -229,9 +249,9 @@ Scope:
 - release checklist expansion for client presentation quality
 
 Deliverables:
-- release QA checklist for game client
-- reproducible packaging flow
-- pre-release regression suite
+- **[in progress]** release QA checklist for game client (`RELEASE_CHECKLIST.md`, `PLAYTEST_CHECKLIST.md`)
+- **[in progress]** reproducible packaging flow (`scripts/release_package.sh`)
+- **[in progress]** pre-release regression suite (CI + nightly workflows)
 
 Exit criteria:
 - a release candidate can be built, tested, and validated repeatedly with low operator friction
@@ -257,10 +277,10 @@ Reason:
 
 ### Critical
 
-- define and test a full command-mode behavior contract
+- **[done]** define and test a full command-mode behavior contract
 - remove remaining HUD/world overlap edge cases
 - run systematic long-session bug sweeps
-- add stronger regression coverage for runtime input/snapshot/state handling
+- **[in progress]** add stronger regression coverage for runtime input/snapshot/state handling
 - validate every major interaction path with keyboard-only, mouse-only, and mixed input
 
 ### High
@@ -303,7 +323,7 @@ Before calling the client commercially viable, the project should meet metrics l
 - visibility/HUD bugs
 - event/audio/animation bugs
 
-2. Add a formal client playtest checklist
+2. **[done]** Add a formal client playtest checklist (`PLAYTEST_CHECKLIST.md`)
 - startup
 - menu flow
 - command paths
@@ -312,7 +332,7 @@ Before calling the client commercially viable, the project should meet metrics l
 - build/production flow
 - match end and restart
 
-3. Run a dedicated Phase 1 stabilization pass
+3. **[in progress]** Run a dedicated Phase 1 stabilization pass
 - stop adding broad feature scope until the top control and bug issues are closed
 
 4. After stabilization, run one controlled visual cohesion pass

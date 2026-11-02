@@ -10,9 +10,9 @@ It is intended for:
 - regression checks after input, HUD, minimap, rendering, and session-flow changes
 
 Related documents:
-- [COMMERCIALIZATION_ROADMAP.md](/Users/hammac/Projects/starkraft/COMMERCIALIZATION_ROADMAP.md)
-- [PHASE1_STABILIZATION_PLAN.md](/Users/hammac/Projects/starkraft/PHASE1_STABILIZATION_PLAN.md)
-- [COMMAND_CONTRACT.md](/Users/hammac/Projects/starkraft/COMMAND_CONTRACT.md)
+- [COMMERCIALIZATION_ROADMAP.md](COMMERCIALIZATION_ROADMAP.md)
+- [PHASE1_STABILIZATION_PLAN.md](PHASE1_STABILIZATION_PLAN.md)
+- [COMMAND_CONTRACT.md](COMMAND_CONTRACT.md)
 
 ## Test Environment
 
@@ -25,8 +25,10 @@ Validate at minimum:
 Run path:
 
 ```bash
-cd /Users/hammac/Projects/starkraft
+# from the repo root
 ./gradlew :sim:play
+# or, with configurable play dir / ticks / scenario
+./scripts/play_sim_graphical.sh
 ```
 
 ## Result Codes
@@ -55,8 +57,8 @@ cd /Users/hammac/Projects/starkraft
 
 ### 1.3 Restart / Scenario Change
 
-- restart returns to live playable session
-- scenario switch starts the intended scenario
+- restart (`F5`) returns to live playable session
+- scenario switch (`F6`/`F7`) starts the intended scenario
 - no stale session state leaks into the next run
 
 ## 2. Core Selection
@@ -254,13 +256,13 @@ cd /Users/hammac/Projects/starkraft
 
 ### 8.1 Pause
 
-- pause toggles correctly
+- pause toggles correctly (`Space` or the `Pause` button)
 - pause status appears in HUD
 - unpause returns control cleanly
 
 ### 8.2 Help
 
-- help opens
+- help opens (`F1` or the `Help` button)
 - help closes with expected input
 - gameplay resumes normally
 
@@ -305,5 +307,5 @@ The build passes manual playtest only if:
 
 1. no `BLOCKER` remains
 2. no unresolved crash remains
-3. no core command in [COMMAND_CONTRACT.md](/Users/hammac/Projects/starkraft/COMMAND_CONTRACT.md) fails
+3. no core command in [COMMAND_CONTRACT.md](COMMAND_CONTRACT.md) fails
 4. no minimap or battlefield visibility issue remains at supported resolutions

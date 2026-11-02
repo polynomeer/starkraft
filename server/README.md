@@ -4,12 +4,12 @@ Authoritative multiplayer host.
 
 ## Related docs
 
-- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
-- `/Users/hammac/Projects/starkraft/docs/security-validation-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/replay-format-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
-- `/Users/hammac/Projects/starkraft/docs/release-artifact-spec.md`
+- [protocol-spec.md](../docs/protocol-spec.md)
+- [server-ops-runbook.md](../docs/server-ops-runbook.md)
+- [security-validation-spec.md](../docs/security-validation-spec.md)
+- [replay-format-spec.md](../docs/replay-format-spec.md)
+- [replay-validation-checklist.md](../docs/replay-validation-checklist.md)
+- [release-artifact-spec.md](../docs/release-artifact-spec.md)
 
 ## Status
 
@@ -18,6 +18,11 @@ Implemented and wired for local play/smoke:
 - room lifecycle + fixed tick orchestration
 - authoritative command validation + ack reasons
 - replay persistence (JSONL with optional keyframes)
+
+Note: the room loop (`pkg/authoritative/room.go`) runs its own minimal Go unit
+model (`move`/`attack`/`build`/`queue`/`surrender`) and its own world hash. It
+does not call the Kotlin `sim`, so server replay hashes are not comparable with
+`sim` world/replay hashes.
 
 ## Current implementation
 
@@ -67,7 +72,11 @@ Replay output (optional):
 STARKRAFT_REPLAY_PATH=/tmp/starkraft-room.replay.jsonl go run ./cmd/server
 ```
 
-Runtime tuning env vars:
+Runtime env vars:
+- `STARKRAFT_SERVER_ADDR` (listen address, default `:8080`)
+- `STARKRAFT_SIM_VERSION` (sim version tag reported by the server, default `dev`)
+- `STARKRAFT_BUILD_HASH` (build identity, default empty)
+- `STARKRAFT_REPLAY_PATH` (replay JSONL output, disabled when empty)
 - `STARKRAFT_EMPTY_ROOM_TTL` (duration, default `30s`)
 - `STARKRAFT_RESUME_WINDOW` (duration, default `15s`)
 - `STARKRAFT_KEYFRAME_EVERY` (int ticks, default `50`)
@@ -96,6 +105,11 @@ go run ./cmd/replaycheck --replay /tmp/starkraft-room.replay.jsonl
 
 ```bash
 cd server
+go build ./...
 go test ./...
+go vet ./...
 go mod verify
 ```
+
+Single test: `go test ./pkg/authoritative -run <TestName>`.
+CI also runs `go mod tidy` and fails if `go.mod`/`go.sum` change.

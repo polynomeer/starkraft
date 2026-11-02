@@ -35,9 +35,10 @@
 - iteration 순서를 안정적으로 유지한다
 - replay command 적용 순서를 명확히 한다
 - hash 계산 입력 순서를 통제한다
-- 랜덤은 seed와 사용 위치를 통제한다
+- 랜덤은 seed와 사용 위치를 통제한다 (현재 `--seed` RNG는 초기 spawn jitter에만 사용)
 
-결과적으로 "같은 입력이면 같은 world hash"라는 기준을 세울 수 있다.
+결과적으로 "같은 입력이면 같은 world hash"라는 기준을 세울 수 있다.  
+world hash는 엔티티 id 순으로 위치(`x*1000`, `y*1000` 정수화), path index, order 수, hp, 무기 cooldown과 매치 종료 상태를 64-bit FNV 계열로 섞은 값이고, replay hash는 명령 스트림 자체를 FNV-1a로 누적한 값이다 (상세는 `simulation-architecture.md`).
 
 ## `sim` 계층 설계
 
@@ -75,16 +76,18 @@
 
 ### 시스템 순서가 중요한 이유
 
-대표 순서는 아래와 같다.
+실제 순서(`sim/src/main/kotlin/App.kt` tick 루프)는 아래와 같다.
 
-1. 생존/정리
-2. 점유 갱신
-3. 경로탐색
-4. 이동
-5. 전투
-6. 시야
-7. 경제/생산/연구/건설
-8. 승리 판정
+1. 생존 snapshot 갱신 (`AliveSystem`)
+2. 입력 적용 (script/replay 명령 → live tail 입력)
+3. 채집 (`ResourceHarvestSystem`)
+4. 점유 갱신 (`OccupancySystem`)
+5. 건설 → 연구 → 생산
+6. 경로탐색
+7. 이동
+8. 전투
+9. 승리 판정
+10. 시야
 
 이 순서를 어기면 아래 같은 문제가 생긴다.
 
@@ -110,10 +113,10 @@ RTS에서 가장 까다로운 축 중 하나는 "많은 유닛이 동시에 움�
 
 경로탐색은 정확도보다 예산 통제가 먼저다.
 
-- tick당 path request quota
-- tick당 node budget
-- blocked/stuck 상황에서의 replan
-- cooldown 기반 재시도
+- path request queue 제한 (최대 256개, tick당 enqueue 50개)
+- tick당 node budget (2000 노드, 소진 시 남은 요청은 다음 tick으로 이월)
+- blocked/stuck 상황에서의 replan (stuck 판정 20 tick)
+- cooldown 기반 재시도 (10 tick)
 
 이 구조는 frame spike를 줄이고 장시간 실행에서 안정성을 확보한다.
 
@@ -130,9 +133,9 @@ RTS에서는 처음 찾은 경로보다 "막혔을 때 어떻게 회복하느냐
 
 ### 전투 설계 포인트
 
-- deterministic target selection
-- overkill 완화
-- sticky target 유지
+- deterministic target selection (alive snapshot 순서 순회, faction별 적 목록 cache 선형 탐색; spatial hash는 아직 없음)
+- overkill 완화 (같은 tick에 예약된 피해를 빼고 한 방에 죽지 않는 대상 우선)
+- sticky target 유지 (`World.autoAttackTargets`)
 - attack-move, hold, patrol 같은 상위 명령과 결합
 
 전투에서 중요한 것은 단순 DPS 계산이 아니라 "많은 유닛이 동시에 판정될 때도 결과가 흔들리지 않는 것"이다.
@@ -147,6 +150,8 @@ RTS에서는 처음 찾은 경로보다 "막혔을 때 어떻게 회복하느냐
 - 서버가 노출 가능한 정보만 보내도록 설계
 - 클라이언트가 비가시 정보를 몰래 보지 못하도록 경계 설정
 - replay/snapshot의 의미를 일관되게 유지
+
+현재 상태: 위 항목은 설계 원칙이며 아직 미구현이다. sim snapshot은 전 엔티티를 포함하고 faction별 시야 정보(`visibleTiles`, vision 레코드)를 별도로 싣는다. Go 서버 snapshot도 room의 모든 유닛을 그대로 broadcast한다.
 
 ## 경제, 건설, 생산, 연구
 
@@ -174,7 +179,7 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 ### 생산과 연구
 
 - 생산은 building queue 기준
-- queue limit, producer capability, rally offset이 데이터 기반
+- queue limit(`productionQueueLimit`), producer capability(`supportsTraining`/`supportsResearch`/`producerTypes`), rally offset이 데이터 기반 (`sim/src/main/resources/data/*.json`)
 - 연구는 faction unlock 상태를 전역적으로 갱신
 
 즉, 규칙을 하드코딩만 하지 않고 데이터 주도 구조로 점차 이동하고 있다.
@@ -183,29 +188,32 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 ### 역할
 
-서버는 판정을 직접 새로 구현하지 않는다.  
+목표 설계는 "서버는 판정을 직접 새로 구현하지 않고 `sim`을 진행시킨다"이다.  
 핵심 역할은 아래와 같다.
 
 - 연결 수립과 handshake 처리
-- room lifecycle 관리
+- room lifecycle 관리 (요청 room 자동 생성, `STARKRAFT_EMPTY_ROOM_TTL` 경과한 빈 room eviction)
 - 입력 검증과 큐잉
-- tick 단위 sim 진행
-- snapshot/ack/replay 생성
+- tick 단위 매치 진행 (20ms ticker)
+- snapshot/ack/replay 생성 (replay JSONL: `header`/`command`/`keyframe`/`matchEnd`)
 
-이 계층은 "권위(authority)"를 갖지만, 규칙 그 자체의 원천은 `sim`이다.
+현재 상태: 서버는 Kotlin `sim`을 호출하지 않는다. `server/pkg/authoritative/room.go`가 자체 최소 Go 유닛 모델(32x32 맵, `move`는 즉시 위치 이동, `attack`은 거리 6 이내 공격자당 10 피해, `build`/`queue`는 유닛 즉시 생성, `surrender`, 600 tick 제한)과 자체 world hash를 갖는다. 따라서 서버 hash와 `sim` hash는 비교할 수 없고, "규칙의 원천은 `sim`"이라는 원칙은 서버 경로에서 아직 미구현이다.
 
 ### 입력 검증을 별도 계층으로 두는 이유
 
 네트워크 경계에서는 규칙 이전에 먼저 막아야 할 문제가 있다.
 
-- 크기 제한
-- 빈 값/공백
-- batch cap
-- stale/future tick window
-- 소유권 위반
-- 범위 밖 좌표
-- unsupported command
-- pending queue 과적
+- 크기 제한 (websocket read limit, client name/room id/requestId 길이와 문자 패턴)
+- 빈 값/공백, NaN/Inf 좌표
+- batch cap (`batchTooLarge`), 명령당 unitIds 수 제한
+- stale/future tick window (현재 tick ±2, 벗어나면 `invalidTick`)
+- client당 tick당 명령 수 제한 (16개 초과 시 `rateLimit`)
+- 소유권 위반 (`notOwner`)
+- 범위 밖 좌표 (`outOfBounds`)
+- unsupported command (`unsupportedCommand`)
+- pending queue 과적 (client당 pending batch 상한 초과 시 `queueFull`)
+
+handshake에서는 protocol version 일치와 `simVersion`이 비어 있지 않은지만 검사한다. 서버의 sim version과 같은지는 비교하지 않는다.
 
 이 검증이 없다면 sim 규칙이 맞아도 서버는 운영상 불안정해진다.
 
@@ -215,7 +223,7 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 - 일시적 네트워크 끊김에서 세션 복구
 - room 상태와 플레이어 identity의 분리
-- 서버가 세션 만료 창을 통제
+- 서버가 세션 만료 창을 통제 (`STARKRAFT_RESUME_WINDOW`, 기본 15초; 토큰은 1회용이며 재접속 시 새 토큰 발급)
 
 이 기능은 향후 실제 멀티플레이 품질을 높일 수 있는 기반이다.
 
@@ -223,9 +231,11 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 클라이언트는 크게 세 종류다.
 
-- 인터랙티브 CLI
-- 봇 클라이언트
-- 그래픽 클라이언트
+- 인터랙티브 CLI (Go, `client/cmd/client`)
+- 봇 클라이언트 (Go, `client/cmd/bot`)
+- 그래픽 클라이언트 (Kotlin/libGDX, `sim/src/main/kotlin/client`)
+
+Go 클라이언트는 websocket으로 서버에 접속하고, 그래픽 클라이언트는 현재 서버가 아니라 로컬 sim의 snapshot/input NDJSON 파일 파이프라인(`:sim:play`)에 붙는다.
 
 이 셋을 나누는 이유는 역할이 다르기 때문이다.
 
@@ -252,9 +262,9 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 멀티언어, 멀티모듈 프로젝트에서 가장 위험한 부분은 "서로 같은 메시지를 다르게 이해하는 것"이다.  
 `starkraft`는 이를 줄이기 위해 세 단계를 둔다.
 
-1. schema
-2. golden payload
-3. 언어별 model + test
+1. schema (`shared-protocol/schema/rts-protocol-v1.schema.json`)
+2. golden payload (`shared-protocol/golden/*.json`)
+3. 언어별 model + test (`server/pkg/protocol`, `client/pkg/protocol`, `sim/.../starkraft/sim/protocol/ProtocolModels.kt`; 각 테스트가 golden과 비교)
 
 이 구조의 장점:
 
@@ -268,11 +278,11 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 ### replay 도구
 
-- metadata 확인
-- 통계 집계
-- hash 검증
-- fast-forward 재실행
-- server NDJSON keyframe 검증
+- metadata 확인 (`replay meta`)
+- 통계 집계 (`replay stats`)
+- hash 검증 (`replay verify`)
+- fast-forward 재실행 (`replay fast-forward`)
+- server NDJSON keyframe 검증 (`replay verify-ndjson`: keyframe의 units로 Go 서버식 hash를 재계산해 비교. `server/cmd/replaycheck`도 같은 서버 replay를 검증)
 
 ### map/data 도구
 
@@ -293,12 +303,12 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 그래서 일반 기능 테스트 외에 아래가 중요하다.
 
-- determinism test
-- replay rerun test
-- protocol round-trip test
-- smoke scripts
-- replay verifier
-- soak/benchmark harness
+- determinism test (`DeterminismTest`)
+- replay rerun test (`ReplayRunnerTest`, `ReplayHashTest`)
+- protocol round-trip test (Go `models_test.go`/`golden_test.go`, Kotlin `ProtocolModelsTest`)
+- smoke scripts (`scripts/smoke_run.sh`, `scripts/e2e_server_bots_smoke.sh`, `scripts/play_sim_smoke.sh`)
+- replay verifier (`tools replay verify*`, `server/cmd/replaycheck`)
+- soak/benchmark harness (`:sim:soak`, `:sim:benchmark`, `:sim:pathfindingBenchmark`)
 
 ## 운영 문서가 중요한 이유
 
@@ -317,21 +327,23 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 
 - 그래픽 클라이언트 UX와 구조 분리가 더 필요함
 - 장시간 네트워크 운영 시나리오 데이터가 더 필요함
+- 서버가 `sim`이 아닌 별도 Go 유닛 모델로 매치를 진행함 (규칙 이원화)
 - 밸런스 문서와 실제 데이터의 장기 동기화 체계가 아직 약함
 
 ### 다음 우선순위
 
 1. 그래픽 클라이언트의 view model / renderer 분리 강화
-2. 장시간 세션 soak와 운영 관측성 확대
-3. 프로토콜/리플레이 장기 호환성 정책 강화
-4. 데이터 정의와 문서 자동 동기화 개선
+2. (미구현) 서버 매치 진행을 `sim` 규칙 엔진으로 일원화
+3. 장시간 세션 soak와 운영 관측성 확대
+4. 프로토콜/리플레이 장기 호환성 정책 강화
+5. 데이터 정의와 문서 자동 동기화 개선
 
 ## 결론
 
 `starkraft`의 기술적 핵심은 화려한 기능 수가 아니라 아래에 있다.
 
 - 규칙 엔진을 결정론적으로 유지하는 구조
-- authoritative server로 입력을 통제하는 경계 설계
+- authoritative server로 입력을 통제하는 경계 설계 (서버 측 규칙은 현재 최소 Go 모델)
 - replay와 hash를 품질 자산으로 쓰는 검증 문화
 - 문서, 코드, 테스트, 운영 루트를 하나의 시스템으로 묶는 방식
 

@@ -5,6 +5,14 @@
 `starkraft`의 오디오가 어떤 역할을 해야 하는지 정의한다.  
 현재는 구현보다 방향성 정리가 목적이다.
 
+## 현재 구현 상태
+
+libGDX 클라이언트에 런타임 합성 tone 기반의 기본 효과음이 있다 (세부: [audio-feedback-contract.md](audio-feedback-contract.md)).
+
+- 구현됨: 명령 수락(move/attack/build)과 실패(invalid), 공격받는 중/구조물 손실 경고, 건설/생산/연구 완료, 공격 발사(공격자 타입별), 유닛/구조물 사망
+- 미구현: 선택/메뉴 UI 사운드, 자원 부족·supply cap·idle worker 경고음, 승리/패배 cue, 음악/ambience
+- 명령 피드백은 서버/sim의 command ack가 아니라 클라이언트 입력 처리 결과(armed 진입, 확정, 클라이언트 측 거절)에 반응한다
+
 ## 오디오 목표
 
 - 플레이어가 화면을 보지 않아도 중요한 이벤트를 감지할 수 있을 것
@@ -56,10 +64,10 @@
 
 ## 초기 구현 우선순위
 
-1. command ack 기반 성공/실패 피드백
-2. under attack alert
-3. build/train/research complete alert
-4. match end cue
+1. command ack 기반 성공/실패 피드백 (부분 완료: 클라이언트 입력 기준)
+2. under attack alert (완료)
+3. build/train/research complete alert (완료)
+4. match end cue (미착수)
 
 ## 운영 원칙
 
@@ -69,6 +77,7 @@
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
-- `/Users/hammac/Projects/starkraft/docs/playtest-report-template.md`
+- [ui-ux-spec.md](ui-ux-spec.md)
+- [audio-feedback-contract.md](audio-feedback-contract.md)
+- [server-ops-runbook.md](server-ops-runbook.md)
+- [playtest-report-template.md](playtest-report-template.md)

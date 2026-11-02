@@ -61,7 +61,7 @@
 - 시뮬레이션 단독 실행
 - world hash 출력과 deterministic smoke
 - snapshot 기반 그래픽 플레이
-- authoritative server 기반 room 운영
+- authoritative server 기반 room 운영 (서버의 게임 모델은 현재 `sim`과 별개인 최소 Go 구현)
 - CLI 클라이언트와 봇 클라이언트 플레이
 - replay 파일 기록과 검증
 - 데이터/맵/도구 계약 검증
@@ -71,6 +71,8 @@
 - 제품 수준 UI polish
 - 상용 아트/오디오 파이프라인
 - 장시간 온라인 운영 경험 축적
+- 서버가 `sim` 규칙 엔진으로 매치를 진행하도록 연결 (미구현)
+- 그래픽 클라이언트의 서버 접속 경로 (현재는 로컬 sim 파일 파이프라인 전용)
 - 밸런스/콘텐츠 레이어 확장
 
 즉, 현재 상태는 "핵심 시스템이 살아 있고 검증 자산이 갖춰진 플레이어블 샌드박스"에 가깝다.
@@ -92,24 +94,26 @@
 ### 서버
 
 - websocket handshake
-- protocol version / sim version 검증
-- room 생성/참가 흐름
+- protocol version 일치 검증, sim version은 비어 있지 않은지만 검사
+- room 생성/참가 흐름 (빈 room은 TTL 후 eviction)
 - 명령 소유권/범위/빈도 검증
 - snapshot broadcast
-- replay persistence
+- replay persistence (JSONL, keyframe world hash 포함)
 - reconnect/resume token 지원
+- `/healthz`, `/admin/stats` 운영 엔드포인트
+- 매치 진행: room별 최소 Go 유닛 모델(move/attack/build/queue/surrender)과 자체 world hash. Kotlin `sim`은 호출하지 않는다
 
 ### 클라이언트
 
-- 인터랙티브 CLI 플레이
-- 스크립트 기반 명령 실행
-- 간단한 봇 자동 플레이
-- snapshot 기반 텍스트 HUD
-- libGDX 기반 그래픽 렌더링
+- 인터랙티브 CLI 플레이 (Go, 서버 접속)
+- 스크립트 기반 명령 실행 (Go CLI `-script`)
+- 간단한 봇 자동 플레이 (Go)
+- snapshot 기반 텍스트 HUD (Go CLI)
+- libGDX 기반 그래픽 렌더링 (Kotlin, `sim` 모듈 내부; 로컬 sim의 snapshot/input NDJSON 파일로 동작)
 
 ### 오프라인 도구
 
-- replay meta/stats/verify/fast-forward
+- replay meta/stats/verify/verify-ndjson/fast-forward
 - map validate/generate
 - data validate
 - JSON output contract 기반 자동화 친화성
@@ -161,7 +165,7 @@
 ### 3. 그래픽 플레이 확인
 
 ```bash
-./scripts/play_sim_graphical.sh
+./scripts/play_sim_graphical.sh   # 내부적으로 ./gradlew :sim:play 실행 (GUI 창이 열림)
 ```
 
 ### 4. 네트워크 스택 확인
@@ -180,8 +184,9 @@
 
 ### 1. `sim`을 단일 진실 공급원으로 고정
 
-게임 규칙은 `sim`에만 있고, 서버는 이를 호출해 진행을 오케스트레이션한다.  
-이 구조 덕분에 규칙 로직이 네트워크 계층에 흩어지지 않고, replay/benchmark/test가 같은 규칙 엔진을 기준으로 돌아간다.
+목표는 게임 규칙을 `sim`에만 두고, 서버는 이를 호출해 진행을 오케스트레이션하는 것이다.  
+현재 로컬 실행, replay, benchmark, test, 그래픽 플레이는 모두 같은 `sim` 규칙 엔진을 기준으로 돌아간다.  
+단, Go 서버는 아직 `sim`을 호출하지 않고 `server/pkg/authoritative/room.go`의 최소 Go 유닛 모델로 매치를 진행한다. 서버–`sim` 연결은 미구현(계획)이다.
 
 ### 2. protocol을 문서와 golden 파일로 동시에 관리
 
@@ -194,7 +199,7 @@ replay는 단순한 관전 파일이 아니라 다음 용도로 쓰인다.
 
 - 버그 재현
 - world hash 검증
-- 서버 결과 검산
+- 서버 결과 검산 (서버 replay의 keyframe hash를 `tools replay verify-ndjson`/`server/cmd/replaycheck`로 재계산)
 - 성능/품질 회귀 탐지
 
 ### 4. 자동화와 수동 플레이 경로를 모두 보유
@@ -212,8 +217,8 @@ replay는 단순한 관전 파일이 아니라 다음 용도로 쓰인다.
 
 ### 기술 선택의 이유가 보인다
 
-- Kotlin/JVM은 시뮬레이션과 도구에 사용
-- Go는 서버/클라이언트 네트워크 경로에 사용
+- Kotlin/JVM(JDK 21 toolchain)은 시뮬레이션, 도구, 그래픽/콘솔 클라이언트에 사용
+- Go는 서버/헤드리스 클라이언트/봇 네트워크 경로에 사용
 - 문서와 테스트가 선택 이유를 뒷받침한다
 
 ### 운영 관점까지 포함한다

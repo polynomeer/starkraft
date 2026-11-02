@@ -14,10 +14,18 @@
 
 다음 레이어는 이 문서의 토큰을 우선 사용한다.
 
-- [`sim/src/main/kotlin/client/GdxUiAssets.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxUiAssets.kt)
-- [`sim/src/main/kotlin/client/GameScreen.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GameScreen.kt)
-- [`sim/src/main/kotlin/client/GdxWorldRenderer.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxWorldRenderer.kt)
+- [`sim/src/main/kotlin/client/GdxUiAssets.kt`](../sim/src/main/kotlin/client/GdxUiAssets.kt)
+- [`sim/src/main/kotlin/client/GameScreen.kt`](../sim/src/main/kotlin/client/GameScreen.kt)
+- [`sim/src/main/kotlin/client/GdxWorldRenderer.kt`](../sim/src/main/kotlin/client/GdxWorldRenderer.kt)
 - 이후 추가될 HUD presenter, effect pass, shader program
+
+## 현재 구현 상태
+
+- `GdxUiAssets.kt`에 `PresentationTheme(colors, motion, audio)`와 `defaultPresentationTheme()`가 있다 (커밋 `d27a2f5` 이후). 아래 색상 토큰은 `PresentationColorTokens` 필드와 1:1 대응한다 (`bg.app` → `appBackground`, `state.selection` → `selection`, `world.terrainA` → `terrainA` 식)
+- 문서에 없던 토큰: `panelSoft`(`rgba(26,41,51,0.72)`, 보조 카드 배경), `friendlyFaction`(`#4D99FF`), `enemyFaction`(`#E65C47`), `neutralFaction`(`#C7B06B`)
+- `GameScreen.kt`의 HUD 색은 모두 토큰에서 파생된다. `GdxWorldRenderer.kt`(그림자·scratch 등 약 25개 리터럴)와 `MainMenuScreen.kt`(6개)에는 아직 `Color(r,g,b,a)` 리터럴이 남아 있고, `GdxUiAssets`의 `chrome` 버튼 색도 리터럴이다
+- motion 토큰(`PresentationMotionTokens`)과 audio gain 토큰(`PresentationAudioTokens`)은 정의만 되어 있고 사용처가 없다. 실제 pulse duration과 사운드 볼륨은 각 파일 상수로 하드코딩되어 있다
+- typography / spacing / radius 토큰은 미구현이다. 폰트는 libGDX 기본 `BitmapFont` 하나이고, HUD 패딩은 1~6px 수준의 개별 값이며 패널은 모두 각진 단색 drawable이다
 
 ## 디자인 방향
 
@@ -81,13 +89,13 @@
 
 | Token | Value | Usage |
 | --- | --- | --- |
-| `world.terrainA` | `#1A2A20` | 기본 타일 |
-| `world.terrainB` | `#1E3225` | 보조 타일 |
-| `world.terrainRidge` | `#2D3827` | ridge, edge |
-| `world.terrainDust` | `#393021` | dust, dry area |
-| `world.terrainMetal` | `#24303A` | blocked/structure plate |
-| `world.fog` | `rgba(10,18,24,0.18)` | visible fog |
-| `world.shroud` | `rgba(6,12,16,0.32)` | unexplored shroud |
+| `world.terrainA` | `#1A261C` | 기본 타일 |
+| `world.terrainB` | `#1F2E21` | 보조 타일 |
+| `world.terrainRidge` | `#2E3826` | ridge, edge |
+| `world.terrainDust` | `#383021` | dust, dry area |
+| `world.terrainMetal` | `#262E36` | blocked/structure plate |
+| `world.fog` | `rgba(18,31,36,0.18)` | visible fog (월드 fog pass 비활성, 현재 미사용) |
+| `world.shroud` | `rgba(13,23,28,0.32)` | unexplored shroud |
 
 ## Faction Readability Tokens
 
@@ -221,7 +229,8 @@ Easing rules:
 
 권장 후속 작업:
 
-1. `GdxUiAssets`에 `PresentationTheme` 데이터 클래스를 도입
-2. 현재 하드코딩된 `Color(...)`를 단계적으로 token reference로 교체
-3. `GameScreen`과 `GdxWorldRenderer`의 상수색을 theme에서 주입
+1. `GdxUiAssets`에 `PresentationTheme` 데이터 클래스를 도입 (완료)
+2. 현재 하드코딩된 `Color(...)`를 단계적으로 token reference로 교체 (`GameScreen` 완료, `GdxWorldRenderer`/`MainMenuScreen` 일부 남음)
+3. `GameScreen`과 `GdxWorldRenderer`의 상수색을 theme에서 주입 (완료, 렌더러 생성 시 `assets.theme.colors` 주입)
+4. motion / audio 토큰을 실제 pulse·사운드 코드에서 참조 (미착수)
 

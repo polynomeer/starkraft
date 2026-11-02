@@ -10,7 +10,9 @@
 
 - 같은 replay를 재실행했는데 final hash가 다름
 - 서버/클라이언트 관측 상태가 장기적으로 벌어짐
-- golden determinism test가 깨짐
+- golden determinism test가 깨짐 (`starkraft.sim.DeterminismTest`, `ReplayHashTest`, `ReplayIOTest`)
+
+주의: hash 비교는 같은 계열끼리만 의미가 있다. Go 서버(`server/pkg/authoritative/room.go`)는 Kotlin `sim`을 호출하지 않고 자체 최소 unit 모델과 자체 world hash를 쓴다. 서버 snapshot/keyframe `worldHash`와 `sim`의 world hash는 원래 다른 값이므로 둘의 차이는 desync가 아니다.
 
 ## 1차 확인
 
@@ -24,18 +26,18 @@
 
 ### 1. replay 자체 검증
 
-- replay meta 확인
-- replay hash 검증
-- replay stats 확인
+- sim replay: `replay meta`, `replay verify <file> --strictHash`, `replay stats`
+- server replay: `cd server && go run ./cmd/replaycheck --replay <file>`, `replay verify-ndjson <file> --json` (첫 불일치 keyframe tick을 `firstMismatchTick`으로 보고)
 
 ### 2. world hash 비교
 
-- baseline run과 suspect run의 final world hash 비교
-- partial replay가 가능하면 중간 tick까지 잘라 비교
+- baseline run과 suspect run의 final world hash 비교 (`./gradlew :sim:run --args="... --dumpWorldHash"`)
+- partial replay로 중간 tick까지 잘라 비교 (`replay fast-forward <file> --ticks N --json`)
+- 주의: `tools replay verify`/`fast-forward`가 출력하는 world hash는 축소 재실행 하네스(20x20 맵, 이동 계열 시스템만) 기준이라 `:sim:run`의 hash와 같지 않다. 같은 도구끼리만 비교한다.
 
 ### 3. snapshot 비교
 
-- 일정 간격 snapshot을 출력해 divergence 시작 tick을 좁힌다
+- 일정 간격 snapshot을 출력해 divergence 시작 tick을 좁힌다 (`:sim:run --args="... --snapshotEvery N --snapshotOut f.ndjson"`)
 
 ## 자주 발생하는 원인
 
@@ -80,6 +82,6 @@
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/replay-validation-checklist.md`
-- `/Users/hammac/Projects/starkraft/docs/testing-strategy.md`
-- `/Users/hammac/Projects/starkraft/docs/simulation-architecture.md`
+- `docs/replay-validation-checklist.md`
+- `docs/testing-strategy.md`
+- `docs/simulation-architecture.md`

@@ -110,6 +110,22 @@
 4. smoke scripts
 5. replay/tooling contract checks
 
+현재 구현 (`.github/workflows/ci.yml`, push/PR마다 실행):
+
+- `sim-build-test`: `scripts/*.sh` 일부 `bash -n` 문법 검사, 공백-only `STARKRAFT_E2E_SIM_VERSION`/`STARKRAFT_PLAY_SIM_VERSION` 거부 확인, `:sim:build`, 짧은 `:sim:run`, `:sim:graphicalClient --headless`, `play_sim_smoke.sh`
+- `tools-build-test`: `:tools:build`, `replay meta` smoke, `:tools:smoke` 후 `summary.json`의 `result == "ok"`, `outputVersion == 1`, 필수 키 검증
+- `server-build-test` / `client-build-test`: `go build`, `go test`, `go vet`, `go mod verify`, `go mod tidy` 후 diff 없음 확인
+- `e2e-smoke`: `e2e_server_bots_smoke.sh` 후 `tools replay verify-ndjson` / `replay stats --json` 결과 검증
+
+야간 (`.github/workflows/nightly.yml`):
+
+- `go-quality`: server/client `go vet`, `go mod verify`
+- `sim-soak`: `:sim:soak --args="--minutes 1 --units 240 --seed 1234 --reportEverySec 30"`, `play_sim_smoke.sh`
+- `replay-compat`: `DeterminismTest`, `ReplayHashTest`, `ReplayIOTest`
+- `tools-health`: `:tools:smoke`와 summary payload 검증
+
+CI의 JDK는 Temurin 17이며, Gradle이 Kotlin `jvmToolchain(21)`을 foojay resolver로 자동 프로비저닝한다. Go는 1.22다.
+
 ## 테스트 작성 규칙
 
 - flaky test 금지
@@ -129,10 +145,25 @@
 
 - `sim/src/test/kotlin/starkraft/sim`
   - 시뮬레이션/결정론/그래픽 클라이언트 테스트
+  - 결정론/replay: `DeterminismTest`, `ReplayHashTest`, `ReplayIOTest`, `ReplayRunnerTest`(golden hash)
+  - 경로탐색 회귀: `CornerCutTest`, `RepathTest`, `OccupancyStressTest`, `PathfindingSystemMetricsTest`
+  - 규칙: `CombatBehaviorTest`, `BuildingPlacementTest`, `ProductionSystemTest`, `ResearchSystemTest`, `ResourceHarvestSystemTest`, `ResourceSystemTest`, `VictorySystemTest`, `SurrenderCommandTest`, `DataRepoTest`
+  - 입력/스크립트: `InputJsonTest`, `InputTailReaderTest`, `ScriptRunnerTest`, `AppCliTest`, `AppTest`
+  - 클라이언트/play 파이프라인: `GdxClientRuntimeTest`, `GameScreenInputRulesTest`, `ClientSessionTest`(partial NDJSON, concurrent append), `PlayLauncherTest`, `SnapshotStreamConsumerTest`, `ClientTcpBridgeTest`, `ClientWebSocketBridgeTest` 등
+  - 프로토콜 golden: `protocol/ProtocolModelsTest`
+  - 단일 클래스 실행: `./gradlew :sim:test --tests starkraft.sim.DeterminismTest`
+- `tools/src/test/kotlin/starkraft/tools`
+  - `ReplayToolTest`, `ReplayToolsTest`, `MapToolTest`, `MapToolsTest`, `DataToolTest`, `DataToolsTest`, `ToolsCliTest`, `ToolsOutputSchemaTest`
 - `server/pkg/authoritative/*_test.go`
-  - handshake, room, validation 통합 테스트
-- `client/pkg/**/*_test.go`
-  - 클라이언트 protocol/stream 테스트
+  - handshake, room lifecycle, validation matrix, admin/metrics, replay verify 테스트
+- `server/pkg/protocol/models_test.go`, `client/pkg/protocol/golden_test.go`
+  - `shared-protocol/golden/*.json`과의 byte 비교
+- `client/pkg/headless/*_test.go`, `client/cmd/client/main_test.go`
+  - 클라이언트 handshake/protocol/matchEnd/stream 테스트
+- `./gradlew :sim:benchmark`, `:sim:pathfindingBenchmark`, `:sim:soak`
+  - 성능/장시간 실행
+- `scripts/tools_health.sh` (`./gradlew :tools:smoke`)
+  - tools JSON 계약 smoke
 - `scripts/smoke_run.sh`
   - 기본 smoke
 - `scripts/e2e_server_bots_smoke.sh`

@@ -66,6 +66,8 @@
 
 ## 관련 명령
 
-- `./gradlew :sim:benchmark`
+- `./gradlew :sim:benchmark` (tick `p50/p95/p99/max`, `replan`/`blocked`/`stuck`/`avglen`/`queue`/`nodes` percentile, `budgetExhausted_p95`, `carryOver_p95`)
+- `./gradlew :sim:pathfindingBenchmark` (budget별 `solved`, `p50/p95`)
+- `./gradlew :sim:soak --args="--minutes 30 --units 120 --seed 1234 --reportEverySec 10"` (`tick_us p50/p95/p99/max`, `pathNodes_p95/p99`, `queue_p95`, `carry_p95`, heap/GC 변화, JFR `jcmd` 힌트)
 - `./scripts/smoke_run.sh`
-- `/Users/hammac/Projects/starkraft/docs/testing-strategy.md`
+- [testing-strategy.md](testing-strategy.md)

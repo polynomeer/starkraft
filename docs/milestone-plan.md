@@ -38,10 +38,22 @@
 
 - `mostly-done`
 
+구현 확인:
+
+- handshake(`handshakeAck`), room join, command ack, snapshot broadcast, match end broadcast
+- `resumeToken` 기반 reconnect와 idle 빈 room eviction
+- e2e smoke(`scripts/e2e_server_bots_smoke.sh`)에서 server + bot 2개 + `replaycheck` 검증
+- `/healthz`, `/admin/stats` endpoint
+
+주의:
+
+- 현재 `server/pkg/authoritative/room.go`는 Kotlin `sim`을 호출하지 않고 자체 Go 유닛 모델과 world hash로 상태를 진행한다. "`server` + `client` + `sim`" 통합은 아직 미완이다.
+
 남은 핵심:
 
-- reconnect/room UX 정리
+- reconnect/room UX 정리 (프로토콜/서버 측 reconnect는 구현됨, 사용자 UX가 남음)
 - 운영 관점 observability 보강
+- server 상태 진행을 `sim` 규칙과 일치시키기
 
 ### M3. Playable Client
 
@@ -53,7 +65,7 @@
 
 - camera, selection, command issuing, HUD가 실사용 가능
 - 생산/연구/건설 상태를 HUD에서 읽을 수 있음
-- match end/result를 UI에서 확인 가능
+- match end/result를 UI에서 확인 가능 (부분: Victory/Defeat/Draw와 종료 reason 표시는 구현, 결과 요약 HUD는 미구현)
 
 상태:
 
@@ -75,6 +87,13 @@
 
 - `next`
 
+선행 작업 현황:
+
+- soak: `:sim:soak` harness(perf/GC telemetry)와 nightly CI 1분 soak 실행
+- replay 검증: nightly CI의 determinism/replay compatibility 테스트, server replay keyframe hash 검증
+- packaging: `scripts/release_package.sh`(sim distZip, Go 바이너리, manifest), [`release-artifact-spec.md`](release-artifact-spec.md), [`replay-validation-checklist.md`](replay-validation-checklist.md), [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md)
+- 미완: soak/perf 통과 기준 수치 고정, 장시간(30분 이상) soak, checksum
+
 ### M5. Presentation Upgrade
 
 목표:
@@ -85,11 +104,11 @@
 
 - placeholder를 넘어선 읽기 쉬운 전장 표현
 - faction, fog, combat, alerts의 시각적 계층 정리
-- 기본 오디오 피드백 도입
+- 기본 오디오 피드백 도입 (부분: command/combat/death/collapse audio와 under-attack/completion alert가 클라이언트에 있음)
 
 상태:
 
-- `later`
+- `later` (일부 선행 착수)
 
 ## 추천 진행 순서
 
@@ -114,19 +133,19 @@
 ### M2
 
 - `server` / `client` Go tests
-- e2e smoke scripts
+- e2e smoke scripts (`scripts/e2e_server_bots_smoke.sh`)
 
 ### M3
 
-- sim graphical smoke
+- sim graphical smoke (`scripts/play_sim_smoke.sh`)
 - 수동 플레이 체크리스트
 - HUD/command regression tests
 
 ### M4
 
-- soak scripts
-- packaging smoke
-- operations checklist
+- soak scripts (`:sim:soak`, `.github/workflows/nightly.yml`)
+- packaging smoke (`scripts/release_package.sh`)
+- operations checklist ([`OPERATIONS.md`](../OPERATIONS.md))
 
 ### M5
 

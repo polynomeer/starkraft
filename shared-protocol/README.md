@@ -4,10 +4,10 @@ Versioned wire protocol definitions.
 
 ## Related docs
 
-- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/architecture-overview.md`
-- `/Users/hammac/Projects/starkraft/docs/security-validation-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/release-artifact-spec.md`
+- [protocol-spec.md](../docs/protocol-spec.md)
+- [architecture-overview.md](../docs/architecture-overview.md)
+- [security-validation-spec.md](../docs/security-validation-spec.md)
+- [release-artifact-spec.md](../docs/release-artifact-spec.md)
 
 ## Current scope
 
@@ -20,9 +20,9 @@ Versioned wire protocol definitions.
   - `simVersion` (rule/data version)
   - `buildHash` (build identity)
 - cross-language model parity tests:
-  - Kotlin golden tests: `/Users/hammac/Projects/starkraft/sim/src/test/kotlin/starkraft/sim/protocol/ProtocolModelsTest.kt`
-  - Go golden tests: `/Users/hammac/Projects/starkraft/server/pkg/protocol/models_test.go`
-  - Go client golden tests: `/Users/hammac/Projects/starkraft/client/pkg/protocol/golden_test.go`
+  - Kotlin golden tests: [ProtocolModelsTest.kt](../sim/src/test/kotlin/starkraft/sim/protocol/ProtocolModelsTest.kt)
+  - Go golden tests: [models_test.go](../server/pkg/protocol/models_test.go)
+  - Go client golden tests: [golden_test.go](../client/pkg/protocol/golden_test.go)
 
 ## Compatibility policy
 

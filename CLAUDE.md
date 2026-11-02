@@ -46,7 +46,7 @@ cd client && go test ./... && go vet ./...
 ./scripts/play_stack_local.sh                    # server + optional bot + interactive CLI
 ```
 
-CI (`.github/workflows/ci.yml`) also runs `bash -n` on every script in `scripts/` and checks that scripts reject whitespace-only `STARKRAFT_*_SIM_VERSION` env values — keep those guard rails when editing scripts.
+CI (`.github/workflows/ci.yml`) also runs `bash -n` on most scripts in `scripts/` (not `play_sim_profile.sh` / `release_package.sh`) and checks that scripts reject whitespace-only `STARKRAFT_*_SIM_VERSION` env values — keep those guard rails when editing scripts.
 
 ## Architecture
 
@@ -61,13 +61,13 @@ CI (`.github/workflows/ci.yml`) also runs `bash -n` on every script in `scripts/
 
 ### Local play pipeline (file-based, no server)
 
-`:sim:play` (`client/PlayLauncher.kt`) runs the sim writing a snapshot NDJSON stream; the graphical client (`client/GdxClientRuntime.kt`, `GameScreen.kt`, `GdxWorldRenderer.kt`) consumes it via `SnapshotStreamConsumer` → `ClientSnapshot` and writes player commands to an input NDJSON that the sim tails on the next tick. `ClientTcpBridge`/`ClientWebSocketBridge` expose the same two files over sockets. Tunables: `STARKRAFT_PLAY_WAIT_SNAPSHOT_MS`, `STARKRAFT_PLAY_SNAPSHOT_EVERY`. Sprites are optional via `data/visuals.json`; missing PNGs fall back to procedural rendering.
+`:sim:play` (`client/PlayLauncher.kt`) runs the sim writing a snapshot NDJSON stream; the graphical client (`client/GdxClientRuntime.kt`, `GameScreen.kt`, `GdxWorldRenderer.kt`) consumes it via `SnapshotStreamConsumer` → `ClientSnapshot` and writes player commands to an input NDJSON that the sim tails on the next tick. `ClientTcpBridge`/`ClientWebSocketBridge` expose the same two files over sockets. Tunables: `STARKRAFT_PLAY_WAIT_SNAPSHOT_MS`, `STARKRAFT_PLAY_SNAPSHOT_EVERY`. `data/visuals.json` sprites are loaded but not drawn (draw path removed in `5149344`); the world is rendered with procedural ShapeRenderer shapes only. Audio is synthesized tones generated at startup (`GdxUiAssets`), with no audio files.
 
 Client input/HUD behavior is specified in `COMMAND_CONTRACT.md` (armed-command enter/confirm/cancel rules) and `docs/hud-layout-contract.md`, `docs/input-mapping-spec.md`.
 
 ### Network stack (Go)
 
-- `server/pkg/authoritative`: websocket ingress, handshake/resume (`resumeToken`), room lifecycle and eviction, per-tick command batch validation (ownership, size caps, rate limits), snapshot broadcast, replay JSONL (`header`/`command`/`keyframe`/`matchEnd`), admin + metrics endpoints, `/healthz`.
+- `server/pkg/authoritative`: websocket ingress, handshake/resume (`resumeToken`), room lifecycle and eviction, per-tick command batch validation (ownership, size caps, rate limits), snapshot broadcast, replay JSONL (`header`/`command`/`keyframe`/`matchEnd`). HTTP routes are only `/ws`, `/healthz`, `/admin/stats` (unauthenticated); metrics are `tick-metrics` log lines, not an endpoint.
 - Caveat: docs describe the server as advancing `sim` state, but `room.go` currently keeps its **own minimal Go unit model and world hash** (move/attack/build/queue/surrender); it does not call the Kotlin sim. Don't assume server and sim hashes are comparable.
 - Server env: `STARKRAFT_SERVER_ADDR`, `STARKRAFT_REPLAY_PATH` (see `OPERATIONS.md`).
 

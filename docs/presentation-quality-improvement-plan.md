@@ -1,3 +1,29 @@
+> **현재 구현 상태 (코드 기준 메모)**
+>
+> 이 문서는 외부 제안 원문을 보존한 것이다. 실제 실행 설계는 [presentation-quality-architecture.md](presentation-quality-architecture.md)를 따르며, 아래는 원문 제안 대비 현재 libGDX 클라이언트(`sim/src/main/kotlin/client/`)의 상태다.
+>
+> - 채택하지 않음/보류: 2.5D·3D 전환, Unity/Godot 클라이언트 교체, 영웅/스킬 기반 vertical slice. 현재는 2D procedural 렌더 경로를 유지한다.
+> - sim/presentation 분리: 완료. sim은 snapshot NDJSON만 내보내고, 클라이언트(`GdxClientRuntime`)가 snapshot 차이에서 피격·사망·완료 이벤트를 추출해 연출한다. sim 쪽 presentation 이벤트 스트림(`UnitDamaged` 등)은 없다.
+> - shader, FrameBuffer post-processing, particle, decal, lighting: 미착수.
+> - 오디오: 런타임 합성 tone 기반 command/combat/death/alert/completion 효과음과 pitch·gain 순환, key별 cooldown만 있다. bus, priority, spatial, ambience, music은 미착수 ([audio-feedback-contract.md](audio-feedback-contract.md)).
+>
+> Quality Epic 상태:
+>
+> | 항목 | 상태 |
+> | --- | --- |
+> | VQ-01 Rendering architecture | 미착수 (단일 `GdxWorldRenderer`) |
+> | VQ-02 Camera | 부분 (glide center, edge pan, map clamp, zoom은 잠금) |
+> | VQ-03 Lighting / VQ-05 Material / VQ-10 Post processing | 미착수 |
+> | VQ-04 Shadow | 부분 (구조물 단색 drop shadow) |
+> | VQ-06 Animation | 부분 (bob, stride, recoil, critical shake 등 state-driven offset) |
+> | VQ-07 VFX / VQ-09 Impact | 부분 (muzzle flash, impact spark, damage flash, death burst + remains, completion flash) |
+> | VQ-08 Projectile | 미착수 |
+> | VQ-11 Terrain | 부분 (패턴 tile tone, edge, prop) |
+> | VQ-12 UI polish | 대부분 완료 (theme 토큰, 고정 HUD 슬롯, command deck/selection panel 재구성) |
+> | AQ-04 Variations | 부분 (pitch/gain 순환만, sample rotation 없음) |
+> | AQ-05 Combat SFX | 부분 (marine/zergling/melee/ranged별 tone) |
+> | AQ-01~03, AQ-06~10 | 미착수 |
+
 맞습니다. 지금 단계에서 Codex를 계속 돌려도 **“기능은 많아지는데 게임처럼 보이지 않는 현상”**이 생기기 쉽습니다. 이유는 상용 게임의 체감 품질에서 코드가 차지하는 비중보다 **아트 에셋 + 애니메이션 + VFX + 라이팅 + 사운드 + UI 연출**의 비중이 훨씬 크기 때문입니다.
 
 특히 현재처럼 스타크래프트 계열 RTS에 영웅/장수와 액션 조작을 섞으려는 프로젝트라면, 이제부터는 `기능 개발`과 `게임 표현 개발`을 완전히 분리하는 것이 좋습니다. libGDX 자체는 Shader, FrameBuffer/Post-processing, 2D/3D Particle, SpriteBatch, TextureAtlas 등의 기반을 충분히 제공합니다. 즉 엔진이 표현을 못 하는 것은 아닙니다. 다만 Unity/Unreal처럼 그 표현을 쉽게 만들어주는 제작환경이 적기 때문에 직접 구축해야 할 부분이 많습니다. ([libGDX](https://libgdx.com/wiki/?utm_source=chatgpt.com))

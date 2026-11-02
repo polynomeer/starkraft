@@ -13,11 +13,18 @@
 3. 일반 실행
    - `./gradlew :sim:play`
 
-`play_sim_profile.sh`는 `STARKRAFT_SIM_DEBUG=1`로 실행하므로 인게임 성능 오버레이가 바로 켜진다.
+`play_sim_profile.sh`는 `STARKRAFT_SIM_DEBUG=1`(기본 `10000` tick, `skirmish`, 출력 디렉터리 `/tmp/starkraft-play-profile`)로 `:sim:play`를 실행하므로 디버그 모드가 처음부터 켜진다. `STARKRAFT_SIM_PLAY_DIR`, `STARKRAFT_SIM_PLAY_TICKS`, `STARKRAFT_SIM_PLAY_SCENARIO`로 실행 인자를 바꿀 수 있다.
 
-## 인게임 성능 오버레이
+## 디버그 모드 (현재 구현)
 
-디버그 오버레이는 다음 값을 표시한다.
+- 켜는 방법: `STARKRAFT_SIM_DEBUG` 또는 JVM property `starkraft.sim.debug`를 `1`/`true`/`yes`/`on`으로 설정, 또는 게임 중 `Tab` 키 / `Debug` 버튼으로 토글 (`GdxClientRuntime.readDebugOverlayEnabled()`, `toggleDebug()`)
+- 현재 표시 내용:
+  - command panel 하단의 `dbg: e=<entity 수> r=<resource node 수>` 라벨
+  - 선택 상태에서 추가 선택 버튼(`Select Type`, `Select Role`, `Damaged`, `Combat`)
+
+## 계측 오버레이 (계획, 아직 미구현)
+
+아래 frame/stage별 수치는 현재 코드에 구현되어 있지 않다. 계측을 추가할 때의 목표 항목으로 유지한다.
 
 - `fps`
 - `frame ms`
@@ -79,17 +86,17 @@
 - 한 번에 하나만 바꾼다.
 - 수정 후 반드시 바로 실행한다.
 - 좋아진 수치와 나빠진 수치를 둘 다 기록한다.
-- 체감만 보지 말고 오버레이 수치도 같이 본다.
+- 체감만 보지 말고 가능한 한 수치(soak/benchmark 출력, 추가한 계측)도 같이 본다.
 - 악화되면 즉시 되돌린다.
 
 ## 권장 기록 방식
 
-플레이 세션마다 [playtest-report-template.md](/Users/hammac/Projects/starkraft/docs/playtest-report-template.md)에 아래 항목을 추가로 기록한다.
+플레이 세션마다 [playtest-report-template.md](playtest-report-template.md)에 아래 항목을 추가로 기록한다.
 
 - 재현 시나리오
 - 평균 체감 FPS
-- 오버레이에서 본 최고 `frame ms`
-- 튀는 항목이 `tick/hud/world/stage` 중 무엇이었는지
+- (계측 오버레이 구현 후) 최고 `frame ms`
+- (계측 오버레이 구현 후) 튀는 항목이 `tick/hud/world/stage` 중 무엇이었는지
 - 창 활성화/종료 지연 유무
 
 ## 이번 코드베이스에서 우선 의심할 구간
@@ -108,15 +115,15 @@
 
 따라서 성능 이상이 재발하면 아래를 먼저 확인한다.
 
-1. `FileClientStreamSubscription`의 poll 처리 상한이 유지되는지
-2. `:sim:play` 기본 snapshot cadence가 불필요하게 커지지 않았는지
+1. `FileClientStreamSubscription`(`client/ClientBridge.kt`)의 poll 처리 상한(`maxRecordsPerPoll = 96`, `maxLinesPerPoll = 384`)이 유지되는지
+2. `:sim:play` 기본 snapshot cadence(`DEFAULT_PLAY_SNAPSHOT_EVERY = 2`, `STARKRAFT_PLAY_SNAPSHOT_EVERY`로 조정)가 불필요하게 커지지 않았는지
 3. HUD actor 수와 tooltip/label churn이 다시 늘어나지 않았는지
 
 ## 다음 반복 루프
 
 1. `play_sim_profile.sh` 실행
 2. 재현 시나리오 수행
-3. 가장 큰 ms 항목 확인
+3. 가장 큰 비용 항목 확인 (계측 오버레이 구현 전에는 체감과 코드 경로 기준)
 4. 해당 경로만 수정
 5. 테스트 실행
 6. 다시 실행 후 비교

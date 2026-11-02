@@ -38,48 +38,81 @@
 
 ## 필수 검증
 
+아래는 현재 서버(`server/pkg/authoritative`)에 구현된 검증과 기본 한도다. 한도는 `authoritative.Config` 기본값이며 현재 env로 조정할 수 없다.
+
+### Transport 단계
+
+- websocket read 크기 상한: 64 KiB (`MaxReadBytes`). 초과 시 연결이 끊긴다.
+- 송신은 클라이언트별 write lock + 1.5초 write deadline으로 tick 루프 블로킹을 막는다. 이미 송신 중이면 해당 메시지는 버려진다 (`connection busy` 로그).
+- `MaxOutboundQueue`(기본 128) 설정 필드는 있지만 현재 어디에서도 사용되지 않는다 (미구현).
+- websocket Origin 검사는 하지 않는다 (`CheckOrigin`이 항상 true).
+
 ### Handshake 단계
 
-- protocol version 호환성
-- non-empty sim version
-- client name 유효성
-- room id 유효성
-- resume token 유효성
+모든 handshake 거부는 websocket close frame으로 reason을 전달한다.
 
-### Command ingress 단계
+| 검사 | close code | reason |
+|---|---|---|
+| protocol version 불일치 | 1008 | `protocol mismatch: upgrade client` / `protocol mismatch: upgrade server` |
+| `simVersion`이 비었거나 공백뿐 | 1008 | `invalid sim version` |
+| 첫 메시지가 `handshake`가 아니거나 파싱 실패 | 1003 | `invalid handshake` |
+| `clientName`이 빈 문자열 | 1008 | `empty client name` |
+| `clientName` 32자 초과 또는 `^[A-Za-z0-9._:-]+$` 불일치 | 1008 | `invalid client name` |
+| `resumeToken`이 없거나 만료됨 | 1008 | `invalid resume token` |
+| room id 32자 초과 또는 같은 패턴 불일치 | 1008 | `invalid room id` |
 
-- 지원되는 command type인지 확인
-- payload 구조 검증
-- batch 크기 제한
-- rate limit 확인
+- resume token은 1회용이다. 사용 시 기존 세션이 삭제되고 같은 `clientId`/이름/room으로 새 토큰이 발급된다.
+- 토큰 유효 기간은 `STARKRAFT_RESUME_WINDOW`(기본 15초)다. 발급 시점부터 계산되며, 연결 종료 시 세션이 아직 남아 있으면 종료 시점부터 다시 연장된다.
+- handshake 이후 수신 envelope도 매번 protocol version과 `simVersion`을 검사하고, 위반 시 1008로 연결을 닫는다.
 
-### Room/sim 적용 단계
+### Command ingress 단계 (수신 즉시, `server.go`)
 
-- unit ownership 확인
-- building ownership 확인
-- 좌표/타겟 bounds 확인
-- tech/build/train prerequisite 확인
+batch 단위로 검사하며, 실패 시 `commandType="commandBatch"`, `requestId` 없는 ack 하나로 batch 전체를 거부한다. 이 ack들은 replay에 기록되지 않는다.
+
+- batch 크기: 명령 64개 초과 → `batchTooLarge`
+- 각 명령:
+  - `commandType`이 비었거나 safe token 패턴 불일치 → `invalidPayload`
+  - `requestId` 64자 초과 또는 패턴 불일치 → `invalidPayload`
+  - `unitIds` 64개 초과 → `invalidPayload`
+  - `x`/`y`가 NaN/Inf → `invalidPayload`
+  - 명령별 필수 필드 누락 (`docs/protocol-spec.md` 표 참고) → `invalidPayload`
+  - 지원하지 않는 command type → `unsupportedCommand`
+- 클라이언트별 대기 batch 수: 8개(`MaxPendingBatchesPerClient`) 이상이면 → `queueFull`
+
+### Room 적용 단계 (다음 tick, `room.go`)
+
+명령 단위로 검사하며 ack는 room의 현재 tick으로 발행되고 replay `command` record로 기록된다.
+
+- batch tick 허용 범위: room tick 기준 과거 2 ~ 미래 2 tick. 범위 밖이면 batch 내 모든 명령 → `invalidTick`
+- 매치 종료 후 명령 → `matchEnded`
+- rate limit: 클라이언트당 tick당 명령 16개 초과 → `rateLimit`
+- 좌표 bounds: 32x32 맵 밖 (`move`, `build`) → `outOfBounds`
+- unit 존재/소유: `missingUnits`(unitIds 비어 있음), `missingUnit`, `notOwner`
+- `attack`: 자기 unit 대상 → `invalidTarget`, 거리 6 이내 공격자 없음 → `outOfRange`
+- `build`: 클라이언트당 unit 64개 도달 → `unitCapReached`
+- `queue`: 소유 unit 없음 → `missingBuilder`
+
+미구현: building ownership, tech/build/train prerequisite 검증. 서버 room 모델에는 건물/테크 개념이 없고 `build`/`queue`는 unit을 즉시 생성한다. `unitType` 값은 safe token 등 내용 검증 없이 그대로 `typeId`가 된다. 비정상 handshake 반복에 대한 연결 수준 rate limit도 없다.
 
 ## Ack / 오류 보고
 
-거부된 명령은 최소한 다음을 제공해야 한다.
+거부된 명령은 다음을 제공한다.
 
-- request id
-- accepted=false
-- reason
-- tick
+- `requestId` (room 단계 거부에서만; ingress batch 거부는 없음)
+- `accepted=false`
+- `reason`
+- `tick`
 
-핵심 이유 예시:
+현재 구현된 reason 전체:
 
-- `invalidPayload`
-- `unsupportedCommand`
-- `notOwner`
-- `outOfBounds`
-- `invalidSimVersion`
+- ingress: `batchTooLarge`, `invalidPayload`, `unsupportedCommand`, `queueFull`
+- room: `invalidTick`, `matchEnded`, `rateLimit`, `outOfBounds`, `missingUnits`, `missingUnit`, `notOwner`, `invalidTarget`, `outOfRange`, `unitCapReached`, `missingBuilder`, `invalidPayload`, `unsupportedCommand`
+
+`invalidSimVersion` ack reason은 없다. sim version 위반은 ack가 아니라 close reason `invalid sim version`으로 보고된다.
 
 ## 로그와 관측
 
-운영 중 추적할 항목:
+운영 중 추적할 항목 (현재 이 분포를 집계하는 metrics endpoint는 없다. `commandAck`/close reason, replay `command` record, 서버 로그에서 수동 집계한다):
 
 - handshake reject reason 분포
 - command ack reject reason 분포
@@ -94,7 +127,7 @@
 
 ## 관련 코드
 
-- `/Users/hammac/Projects/starkraft/server/pkg/authoritative`
-- `/Users/hammac/Projects/starkraft/client/pkg/headless`
-- `/Users/hammac/Projects/starkraft/docs/protocol-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/server-ops-runbook.md`
+- `server/pkg/authoritative`
+- `client/pkg/headless`
+- `docs/protocol-spec.md`
+- `docs/server-ops-runbook.md`

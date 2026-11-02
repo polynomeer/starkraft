@@ -62,6 +62,8 @@
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/balance-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`
+- [ui-ux-spec.md](ui-ux-spec.md)
+- [balance-spec.md](balance-spec.md)
+- [feature-backlog.md](feature-backlog.md)
+- [performance-debugging-workflow.md](performance-debugging-workflow.md)
+- [루트 PLAYTEST_CHECKLIST.md](../PLAYTEST_CHECKLIST.md)

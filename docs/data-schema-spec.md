@@ -13,67 +13,82 @@
 
 ## 데이터 분류
 
-### 유닛 데이터
+모든 정의 파일(`units`/`buildings`/`techs`/`weapons`)은 `{"list": [ ... ]}` 컨테이너 형식이다(`tools/schema/data-defs-v1.schema.json`). 런타임 로더는 `sim/src/main/kotlin/data/Schema.kt`의 data class와 `DataRepo.kt`이며, 알 수 없는 키는 무시된다(`ignoreUnknownKeys = true`). 아래 괄호 안 값은 생략 시 기본값이다.
 
-최소 필드:
+### 유닛 데이터 (`units.json`)
 
-- `typeId`
-- `archetype`
+필수 필드:
+
+- `id` (문서상 `typeId`)
 - `hp`
-- `armor`
-- `speed`
-- `vision`
-- `cost`
-- `buildTicks`
-- `supply`
 
 선택 필드:
 
-- `weaponId`
-- `harvest capability`
-- `special flags`
+- `archetype` (`"genericUnit"`)
+- `armor` (0)
+- `speed` (0.06, tile/tick)
+- `weaponId` (null, `weapons.json` 참조)
+- `mineralCost`, `gasCost` (0)
+- `buildTicks` (0, 0이면 생산 불가: `trainSpec`이 null)
+- `footprintWidth`, `footprintHeight` (0)
+- `producerTypes` (빈 목록 = 생산 건물 제한 없음)
+- `requiredBuildingTypes`, `requiredResearchIds` (빈 목록)
 
-### 건물 데이터
+미구현(계획): `vision`, `supply`, harvest capability, special flags. 현재 시야는 코드 상수이고 채집 능력은 `harvest` 명령으로 부여된다.
 
-최소 필드:
+### 건물 데이터 (`buildings.json`)
 
-- `typeId`
-- `archetype`
+필수 필드:
+
+- `id`
+- `hp`
 - `footprintWidth`
 - `footprintHeight`
-- `placementClearance`
-- `minerals`
-- `gas`
-- `buildTicks`
 
 선택 필드:
 
-- `supportsTraining`
-- `supportsResearch`
-- `dropOffKinds`
-- `queueLimit`
-- `rallyOffset`
+- `archetype` (`"genericBuilding"`)
+- `armor` (0)
+- `buildTicks` (0, 0이면 배치 즉시 완성)
+- `placementClearance` (0)
+- `supportsTraining`, `supportsResearch`, `supportsRally`, `supportsDropoff` (false)
+- `dropoffResourceKinds` (빈 목록, `minerals`/`gas`)
+- `productionQueueLimit` (5, 연구 queue에도 같은 한도 적용)
+- `rallyOffsetX`, `rallyOffsetY` (0.0)
+- `mineralCost`, `gasCost` (0)
+- `requiredBuildingTypes`, `requiredResearchIds` (빈 목록)
 
-### 기술 데이터
+### 기술 데이터 (`techs.json`)
 
-최소 필드:
+필수 필드:
 
-- `techId`
-- `display name`
-- `prerequisites`
-- `minerals`
-- `gas`
-- `researchTicks`
-- `effect summary`
+- `id` (문서상 `techId`)
+- `buildTicks` (연구 시간)
 
-### 시각 데이터
+선택 필드:
 
-현재/향후 대상:
+- `mineralCost`, `gasCost` (0)
+- `producerTypes` (빈 목록)
+- `requiredBuildingTypes`, `requiredResearchIds` (빈 목록)
 
-- sprite id
-- atlas/asset 경로
-- 팀 컬러 처리 방식
-- scale / anchor / draw layer
+미구현(계획): `display name`, `effect summary`. 현재 연구 완료는 faction unlock 집합에 id를 추가할 뿐이다.
+
+### 무기 데이터 (`weapons.json`)
+
+필수 필드: `id`, `damage`, `range`, `cooldownTicks` (기본값 없음).
+
+### 시각 데이터 (`visuals.json`)
+
+현재 구조 (`sim/src/main/kotlin/client/VisualAssetCatalog.kt`):
+
+- 최상위 키: `units`, `unitArchetypes`, `buildings`, `buildingArchetypes`, `resources`, `terrain`(`base`/`blocked`/`occupied`)
+- 각 항목: `asset`(PNG 경로), `scale`(1.0), `tint`(null), `teamTintStrength`(0.0)
+- 파일이나 PNG가 없으면 클라이언트는 절차적 렌더링으로 fallback한다.
+
+향후 대상(미구현):
+
+- atlas
+- anchor / draw layer
 
 ## 식별자 규칙
 
@@ -83,23 +98,37 @@
 
 ## 검증 규칙
 
+현재 `tools data validate --dir <path>`(`tools/src/main/kotlin/starkraft/tools/DataTool.kt`)가 다음을 검사한다. `units`/`buildings`/`techs`/`weapons` 파일을 `.json`/`.yaml`/`.yml`로 찾는다.
+
 ### 구조 검증
 
-- 필수 필드 존재 여부
-- 숫자 범위 유효성
-- 중복 id 금지
+- 네 파일 존재 여부
+- `list`가 객체 배열인지
+- 각 항목의 비어 있지 않은 `id`
+- 파일 내 중복 id 금지
 
 ### 참조 검증
 
-- 생산 가능한 `typeId`가 실제 존재하는가
-- prerequisite가 실제 데이터에 존재하는가
-- visual asset id가 실제 자산과 연결되는가
+- 유닛 `weaponId`가 `weapons`에 존재하는가
+- 유닛/기술의 `producerTypes`가 `buildings`에 존재하는가
+- `supportsDropoff=true` 건물은 `dropoffResourceKinds`가 비어 있지 않아야 한다
+- `dropoffResourceKinds` 값은 `minerals` 또는 `gas`
 
 ### 의미 검증
 
+`tools/src/main/kotlin/starkraft/tools/DataTools.kt`의 `validateGameData`는 다음을 추가로 검사하지만 현재 CLI에는 연결되어 있지 않고 테스트에서만 사용된다.
+
+- `hp > 0`, 유닛 `speed >= 0`
+- 건물 footprint 0 이하 금지
+- `productionQueueLimit >= 0` (0은 생산 불가 건물에 유효: `ResourceDepot`, `GasDepot`)
+- 기술 `buildTicks > 0`
+- `requiredBuildingTypes`/`requiredResearchIds` 참조 존재 여부
+- producer 건물이 각각 `supportsTraining`/`supportsResearch`인지
+
+미구현(계획):
+
 - 음수 비용 금지
-- footprint 0 이하 금지
-- queue limit 1 미만 금지
+- visual asset id가 실제 자산과 연결되는가
 
 ## 변경 절차
 
@@ -110,6 +139,8 @@
 
 ## 관련 코드
 
-- `/Users/hammac/Projects/starkraft/sim/src/main/resources/data`
-- `/Users/hammac/Projects/starkraft/tools/src/main/kotlin`
-- `/Users/hammac/Projects/starkraft/sim/src/test/kotlin/starkraft/sim`
+- [`sim/src/main/resources/data`](../sim/src/main/resources/data)
+- [`sim/src/main/kotlin/data`](../sim/src/main/kotlin/data)
+- [`tools/schema/data-defs-v1.schema.json`](../tools/schema/data-defs-v1.schema.json)
+- [`tools/src/main/kotlin`](../tools/src/main/kotlin)
+- [`sim/src/test/kotlin/starkraft/sim`](../sim/src/test/kotlin/starkraft/sim)

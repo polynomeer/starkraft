@@ -12,6 +12,17 @@
 - 방금 어떤 명령이 내려졌는가
 - 어떤 구조물이 생산/연구/건설 중인가
 
+## 현재 구현 상태
+
+[`GdxWorldRenderer.kt`](../sim/src/main/kotlin/client/GdxWorldRenderer.kt) 기준. 모든 월드 표현은 ShapeRenderer procedural 렌더이며 sprite는 현재 그리지 않는다.
+
+- 렌더 순서(월드 scissor 안): terrain → resources → (fog: no-op) → entities → activity markers → order markers → ground ping → selection click pulse → death remains → death bursts → build preview → armed command preview → drag box, 이어서 line pass(grid, terrain edge, world frame, selection bracket, selection overlay). 그 뒤 minimap, minimap viewport, 라벨 순
+- 구현됨: lime selection bracket/overlay와 confirm pulse, 피격 flash(melee/ranged별 alpha·색 차등), damage recoil·critical shake, muzzle flash, impact spark, death burst + remains(구조물은 더 큰 burst), 건설/생산/연구 완료 flash, 생산/연구/건설 진행 activity marker, queued order marker와 rally/build chevron trail, armed 명령 cursor preview(move/attack/patrol/rally), build placement preview
+- command ping 색은 아래 표와 다르다: move = `state.selection`(lime), attack = `state.warning`(amber), build = `state.build`에 `commandSoft` 혼합, invalid = `state.danger`
+- 미구현: projectile tracer, impact smoke, damaged 구조물 smoke/crack, hero silhouette, effect 중첩 시 약화 규칙의 일반화
+- fog: 월드 fog pass(`drawFog`)는 비어 있다. viewed faction 시야 밖 엔티티는 그리지 않고, visible/explored 음영은 미니맵에서만 표현한다
+- minimap: 구조물/전투/worker/support별 마커 크기와 역할 색, 자원 노드, 선택 강조, 실제 world viewport 기준 viewport box가 구현되어 있다
+
 ## 기본 원칙
 
 1. 가독성이 장식보다 우선이다.
@@ -118,8 +129,8 @@
 
 | Command | Color | Motion |
 | --- | --- | --- |
-| move | teal-cyan | short ripple |
-| attack | orange-red | sharp pulse |
+| move | teal-cyan (현재 lime) | short ripple |
+| attack | orange-red (현재 amber) | sharp pulse |
 | build | green-cyan | grid/placement cue |
 | invalid | red | brief broken pulse |
 

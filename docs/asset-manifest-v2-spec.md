@@ -2,7 +2,7 @@
 
 ## 목적
 
-현재 [`sim/src/main/resources/data/visuals.json`](/Users/hammac/Projects/starkraft/sim/src/main/resources/data/visuals.json) 기반 자산 정의를 production-ready manifest로 확장하기 위한 규격이다.
+현재 [`sim/src/main/resources/data/visuals.json`](../sim/src/main/resources/data/visuals.json) 기반 자산 정의를 production-ready manifest로 확장하기 위한 규격이다.
 
 이 문서는 다음 문제를 해결한다.
 
@@ -14,8 +14,8 @@
 
 현재 참조 타입:
 
-- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/VisualAssetCatalog.kt)
-- [`sim/src/main/kotlin/client/GdxSpriteAssets.kt`](/Users/hammac/Projects/starkraft/sim/src/main/kotlin/client/GdxSpriteAssets.kt)
+- [`sim/src/main/kotlin/client/VisualAssetCatalog.kt`](../sim/src/main/kotlin/client/VisualAssetCatalog.kt)
+- [`sim/src/main/kotlin/client/GdxSpriteAssets.kt`](../sim/src/main/kotlin/client/GdxSpriteAssets.kt)
 
 현재 `SpriteAssetRef` 필드:
 
@@ -25,6 +25,18 @@
 - `teamTintStrength`
 
 이 구조는 시작점으로는 충분하지만, 표현 품질을 올리기에는 메타데이터가 부족하다.
+
+## 현재 구현 상태 (v1)
+
+이 문서의 V2 필드(`anchorX`, `anchorY`, `shadowAsset`, `selectionStyle`, `variantGroup`, `animationSet`, `layer`, `effectSet`, `minimapStyle`)와 atlas, validation CLI는 모두 미구현이다. 현재 v1 동작은 다음과 같다.
+
+- 최상위 키: `units`, `unitArchetypes`, `buildings`, `buildingArchetypes`, `resources`, `terrain` (`base` / `blocked` / `occupied`). V2 제안의 `structures` 대신 현재 키는 `buildings`다
+- 조회: footprint가 있는 엔티티는 `buildings[typeId]` → `buildingArchetypes[archetype]`, 그 외는 `units[typeId]` → `unitArchetypes[archetype]` 순
+- 파싱: `ignoreUnknownKeys = true`라 V2 필드를 미리 넣어도 무시된다. `/data/visuals.json`이 없으면 빈 manifest
+- 로더(`GdxSpriteAssets`): classpath 경로로 텍스처를 읽고, 없는 파일은 missing으로 캐시해 `null`을 돌려준다(경고 로그 없음). 알파 > 8인 픽셀 기준으로 opaque bounds를 잘라 region을 만든다. `scale`은 0.01 이상, `teamTintStrength`는 `0..1`로 clamp하고, `tint`는 `#` 유무와 무관하게 hex로 파싱한다
+- 현재 `visuals.json`: `Worker`/`Marine`/`Zergling`, `Depot`/`ResourceDepot`/`GasDepot`(세 건물 모두 `depot.png` 공유), `minerals`/`gas`, terrain 3종
+- 렌더링: `GdxWorldRenderer`는 현재 sprite를 그리지 않는다. 커밋 `5149344`(perf: restore fast play baseline)에서 sprite draw 경로가 빠진 뒤로 월드는 항상 procedural silhouette으로 그려지고, `GdxUiAssets.spriteAssets`는 생성만 된다
+- `tools`의 data validate는 `visuals.json`을 검사하지 않는다
 
 ## 설계 원칙
 
@@ -166,8 +178,8 @@ manifest는 effect 세트와 느슨하게 연결되어야 한다.
 
 ## Validation Rules
 
-- `asset` 경로가 없으면 경고 후 fallback
-- `scale <= 0` 금지
+- `asset` 경로가 없으면 경고 후 fallback (현재: 경고 없이 fallback)
+- `scale <= 0` 금지 (현재: 로더가 0.01로 clamp)
 - `anchorX`, `anchorY`는 `0..1`
 - `teamTintStrength`는 `0..1`
 - 중복 type key 금지

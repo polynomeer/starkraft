@@ -10,6 +10,14 @@
 - 시각 자산은 가독성과 기능 검증이 최우선
 - 완성형 아트 스타일은 아직 고정되지 않음
 
+## 현재 구현 상태
+
+- 월드는 `GdxWorldRenderer`의 ShapeRenderer 기반 procedural 렌더만 사용한다. 유닛/건물은 역할별 silhouette(`drawUnitSilhouette`, `drawStructureSilhouette`), 자원은 mineral/gas별 색과 크기, 지형은 패턴 기반 tile tone으로 그린다
+- `data/visuals.json`과 `assets/sprites/`의 샘플 PNG는 manifest로 로드되지만 현재 월드 렌더에서 그려지지 않는다 ([asset-manifest-v2-spec.md](asset-manifest-v2-spec.md) 참고)
+- faction 색: viewed faction은 friendly(파랑), 그 외는 enemy(적색), faction 0 이하는 neutral(sand). observer 시점에서는 faction 1이 friendly 색이다. 미니맵 마커도 같은 faction 색에 역할 색을 섞는다
+- 구현된 상태 표현: HP 바, lime 선택 bracket/ring과 confirm pulse, 피격 flash/recoil, muzzle flash, death burst와 remains, 건설/생산/연구 완료 flash, activity/queue marker, 명령 ground ping, armed 명령 cursor preview, build placement preview
+- 미구현/보류: 월드 fog 마스크(`drawFog`가 비어 있고, 대신 시야 밖 엔티티를 숨김), 자원 depletion 표시, 줌(현재 zoom lock)
+
 ## 시각 목표
 
 ### 읽기 쉬운 전장
@@ -74,14 +82,15 @@
 
 ## 비주얼 구현 우선순위
 
-1. 가독성 높은 placeholder 세트
-2. faction color 시스템 정리
-3. fog/vision 마스크 품질 개선
-4. 전투 hit feedback
-5. 생산/연구/건설 상태 애니메이션
+1. 가독성 높은 placeholder 세트 (procedural silhouette로 진행 중)
+2. faction color 시스템 정리 (theme 토큰으로 정리됨)
+3. fog/vision 마스크 품질 개선 (미착수: 월드 fog pass 비활성)
+4. 전투 hit feedback (기본 구현)
+5. 생산/연구/건설 상태 애니메이션 (완료 flash와 activity marker 수준)
 
 ## 관련 문서
 
-- `/Users/hammac/Projects/starkraft/docs/ui-ux-spec.md`
-- `/Users/hammac/Projects/starkraft/docs/game-design-document.md`
-- `/Users/hammac/Projects/starkraft/docs/feature-backlog.md`
+- [ui-ux-spec.md](ui-ux-spec.md)
+- [battlefield-visual-contract.md](battlefield-visual-contract.md)
+- [game-design-document.md](game-design-document.md)
+- [feature-backlog.md](feature-backlog.md)
