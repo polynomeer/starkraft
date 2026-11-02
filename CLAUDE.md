@@ -67,7 +67,7 @@ Client input/HUD behavior is specified in `COMMAND_CONTRACT.md` (armed-command e
 
 ### Network stack (Go)
 
-- `server/pkg/authoritative`: websocket ingress, handshake/resume (`resumeToken`), room lifecycle and eviction, per-tick command batch validation (ownership, size caps, rate limits), snapshot broadcast, replay JSONL (`header`/`command`/`keyframe`/`matchEnd`). HTTP routes are only `/ws`, `/healthz`, `/admin/stats` (unauthenticated); metrics are `tick-metrics` log lines, not an endpoint.
+- `server/pkg/authoritative`: websocket ingress, handshake/resume (`resumeToken`), room lifecycle and eviction, per-tick command batch validation (ownership, size caps, rate limits), snapshot broadcast, replay JSONL (`header`/`command`/`keyframe`/`matchEnd`). HTTP routes are only `/ws`, `/healthz`, `/admin/stats` (bearer `STARKRAFT_ADMIN_TOKEN`, or loopback-only when unset); metrics are `tick-metrics` log lines, not an endpoint.
 - Caveat: docs describe the server as advancing `sim` state, but `room.go` currently keeps its **own minimal Go unit model and world hash** (move/attack/build/queue/surrender); it does not call the Kotlin sim. Don't assume server and sim hashes are comparable.
 - Server env: `STARKRAFT_SERVER_ADDR`, `STARKRAFT_REPLAY_PATH` (see `OPERATIONS.md`).
 

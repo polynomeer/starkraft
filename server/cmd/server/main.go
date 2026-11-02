@@ -21,6 +21,7 @@ func main() {
 	emptyRoomTTL := getenvDuration("STARKRAFT_EMPTY_ROOM_TTL", 30*time.Second)
 	resumeWindow := getenvDuration("STARKRAFT_RESUME_WINDOW", 15*time.Second)
 	keyframeEvery := getenvInt("STARKRAFT_KEYFRAME_EVERY", 50)
+	adminToken := strings.TrimSpace(os.Getenv("STARKRAFT_ADMIN_TOKEN"))
 
 	srv := authoritative.NewServer(authoritative.Config{
 		Addr:          addr,
@@ -31,6 +32,7 @@ func main() {
 		KeyframeEvery: keyframeEvery,
 		EmptyRoomTTL:  emptyRoomTTL,
 		ResumeWindow:  resumeWindow,
+		AdminToken:    adminToken,
 	})
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

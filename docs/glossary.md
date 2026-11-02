@@ -39,7 +39,7 @@ replay command stream을 기준으로 계산한 검증용 해시 (`ReplayHashRec
 ### resume token
 
 handshake 성공 시 서버가 발급하는 1회용 재접속 토큰.  
-resume window(`STARKRAFT_RESUME_WINDOW`, 기본 15초) 안에 다시 handshake하면 같은 client id/room으로 복귀한다.
+연결 종료 후 resume window(`STARKRAFT_RESUME_WINDOW`, 기본 15초) 안에 다시 handshake하면 같은 client id/room으로 복귀한다.
 
 ### snapshot
 

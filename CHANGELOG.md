@@ -34,6 +34,12 @@ Changes since the 2026-03-06 changelog update, summarized by area from `git log`
 - Launcher env values are trimmed before parsing.
 - Added resume-token handshake and surrender command-batch golden coverage.
 
+### Fixed (server)
+- `queue` now spawns next to the lowest-id owned unit instead of a random one picked by map iteration, so the server world hash is deterministic.
+- Resume sessions no longer expire while the client is connected; `STARKRAFT_RESUME_WINDOW` counts from disconnect.
+- Resume tokens are 128-bit random values instead of sequential `resume-N`.
+- `/admin/stats` requires `Authorization: Bearer $STARKRAFT_ADMIN_TOKEN` when set, otherwise answers loopback clients only, and no longer returns resume tokens.
+
 ### Go client and bot
 - Added `--resumeToken` and `--simVersion` flags; the resume token is printed on connect and `simVersion` is trimmed before handshake.
 

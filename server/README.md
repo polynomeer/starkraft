@@ -78,7 +78,8 @@ Runtime env vars:
 - `STARKRAFT_BUILD_HASH` (build identity, default empty)
 - `STARKRAFT_REPLAY_PATH` (replay JSONL output, disabled when empty)
 - `STARKRAFT_EMPTY_ROOM_TTL` (duration, default `30s`)
-- `STARKRAFT_RESUME_WINDOW` (duration, default `15s`)
+- `STARKRAFT_RESUME_WINDOW` (duration, default `15s`; counted from disconnect)
+- `STARKRAFT_ADMIN_TOKEN` (optional bearer token for `/admin/stats`; when empty, only loopback clients are allowed)
 - `STARKRAFT_KEYFRAME_EVERY` (int ticks, default `50`)
 - whitespace-only launcher env values fall back to defaults after trimming
 
@@ -87,7 +88,8 @@ Operational endpoints:
   - lightweight readiness/status payload (`status`, protocol, sim version, room/session counts)
 - `GET /admin/stats`:
   - room-level runtime snapshot (`tick`, world hash, unit/client/pending counts, match state)
-  - resumable session snapshot (token, room/client linkage, remaining expiry)
+  - resumable session snapshot (client/room linkage, connected flag, remaining expiry after disconnect; tokens are never exposed)
+  - requires `Authorization: Bearer $STARKRAFT_ADMIN_TOKEN` when set, otherwise loopback-only (403)
 
 Replay verifier:
 

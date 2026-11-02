@@ -29,7 +29,8 @@ Server env vars (`server/cmd/server`, whitespace-only values fall back to defaul
 - `STARKRAFT_REPLAY_PATH` (optional; JSONL replay, truncated on each server start)
 - `STARKRAFT_KEYFRAME_EVERY` (default `50` ticks; `0` disables keyframes)
 - `STARKRAFT_EMPTY_ROOM_TTL` (default `30s`)
-- `STARKRAFT_RESUME_WINDOW` (default `15s`)
+- `STARKRAFT_RESUME_WINDOW` (default `15s`; counted from disconnect, a connected session never expires)
+- `STARKRAFT_ADMIN_TOKEN` (optional; when set, `/admin/stats` requires `Authorization: Bearer <token>`; when empty, it only answers loopback clients)
 
 Client/bot flags: `--url` (default `ws://127.0.0.1:8080/ws`), `--name`, `--room` (default `default`), `--simVersion` (default `dev`), `--resumeToken`; the CLI client also takes `--script <json>`.
 
@@ -122,11 +123,11 @@ With server running:
 
 ```bash
 curl -s http://127.0.0.1:18080/healthz | jq .
-curl -s http://127.0.0.1:18080/admin/stats | jq .
+curl -s http://127.0.0.1:18080/admin/stats | jq .   # add -H "Authorization: Bearer $STARKRAFT_ADMIN_TOKEN" when set
 ```
 
 - `/healthz` gives `status`, `protocolVersion`, `simVersion`, `rooms`, `resumeSessions` (counts).
-- `/admin/stats` gives `protocolVersion`, `simVersion`, `buildHash`, `tickIntervalMs`, per-room runtime state (`tick`, `worldHash`, `units`, `connectedClients`, `pendingBatches`, `matchEnded`, `winnerId`, `emptyForMs`) and resumable sessions (including tokens). It is unauthenticated; do not expose it publicly.
+- `/admin/stats` gives `protocolVersion`, `simVersion`, `buildHash`, `tickIntervalMs`, per-room runtime state (`tick`, `worldHash`, `units`, `connectedClients`, `pendingBatches`, `matchEnded`, `winnerId`, `emptyForMs`) and resumable sessions (`clientId`, `clientName`, `roomId`, `connected`, `expiresInMs` once disconnected). Tokens are never included. Without `STARKRAFT_ADMIN_TOKEN` it returns 403 to non-loopback clients; with it, a missing or wrong bearer token returns 401.
 - Both are GET-only (other methods return 405). There is no separate metrics endpoint; the server logs a `tick-metrics` line (p50/p95/p99 step latency, max pending batches) every 200 ticks.
 - Note: the server room runs its own minimal Go unit model (`server/pkg/authoritative/room.go`), not the Kotlin sim, so its `worldHash` is not comparable with sim hashes.
 

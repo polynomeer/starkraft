@@ -197,7 +197,7 @@ RTS의 전략성은 전투만으로 생기지 않는다.
 - tick 단위 매치 진행 (20ms ticker)
 - snapshot/ack/replay 생성 (replay JSONL: `header`/`command`/`keyframe`/`matchEnd`)
 
-현재 상태: 서버는 Kotlin `sim`을 호출하지 않는다. `server/pkg/authoritative/room.go`가 자체 최소 Go 유닛 모델(32x32 맵, `move`는 즉시 위치 이동, `attack`은 거리 6 이내 공격자당 10 피해, `build`/`queue`는 유닛 즉시 생성, `surrender`, 600 tick 제한)과 자체 world hash를 갖는다. 따라서 서버 hash와 `sim` hash는 비교할 수 없고, "규칙의 원천은 `sim`"이라는 원칙은 서버 경로에서 아직 미구현이다.
+현재 상태: 서버는 Kotlin `sim`을 호출하지 않는다. `server/pkg/authoritative/room.go`가 자체 최소 Go 유닛 모델(32x32 맵, `move`는 즉시 위치 이동, `attack`은 거리 6 이내 공격자당 10 피해, `build`/`queue`는 유닛 즉시 생성(`queue`는 소유 유닛 중 가장 작은 id 옆에 생성), `surrender`, 600 tick 제한)과 자체 world hash를 갖는다. 따라서 서버 hash와 `sim` hash는 비교할 수 없고, "규칙의 원천은 `sim`"이라는 원칙은 서버 경로에서 아직 미구현이다.
 
 ### 입력 검증을 별도 계층으로 두는 이유
 
@@ -223,7 +223,7 @@ handshake에서는 protocol version 일치와 `simVersion`이 비어 있지 않�
 
 - 일시적 네트워크 끊김에서 세션 복구
 - room 상태와 플레이어 identity의 분리
-- 서버가 세션 만료 창을 통제 (`STARKRAFT_RESUME_WINDOW`, 기본 15초; 토큰은 1회용이며 재접속 시 새 토큰 발급)
+- 서버가 세션 만료 창을 통제 (`STARKRAFT_RESUME_WINDOW`, 기본 15초, 연결 종료 시점부터 계산; 토큰은 128bit 무작위 1회용이며 재접속 시 새 토큰 발급)
 
 이 기능은 향후 실제 멀티플레이 품질을 높일 수 있는 기반이다.
 

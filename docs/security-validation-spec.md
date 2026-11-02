@@ -46,6 +46,7 @@
 - 송신은 클라이언트별 write lock + 1.5초 write deadline으로 tick 루프 블로킹을 막는다. 이미 송신 중이면 해당 메시지는 버려진다 (`connection busy` 로그).
 - `MaxOutboundQueue`(기본 128) 설정 필드는 있지만 현재 어디에서도 사용되지 않는다 (미구현).
 - websocket Origin 검사는 하지 않는다 (`CheckOrigin`이 항상 true).
+- `/admin/stats`: `STARKRAFT_ADMIN_TOKEN` 설정 시 `Authorization: Bearer <token>`을 constant-time 비교로 검사(불일치 401), 미설정 시 loopback 요청만 허용(그 외 403). 응답에는 resume token을 넣지 않는다.
 
 ### Handshake 단계
 
@@ -62,7 +63,8 @@
 | room id 32자 초과 또는 같은 패턴 불일치 | 1008 | `invalid room id` |
 
 - resume token은 1회용이다. 사용 시 기존 세션이 삭제되고 같은 `clientId`/이름/room으로 새 토큰이 발급된다.
-- 토큰 유효 기간은 `STARKRAFT_RESUME_WINDOW`(기본 15초)다. 발급 시점부터 계산되며, 연결 종료 시 세션이 아직 남아 있으면 종료 시점부터 다시 연장된다.
+- 토큰은 `crypto/rand` 128bit 값(`resume-<32 hex>`)이라 추측할 수 없다.
+- 연결 중인 세션은 만료되지 않는다. 유효 기간 `STARKRAFT_RESUME_WINDOW`(기본 15초)는 연결 종료 시점부터 계산된다.
 - handshake 이후 수신 envelope도 매번 protocol version과 `simVersion`을 검사하고, 위반 시 1008로 연결을 닫는다.
 
 ### Command ingress 단계 (수신 즉시, `server.go`)

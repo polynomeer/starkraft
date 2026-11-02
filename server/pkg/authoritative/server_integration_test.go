@@ -1159,6 +1159,83 @@ func TestHandshakeResumeTokenRestoresIdentity(t *testing.T) {
 	}
 }
 
+func TestResumeTokenSurvivesConnectionLongerThanWindow(t *testing.T) {
+	srv := NewServer(Config{
+		SimVersion:   "test",
+		TickInterval: 20 * time.Millisecond,
+		ResumeWindow: 100 * time.Millisecond,
+	})
+	defer srv.Close()
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+	roomID := "resume-long-room"
+	conn1, ack1 := dialHandshakeWithAck(t, wsURL, protocol.HandshakeMessage{
+		Type:          "handshake",
+		ClientName:    "bot-a",
+		RequestedRoom: &roomID,
+	})
+	if ack1.ResumeToken == nil || *ack1.ResumeToken == "" {
+		t.Fatalf("expected resume token in handshake ack")
+	}
+	token := *ack1.ResumeToken
+	// Stay connected well past the resume window, then trigger a prune.
+	time.Sleep(250 * time.Millisecond)
+	srv.mu.Lock()
+	srv.pruneExpiredResumeSessionsLocked()
+	srv.mu.Unlock()
+	_ = conn1.Close()
+	waitForResumeSessionDisconnected(t, srv, token)
+
+	conn2, ack2 := dialHandshakeWithAck(t, wsURL, protocol.HandshakeMessage{
+		Type:        "handshake",
+		ClientName:  "bot-a",
+		ResumeToken: &token,
+	})
+	defer conn2.Close()
+	if ack2.ClientID != ack1.ClientID {
+		t.Fatalf("expected resumed client id %s, got %s", ack1.ClientID, ack2.ClientID)
+	}
+}
+
+func TestResumeTokensAreUnpredictable(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test", TickInterval: 20 * time.Millisecond})
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+	first, err := srv.issueResumeTokenLocked("player-1", "a", "room")
+	if err != nil {
+		t.Fatalf("issue token: %v", err)
+	}
+	second, err := srv.issueResumeTokenLocked("player-2", "b", "room")
+	if err != nil {
+		t.Fatalf("issue token: %v", err)
+	}
+	if first == second || first == "resume-1" || second == "resume-2" {
+		t.Fatalf("expected random resume tokens, got %q and %q", first, second)
+	}
+	if len(first) < len("resume-")+32 {
+		t.Fatalf("expected at least 128-bit token, got %q", first)
+	}
+}
+
+func waitForResumeSessionDisconnected(t *testing.T, srv *Server, token string) {
+	t.Helper()
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for {
+		srv.mu.Lock()
+		session, ok := srv.resumeSessions[token]
+		srv.mu.Unlock()
+		if ok && !session.connected {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for resume session %s to disconnect (present=%v)", token, ok)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
 func readEnvelope(t *testing.T, conn *websocket.Conn) protocol.ProtocolEnvelope {
 	t.Helper()
 	var env protocol.ProtocolEnvelope

@@ -39,15 +39,16 @@
 | `STARKRAFT_REPLAY_PATH` | (없음) | 설정 시 JSONL replay 기록 (서버 시작 시 덮어씀) |
 | `STARKRAFT_KEYFRAME_EVERY` | `50` | keyframe 기록 간격(tick), 0 이하면 비활성 |
 | `STARKRAFT_EMPTY_ROOM_TTL` | `30s` | 빈 room 제거까지 대기 (Go duration) |
-| `STARKRAFT_RESUME_WINDOW` | `15s` | resume token 유효 기간 (Go duration) |
+| `STARKRAFT_RESUME_WINDOW` | `15s` | 연결 종료 후 resume token 유효 기간 (Go duration). 연결 중에는 만료되지 않는다 |
+| `STARKRAFT_ADMIN_TOKEN` | (없음) | 설정 시 `/admin/stats`에 `Authorization: Bearer <token>` 필요. 미설정 시 loopback 요청만 허용 |
 
 잘못된 int/duration 값은 경고 로그 후 기본값을 쓴다. tick 간격은 20ms 고정이다. 서버는 클라이언트 `simVersion`이 자기 값과 같은지는 검사하지 않는다 (비어 있지 않은지만 검사).
 
 ### 헬스체크
 
 - `GET /healthz`: `status`, `protocolVersion`, `simVersion`, `rooms`, `resumeSessions`
-- `GET /admin/stats`: `protocolVersion`, `simVersion`, `buildHash`, `tickIntervalMs`, room별 `id`/`tick`/`worldHash`/`units`/`connectedClients`/`pendingBatches`/`matchEnded`/`winnerId`/`emptyForMs`, `resumeSessions[]`(token 포함)
-- 두 endpoint 모두 GET 이외는 405. 인증이 없으므로 `/admin/stats`(resume token 노출)를 외부에 공개하지 않는다.
+- `GET /admin/stats`: `protocolVersion`, `simVersion`, `buildHash`, `tickIntervalMs`, room별 `id`/`tick`/`worldHash`/`units`/`connectedClients`/`pendingBatches`/`matchEnded`/`winnerId`/`emptyForMs`, `resumeSessions[]`(`clientId`/`clientName`/`roomId`/`connected`/연결 종료 후 `expiresInMs`; token은 포함하지 않음)
+- 두 endpoint 모두 GET 이외는 405. `/admin/stats`는 `STARKRAFT_ADMIN_TOKEN` 미설정 시 loopback 외 요청에 403, 설정 시 bearer token 불일치에 401을 반환한다. `/healthz`는 인증 없이 열려 있다.
 - smoke script가 서버 readiness(`/healthz`)를 통과하는지 확인
 
 ### 헬스체크

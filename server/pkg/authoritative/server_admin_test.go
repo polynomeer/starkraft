@@ -118,3 +118,71 @@ func waitForResumeSessions(t *testing.T, srv *Server, want int) {
 		time.Sleep(5 * time.Millisecond)
 	}
 }
+
+func TestAdminStatsDoesNotExposeResumeTokens(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test-sim", TickInterval: 20 * time.Millisecond})
+	srv.mu.Lock()
+	token, err := srv.issueResumeTokenLocked("player-1", "bot-a", "ops-room")
+	srv.mu.Unlock()
+	if err != nil {
+		t.Fatalf("issue token: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/stats", nil)
+	req.RemoteAddr = "127.0.0.1:4242"
+	rec := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+	if strings.Contains(rec.Body.String(), token) {
+		t.Fatalf("admin stats leaked resume token: %s", rec.Body.String())
+	}
+	var payload adminStatsResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode admin stats payload: %v", err)
+	}
+	if len(payload.ResumeSessions) != 1 || !payload.ResumeSessions[0].Connected {
+		t.Fatalf("expected one connected resume session, got %+v", payload.ResumeSessions)
+	}
+}
+
+func TestAdminStatsRejectsNonLoopbackWithoutToken(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test-sim", TickInterval: 20 * time.Millisecond})
+	req := httptest.NewRequest(http.MethodGet, "/admin/stats", nil)
+	req.RemoteAddr = "203.0.113.7:4242"
+	rec := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403, got %d", rec.Code)
+	}
+}
+
+func TestAdminStatsRequiresBearerTokenWhenConfigured(t *testing.T) {
+	srv := NewServer(Config{SimVersion: "test-sim", TickInterval: 20 * time.Millisecond, AdminToken: "s3cret"})
+	cases := []struct {
+		name   string
+		header string
+		want   int
+	}{
+		{name: "missing", header: "", want: http.StatusUnauthorized},
+		{name: "wrong", header: "Bearer nope", want: http.StatusUnauthorized},
+		{name: "no scheme", header: "s3cret", want: http.StatusUnauthorized},
+		{name: "valid", header: "Bearer s3cret", want: http.StatusOK},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/admin/stats", nil)
+			// Token auth applies regardless of source address.
+			req.RemoteAddr = "203.0.113.7:4242"
+			if tc.header != "" {
+				req.Header.Set("Authorization", tc.header)
+			}
+			rec := httptest.NewRecorder()
+			srv.Handler().ServeHTTP(rec, req)
+			if rec.Code != tc.want {
+				t.Fatalf("expected status %d, got %d", tc.want, rec.Code)
+			}
+		})
+	}
+}

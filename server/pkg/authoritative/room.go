@@ -401,12 +401,16 @@ func (r *room) applyBuildLocked(clientID string, cmd protocol.WireCommand) (bool
 }
 
 func (r *room) applyQueueLocked(clientID string, cmd protocol.WireCommand) (bool, string) {
+	// Anchor on the lowest-id owned unit; map iteration order is random and
+	// would make spawn positions (and the world hash) non-deterministic.
 	var anchor *unitState
-	for _, u := range r.units {
-		if u.ownerID == clientID {
+	for id, u := range r.units {
+		if u.ownerID != clientID {
+			continue
+		}
+		if anchor == nil || id < anchor.id {
 			uCopy := u
 			anchor = &uCopy
-			break
 		}
 	}
 	if anchor == nil {

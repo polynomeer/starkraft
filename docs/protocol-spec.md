@@ -61,11 +61,11 @@
 - `clientId` (`player-N` 형식, 서버 전역 카운터로 발급)
 - `serverTickMs` (현재 20)
 - `protocolVersion`
-- `resumeToken` (`resume-N` 형식)
+- `resumeToken` (`resume-<32 hex>`, 128bit 무작위 값)
 
 faction/진영 정보는 별도로 전달하지 않는다. 소유권은 `clientId`와 snapshot unit의 `ownerId`로 판단한다.
 
-재접속(resume): handshake에 이전 ack의 `resumeToken`을 넣으면 같은 `clientId`/이름/room으로 복귀한다 (`requestedRoom`은 무시). 토큰은 1회용이며 매 handshake마다 새 토큰이 발급된다. 유효 기간은 `STARKRAFT_RESUME_WINDOW`(기본 15초)다. 무효/만료 토큰은 close reason `invalid resume token`으로 거부된다.
+재접속(resume): handshake에 이전 ack의 `resumeToken`을 넣으면 같은 `clientId`/이름/room으로 복귀한다 (`requestedRoom`은 무시). 토큰은 1회용이며 매 handshake마다 새 토큰이 발급된다. 유효 기간은 연결 종료 후 `STARKRAFT_RESUME_WINDOW`(기본 15초)이며, 연결 중에는 만료되지 않는다. 무효/만료 토큰은 close reason `invalid resume token`으로 거부된다.
 
 ### CommandBatch (`commandBatch`)
 

@@ -2,6 +2,9 @@ package authoritative
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,6 +39,9 @@ type Config struct {
 	MaxOutboundQueue           int
 	EmptyRoomTTL               time.Duration
 	ResumeWindow               time.Duration
+	// AdminToken guards /admin/stats via "Authorization: Bearer <token>".
+	// When empty, the endpoint only answers loopback clients.
+	AdminToken string
 }
 
 type Server struct {
@@ -52,7 +58,6 @@ type Server struct {
 	tickCount      int
 	maxPendingSeen int
 	resumeSessions map[string]resumeSession
-	nextResumeID   int
 }
 
 type clientConn struct {
@@ -70,7 +75,13 @@ type resumeSession struct {
 	clientID string
 	name     string
 	roomID   string
-	expires  time.Time
+	// connected sessions never expire; the resume window starts on disconnect.
+	connected bool
+	expires   time.Time
+}
+
+func (rs resumeSession) expired(now time.Time) bool {
+	return !rs.connected && now.After(rs.expires)
 }
 
 type healthResponse struct {
@@ -90,12 +101,13 @@ type adminStatsResponse struct {
 	ResumeSessions  []resumeSessionStat `json:"resumeSessions"`
 }
 
+// resumeSessionStat deliberately omits the token: it grants a player's identity.
 type resumeSessionStat struct {
-	Token       string `json:"token"`
 	ClientID    string `json:"clientId"`
 	ClientName  string `json:"clientName"`
 	RoomID      string `json:"roomId"`
-	ExpiresInMs int64  `json:"expiresInMs"`
+	Connected   bool   `json:"connected"`
+	ExpiresInMs int64  `json:"expiresInMs,omitempty"`
 }
 
 type handshakeError struct {
@@ -366,6 +378,10 @@ func (s *Server) handleAdminStats(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	if status := s.authorizeAdmin(r); status != http.StatusOK {
+		w.WriteHeader(status)
+		return
+	}
 	now := time.Now()
 	s.mu.Lock()
 	s.pruneExpiredResumeSessionsLocked()
@@ -374,19 +390,27 @@ func (s *Server) handleAdminStats(w http.ResponseWriter, r *http.Request) {
 		rooms = append(rooms, rm)
 	}
 	resumeStats := make([]resumeSessionStat, 0, len(s.resumeSessions))
-	for token, session := range s.resumeSessions {
-		resumeStats = append(resumeStats, resumeSessionStat{
-			Token:       token,
-			ClientID:    session.clientID,
-			ClientName:  session.name,
-			RoomID:      session.roomID,
-			ExpiresInMs: session.expires.Sub(now).Milliseconds(),
-		})
+	for _, session := range s.resumeSessions {
+		stat := resumeSessionStat{
+			ClientID:   session.clientID,
+			ClientName: session.name,
+			RoomID:     session.roomID,
+			Connected:  session.connected,
+		}
+		if !session.connected {
+			stat.ExpiresInMs = session.expires.Sub(now).Milliseconds()
+		}
+		resumeStats = append(resumeStats, stat)
 	}
 	cfg := s.cfg
 	s.mu.Unlock()
 
-	sort.Slice(resumeStats, func(i, j int) bool { return resumeStats[i].Token < resumeStats[j].Token })
+	sort.Slice(resumeStats, func(i, j int) bool {
+		if resumeStats[i].RoomID != resumeStats[j].RoomID {
+			return resumeStats[i].RoomID < resumeStats[j].RoomID
+		}
+		return resumeStats[i].ClientID < resumeStats[j].ClientID
+	})
 	roomStats := make([]roomRuntimeStats, 0, len(rooms))
 	for _, rm := range rooms {
 		roomStats = append(roomStats, rm.runtimeStats(now))
@@ -402,6 +426,24 @@ func (s *Server) handleAdminStats(w http.ResponseWriter, r *http.Request) {
 		ResumeSessions:  resumeStats,
 	}
 	writeJSON(w, resp)
+}
+
+func (s *Server) authorizeAdmin(r *http.Request) int {
+	if s.cfg.AdminToken != "" {
+		got, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if !ok || subtle.ConstantTimeCompare([]byte(got), []byte(s.cfg.AdminToken)) != 1 {
+			return http.StatusUnauthorized
+		}
+		return http.StatusOK
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return http.StatusForbidden
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return http.StatusForbidden
+	}
+	return http.StatusOK
 }
 
 func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
@@ -439,7 +481,7 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 	clientName := hs.ClientName
 	if hs.ResumeToken != nil && *hs.ResumeToken != "" {
 		session, ok := s.resumeSessions[*hs.ResumeToken]
-		if !ok || time.Now().After(session.expires) {
+		if !ok || session.expired(time.Now()) {
 			return nil, nil, &handshakeError{closeCode: websocket.ClosePolicyViolation, reason: "invalid resume token"}
 		}
 		delete(s.resumeSessions, *hs.ResumeToken)
@@ -463,7 +505,10 @@ func (s *Server) handshake(conn *websocket.Conn) (*clientConn, *room, error) {
 		rm.maxPendingBatchesPerClient = s.cfg.MaxPendingBatchesPerClient
 		s.rooms[roomID] = rm
 	}
-	resumeToken := s.issueResumeTokenLocked(clientID, clientName, roomID)
+	resumeToken, err := s.issueResumeTokenLocked(clientID, clientName, roomID)
+	if err != nil {
+		return nil, nil, err
+	}
 	return &clientConn{
 		id: clientID, name: clientName, roomID: roomID, conn: conn,
 		simVersion: s.cfg.SimVersion, buildHash: s.cfg.BuildHash,
@@ -600,16 +645,20 @@ func (s *Server) stepRooms() {
 	}
 }
 
-func (s *Server) issueResumeTokenLocked(clientID, name, roomID string) string {
-	s.nextResumeID++
-	token := fmt.Sprintf("resume-%d", s.nextResumeID)
-	s.resumeSessions[token] = resumeSession{
-		clientID: clientID,
-		name:     name,
-		roomID:   roomID,
-		expires:  time.Now().Add(s.cfg.ResumeWindow),
+func (s *Server) issueResumeTokenLocked(clientID, name, roomID string) (string, error) {
+	// Tokens grant a player's identity, so they must not be guessable.
+	var raw [16]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", fmt.Errorf("generate resume token: %w", err)
 	}
-	return token
+	token := "resume-" + hex.EncodeToString(raw[:])
+	s.resumeSessions[token] = resumeSession{
+		clientID:  clientID,
+		name:      name,
+		roomID:    roomID,
+		connected: true,
+	}
+	return token, nil
 }
 
 func (s *Server) rememberResumeSession(client *clientConn) {
@@ -622,6 +671,7 @@ func (s *Server) rememberResumeSession(client *clientConn) {
 	if !ok {
 		return
 	}
+	session.connected = false
 	session.expires = time.Now().Add(s.cfg.ResumeWindow)
 	s.resumeSessions[client.resumeToken] = session
 }
@@ -629,7 +679,7 @@ func (s *Server) rememberResumeSession(client *clientConn) {
 func (s *Server) pruneExpiredResumeSessionsLocked() {
 	now := time.Now()
 	for token, session := range s.resumeSessions {
-		if now.After(session.expires) {
+		if session.expired(now) {
 			delete(s.resumeSessions, token)
 		}
 	}
