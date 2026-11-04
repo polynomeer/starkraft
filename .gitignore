@@ -42,3 +42,8 @@ bin/
 .DS_Store
 ### Claude Code ###
 .claude/settings.local.json
+
+### Sampajeon design build output ###
+art/sampajeon/design2/project/
+art/sampajeon/build/
+__pycache__/
