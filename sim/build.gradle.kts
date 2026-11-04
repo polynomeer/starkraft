@@ -34,6 +34,11 @@ application {
     mainClass.set("starkraft.sim.AppKt")
 }
 
+// Classes target the toolchain's JDK, so every run task must use it rather than the JDK running Gradle.
+tasks.withType<JavaExec>().configureEach {
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+}
+
 tasks.register<JavaExec>("benchmark") {
     group = "application"
     description = "Run headless simulation benchmark"
