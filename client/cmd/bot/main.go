@@ -47,7 +47,7 @@ func main() {
 		case s := <-c.SnapshotCh:
 			lastTick = s.Tick
 			if s.MatchEnded {
-				fmt.Printf("bot %s match ended winner=%v\n", c.ClientID(), s.WinnerID)
+				fmt.Printf("bot %s match ended winner=%s\n", c.ClientID(), winnerLabel(s.WinnerID))
 				return
 			}
 			myUnits := make([]protocol.SnapshotUnit, 0)
@@ -122,4 +122,11 @@ func nearestEnemy(from protocol.SnapshotUnit, enemies []protocol.SnapshotUnit) p
 		}
 	}
 	return best
+}
+
+func winnerLabel(winnerID *string) string {
+	if winnerID == nil {
+		return "none"
+	}
+	return *winnerID
 }
