@@ -28,6 +28,10 @@
 
 ## 현재 구현 상태 (v1)
 
+- `SpriteAssetRef`에 `anchorX`, `anchorY`, `widthTiles`가 추가되었다. 기준점이 있으면 여백 자르기를 하지 않고, 텍스처에는 밉맵을 쓴다
+- `GdxWorldRenderer`가 스프라이트를 그린다 (`drawWorldSprites`). 아래 내용 중 이와 다른 설명은 이 변경 이전 기준이다
+- `visuals.json`은 `art/sampajeon/export_sprites.py`가 생성한다
+
 이 문서의 V2 필드(`anchorX`, `anchorY`, `shadowAsset`, `selectionStyle`, `variantGroup`, `animationSet`, `layer`, `effectSet`, `minimapStyle`)와 atlas, validation CLI는 모두 미구현이다. 현재 v1 동작은 다음과 같다.
 
 - 최상위 키: `units`, `unitArchetypes`, `buildings`, `buildingArchetypes`, `resources`, `terrain` (`base` / `blocked` / `occupied`). V2 제안의 `structures` 대신 현재 키는 `buildings`다

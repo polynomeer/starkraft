@@ -12,6 +12,7 @@ internal class GdxSpriteAssets(
 ) : Disposable {
     private val texturesByPath = LinkedHashMap<String, Texture>()
     private val missingPaths = HashSet<String>()
+    private val loadedByRef = HashMap<SpriteAssetRef, LoadedSpriteAsset?>()
 
     fun entity(entity: EntitySnapshot): LoadedSpriteAsset? =
         catalog.entity(
@@ -29,13 +30,23 @@ internal class GdxSpriteAssets(
     fun occupiedTile(): LoadedSpriteAsset? = catalog.occupiedTile()?.let(::resolve)
 
     private fun resolve(ref: SpriteAssetRef): LoadedSpriteAsset? {
+        if (ref in loadedByRef) return loadedByRef[ref]
+        return load(ref).also { loadedByRef[ref] = it }
+    }
+
+    private fun load(ref: SpriteAssetRef): LoadedSpriteAsset? {
         val texture = texture(ref.asset) ?: return null
-        val region = region(ref.asset, texture)
+        // An anchor is measured on the whole image, so anchored sprites keep their transparent margin.
+        val anchored = ref.anchorX != null && ref.anchorY != null
+        val region = if (anchored) TextureRegion(texture) else region(ref.asset, texture)
         return LoadedSpriteAsset(
             region = region,
             scale = ref.scale.coerceAtLeast(0.01f),
             tint = ref.tint?.let(::parseTint),
-            teamTintStrength = ref.teamTintStrength.coerceIn(0f, 1f)
+            teamTintStrength = ref.teamTintStrength.coerceIn(0f, 1f),
+            anchorX = ref.anchorX ?: 0.5f,
+            anchorY = ref.anchorY ?: 1f,
+            widthTiles = ref.widthTiles ?: ref.scale.coerceAtLeast(0.01f)
         )
     }
 
@@ -47,7 +58,11 @@ internal class GdxSpriteAssets(
             missingPaths += path
             return null
         }
-        return Texture(handle).also { texturesByPath[path] = it }
+        return Texture(handle, true).also {
+            // Sprites are drawn far below their source size, so they need mipmaps to stay clean.
+            it.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear)
+            texturesByPath[path] = it
+        }
     }
 
     private fun region(path: String, texture: Texture): TextureRegion {
@@ -102,6 +117,7 @@ internal class GdxSpriteAssets(
     override fun dispose() {
         texturesByPath.values.forEach(Texture::dispose)
         texturesByPath.clear()
+        loadedByRef.clear()
         missingPaths.clear()
     }
 }
@@ -110,7 +126,10 @@ internal data class LoadedSpriteAsset(
     val region: TextureRegion,
     val scale: Float,
     val tint: Color?,
-    val teamTintStrength: Float
+    val teamTintStrength: Float,
+    val anchorX: Float,
+    val anchorY: Float,
+    val widthTiles: Float
 )
 
 private data class SpriteBounds(

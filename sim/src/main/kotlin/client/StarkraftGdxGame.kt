@@ -23,11 +23,21 @@ internal class StarkraftGdxGame(
         )
     private var assets: GdxUiAssets? = null
     private var gameScreen: Screen? = null
+    private val screenCapture = DebugScreenCapture.fromEnvironment()
 
     override fun create() {
         val assets = GdxUiAssets()
         this.assets = assets
         setScreen(MainMenuScreen(this, assets, runtime))
+    }
+
+    override fun render() {
+        val capture = screenCapture
+        if (capture != null && capture.shouldOpenGame() && gameScreen == null) {
+            openGameScreen()
+        }
+        super.render()
+        capture?.captureIfDue()
     }
 
     fun openGameScreen() {

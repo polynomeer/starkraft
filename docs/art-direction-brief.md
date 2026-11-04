@@ -12,8 +12,9 @@
 
 ## 현재 구현 상태
 
-- 월드는 `GdxWorldRenderer`의 ShapeRenderer 기반 procedural 렌더만 사용한다. 유닛/건물은 역할별 silhouette(`drawUnitSilhouette`, `drawStructureSilhouette`), 자원은 mineral/gas별 색과 크기, 지형은 패턴 기반 tile tone으로 그린다
-- `data/visuals.json`과 `assets/sprites/`의 샘플 PNG는 manifest로 로드되지만 현재 월드 렌더에서 그려지지 않는다 ([asset-manifest-v2-spec.md](asset-manifest-v2-spec.md) 참고)
+- 시각 방향은 삼파전 시안으로 정해졌다. 적용 순서는 [sampajeon-application-plan.md](sampajeon-application-plan.md)를 본다
+- 월드 지형은 `GdxWorldRenderer`의 ShapeRenderer 도형으로 그린다. 유닛, 건물, 자원은 `data/visuals.json`에 등록된 타입이면 스프라이트 패스(y 정렬)로 그리고, 없으면 기존 silhouette(`drawUnitSilhouette`, `drawStructureSilhouette`)으로 그린다
+- 그림은 같은 타입이면 양쪽 진영이 같으므로, 진영은 발밑 색 타원과 건물 바닥 색으로 구분한다
 - faction 색: viewed faction은 friendly(파랑), 그 외는 enemy(적색), faction 0 이하는 neutral(sand). observer 시점에서는 faction 1이 friendly 색이다. 미니맵 마커도 같은 faction 색에 역할 색을 섞는다
 - 구현된 상태 표현: HP 바, lime 선택 bracket/ring과 confirm pulse, 피격 flash/recoil, muzzle flash, death burst와 remains, 건설/생산/연구 완료 flash, activity/queue marker, 명령 ground ping, armed 명령 cursor preview, build placement preview
 - 미구현/보류: 월드 fog 마스크(`drawFog`가 비어 있고, 대신 시야 밖 엔티티를 숨김), 자원 depletion 표시, 줌(현재 zoom lock)

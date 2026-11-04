@@ -1,48 +1,70 @@
 {
   "units": {
     "Worker": {
-      "asset": "assets/sprites/units/worker.png",
-      "scale": 0.58,
-      "teamTintStrength": 0.06
+      "asset": "assets/sprites/sampajeon/artisan.png",
+      "anchorX": 0.5,
+      "anchorY": 0.9193,
+      "widthTiles": 1.7
     },
     "Marine": {
-      "asset": "assets/sprites/units/marine.png",
-      "scale": 0.56,
-      "teamTintStrength": 0.05
+      "asset": "assets/sprites/sampajeon/gunner.png",
+      "anchorX": 0.5,
+      "anchorY": 0.9082,
+      "widthTiles": 2.1
     },
     "Zergling": {
-      "asset": "assets/sprites/units/zergling.png",
-      "scale": 0.54,
-      "teamTintStrength": 0.04
+      "asset": "assets/sprites/sampajeon/brute.png",
+      "anchorX": 0.475,
+      "anchorY": 0.9307,
+      "widthTiles": 2.5
     }
   },
   "unitArchetypes": {},
   "buildings": {
     "Depot": {
-      "asset": "assets/sprites/buildings/depot.png",
-      "scale": 0.92,
-      "teamTintStrength": 0.05
+      "asset": "assets/sprites/sampajeon/hall.png",
+      "anchorX": 0.5,
+      "anchorY": 0.56,
+      "widthTiles": 3.4
     },
     "ResourceDepot": {
-      "asset": "assets/sprites/buildings/depot.png",
-      "scale": 0.92,
-      "teamTintStrength": 0.05
+      "asset": "assets/sprites/sampajeon/granary.png",
+      "anchorX": 0.5158,
+      "anchorY": 0.4667,
+      "widthTiles": 3.2
     },
     "GasDepot": {
-      "asset": "assets/sprites/buildings/depot.png",
-      "scale": 0.92,
-      "teamTintStrength": 0.05
+      "asset": "assets/sprites/sampajeon/still.png",
+      "anchorX": 0.4474,
+      "anchorY": 0.5867,
+      "widthTiles": 3.2
     }
   },
   "buildingArchetypes": {},
   "resources": {
     "minerals": {
-      "asset": "assets/sprites/resources/minerals.png",
-      "scale": 0.74
+      "asset": "assets/sprites/sampajeon/ore.png",
+      "anchorX": 0.5,
+      "anchorY": 0.72,
+      "widthTiles": 2.0
     },
     "gas": {
-      "asset": "assets/sprites/resources/gas.png",
-      "scale": 0.78
+      "asset": "assets/sprites/sampajeon/gas.png",
+      "anchorX": 0.5,
+      "anchorY": 0.8,
+      "widthTiles": 2.2
+    },
+    "MineralField": {
+      "asset": "assets/sprites/sampajeon/ore.png",
+      "anchorX": 0.5,
+      "anchorY": 0.72,
+      "widthTiles": 2.0
+    },
+    "GasGeyser": {
+      "asset": "assets/sprites/sampajeon/gas.png",
+      "anchorX": 0.5,
+      "anchorY": 0.8,
+      "widthTiles": 2.2
     }
   },
   "terrain": {

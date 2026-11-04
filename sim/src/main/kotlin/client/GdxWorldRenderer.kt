@@ -6,12 +6,30 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.floor
+
+private const val SPRITE_SCREEN_MARGIN = 160f
+
+private class QueuedSprite(
+    val sortY: Float,
+    val id: Int,
+    val sprite: LoadedSpriteAsset,
+    val x: Float,
+    val y: Float,
+    val entity: EntitySnapshot?
+)
+
+// Lower on screen draws later, so nearer things overlap farther ones. The id keeps ties stable between frames.
+private val queuedSpriteOrder = compareBy<QueuedSprite>({ it.sortY }, { it.id })
 
 internal class GdxWorldRenderer(
     private val assets: GdxUiAssets
 ) {
     private val screenCamera = OrthographicCamera()
+    private val spriteQueue = ArrayList<QueuedSprite>()
+    private val spriteDamageTint = Color(1f, 0.62f, 0.56f, 1f)
+    private val spriteConstructionTint = Color(0.72f, 0.72f, 0.72f, 0.62f)
     private val textCamera = OrthographicCamera()
     private val colors = assets.theme.colors
     private val friendlyColor = colors.friendlyFaction.cpy()
@@ -223,13 +241,29 @@ internal class GdxWorldRenderer(
 
         Gdx.gl.glClearColor(colors.appBackground.r, colors.appBackground.g, colors.appBackground.b, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+        enableBlending()
 
         beginWorldScissor(width, height, worldViewportHeight)
         shape.begin(ShapeRenderer.ShapeType.Filled)
         drawTerrain(shape, runtime, visibleRange)
         drawResources(shape, runtime)
         drawFog(shape, runtime)
+        shape.end()
+
+        shape.begin(ShapeRenderer.ShapeType.Line)
+        drawGrid(shape, runtime, visibleRange, worldViewportHeight)
+        drawTerrainEdges(shape, runtime, visibleRange)
+        shape.end()
+
+        shape.begin(ShapeRenderer.ShapeType.Filled)
         drawEntities(shape, runtime)
+        shape.end()
+
+        drawWorldSprites(runtime)
+        enableBlending() // SpriteBatch.end() turns blending off
+
+        shape.begin(ShapeRenderer.ShapeType.Filled)
+        drawHealthBars(shape, runtime)
         drawActivityMarkers(shape, runtime)
         drawOrderMarkers(shape, runtime)
         drawGroundPing(shape, runtime)
@@ -242,8 +276,6 @@ internal class GdxWorldRenderer(
         shape.end()
 
         shape.begin(ShapeRenderer.ShapeType.Line)
-        drawGrid(shape, runtime, visibleRange, worldViewportHeight)
-        drawTerrainEdges(shape, runtime, visibleRange)
         drawWorldFrame(shape, runtime)
         drawSelectionBrackets(shape, runtime)
         drawSelectionOverlays(shape, runtime)
@@ -380,6 +412,7 @@ internal class GdxWorldRenderer(
         val snapshot = runtime.snapshot ?: return
         val pulse = ambientPulse(1400L)
         for (node in snapshot.resourceNodes) {
+            if (assets.spriteAssets.resource(node.kind) != null) continue
             val sx = runtime.camera.worldToScreenX(node.x)
             val sy = runtime.camera.worldToScreenY(node.y)
             if (node.kind == "gas") {
@@ -432,17 +465,20 @@ internal class GdxWorldRenderer(
             val footprintWidth = entity.footprintWidth
             val footprintHeight = entity.footprintHeight
             val selected = entity.id in runtime.session.state.selectedIds
+            val hasSprite = assets.spriteAssets.entity(entity) != null
             if (footprintWidth != null && footprintHeight != null) {
-                val tileX = floor(entity.x).toInt()
-                val tileY = floor(entity.y).toInt()
+                val tileX = structureOriginTile(entity.x, footprintWidth)
+                val tileY = structureOriginTile(entity.y, footprintHeight)
                 val w = footprintWidth * runtime.camera.tileSize
                 val h = footprintHeight * runtime.camera.tileSize
                 val left = runtime.camera.worldToScreenX(tileX.toFloat())
                 val top = runtime.camera.worldToScreenY(tileY.toFloat())
-                shape.color = Color(0f, 0f, 0f, 0.18f)
-                shape.rect(left + 7f, top + 8f, w, h)
-                shape.color = Color(0f, 0f, 0f, 0.12f)
-                shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
+                if (!hasSprite) {
+                    shape.color = Color(0f, 0f, 0f, 0.18f)
+                    shape.rect(left + 7f, top + 8f, w, h)
+                    shape.color = Color(0f, 0f, 0f, 0.12f)
+                    shape.rect(left + 3f, top + h - 4f, w + 4f, 8f)
+                }
                 if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
                     shape.color = Color(flashColor.r, flashColor.g, flashColor.b, damageFlashAlpha(selected, runtime.damageImpactKind(entity.id)))
@@ -479,21 +515,27 @@ internal class GdxWorldRenderer(
                         }
                     }
                 }
-                shape.color = Color(0f, 0f, 0f, 0.22f)
-                shape.rect(left + 3f, top + 3f, w, h)
-                drawStructureSilhouette(
-                    shape = shape,
-                    entity = entity,
-                    tileX = tileX,
-                    tileY = tileY,
-                    width = w,
-                    height = h,
-                    runtime = runtime,
-                    factionColor = factionColor(entity.faction, viewedFaction)
-                )
+                if (hasSprite) {
+                    drawFactionFootprint(shape, left, top, w, h, factionColor(entity.faction, viewedFaction))
+                } else {
+                    shape.color = Color(0f, 0f, 0f, 0.22f)
+                    shape.rect(left + 3f, top + 3f, w, h)
+                    drawStructureSilhouette(
+                        shape = shape,
+                        entity = entity,
+                        tileX = tileX,
+                        tileY = tileY,
+                        width = w,
+                        height = h,
+                        runtime = runtime,
+                        factionColor = factionColor(entity.faction, viewedFaction)
+                    )
+                }
             } else {
-                shape.color = Color(0f, 0f, 0f, 0.20f)
-                shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
+                if (!hasSprite) {
+                    shape.color = Color(0f, 0f, 0f, 0.20f)
+                    shape.circle(screenX + 2.5f, screenY + 3.5f, if (selected) 8.5f else 7f)
+                }
                 if (runtime.isDamageFlashActive(entity.id)) {
                     val flashColor = impactFlashForEntity(runtime, entity.id)
                     val sparkColor = impactSparkForEntity(runtime, entity.id)
@@ -534,11 +576,103 @@ internal class GdxWorldRenderer(
                         }
                     }
                 }
-                drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
+                if (hasSprite) {
+                    drawFactionRing(shape, screenX, screenY, factionColor(entity.faction, viewedFaction))
+                } else {
+                    drawUnitSilhouette(shape, entity, screenX, screenY, factionColor(entity.faction, viewedFaction), selected)
+                }
             }
-            drawHealthBar(shape, runtime, entity, screenX, screenY, selected)
         }
     }
+
+    private fun enableBlending() {
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+    }
+
+    private fun entityScreenPoint(runtime: GdxClientRuntime, snapshot: ClientSnapshot, entity: EntitySnapshot): Pair<Float, Float> {
+        val recoil = damageRecoilOffset(runtime, snapshot, entity)
+        val criticalShake = criticalShakeOffset(entity)
+        return Pair(
+            runtime.camera.worldToScreenX(entity.x) + recoil.first + criticalShake.first,
+            runtime.camera.worldToScreenY(entity.y) + recoil.second + criticalShake.second
+        )
+    }
+
+    private fun drawHealthBars(shape: ShapeRenderer, runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        for (entity in snapshot.entities) {
+            if (!isEntityVisible(entity, runtime)) continue
+            val (screenX, screenY) = entityScreenPoint(runtime, snapshot, entity)
+            if (!isOnScreen(screenX, screenY)) continue
+            drawHealthBar(shape, runtime, entity, screenX, screenY, entity.id in runtime.session.state.selectedIds)
+        }
+    }
+
+    /** Sprites show the same art for both sides, so the ground under them carries the side's colour. */
+    private fun drawFactionRing(shape: ShapeRenderer, screenX: Float, screenY: Float, factionColor: Color) {
+        shape.color = scratchColorA.set(factionColor).also { it.a = 0.34f }
+        shape.ellipse(screenX - 11f, screenY - 5f, 22f, 10f)
+    }
+
+    private fun drawFactionFootprint(shape: ShapeRenderer, left: Float, top: Float, width: Float, height: Float, factionColor: Color) {
+        shape.color = scratchColorA.set(factionColor).also { it.a = 0.22f }
+        shape.rect(left, top, width, height)
+    }
+
+    private fun drawWorldSprites(runtime: GdxClientRuntime) {
+        val snapshot = runtime.snapshot ?: return
+        val tileSize = runtime.camera.tileSize
+        spriteQueue.clear()
+        for (node in snapshot.resourceNodes) {
+            val sprite = assets.spriteAssets.resource(node.kind) ?: continue
+            val sx = runtime.camera.worldToScreenX(node.x)
+            val sy = runtime.camera.worldToScreenY(node.y)
+            if (isSpriteOnScreen(sx, sy)) spriteQueue += QueuedSprite(sy, node.id, sprite, sx, sy, null)
+        }
+        for (entity in snapshot.entities) {
+            if (!isEntityVisible(entity, runtime)) continue
+            val sprite = assets.spriteAssets.entity(entity) ?: continue
+            val (pointX, pointY) =
+                if (entity.footprintWidth != null) {
+                    Pair(runtime.camera.worldToScreenX(entity.x), runtime.camera.worldToScreenY(entity.y))
+                } else {
+                    entityScreenPoint(runtime, snapshot, entity)
+                }
+            if (isSpriteOnScreen(pointX, pointY)) spriteQueue += QueuedSprite(pointY, entity.id, sprite, pointX, pointY, entity)
+        }
+        spriteQueue.sortWith(queuedSpriteOrder)
+
+        val batch = assets.batch
+        batch.projectionMatrix = screenCamera.combined
+        batch.begin()
+        for (queued in spriteQueue) {
+            val entity = queued.entity
+            val moving = entity != null && entity.footprintWidth == null && entity.pathRemainingNodes > 0
+            val stride = if (moving) moveStride(entity!!.id, 1.4f) else 0f
+            val rect = spriteScreenRect(queued.x, queued.y + stride, tileSize, queued.sprite)
+            batch.color =
+                when {
+                    entity == null -> Color.WHITE
+                    runtime.isDamageFlashActive(entity.id) -> spriteDamageTint
+                    entity.underConstruction -> spriteConstructionTint
+                    else -> Color.WHITE
+                }
+            // The world camera is y-down, so the image is drawn with a negative height to stay upright.
+            val faceLeft = moving && cos(entity!!.dir) < 0f
+            val drawLeft = if (faceLeft) rect.left + rect.width else rect.left
+            val drawWidth = if (faceLeft) -rect.width else rect.width
+            batch.draw(queued.sprite.region, drawLeft, rect.top + rect.height, drawWidth, -rect.height)
+        }
+        batch.color = Color.WHITE
+        batch.end()
+    }
+
+    private fun isSpriteOnScreen(screenX: Float, screenY: Float): Boolean =
+        screenX >= -SPRITE_SCREEN_MARGIN &&
+            screenX <= Gdx.graphics.width + SPRITE_SCREEN_MARGIN &&
+            screenY >= -SPRITE_SCREEN_MARGIN &&
+            screenY <= Gdx.graphics.height + SPRITE_SCREEN_MARGIN
 
     private fun drawHealthBar(shape: ShapeRenderer, runtime: GdxClientRuntime, entity: EntitySnapshot, x: Float, y: Float, selected: Boolean) {
         val hp = entity.hp
@@ -585,8 +719,8 @@ internal class GdxWorldRenderer(
             if (!isOnScreen(startX, startY)) continue
             val pulse = selectionPulse()
             if (entity.footprintWidth != null && entity.footprintHeight != null) {
-                val tileX = floor(entity.x).toInt()
-                val tileY = floor(entity.y).toInt()
+                val tileX = structureOriginTile(entity.x, entity.footprintWidth ?: 0)
+                val tileY = structureOriginTile(entity.y, entity.footprintHeight ?: 0)
                 val left = runtime.camera.worldToScreenX(tileX.toFloat()) - 2f
                 val top = runtime.camera.worldToScreenY(tileY.toFloat()) - 2f
                 val width = (entity.footprintWidth * runtime.camera.tileSize) + 4f
@@ -628,8 +762,8 @@ internal class GdxWorldRenderer(
             val footprintHeight = entity.footprintHeight
             val confirmPulse = runtime.selectionConfirmPulse(entity.id)
             if (footprintWidth != null && footprintHeight != null) {
-                val tileX = floor(entity.x).toInt()
-                val tileY = floor(entity.y).toInt()
+                val tileX = structureOriginTile(entity.x, entity.footprintWidth ?: 0)
+                val tileY = structureOriginTile(entity.y, entity.footprintHeight ?: 0)
                 val left = runtime.camera.worldToScreenX(tileX.toFloat()) - 6f
                 val top = runtime.camera.worldToScreenY(tileY.toFloat()) - 6f
                 val width = footprintWidth * runtime.camera.tileSize + 12f
@@ -1203,8 +1337,8 @@ internal class GdxWorldRenderer(
                 }
                 shape.color = impactSparkForEntity(runtime, entity.id)
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
-                    val tileX = floor(entity.x).toInt()
-                    val tileY = floor(entity.y).toInt()
+                    val tileX = structureOriginTile(entity.x, entity.footprintWidth ?: 0)
+                    val tileY = structureOriginTile(entity.y, entity.footprintHeight ?: 0)
                     val left = runtime.camera.worldToScreenX(tileX.toFloat())
                     val top = runtime.camera.worldToScreenY(tileY.toFloat())
                     val width = entity.footprintWidth * runtime.camera.tileSize
@@ -1222,8 +1356,8 @@ internal class GdxWorldRenderer(
             if (runtime.isCompletionFlashActive(entity.id)) {
                 shape.color = completionSparkColor(runtime, entity.id)
                 if (entity.footprintWidth != null && entity.footprintHeight != null) {
-                    val tileX = floor(entity.x).toInt()
-                    val tileY = floor(entity.y).toInt()
+                    val tileX = structureOriginTile(entity.x, entity.footprintWidth ?: 0)
+                    val tileY = structureOriginTile(entity.y, entity.footprintHeight ?: 0)
                     val left = runtime.camera.worldToScreenX(tileX.toFloat())
                     val top = runtime.camera.worldToScreenY(tileY.toFloat())
                     val width = entity.footprintWidth * runtime.camera.tileSize
@@ -2675,8 +2809,8 @@ internal class GdxWorldRenderer(
         val viewedFaction = runtime.session.state.viewedFaction ?: return true
         val visibleTiles = runtime.session.state.visionState?.visibleTiles(viewedFaction) ?: return true
         if (entity.footprintWidth != null && entity.footprintHeight != null) {
-            val tileX = floor(entity.x).toInt()
-            val tileY = floor(entity.y).toInt()
+            val tileX = structureOriginTile(entity.x, entity.footprintWidth ?: 0)
+            val tileY = structureOriginTile(entity.y, entity.footprintHeight ?: 0)
             for (x in tileX until (tileX + entity.footprintWidth)) {
                 for (y in tileY until (tileY + entity.footprintHeight)) {
                     if ((x to y) in visibleTiles) return true
