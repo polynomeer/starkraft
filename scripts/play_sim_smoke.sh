@@ -22,7 +22,7 @@ echo "[play-sim-smoke] tmp=$TMP_DIR"
 ./gradlew :sim:run --args="--ticks 40 --noSleep --snapshotEvery 1 --snapshotOut $SNAPSHOT_FILE --inputTail $INPUT_FILE" >"$RUN_LOG"
 ./gradlew :sim:graphicalClient --args="--headless --headlessTicks 5 $SNAPSHOT_FILE $INPUT_FILE" >"$CLIENT_LOG"
 
-if ! rg -q '"recordType":"snapshot"' "$SNAPSHOT_FILE"; then
+if ! grep -q '"recordType":"snapshot"' "$SNAPSHOT_FILE"; then
   if ! grep -q '"recordType":"snapshot"' "$SNAPSHOT_FILE"; then
     echo "[play-sim-smoke] missing snapshot records"
     cat "$RUN_LOG"

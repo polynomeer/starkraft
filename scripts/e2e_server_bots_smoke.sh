@@ -133,23 +133,23 @@ if [[ ! -s "$REPLAY_FILE" ]]; then
   exit 1
 fi
 
-if ! rg -q '"recordType":"header"' "$REPLAY_FILE"; then
+if ! grep -q '"recordType":"header"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing header"
   print_logs
   exit 1
 fi
-if ! rg -q '"recordType":"command"' "$REPLAY_FILE"; then
+if ! grep -q '"recordType":"command"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing command"
   print_logs
   exit 1
 fi
-if ! rg -q '"recordType":"matchEnd"' "$REPLAY_FILE"; then
+if ! grep -q '"recordType":"matchEnd"' "$REPLAY_FILE"; then
   echo "[e2e] replay missing matchEnd"
   print_logs
   exit 1
 fi
 
-if ! rg -q 'match ended winner=' "$BOT1_LOG" && ! rg -q 'match ended winner=' "$BOT2_LOG"; then
+if ! grep -q 'match ended winner=' "$BOT1_LOG" && ! grep -q 'match ended winner=' "$BOT2_LOG"; then
   echo "[e2e] bots did not observe match end"
   print_logs
   exit 1
