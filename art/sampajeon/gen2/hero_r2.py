@@ -1,4 +1,4 @@
-"""Generate HeroR2.dc.html — hero codex for R2 요물 무리 (삼파전 SAMPAJEON), per SPEC_HERO.md and SPEC_YOMUL.md.
+"""Generate HeroR2.dc.html — hero codex for R2 요물 무리 (삼재 SAMJAE), per SPEC_HERO.md and SPEC_YOMUL.md.
 
 Heroes: 비형랑 (summoner), 두두리 (smith-god brute), 구미호 (fox trickster) — from 『삼국유사』 and folk belief.
 Figures are built with figure_kit through race_r2's R2Kit and painted helpers (imported, not edited).
@@ -849,7 +849,7 @@ body = f"""<div style="position: relative; width: 1440px; height: 960px; box-siz
   <header style="{FRAME}; flex-direction: row; align-items: center; gap: 18px; padding: 10px 18px">{R.corners()}
     {R.crest()}
     <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0">
-      <span style="{MONO}; font-size: 12px; letter-spacing: 0.12em; color: #CFB98A">SAMPAJEON · HERO CODEX R2 · 옛 기록 · 민담 · 민간 신앙 · 3 HEROES</span>
+      <span style="{MONO}; font-size: 12px; letter-spacing: 0.12em; color: #CFB98A">SAMJAE · HERO CODEX R2 · 옛 기록 · 민담 · 민간 신앙 · 3 HEROES</span>
       <h1 style="margin: 0; display: flex; align-items: baseline; gap: 14px; line-height: 1.05"><span style="{MYEONG}; font-weight: 800; font-size: 44px; {GOLD_TEXT}">영웅 · 요물 무리</span><span style="{MONO}; font-size: 19px; font-weight: 600; color: {BLUE}; letter-spacing: 0.14em; text-shadow: 0 0 8px rgba(79,179,232,0.5)">YOMUL HEROES</span></h1>
       <span style="font-size: 13px; color: #E2D6BC">옛 기록과 민담에서 걸어 나온 세 영웅. 한 판에 하나만 부를 수 있고, 쓰러지면 도깨비 소굴에서 다시 깨어납니다.</span>
     </div>

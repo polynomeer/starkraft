@@ -1,4 +1,4 @@
-# 삼파전 SAMPAJEON — shared design spec (all artboards follow this)
+# 삼재 SAMJAE — shared design spec (all artboards follow this)
 
 Concept: Joseon-punk folk-tale RTS. An alternate Joseon that chose engineering over opening its ports. A survey crew mapping the whole country (in the spirit of 대동여지도) finds veins of 귀화석 (鬼火石, goblin-fire stone). Three powers fight over it in Korean mountains, rivers, rice paddies, stone walls, pine groves and tiled-roof villages. It is a 1v1 RTS on a deterministic 20 ms tick server, so the screens keep the same functional content as the old design in ../design/project (menu, server connect + resume, rooms, HUD, results + replay verification).
 
@@ -44,7 +44,7 @@ Original work only: nothing that resembles StarCraft (no Terran/Zerg/Protoss loo
   - thin 단청 bands (red / green / yellow stripes) as panel headers
   - corner brackets like wooden joinery
   - Keep it legible and game-like, not a museum page.
-- Wordmark: "삼파전" in Nanum Myeongjo 800, with "SAMPAJEON" in small mono tracking and a square red seal holding "三" or "參".
+- Wordmark: "삼재" in Nanum Myeongjo 800, with "SAMJAE" in small mono tracking and a square red seal holding "三" or "參".
 
 ## Races (faction colour + shape language)
 Lighting rule for all art: one light from the top-left, blurred cast shadows, gradient faces, rim light, ambient occlusion, emissive glows. Buildings in 3/4 top-down view. Units at 128px masters, game-concept quality with dense detail.

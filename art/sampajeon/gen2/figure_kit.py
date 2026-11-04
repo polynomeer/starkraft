@@ -1,4 +1,4 @@
-"""figure_kit — pre-rendered-sprite style character parts for 삼파전 (shared by all artboards).
+"""figure_kit — pre-rendered-sprite style character parts for 삼재 (shared by all artboards).
 
 Goal: the look of late-90s/2000s Korean 2.5D games' pre-rendered 3D sprites — every limb is a
 shaded cylinder (light edge -> specular -> midtone -> core shadow -> reflected bounce light),

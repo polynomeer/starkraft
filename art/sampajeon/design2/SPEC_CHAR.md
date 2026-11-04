@@ -1,4 +1,4 @@
-# 삼파전 — character shading & anatomy pass (addendum to SPEC.md + SPEC_HQ.md)
+# 삼재 — character shading & anatomy pass (addendum to SPEC.md + SPEC_HQ.md)
 
 The user's feedback on version 4 was that the shading (명암) and the arm and leg detail (팔다리 디테일) are far too weak. They want the art to reference 천년의 신화, 거상 and 임진록2 directly. Emulate their RENDERING TECHNIQUE only, which is the pre-rendered 3D sprite look of late-90s Korean 2.5D games. Never copy their characters, costumes-as-designed, UI, logos or text. Our units stay as defined in SPEC.md.
 

@@ -1,4 +1,4 @@
-# 삼파전 — natural limbs + individual faces pass (addendum to SPEC_CHAR.md / SPEC_HERO.md)
+# 삼재 — natural limbs + individual faces pass (addendum to SPEC_CHAR.md / SPEC_HERO.md)
 
 User feedback on the previous pass: "얼굴이 다 똑같고 팔다리도 관절이 너무 끊어지는데 더 자연스럽게" — every face looks the same, and arms and legs look broken apart at the joints.
 

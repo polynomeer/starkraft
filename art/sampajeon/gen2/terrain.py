@@ -1,4 +1,4 @@
-# 삼파전 SAMPAJEON — T 지형·배경 sheet generator (high-fidelity 2.5D isometric pass).
+# 삼재 SAMJAE — T 지형·배경 sheet generator (high-fidelity 2.5D isometric pass).
 # Usage: python3 terrain.py <out.html>
 # Previous top-down version: terrain_v1_topdown.py
 import math, random, sys
@@ -1272,7 +1272,7 @@ page = HEAD + '''<div style="width: 1440px; height: 960px; box-sizing: border-bo
 
   <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 60px">
     <div style="display: flex; flex-direction: column; gap: 8px">
-      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #A89E8A">SAMPAJEON · ASSET SHEET T · 2.5D ISOMETRIC 2:1 · 64×32 TILE · KEY LIGHT TOP-LEFT</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #A89E8A">SAMJAE · ASSET SHEET T · 2.5D ISOMETRIC 2:1 · 64×32 TILE · KEY LIGHT TOP-LEFT</span>
       <div style="display: flex; align-items: center; gap: 14px">
         <span style="width: 34px; height: 34px; background: #C8432B; color: #EFE6D2; display: flex; align-items: center; justify-content: center; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 20px; border-radius: 3px; box-shadow: inset 0 0 0 2px #E06A50">參</span>
         <h1 style="margin: 0; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 40px; line-height: 1">지형 · 배경</h1>

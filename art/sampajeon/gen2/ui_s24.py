@@ -1,4 +1,4 @@
-"""Shared helpers for the SAMPAJEON lobby (s2-) and results (s4-) screens.
+"""Shared helpers for the SAMJAE lobby (s2-) and results (s4-) screens.
 
 High-fidelity pass: carved lacquered-wood frames with brass corner fittings,
 aged hanji panels, gold display type, beveled lacquer buttons, painted race
@@ -333,8 +333,8 @@ def wordmark(p, compact=False):
     s = 40 if compact else 52
     return (f'<div style="display: flex; align-items: center; gap: 12px">{seal(p + "-wm", "參", s, rotate=-3)}'
             f'<div style="display: flex; flex-direction: column; gap: 5px">'
-            f'{gold_text("삼파전", 27 if compact else 34)}'
-            f'<span style="font-family: {MONO}; font-size: 10px; letter-spacing: 0.32em; color: #C9B48A">SAMPAJEON</span></div></div>')
+            f'{gold_text("삼재", 27 if compact else 34)}'
+            f'<span style="font-family: {MONO}; font-size: 10px; letter-spacing: 0.32em; color: #C9B48A">SAMJAE</span></div></div>')
 
 
 def title_bar(p, left, right, h=64):

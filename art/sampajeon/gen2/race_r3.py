@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate RaceR3.dc.html — 삼파전 race codex, slot 3: 天 오방 신당 (Obang Shrine).
+"""Generate RaceR3.dc.html — 삼재 race codex, slot 3: 天 오방 신당 (Obang Shrine).
 
 High-fidelity pass: 2.5D isometric (2:1), painterly layered shading, material
 textures, sprite outlines and ornate lacquer/brass/hanji chrome.
@@ -1033,7 +1033,7 @@ def page():
   <header style="display: flex; align-items: center; gap: 18px">
     {svg('0 0 100 100', emblem(), 84, 84, '오방 신당 문장')}
     <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0">
-      <span style="{MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX 天 · 삼파전 SAMPAJEON · 6 UNITS · 7 STRUCTURES</span>
+      <span style="{MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX 天 · 삼재 SAMJAE · 6 UNITS · 7 STRUCTURES</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><h1 style="{title_style}">오방 신당</h1><span style="{MONO}; font-size: 19px; font-weight: 600; letter-spacing: 0.2em; color: {OCHRE}">OBANG SHRINE</span></div>
       <span style="font-size: 13px; color: #D8CDB4">귀화석이 깨어나 땅이 어지러워지자, 마을을 지키던 신령들이 금줄을 치고 일어섭니다. 성역 안에서 강하고, 쓰러져도 혼이 잠시 머뭅니다.</span>
     </div>

@@ -1,4 +1,4 @@
-"""Generate RaceR1.dc.html — race codex R1 · 조선 공방 Joseon Works (삼파전 SAMPAJEON), high-fidelity pass.
+"""Generate RaceR1.dc.html — race codex R1 · 조선 공방 Joseon Works (삼재 SAMJAE), high-fidelity pass.
 
 2.5D isometric painterly SVG art with ornate lacquered-wood UI chrome.
 Usage: python3 race_r1.py [out_path]
@@ -193,7 +193,7 @@ body = f"""<div style="width: 1440px; height: 960px; box-sizing: border-box; {PA
   <header style="position: relative; display: flex; align-items: center; gap: 18px; padding: 8px 14px 8px 8px; {LACQUER}">{CORNERS}
     {crest()}
     <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
-      <span style="{MONO}; font-size: 11.5px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX R1 · 삼파전 SAMPAJEON · 人 사람과 기계</span>
+      <span style="{MONO}; font-size: 11.5px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX R1 · 삼재 SAMJAE · 人 사람과 기계</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><span style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; align-self: center; background: {RED}; border: 1px solid {RED_L}; {SERIF}; font-size: 28px; font-weight: 800; color: #FFF4E0">人</span><h1 style="margin: 0; {SERIF}; font-weight: 800; font-size: 44px; line-height: 1; {GOLD_TXT}">조선 공방</h1><span style="{MONO}; font-weight: 600; font-size: 17px; letter-spacing: 0.18em; color: {RED_L}">JOSEON WORKS</span></div>
       <span style="font-size: 13.5px; color: #D8CDB4">관상감의 기술자와 팔도를 잇는 보부상이 손잡은 사람의 세력. 진지를 굳히고, 수레와 연으로 물자를 나르며, 화력으로 밀어붙입니다.</span>
     </div>

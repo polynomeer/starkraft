@@ -1,4 +1,6 @@
-# 삼파전 시안 원본
+# 삼재 시안 원본
+
+시안 초기 이름은 삼파전(SAMPAJEON)이라 `art/sampajeon/` 경로에 옛 이름이 남아 있다.
 
 [디자인 시안](https://claude.ai/artifact/53Te38p8czaacWt5EKnbBu)을 만드는 생성기와 규격이다. 적용 순서는 [작업계획서](../../docs/sampajeon-application-plan.md)를 본다.
 

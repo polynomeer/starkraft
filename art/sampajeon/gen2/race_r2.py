@@ -1,4 +1,4 @@
-"""Generate RaceR2.dc.html — race codex R2: 요물 무리 Yomul Horde (삼파전 SAMPAJEON).
+"""Generate RaceR2.dc.html — race codex R2: 요물 무리 Yomul Horde (삼재 SAMJAE).
 
 High-fidelity pass (SPEC_HQ.md): 2.5D isometric dioramas, painterly layered shading,
 ornate lacquered-wood + brass chrome with hanji label panels.
@@ -2076,7 +2076,7 @@ body = f"""<div style="position: relative; width: 1440px; height: 960px; box-siz
   <header style="{FRAME}; flex-direction: row; align-items: center; gap: 18px; padding: 10px 18px">{corners()}
     {crest()}
     <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0">
-      <span style="{MONO}; font-size: 12px; letter-spacing: 0.12em; color: #CFB98A">SAMPAJEON · RACE CODEX R2 · 민담 요물 · 6 UNITS · 7 STRUCTURES</span>
+      <span style="{MONO}; font-size: 12px; letter-spacing: 0.12em; color: #CFB98A">SAMJAE · RACE CODEX R2 · 민담 요물 · 6 UNITS · 7 STRUCTURES</span>
       <h1 style="margin: 0; display: flex; align-items: baseline; gap: 14px; line-height: 1.05"><span style="{MYEONG}; font-weight: 800; font-size: 44px; {GOLD_TEXT}">요물 무리</span><span style="{MONO}; font-size: 19px; font-weight: 600; color: {BLUE}; letter-spacing: 0.14em; text-shadow: 0 0 8px rgba(79,179,232,0.5)">YOMUL HORDE</span></h1>
       <span style="font-size: 13px; color: #E2D6BC">귀화석과 함께 깨어난 산과 물의 요물들. 도깨비들이 내기와 씨름판을 벌여 끌어모읍니다.</span>
     </div>

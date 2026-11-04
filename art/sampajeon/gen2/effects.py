@@ -1,4 +1,4 @@
-"""Generate Effects.dc.html for 삼파전 SAMPAJEON (sheet E) — high-fidelity pass.
+"""Generate Effects.dc.html for 삼재 SAMJAE (sheet E) — high-fidelity pass.
 
 Usage: python3 effects.py <out.html>
 
@@ -1176,12 +1176,12 @@ def page():
     header = (
         '<div style="display: flex; align-items: flex-end; justify-content: space-between">'
         '<div style="display: flex; flex-direction: column; gap: 4px">'
-        f'<span style="font-family: {MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">ASSET SHEET E · 삼파전 SAMPAJEON · 2.5D ISO · LIGHT ↖</span>'
+        f'<span style="font-family: {MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">ASSET SHEET E · 삼재 SAMJAE · 2.5D ISO · LIGHT ↖</span>'
         f'<h1 style="margin: 0; font-family: {SERIF}; font-weight: 800; font-size: 34px; line-height: 1; color: #F2E2B8; '
         f'text-shadow: 0 2px 0 #000, 0 0 14px rgba(226,177,60,0.25)">효과 · 아이콘 · 유닛 상태</h1></div>'
         '<div style="display: flex; align-items: center; gap: 14px">'
         f'<span style="font-size: 13px; color: {MUTED}">옻칠 나무 · 놋쇠 · 금박 · 오방색 · 낙관</span>'
-        f'<span style="display: flex; align-items: center; gap: 8px; font-family: {SERIF}; font-weight: 800; font-size: 22px; color: #F2E2B8">삼파전'
+        f'<span style="display: flex; align-items: center; gap: 8px; font-family: {SERIF}; font-weight: 800; font-size: 22px; color: #F2E2B8">삼재'
         f'<span style="width: 30px; height: 30px; background: {RED}; color: #FBE4D6; display: flex; align-items: center; justify-content: center; '
         f'font-size: 18px; border-radius: 3px; transform: rotate(-4deg); box-shadow: 0 2px 4px rgba(0,0,0,0.5)">參</span></span></div></div>')
     body = (f'{hidden}{header}'

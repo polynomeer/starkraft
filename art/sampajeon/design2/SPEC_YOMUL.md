@@ -1,4 +1,4 @@
-# 삼파전 — R2 faction expansion: 요물 무리 (addendum to SPEC*.md)
+# 삼재 — R2 faction expansion: 요물 무리 (addendum to SPEC*.md)
 
 The user decided (2026-11-04):
 - Faction name: **요물 무리** (replaces 도깨비 무리). English: **YOMUL HORDE**.

@@ -6,7 +6,7 @@ Commit/PR/testing rules live in @AGENTS.md (Conventional Commits, subject ≤ 72
 
 ## Project
 
-Starkraft is a 1v1 RTS sandbox built around a deterministic fixed-tick simulation (`Time.TICK_MS = 20`). Most project docs (`README.md`, `docs/*.md`) are in Korean; `docs/README.md` is the doc index.
+The product name is 삼재 (SAMJAE); `starkraft` remains the repo and code name. It is a 1v1 RTS sandbox built around a deterministic fixed-tick simulation (`Time.TICK_MS = 20`). Most project docs (`README.md`, `docs/*.md`) are in Korean; `docs/README.md` is the doc index.
 
 Modules:
 - `sim/` — Kotlin/JVM (JDK 21 toolchain): simulation core, headless runner, benchmarks, **and** the libGDX graphical client + console client.

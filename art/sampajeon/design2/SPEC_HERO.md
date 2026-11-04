@@ -1,4 +1,4 @@
-# 삼파전 — hero units (addendum to SPEC.md, SPEC_HQ.md, SPEC_CHAR.md)
+# 삼재 — hero units (addendum to SPEC.md, SPEC_HQ.md, SPEC_CHAR.md)
 
 The user asked for hero characters, an RTS staple: one-per-army named units with skills and an aura. They should come from Korean myth, folk tales or history. Each race gets 3 heroes.
 

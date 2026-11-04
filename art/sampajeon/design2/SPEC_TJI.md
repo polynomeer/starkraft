@@ -1,4 +1,4 @@
-# 삼파전 — 천·지·인 reorganisation (addendum to SPEC*.md)
+# 삼재 — 천·지·인 reorganisation (addendum to SPEC*.md)
 
 The user approved on 2026-11-04: the three factions become 천(天), 지(地), 인(人), so each differs in body, building method and how it dies. Use StarCraft only as a benchmark for how deep the differences go. Copy no looks, units or mechanics, and nothing psionic or warp-like.
 

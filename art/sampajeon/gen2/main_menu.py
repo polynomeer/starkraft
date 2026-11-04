@@ -1,4 +1,4 @@
-"""Generates design2/project/Main.dc.html — SAMPAJEON main menu, hi-fi 2.5D pass (id prefix s1-)."""
+"""Generates design2/project/Main.dc.html — SAMJAE main menu, hi-fi 2.5D pass (id prefix s1-)."""
 import os
 import random
 import sys
@@ -358,10 +358,10 @@ def build():
   <div style="position: absolute; left: 60px; top: 44px; display: flex; flex-direction: column; gap: 4px">
     <span style="font-family: {MONO}; font-size: 12px; letter-spacing: .16em; color: #F2CF7E; text-shadow: 0 1px 2px #000">조선펑크 민담 RTS · 1대1 결정론 전술</span>
     <div style="display: flex; align-items: center; gap: 14px">
-      {gold_title("s1-wm", "삼파전", 350, 128, 108)}
+      {gold_title("s1-wm", "삼재", 240, 128, 108)}
       {seal("s1-seal", 74)}
     </div>
-    <span style="font-family: {MONO}; font-size: 13px; letter-spacing: .62em; color: #D8C6A2; margin-top: -6px">SAMPAJEON</span>
+    <span style="font-family: {MONO}; font-size: 13px; letter-spacing: .62em; color: #D8C6A2; margin-top: -6px">SAMJAE</span>
   </div>
 
   <div style="position: absolute; left: 52px; top: 262px">
@@ -391,7 +391,7 @@ def build():
   </div>
   {kit_defs()}
 </div>"""
-    return page("삼파전 메인 메뉴", body, W, H)
+    return page("삼재 메인 메뉴", body, W, H)
 
 
 if __name__ == "__main__":

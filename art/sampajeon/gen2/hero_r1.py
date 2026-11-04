@@ -1,4 +1,4 @@
-"""Generate HeroR1.dc.html — 영웅 · 조선 공방 (삼파전 SAMPAJEON hero codex R1).
+"""Generate HeroR1.dc.html — 영웅 · 조선 공방 (삼재 SAMJAE hero codex R1).
 
 Heroes: 장영실 (engineer), 이순신 (commander), 김만덕 (support, art from the preserved 보부상 page).
 Figures are built on figure_kit via r1_figs' Kit (ids renamed r1k- -> h1k-, r1- -> h1- at the end so this
@@ -1025,9 +1025,9 @@ body = f"""<div style="width: 1440px; height: 960px; box-sizing: border-box; {PA
   <header style="position: relative; display: flex; align-items: center; gap: 16px; padding: 6px 16px 6px 8px; {LACQUER}">{CORNERS}
     {crest()}
     <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
-      <span style="{MONO}; font-size: 11.5px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX R1 · 삼파전 SAMPAJEON · 진영당 영웅 1명 출전</span>
+      <span style="{MONO}; font-size: 11.5px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX R1 · 삼재 SAMJAE · 진영당 영웅 1명 출전</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><h1 style="margin: 0; {SERIF}; font-weight: 800; font-size: 40px; line-height: 1; {GOLD_TXT}">영웅 · 조선 공방</h1><span style="{MONO}; font-weight: 600; font-size: 16px; letter-spacing: 0.18em; color: {RED_L}">HEROES · JOSEON WORKS</span></div>
-      <span style="font-size: 13px; color: #D8CDB4">역사 속 장인과 장수, 거상을 삼파전의 조선으로 불러온 영웅들 — 각자 하나의 오라와 두 개의 기술을 지닙니다.</span>
+      <span style="font-size: 13px; color: #D8CDB4">역사 속 장인과 장수, 거상을 삼재의 조선으로 불러온 영웅들 — 각자 하나의 오라와 두 개의 기술을 지닙니다.</span>
     </div>
     <div style="margin-left: auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; font-size: 12px; color: {MUTED}">
       <span>Q · W · E 기술 · 레벨 없이 고정 성능</span>

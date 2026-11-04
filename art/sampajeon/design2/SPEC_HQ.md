@@ -1,6 +1,6 @@
-# 삼파전 — high-fidelity pass (addendum to SPEC.md)
+# 삼재 — high-fidelity pass (addendum to SPEC.md)
 
-The user says the current art is too simple. They want the graphics and design quality of classic Korean 2.5D games such as *임진록2 조선의 반격* (RTS) and *거상* (online RPG). Use those games only as a QUALITY and GENRE benchmark: 2.5D isometric, painterly "pre-rendered" sprites, and ornate traditional UI. Do NOT copy any of their specific characters, buildings, UI layouts, logos, icons or text. Everything stays our own 삼파전 content from SPEC.md.
+The user says the current art is too simple. They want the graphics and design quality of classic Korean 2.5D games such as *임진록2 조선의 반격* (RTS) and *거상* (online RPG). Use those games only as a QUALITY and GENRE benchmark: 2.5D isometric, painterly "pre-rendered" sprites, and ornate traditional UI. Do NOT copy any of their specific characters, buildings, UI layouts, logos, icons or text. Everything stays our own 삼재 content from SPEC.md.
 
 ## What "higher quality" means here
 1. **Projection.** Switch the battlefield, terrain, units and buildings to **2.5D isometric (2:1 dimetric)**.

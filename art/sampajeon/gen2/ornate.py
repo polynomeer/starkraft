@@ -1,4 +1,4 @@
-"""Ornate traditional UI kit + 2.5D isometric scene helpers for SAMPAJEON screens (Main, Tokens).
+"""Ornate traditional UI kit + 2.5D isometric scene helpers for SAMJAE screens (Main, Tokens).
 
 Everything is our own design: carved lacquered-wood frames with brass fittings, hanji/parchment
 panels, beveled lacquer buttons, gold titles, cloud ornaments (구름문), and a 2:1 isometric

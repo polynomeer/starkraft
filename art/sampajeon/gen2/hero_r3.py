@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate HeroR3.dc.html — 삼파전 hero codex, slot 3: 天 오방 신당.
+"""Generate HeroR3.dc.html — 삼재 hero codex, slot 3: 天 오방 신당.
 
 Heroes: 바리공주 (support, 무조신), 강림도령 (duelist, 저승차사), 산군 (mountain tiger with the elder).
 Figures come from obang_figs; race_r3 supplies the chrome. Every id from race_r3 (r3- / r3k-)
@@ -410,7 +410,7 @@ body{{margin:0;background:{GROUND}}}
   <header style="display: flex; align-items: center; gap: 16px">
     {emblem}
     <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0">
-      <span style="{R.MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX 天 · 삼파전 SAMPAJEON · 무가 · 민간 신앙</span>
+      <span style="{R.MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX 天 · 삼재 SAMJAE · 무가 · 민간 신앙</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><h1 style="{title_style}">영웅 · 오방 신당</h1><span style="{R.MONO}; font-size: 18px; font-weight: 600; letter-spacing: 0.2em; color: {OCHRE}">HEROES</span></div>
     </div>
     <p style="margin: 0; max-width: 470px; font-size: 12.5px; line-height: 1.55; color: #D8CDB4">망자를 인도하는 이, 저승의 부름을 전하는 이, 산을 지키는 이. 영웅은 한 진영에 하나씩 소환되며 발밑의 금빛 고리로 구분됩니다. 살아 있는 신앙에서 온 인물이므로 존중을 담아 재해석했습니다.</p>

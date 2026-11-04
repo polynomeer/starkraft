@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate RaceR3.dc.html — 삼파전 race codex R3 (보부상 연단 / Kite Guild).
+"""Generate RaceR3.dc.html — 삼재 race codex R3 (보부상 연단 / Kite Guild).
 
 High-fidelity pass: 2.5D isometric (2:1), painterly layered shading, material
 textures, sprite outlines and ornate lacquer/brass/hanji chrome.
@@ -1970,7 +1970,7 @@ a{{color:{OCHRE}}}a:hover{{color:{OCHRE_L}}}
   <header style="display: flex; align-items: center; gap: 18px">
     {svg('0 0 100 100', emblem(), 88, 88, '보부상 연단 문장')}
     <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0">
-      <span style="{MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX R3 · 삼파전 SAMPAJEON · 2.5D ISOMETRIC</span>
+      <span style="{MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">RACE CODEX R3 · 삼재 SAMJAE · 2.5D ISOMETRIC</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><h1 style="{title_style}">보부상 연단</h1><span style="{MONO}; font-size: 19px; font-weight: 600; letter-spacing: 0.2em; color: {OCHRE}">KITE GUILD</span></div>
       <span style="font-size: 13px; color: #D8CDB4">바람과 연, 황포 돛으로 산을 넘는 행상 조합. 지게와 패랭이, 방울 소리 — 장이 서는 곳이 곧 진지.</span>
     </div>

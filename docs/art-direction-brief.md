@@ -12,7 +12,7 @@
 
 ## 현재 구현 상태
 
-- 시각 방향은 삼파전 시안으로 정해졌다. 적용 순서는 [sampajeon-application-plan.md](sampajeon-application-plan.md)를 본다
+- 시각 방향은 삼재 시안으로 정해졌다. 적용 순서는 [sampajeon-application-plan.md](sampajeon-application-plan.md)를 본다
 - 월드 지형은 `GdxWorldRenderer`의 ShapeRenderer 도형으로 그린다. 유닛, 건물, 자원은 `data/visuals.json`에 등록된 타입이면 스프라이트 패스(y 정렬)로 그리고, 없으면 기존 silhouette(`drawUnitSilhouette`, `drawStructureSilhouette`)으로 그린다
 - 그림은 같은 타입이면 양쪽 진영이 같으므로, 진영은 발밑 색 타원과 건물 바닥 색으로 구분한다
 - faction 색: viewed faction은 friendly(파랑), 그 외는 enemy(적색), faction 0 이하는 neutral(sand). observer 시점에서는 faction 1이 friendly 색이다. 미니맵 마커도 같은 faction 색에 역할 색을 섞는다

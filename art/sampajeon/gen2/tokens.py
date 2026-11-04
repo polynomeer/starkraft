@@ -1,4 +1,4 @@
-"""Generates design2/project/Tokens.dc.html — SAMPAJEON design tokens & components (id prefix s5-)."""
+"""Generates design2/project/Tokens.dc.html — SAMJAE design tokens & components (id prefix s5-)."""
 import os
 import sys
 
@@ -66,7 +66,7 @@ def colors():
 
 def type_scale():
     rows = [
-        (f"font-family: {DISPLAY}; font-weight: 800; font-size: 46px; line-height: 1", "삼파전", "Display · 명조 800 / 46"),
+        (f"font-family: {DISPLAY}; font-weight: 800; font-size: 46px; line-height: 1", "삼재", "Display · 명조 800 / 46"),
         (f"font-family: {DISPLAY}; font-weight: 800; font-size: 28px; line-height: 1.1", "한 판이 끝났습니다", "Title · 명조 800 / 28"),
         ("font-size: 20px; font-weight: 600", "화승총수 4기 선택", "Heading · Plex 600 / 20"),
         ("font-size: 15px", "귀화석 광맥이 바닥나고 있습니다.", "Body · Plex 400 / 15"),
@@ -341,10 +341,10 @@ def build():
     body = f"""<div style="width: 1440px; height: 900px; box-sizing: border-box; padding: 26px 48px; background: radial-gradient(120% 90% at 50% 0%, #241C14 0%, {GROUND} 60%); color: {INK}; font-family: {BODY}; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
   <header style="display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #5A4630; box-shadow: 0 1px 0 rgba(0,0,0,.6)">
     <div style="display: flex; align-items: center; gap: 12px">
-      {gold_title("s5-wm", "삼파전", 190, 64, 56)}
+      {gold_title("s5-wm", "삼재", 128, 64, 56)}
       {seal("s5-seal", 48)}
       <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 6px">
-        <span style="font-family: {MONO}; font-size: 11px; letter-spacing: .5em; color: #D8C6A2">SAMPAJEON</span>
+        <span style="font-family: {MONO}; font-size: 11px; letter-spacing: .5em; color: #D8C6A2">SAMJAE</span>
         <span style="font-size: 13px; color: {MUTED}">2.5D 조선펑크 · 옻칠 목재 · 놋쇠 · 한지 · 오방색</span>
       </div>
     </div>
@@ -359,7 +359,7 @@ def build():
     <div style="display: flex; flex-direction: column; gap: 14px">{frame_parts()}{ornaments()}{iso_spec()}</div>
   </div>
 </div>"""
-    return page("삼파전 디자인 토큰", body, 1440, 900)
+    return page("삼재 디자인 토큰", body, 1440, 900)
 
 
 if __name__ == "__main__":

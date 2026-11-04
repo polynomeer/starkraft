@@ -1,4 +1,4 @@
-"""Shared helpers for the SAMPAJEON screen artboards (Main, Tokens)."""
+"""Shared helpers for the SAMJAE screen artboards (Main, Tokens)."""
 
 FONT_LINK = ("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800"
              "&amp;family=IBM+Plex+Mono:wght@400;500;600"

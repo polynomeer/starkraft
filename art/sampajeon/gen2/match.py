@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate design2/project/Match.dc.html — 삼파전 in-game HUD, high-fidelity 2.5D pass (id prefix s3-).
+"""Generate design2/project/Match.dc.html — 삼재 in-game HUD, high-fidelity 2.5D pass (id prefix s3-).
 
 The battlefield is a 2:1 isometric painted scene. Everything repetitive (roof tiles,
 stones, grass, rice) is generated with a seeded RNG so the output is deterministic.
@@ -1485,7 +1485,7 @@ def top_bar():
   <div style="position:absolute;left:0;top:0;width:1440px;height:48px;display:flex;align-items:center;padding:0 14px;box-sizing:border-box;gap:14px">
     <div style="display:flex;align-items:center;gap:9px">
       {seal(30)}
-      <span style="font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:21px;letter-spacing:.04em;color:#F6E3B4;text-shadow:0 1px 0 #000, 0 0 6px rgba(0,0,0,.6)">삼파전</span>
+      <span style="font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:21px;letter-spacing:.04em;color:#F6E3B4;text-shadow:0 1px 0 #000, 0 0 6px rgba(0,0,0,.6)">삼재</span>
       <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#D9C49A;letter-spacing:.06em">1P · 조선 공방</span>
     </div>
     <div style="display:flex;gap:7px;margin-left:6px">

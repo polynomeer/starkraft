@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate HeroR3.dc.html — 삼파전 hero codex for R3 보부상 연단 (Kite Guild).
+"""Generate HeroR3.dc.html — 삼재 hero codex for R3 보부상 연단 (Kite Guild).
 
 Heroes: 김정호 (scout / map), 김만덕 (support / economy), 김유신 (kite general).
 Figures use figure_kit through race_r3's kit helpers; every id from race_r3 (r3- / r3k-)
@@ -1257,10 +1257,10 @@ body{{margin:0;background:{GROUND}}}
   <header style="display: flex; align-items: center; gap: 16px">
     {R.svg('0 0 100 100', R.emblem(), 72, 72, '보부상 연단 문장')}
     <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0">
-      <span style="{R.MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX R3 · 삼파전 SAMPAJEON · 역사 · 설화 인물</span>
+      <span style="{R.MONO}; font-size: 12px; letter-spacing: 0.14em; color: {MUTED}">HERO CODEX R3 · 삼재 SAMJAE · 역사 · 설화 인물</span>
       <div style="display: flex; align-items: baseline; gap: 14px"><h1 style="{title_style}">영웅 · 보부상 연단</h1><span style="{R.MONO}; font-size: 18px; font-weight: 600; letter-spacing: 0.2em; color: {OCHRE}">HEROES</span></div>
     </div>
-    <p style="margin: 0; max-width: 470px; font-size: 12.5px; line-height: 1.55; color: #D8CDB4">길 위의 사람들 — 지도를 그린 이, 쌀을 나눈 이, 불연을 띄운 이. 영웅은 한 진영에 하나씩 소환되며 발밑의 금빛 고리로 구분됩니다. 실존 인물은 존중을 담아 삼파전 세계관에 맞게 재해석했습니다.</p>
+    <p style="margin: 0; max-width: 470px; font-size: 12.5px; line-height: 1.55; color: #D8CDB4">길 위의 사람들 — 지도를 그린 이, 쌀을 나눈 이, 불연을 띄운 이. 영웅은 한 진영에 하나씩 소환되며 발밑의 금빛 고리로 구분됩니다. 실존 인물은 존중을 담아 삼재 세계관에 맞게 재해석했습니다.</p>
   </header>
   <div style="display: flex; height: 5px; box-shadow: 0 1px 0 #000"><span style="flex: 3; background: {R.RED}"></span><span style="flex: 2; background: {R.GREEN}"></span><span style="flex: 2; background: {OCHRE}"></span><span style="flex: 1; background: {R.BLUE}"></span><span style="flex: 6; background: linear-gradient(90deg, #4A2A16, transparent)"></span></div>
 
