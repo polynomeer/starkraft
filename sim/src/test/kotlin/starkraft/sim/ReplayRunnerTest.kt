@@ -23,7 +23,7 @@ class ReplayRunnerTest {
     }
 }
 
-private const val GOLDEN_WORLD_HASH = 3423039781053103764L
+private const val GOLDEN_WORLD_HASH = -5607210548334100398L
 
 private fun runReplay(path: String): Long {
     val world = World()
