@@ -63,7 +63,7 @@ internal class MainMenuScreen(
                                 background = assets.panelDrawable(colors.panelStrong.cpy().also { it.a = 0.92f })
                                 pad(4f, 10f, 4f, 10f)
                                 add(Table().apply { background = assets.panelDrawable(colors.commandSoft.cpy().also { it.a = 0.82f }) }).width(3f).expandY().fillY().padRight(6f)
-                                add(Label("STARKRAFT", assets.titleLabelStyle)).left()
+                                add(Label("SAMJAE", assets.titleLabelStyle)).left()
                             }
                         )
                     }

@@ -13,7 +13,7 @@ internal fun launchLibgdxClient(
     val game = StarkraftGdxGame(session, config, onRestartRequested)
     val applicationConfig =
         Lwjgl3ApplicationConfiguration().apply {
-            setTitle("Starkraft")
+            setTitle("삼재 SAMJAE")
             setWindowedMode(1440, 900)
             useVsync(true)
             setForegroundFPS(60)
