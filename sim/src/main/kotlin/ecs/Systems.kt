@@ -241,7 +241,7 @@ class MovementSystem(
 
     private fun movementSpeedFor(id: EntityId): Float {
         val typeId = world.tags[id]?.typeId ?: return defaultSpeed
-        return data?.unit(typeId)?.speed ?: defaultSpeed
+        return data?.unitOrNull(typeId)?.speed ?: defaultSpeed
     }
 
     private fun isDiagonalCornerBlocked(cx: Int, cy: Int, nx: Int, ny: Int): Boolean {

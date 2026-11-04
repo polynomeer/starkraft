@@ -65,6 +65,7 @@ class DataRepo(
             ?: emptyMap()
 
     fun unit(id: String) = units.getValue(id)
+    fun unitOrNull(id: String) = units[id]
     fun weapon(id: String) = weapons.getValue(id)
     fun unitArchetype(id: String): String? = units[id]?.archetype
     fun buildingArchetype(id: String): String? = buildings[id]?.archetype

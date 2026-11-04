@@ -25,10 +25,37 @@ import starkraft.sim.ecs.path.PathfindingSystem
 class CombatBehaviorTest {
     private fun combatData(): DataRepo =
         DataRepo(
-            """{"list":[]}""",
+            // Speed is fixed here so these timings do not move when the game's units are retuned.
+            """{"list":[{"id":"Marine","hp":45,"speed":0.06}]}""",
             """{"list":[{"id":"Gauss","damage":8,"range":4.0,"cooldownTicks":1}]}""",
             """{"list":[]}"""
         )
+
+    @Test
+    fun `unit type missing from data moves at the default speed`() {
+        val data = combatData()
+        val world = World()
+        val map = MapGrid(24, 24)
+        val occ = OccupancyGrid(24, 24)
+        val alive = AliveSystem(world)
+        val occupancy = OccupancySystem(world, occ)
+        val pool = PathPool(map.width * map.height)
+        val queue = PathRequestQueue(64, 64)
+        val pathing = PathfindingSystem(world, Pathfinder(map, occ), pool, queue, 1024)
+        val movement = MovementSystem(world, map, occ, pool, queue, data)
+
+        val unit = world.spawn(Transform(2f, 2f), UnitTag(1, "NotInData"), Health(10, 10), w = null)
+        world.orders[unit]?.items?.addLast(Order.Move(12f, 2f))
+
+        repeat(40) {
+            alive.tick()
+            occupancy.tick()
+            pathing.tick()
+            movement.tick()
+        }
+
+        assertTrue(world.transforms[unit]!!.x > 2f)
+    }
 
     @Test
     fun `attack order chases targets that start out of range`() {
