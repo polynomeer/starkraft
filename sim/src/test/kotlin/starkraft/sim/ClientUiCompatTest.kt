@@ -56,8 +56,8 @@ class ClientUiCompatTest {
                 )
             )
 
-        assertEquals("2 selected · combat 1 · structures 1 · prod 1 · tech 1 · rally 1/1", formatSelectionMetaSummary(selected))
-        assertEquals("2 selected · combat 1 · structures 1", formatSelectionMetaSummary(selected, includeCapabilities = false))
+        assertEquals("2 sel · cmb 1 · bld 1 · prod 1 · tech 1 · ral 1/1", formatSelectionMetaSummary(selected))
+        assertEquals("2 sel · cmb 1 · bld 1", formatSelectionMetaSummary(selected, includeCapabilities = false))
     }
 
     @Test
@@ -70,8 +70,8 @@ class ClientUiCompatTest {
 
     @Test
     fun `formats command captions with stable hotkey and state sections`() {
-        assertEquals("Move [M]", formatDeckCommandCaption("Move", "M", null))
-        assertEquals("Train [B] · 11t", formatDeckCommandCaption("Train", "B", "11t"))
+        assertEquals("Move · M", formatDeckCommandCaption("Move", "M", null))
+        assertEquals("Train · B · 11t", formatDeckCommandCaption("Train", "B", "11t"))
         assertEquals("Cancel · x2", formatDeckCommandCaption("Cancel", null, "x2"))
     }
 
@@ -126,7 +126,7 @@ class ClientUiCompatTest {
             )
 
         assertEquals(
-            "Depot · producer · train · tech · rally 14,10 · prod Marine x2 · tech AdvancedTraining x1",
+            "Depot · prod · train · tech · ral 14,10 · prod Marine x2 · tech Adv x1",
             formatSelectionRosterSummary(selected)
         )
     }
@@ -185,7 +185,7 @@ class ClientUiCompatTest {
             )
 
         assertEquals(
-            "Ros Depot:1   Marine:1   Academy:1   prod:1   tech:1   rally:1",
+            "Ros Depot:1   Mar:1   Aca:1   prod:1   tech:1   ral:1",
             formatSelectionRosterSummary(selected)
         )
     }

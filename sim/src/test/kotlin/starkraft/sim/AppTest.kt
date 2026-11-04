@@ -54,7 +54,7 @@ class AppTest {
     fun `version text includes build and map context`() {
         val version = buildVersionText()
         assertTrue(version.contains("starkraft-sim version=1.0-SNAPSHOT"))
-        assertTrue(version.contains("map=demo-32x32-obstacles"))
+        assertTrue(version.contains("map=demo-96x96-frontier"))
     }
 
     @Test
@@ -1198,7 +1198,7 @@ class AppTest {
 
         assertEquals(
             listOf(
-                "replay warning: mapId=other-map current=demo-32x32-obstacles",
+                "replay warning: mapId=other-map current=demo-96x96-frontier",
                 "replay warning: buildVersion=0.9.0 current=1.0-SNAPSHOT"
             ),
             warnings
@@ -1214,7 +1214,7 @@ class AppTest {
                         schema = 1,
                         replayHash = 10L,
                         seed = 5L,
-                        mapId = "demo-32x32-obstacles",
+                        mapId = "demo-96x96-frontier",
                         buildVersion = "1.0-SNAPSHOT",
                         eventCount = 2,
                         fileSizeBytes = 128,
@@ -1259,7 +1259,7 @@ class AppTest {
             }
 
         assertEquals(
-            "replay warning: mapId=other-map current=demo-32x32-obstacles\n" +
+            "replay warning: mapId=other-map current=demo-96x96-frontier\n" +
                 "replay warning: buildVersion=0.9.0 current=1.0-SNAPSHOT",
             ex.message
         )
@@ -1268,7 +1268,7 @@ class AppTest {
     @Test
     fun `prints current runtime metadata line`() {
         assertEquals(
-            "runtime metadata: mapId=demo-32x32-obstacles buildVersion=1.0-SNAPSHOT seed=42",
+            "runtime metadata: mapId=demo-96x96-frontier buildVersion=1.0-SNAPSHOT seed=42",
             currentRuntimeMetadataLine(42L)
         )
     }
@@ -2138,7 +2138,7 @@ class AppTest {
                             legacy = false
                         ),
                     replayPath = "/tmp/demo.replay.json",
-                    currentMapId = "demo-32x32-obstacles",
+                    currentMapId = "demo-96x96-frontier",
                     currentBuildVersion = "1.0-SNAPSHOT",
                     currentSeed = 99L,
                     strictReplayMeta = true,
@@ -2150,7 +2150,7 @@ class AppTest {
             """
             {
                 "replayPath": "/tmp/demo.replay.json",
-                "currentMapId": "demo-32x32-obstacles",
+                "currentMapId": "demo-96x96-frontier",
                 "currentBuildVersion": "1.0-SNAPSHOT",
                 "currentSeed": 99,
                 "strictReplayMeta": true,
@@ -2166,7 +2166,7 @@ class AppTest {
                     "legacy": false
                 },
                 "warnings": [
-                    "replay warning: mapId=other-map current=demo-32x32-obstacles",
+                    "replay warning: mapId=other-map current=demo-96x96-frontier",
                     "replay warning: buildVersion=0.9.0 current=1.0-SNAPSHOT"
                 ]
             }
@@ -2192,7 +2192,7 @@ class AppTest {
                             legacy = false
                         ),
                     replayPath = "/tmp/demo.replay.json",
-                    currentMapId = "demo-32x32-obstacles",
+                    currentMapId = "demo-96x96-frontier",
                     currentBuildVersion = "1.0-SNAPSHOT",
                     currentSeed = 99L,
                     strictReplayMeta = true,
@@ -2222,7 +2222,7 @@ class AppTest {
                         legacy = false
                     ),
                 replayPath = "/tmp/demo.replay.json",
-                currentMapId = "demo-32x32-obstacles",
+                currentMapId = "demo-96x96-frontier",
                 currentBuildVersion = "1.0-SNAPSHOT",
                 currentSeed = 99L,
                 strictReplayMeta = true,
@@ -2230,7 +2230,7 @@ class AppTest {
             )
 
         assertEquals("/tmp/demo.replay.json", report.replayPath)
-        assertEquals("demo-32x32-obstacles", report.currentMapId)
+        assertEquals("demo-96x96-frontier", report.currentMapId)
         assertEquals("1.0-SNAPSHOT", report.currentBuildVersion)
         assertEquals(99L, report.currentSeed)
         assertEquals(true, report.strictReplayMeta)
@@ -2254,7 +2254,7 @@ class AppTest {
                         schema = 1,
                         replayHash = 12L,
                         seed = 42L,
-                        mapId = "demo-32x32-obstacles",
+                        mapId = "demo-96x96-frontier",
                         buildVersion = "1.0-SNAPSHOT",
                         eventCount = 1,
                         fileSizeBytes = 64,
