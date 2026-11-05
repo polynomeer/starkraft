@@ -1,5 +1,7 @@
 # 삼재 디자인 적용 작업계획서
 
+> 2단계 이후는 [전체 개선안](architecture-renewal-proposal.md)의 결정에 따라 바뀔 수 있다.
+
 ## 목적
 
 [디자인 시안](https://claude.ai/artifact/53Te38p8czaacWt5EKnbBu)을 실제 게임에 적용하기 위한 순서, 범위, 완료 기준을 정한다.

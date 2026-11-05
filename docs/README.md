@@ -44,6 +44,7 @@
 | 게임 기획 | `game-design-document.md` | 핵심 플레이 루프와 규칙 구조 |
 | 기능 우선순위 | `feature-backlog.md`, `milestone-plan.md` | 남은 범위와 단계별 목표 |
 | 디자인 적용 | `sampajeon-application-plan.md` | 삼재 시안을 게임에 적용하는 단계별 계획 |
+| 전체 개선안 | `architecture-renewal-proposal.md` | 구조, 기술 선택, 범위를 포함한 개편 제안 (결정 전) |
 | 상위 설계 | `architecture-overview.md` | 모듈 책임과 데이터 흐름 |
 | 기술 심화 | `technical-deep-dive.md` | 결정론, 서버 경계, replay 중심 설계 해설 |
 | 시뮬레이션 내부 | `simulation-architecture.md` | `sim` 내부 구조와 성능/결정론 원칙 |
