@@ -1,0 +1,46 @@
+name: P0 spike hash
+
+on:
+  push:
+    paths:
+      - "spike/**"
+      - ".github/workflows/p0-spike-hash.yml"
+
+jobs:
+  hash:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Rule checks
+        shell: bash
+        run: ./spike/check.sh
+      - name: Print checkpoint hashes
+        shell: bash
+        run: dotnet run -c Release --no-build --project spike/Samjae.Check -- hash | tr -d '\r' > "hashes-${{ matrix.os }}.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashes-${{ matrix.os }}
+          path: hashes-${{ matrix.os }}.txt
+
+  compare:
+    needs: hash
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: hashes
+          merge-multiple: true
+      - name: Require identical hashes on every OS
+        run: |
+          ls hashes
+          test "$(ls hashes | wc -l)" -eq 3
+          test "$(md5sum hashes/* | cut -d' ' -f1 | sort -u | wc -l)" -eq 1
+          cat hashes/hashes-ubuntu-latest.txt
