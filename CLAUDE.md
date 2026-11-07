@@ -14,6 +14,8 @@ Modules:
 - `server/` — Go authoritative websocket server (`cmd/server`) plus `cmd/replaycheck`.
 - `client/` — Go headless CLI client (`cmd/client`) and bot (`cmd/bot`).
 - `shared-protocol/` — JSON schema + golden envelopes for wire protocol v1.
+- `core/`, `core.tests/`, `content/` — C# rewrite of the rule core in progress, see `docs/p1-core-port-plan.md`. `CoreBoundaryTests` bans floating point, IO and engine use in `core/`.
+- `spike/` — P0 Godot baseline scene and its own older core copy. Kept for re-measuring until P2 starts; do not build on it.
 
 Gradle includes only `sim` and `tools`; `server` and `client` are independent Go modules (run `go` commands inside each directory).
 
@@ -40,6 +42,9 @@ cd server && go build ./... && go test ./... && go vet ./...
 cd server && go test ./pkg/authoritative -run TestName              # single Go test
 cd client && go test ./... && go vet ./...
 # CI also enforces: go mod tidy leaves go.mod/go.sum unchanged
+
+dotnet test --project core.tests                 # C# rule core tests (.NET 10 SDK)
+dotnet test --project core.tests --filter-class Samjae.Core.Tests.FixTests  # single class
 
 ./scripts/e2e_server_bots_smoke.sh               # server + 2 bots + replaycheck
 ./scripts/play_sim_smoke.sh                      # headless check of the :sim:play pipeline
