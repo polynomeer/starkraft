@@ -176,6 +176,42 @@ public class HarvestTests
         Assert.Equal(new NodeHarvest(node, 5, 5, false), Assert.Single(s.Harvest.Nodes));
     }
 
+    // Ported from Kotlin's App.kt clearHarvestersForNode / findNearestHarvestNode.
+    [Fact]
+    public void A_depleted_node_is_removed_and_its_workers_move_to_the_fullest_node()
+    {
+        Simulation s = New();
+        Building(s, "Depot", 1, "10", "4", 9, 3);
+        int dry = Node(s, "4", "4", 3);
+        int small = Node(s, "6", "8", 20);
+        int large = Node(s, "20", "20", 90);
+        Node(s, "5", "5", 500, ResourceKind.Gas);
+        int empty = Worker(s, 1, "6", "9", dry, 3);
+        int loaded = Worker(s, 1, "4.5", "4", dry, 3);
+        s.World.Orders.Get(empty).Add(new Order.Move(Fix.FromInt(4), Fix.FromInt(4)));
+
+        s.Harvest.Tick();
+
+        Assert.False(s.World.ResourceNodes.Has(dry));
+        Assert.Equal("resourceDepleted", s.World.RemovedEvents[^1].Reason);
+        Assert.Equal(large, s.World.Harvesters.Get(empty).TargetNodeId);
+        Assert.Equal(new Order.Move(Fix.FromInt(20), Fix.FromInt(20)), s.World.Orders.Get(empty)[0]);
+        Assert.Equal(large, s.World.Harvesters.Get(loaded).TargetNodeId);
+        Assert.Equal(3, s.World.Harvesters.Get(loaded).CargoAmount);
+        Assert.NotEqual(small, s.World.Harvesters.Get(loaded).TargetNodeId);
+    }
+
+    [Fact]
+    public void A_worker_with_no_node_left_stops_harvesting()
+    {
+        Simulation s = New();
+        int dry = Node(s, "4", "4", 3);
+        int worker = Worker(s, 1, "10", "10", dry, 3);
+        Worker(s, 1, "4.5", "4", dry, 3);
+        s.Harvest.Tick();
+        Assert.False(s.World.Harvesters.Has(worker));
+    }
+
     [Fact]
     public void Totals_are_tracked_by_faction()
     {

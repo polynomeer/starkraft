@@ -17,6 +17,7 @@ public sealed class Simulation
     private const int StateVersion = 3;
 
     private readonly ITickSystem[] _tickOrder;
+    private readonly CommandProcessor _commands;
     private DeterministicRandom _random;
 
     public int Tick { get; private set; }
@@ -31,6 +32,7 @@ public sealed class Simulation
     public ConstructionSystem Construction { get; }
     public ResearchSystem Research { get; }
     public ProductionSystem Production { get; }
+    public VisionSystem Vision { get; }
 
     private Simulation(World world, GameContent content, ulong randomState)
     {
@@ -43,6 +45,8 @@ public sealed class Simulation
         Construction = new ConstructionSystem(world, content);
         Research = new ResearchSystem(world, content, Resources);
         Production = new ProductionSystem(world, content, Resources);
+        Vision = new VisionSystem(world);
+        _commands = new CommandProcessor(this);
         Pathing = new PathfindingSystem(world);
         Movement = new MovementSystem(world, content);
         Combat = new CombatSystem(world, content);
@@ -59,6 +63,8 @@ public sealed class Simulation
             Pathing,
             Movement,
             Combat,
+            new VictorySystem(world),
+            Vision,
         };
     }
 
@@ -83,18 +89,31 @@ public sealed class Simulation
         return new Simulation(new World(setup.MapWidth, setup.MapHeight, setup.Paths), content, setup.Seed);
     }
 
-    public void Step()
+    public void Step() => Step(System.ReadOnlySpan<PlayerCommand>.Empty);
+
+    /// <summary>
+    /// Applies the commands in the order given, then runs every system. Every peer must pass the same commands in the
+    /// same order; deciding that order is the relay's job, not the core's.
+    /// </summary>
+    public System.Collections.Generic.IReadOnlyList<CommandResult> Step(System.ReadOnlySpan<PlayerCommand> commands)
     {
         World.ClearRemovedEvents();
         Resources.ClearChanges();
         Research.ClearEvents();
         Production.ClearEvents();
+        var results = new CommandResult[commands.Length];
+        for (int i = 0; i < commands.Length; i++)
+        {
+            results[i] = _commands.Apply(i, commands[i]);
+        }
+
         foreach (ITickSystem system in _tickOrder)
         {
             system.Tick();
         }
 
         Tick++;
+        return results;
     }
 
     /// <summary>Serialises the whole state. BinaryWriter is little-endian on every platform.</summary>

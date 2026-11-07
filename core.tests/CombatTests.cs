@@ -36,9 +36,11 @@ public class CombatTests
     }
 
     [Fact]
-    public void Combat_runs_last_in_the_tick()
+    public void Combat_runs_after_movement_and_before_victory()
     {
-        Assert.Equal("CombatSystem", New().SystemOrder.Last());
+        var order = New().SystemOrder.ToList();
+        Assert.True(order.IndexOf("MovementSystem") < order.IndexOf("CombatSystem"));
+        Assert.Equal(order.IndexOf("CombatSystem") + 1, order.IndexOf("VictorySystem"));
     }
 
     [Fact]

@@ -69,6 +69,80 @@ public sealed class HarvestSystem : ITickSystem
                 TickGather(id, tag.Faction, position, harvester);
             }
         }
+
+        RemoveDepletedNodes();
+    }
+
+    /// <summary>
+    /// A node that runs dry is removed, and its workers move to the fullest node of the same kind, nearest first.
+    /// A worker with nowhere to go stops harvesting once it has nothing left to deliver. Ported from Kotlin's App.kt.
+    /// </summary>
+    private void RemoveDepletedNodes()
+    {
+        foreach (NodeHarvest harvested in _nodes)
+        {
+            if (!harvested.Depleted || !_world.ResourceNodes.TryGet(harvested.Node, out ResourceNode node))
+            {
+                continue;
+            }
+
+            Position nodePosition = _world.Positions.Get(harvested.Node);
+            foreach (int worker in _world.Harvesters)
+            {
+                if (_world.Harvesters.Get(worker).TargetNodeId == harvested.Node)
+                {
+                    Retarget(worker, harvested.Node, node.Kind, nodePosition);
+                }
+            }
+
+            _world.Remove(harvested.Node, "resourceDepleted");
+        }
+    }
+
+    private void Retarget(int worker, int depletedNode, ResourceKind kind, Position depletedAt)
+    {
+        Harvester harvester = _world.Harvesters.Get(worker);
+        List<Order> orders = _world.Orders.Get(worker);
+        if (orders.Count > 0 && orders[0] is Order.Move move && move.X == depletedAt.X && move.Y == depletedAt.Y)
+        {
+            orders.RemoveAt(0);
+        }
+
+        int next = FullestNode(worker, kind, depletedNode);
+        harvester.TargetNodeId = next;
+        if (next >= 0 && harvester.CargoAmount == 0)
+        {
+            Position at = _world.Positions.Get(next);
+            orders.Insert(0, new Order.Move(at.X, at.Y));
+        }
+        else if (next < 0 && harvester.CargoAmount == 0)
+        {
+            _world.Harvesters.Remove(worker);
+        }
+    }
+
+    private int FullestNode(int worker, ResourceKind kind, int exclude)
+    {
+        Position from = _world.Positions.Get(worker);
+        int best = -1;
+        int bestRemaining = -1;
+        long bestDistance = long.MaxValue;
+        foreach (int id in _world.ResourceNodes)
+        {
+            ResourceNode node = _world.ResourceNodes.Get(id);
+            if (id == exclude || node.Remaining <= 0 || node.Kind != kind || !_world.Positions.TryGet(id, out Position at))
+            {
+                continue;
+            }
+
+            long distance = Fix.LengthSquaredRaw(at.X - from.X, at.Y - from.Y);
+            if (node.Remaining > bestRemaining || (node.Remaining == bestRemaining && distance < bestDistance))
+            {
+                (best, bestRemaining, bestDistance) = (id, node.Remaining, distance);
+            }
+        }
+
+        return best;
     }
 
     private void TickGather(int id, int faction, Position position, Harvester harvester)
