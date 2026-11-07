@@ -99,6 +99,16 @@ public sealed class World
         RemoveReferencesTo(AutoAttackTargets, id);
     }
 
+    /// <summary>
+    /// Whether attacks may target this entity: alive and not a resource node. Kotlin let units shoot resource
+    /// nodes, which carry an owner and health; that was not intended play and is dropped here.
+    /// </summary>
+    public bool IsAttackable(int id) =>
+        Healths.TryGet(id, out Health health) && health.Hp > 0 && Positions.Has(id) && Tags.Has(id) && !ResourceNodes.Has(id);
+
+    /// <summary>Attackable and owned by a faction other than <paramref name="faction"/>.</summary>
+    public bool IsEnemyOf(int id, int faction) => IsAttackable(id) && Tags.Get(id).Faction != faction;
+
     public void ClearRemovedEvents() => _removedEvents.Clear();
 
     public bool UnlockTech(int faction, string techId)

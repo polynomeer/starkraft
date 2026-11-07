@@ -47,6 +47,17 @@ public class CrossPlatformHashTests
             scenario.StepOnce();
         }
 
+        var battle = new BattleScenario(seed: 21UL);
+        for (int tick = 0; tick <= 1200; tick++)
+        {
+            if (tick % 200 == 0)
+            {
+                lines.Add(Line($"battle-{tick}", battle.Simulation.ComputeHash()));
+            }
+
+            battle.Simulation.Step();
+        }
+
         return lines.ToArray();
     }
 

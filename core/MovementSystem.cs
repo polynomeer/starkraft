@@ -19,6 +19,7 @@ public sealed class MovementSystem : ITickSystem
 
     private readonly World _world;
     private readonly GameContent _content;
+    private readonly Reach _reach;
 
     public int LastTickReplans { get; private set; }
     public int LastTickReplansBlocked { get; private set; }
@@ -28,6 +29,7 @@ public sealed class MovementSystem : ITickSystem
     {
         _world = world;
         _content = content;
+        _reach = new Reach(world, content);
     }
 
     public void Tick()
@@ -166,7 +168,7 @@ public sealed class MovementSystem : ITickSystem
             return;
         }
 
-        if (IsAttackTargetInRange(id, position, target))
+        if (IsAttackTargetInRange(id, position, attack.Target))
         {
             _world.ClearPath(id);
             return;
@@ -204,12 +206,9 @@ public sealed class MovementSystem : ITickSystem
     private bool IsValidAttackTarget(int id, int targetId, out Position? target)
     {
         target = null;
-        return _world.Healths.TryGet(targetId, out Health health)
-            && _world.Positions.TryGet(targetId, out target)
-            && health.Hp > 0
-            && _world.Tags.TryGet(targetId, out UnitTag targetTag)
-            && _world.Tags.TryGet(id, out UnitTag tag)
-            && targetTag.Faction != tag.Faction;
+        return _world.Tags.TryGet(id, out UnitTag tag)
+            && _world.IsEnemyOf(targetId, tag.Faction)
+            && _world.Positions.TryGet(targetId, out target);
     }
 
     /// <summary>Returns true when the tick is over because a new path was requested for a missing or stale goal.</summary>
@@ -331,9 +330,9 @@ public sealed class MovementSystem : ITickSystem
 
     private bool IsClosedOff(int x, int y) => !_world.Map.IsPassable(x, y) || _world.Occupancy.IsBlocked(x, y);
 
-    private bool IsAttackTargetInRange(int id, Position source, Position target)
+    private bool IsAttackTargetInRange(int id, Position source, int target)
     {
-        return WeaponRange(id) is Fix range && Fix.IsWithin(target.X - source.X, target.Y - source.Y, range);
+        return WeaponRange(id) is Fix range && _reach.IsInReach(id, source, target, range);
     }
 
     private Fix? WeaponRange(int id)
@@ -366,11 +365,7 @@ public sealed class MovementSystem : ITickSystem
 
         foreach (int other in _world.AliveIds)
         {
-            if (other != id
-                && _world.Tags.TryGet(other, out UnitTag otherTag) && otherTag.Faction != tag.Faction
-                && _world.Healths.TryGet(other, out Health health) && health.Hp > 0
-                && _world.Positions.TryGet(other, out Position target)
-                && Fix.IsWithin(target.X - source.X, target.Y - source.Y, range))
+            if (other != id && _world.IsEnemyOf(other, tag.Faction) && _reach.IsInReach(id, source, other, range))
             {
                 return true;
             }

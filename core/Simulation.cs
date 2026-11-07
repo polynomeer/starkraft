@@ -24,6 +24,7 @@ public sealed class Simulation
     public GameContent Content { get; }
     public PathfindingSystem Pathing { get; }
     public MovementSystem Movement { get; }
+    public CombatSystem Combat { get; }
 
     private Simulation(World world, GameContent content, ulong randomState)
     {
@@ -32,6 +33,7 @@ public sealed class Simulation
         _random = new DeterministicRandom(randomState);
         Pathing = new PathfindingSystem(world);
         Movement = new MovementSystem(world, content);
+        Combat = new CombatSystem(world, content);
 
         // The tick order, in one place. Changing it changes every hash and replay.
         _tickOrder = new ITickSystem[]
@@ -40,6 +42,7 @@ public sealed class Simulation
             new OccupancySystem(world),
             Pathing,
             Movement,
+            Combat,
         };
     }
 

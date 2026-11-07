@@ -12,7 +12,7 @@ public class ContentTests
 
     private const string Units = """
         {"list":[
-          {"id":"Marine","archetype":"infantry","hp":45,"armor":0,"speedTilesPerSecond":3.0,"weaponId":"Gauss","oreCost":50,"gasCost":0,"buildMs":1500,"producerTypes":["Depot"],"requiredBuildingTypes":["Academy"]}
+          {"id":"Marine","archetype":"infantry","hp":45,"armor":0,"radius":0.4,"speedTilesPerSecond":3.0,"weaponId":"Gauss","oreCost":50,"gasCost":0,"buildMs":1500,"producerTypes":["Depot"],"requiredBuildingTypes":["Academy"]}
         ]}
         """;
 
@@ -73,7 +73,7 @@ public class ContentTests
     public void Unknown_ids_and_untrainable_units_are_reported()
     {
         GameContent content = ContentParser.Parse(
-            """{"list":[{"id":"Worker","archetype":"worker","hp":40,"speedTilesPerSecond":3.5}]}""", Empty, Empty, Empty);
+            """{"list":[{"id":"Worker","archetype":"worker","hp":40,"radius":0.4,"speedTilesPerSecond":3.5}]}""", Empty, Empty, Empty);
         Assert.Null(content.BuildingOrNull("Worker"));
         Assert.Null(content.TechOrNull("AdvancedTraining"));
         Assert.Null(content.UnitOrNull("Nobody"));
@@ -104,6 +104,8 @@ public class ContentTests
         Assert.Equal(Fix.FromRatio(9, 2), content.WeaponOrNull("matchlock")!.Range);
         Assert.Equal(5, content.WeaponOrNull("matchlock")!.CooldownTicks);
         Assert.Equal(4, content.WeaponOrNull("club")!.CooldownTicks);
+        Assert.Equal(Fix.FromRatio(9, 20), content.RadiusOf("brute"));
+        Assert.Equal(GameContent.DefaultRadius, content.RadiusOf("not-a-unit"));
     }
 
     [Fact]
@@ -123,16 +125,17 @@ public class ContentTests
     }
 
     [Theory]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1,"typo":1}]}""", "unknown key 'typo'")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1}]}""", "missing 'speedTilesPerSecond'")]
-    [InlineData("""{"list":[{"archetype":"x","hp":1,"speedTilesPerSecond":1}]}""", "missing 'id'")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":0,"speedTilesPerSecond":1}]}""", "'hp' must be")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1.5,"speedTilesPerSecond":1}]}""", "'hp' must be")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":"1","speedTilesPerSecond":1}]}""", "'hp' must be")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1e2}]}""", "not usable")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1,"weaponId":"None"}]}""", "unknown weapon 'None'")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1,"producerTypes":["None"]}]}""", "unknown producer 'None'")]
-    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1},{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1}]}""", "Duplicate unit id 'A'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1,"typo":1}]}""", "unknown key 'typo'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4}]}""", "missing 'speedTilesPerSecond'")]
+    [InlineData("""{"list":[{"archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1}]}""", "missing 'id'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":0,"radius":0.4,"speedTilesPerSecond":1}]}""", "'hp' must be")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1.5,"radius":0.4,"speedTilesPerSecond":1}]}""", "'hp' must be")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":"1","radius":0.4,"speedTilesPerSecond":1}]}""", "'hp' must be")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1e2}]}""", "not usable")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1,"weaponId":"None"}]}""", "unknown weapon 'None'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1,"producerTypes":["None"]}]}""", "unknown producer 'None'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1},{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1}]}""", "Duplicate unit id 'A'")]
+    [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1}]}""", "missing 'radius'")]
     [InlineData("""{"units":[]}""", "'list' array")]
     public void Invalid_units_are_rejected_with_a_clear_message(string units, string expected)
     {

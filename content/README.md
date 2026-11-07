@@ -8,7 +8,9 @@
 | --- | --- | --- |
 | `buildMs`, `cooldownMs` | 밀리초 | 불러올 때 틱으로 올림 변환 |
 | `speedTilesPerSecond` | 타일/초 | 불러올 때 타일/틱으로 변환 |
-| `range`, `rallyOffsetX/Y` | 타일 | 소수는 고정소수점으로 정확히 읽음. 지수 표기 금지 |
+| `range`, `radius`, `rallyOffsetX/Y` | 타일 | 소수는 고정소수점으로 정확히 읽음. 지수 표기 금지 |
+
+사거리는 몸 가장자리에서 잽니다. 공격자와 대상의 `radius`를 뺀 거리, 건물이면 공격자 `radius`를 뺀 건물 바닥 사각형까지의 거리가 `range` 이하일 때 닿습니다. `radius`는 Kotlin 데이터에 없던 값입니다.
 
 ## Kotlin 데이터와의 대응
 

@@ -42,6 +42,7 @@ public static class ContentParser
         f.Text("archetype"),
         f.RequiredInt("hp", 1),
         f.Int("armor", 0),
+        f.Fixed("radius"),
         f.Fixed("speedTilesPerSecond") / Fix.FromInt(Simulation.TicksPerSecond),
         f.OptionalText("weaponId"),
         f.Int("oreCost", 0),

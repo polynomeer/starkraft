@@ -15,6 +15,7 @@ public sealed record UnitDef(
     string Archetype,
     int Hp,
     int Armor,
+    Fix Radius,
     Fix SpeedPerTick,
     string? WeaponId,
     int OreCost,
@@ -94,7 +95,12 @@ public sealed class GameContent
         Hash = ComputeHash();
     }
 
+    /// <summary>Body radius for entity types with no unit definition, such as test dummies.</summary>
+    public static readonly Fix DefaultRadius = Fix.FromRatio(2, 5);
+
     public UnitDef? UnitOrNull(string id) => _units.GetValueOrDefault(id);
+
+    public Fix RadiusOf(string typeId) => UnitOrNull(typeId)?.Radius ?? DefaultRadius;
     public WeaponDef? WeaponOrNull(string id) => _weapons.GetValueOrDefault(id);
     public BuildingDef? BuildingOrNull(string id) => _buildings.GetValueOrDefault(id);
     public TechDef? TechOrNull(string id) => _techs.GetValueOrDefault(id);
@@ -169,7 +175,7 @@ public sealed class GameContent
         {
             writer.Write(u.Id);
             writer.Write(u.Archetype);
-            WriteInts(writer, u.Hp, u.Armor, u.SpeedPerTick.Raw, u.OreCost, u.GasCost, u.BuildTicks, u.FootprintWidth, u.FootprintHeight);
+            WriteInts(writer, u.Hp, u.Armor, u.Radius.Raw, u.SpeedPerTick.Raw, u.OreCost, u.GasCost, u.BuildTicks, u.FootprintWidth, u.FootprintHeight);
             writer.Write(u.WeaponId ?? "");
             WriteLists(writer, u.ProducerTypes, u.RequiredBuildingTypes, u.RequiredResearchIds);
         }

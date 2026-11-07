@@ -31,7 +31,7 @@ public class MovementTests
     public void System_order_is_pinned()
     {
         Assert.Equal(
-            new[] { "AliveSystem", "OccupancySystem", "PathfindingSystem", "MovementSystem" },
+            new[] { "AliveSystem", "OccupancySystem", "PathfindingSystem", "MovementSystem", "CombatSystem" },
             New().SystemOrder.ToArray());
     }
 
@@ -239,7 +239,7 @@ public class MovementTests
         s.World.Orders.Get(unit).Add(new Order.AttackMove(F(14), F(1)));
         Run(s, 200);
         int x = Tile(s, unit).X;
-        Assert.InRange(x, 3, 6); // 4.5 tiles short of the enemy at x = 9, within the waypoint step.
+        Assert.InRange(x, 2, 5); // 4.5 tiles plus both radii short of the enemy at x = 9, within the waypoint step.
         Assert.Empty(s.World.Orders.Get(unit)); // Beyond the 3-tile leash, so the order is dropped.
     }
 
@@ -248,7 +248,8 @@ public class MovementTests
     {
         Simulation s = New();
         int unit = Spawn(s, 6, 1, "gunner", 1, new WeaponRef("matchlock"));
-        Spawn(s, 8, 1, "gunner", 2);
+        int enemy = Spawn(s, 8, 1, "gunner", 2);
+        s.World.Healths.Set(enemy, new Health(100_000, 100_000));
         s.World.Orders.Get(unit).Add(new Order.AttackMove(F(7), F(1)));
         Run(s, 40);
         Assert.Single(s.World.Orders.Get(unit));
@@ -260,11 +261,13 @@ public class MovementTests
         Simulation s = New();
         int unit = Spawn(s, 1, 1, "gunner", 1, new WeaponRef("matchlock"));
         int enemy = Spawn(s, 12, 1, "gunner", 2);
+        s.World.Healths.Set(enemy, new Health(100_000, 100_000)); // Survives, so only the chase is measured.
         s.World.Orders.Get(unit).Add(new Order.Attack(enemy));
         Run(s, 200);
-        Position position = s.World.Positions.Get(unit);
-        Position target = s.World.Positions.Get(enemy);
-        Assert.True(Fix.IsWithin(target.X - position.X, target.Y - position.Y, Fix.FromRatio(9, 2)));
+        var reach = new Reach(s.World, s.Content);
+        Assert.True(reach.IsInReach(unit, s.World.Positions.Get(unit), enemy, Fix.FromRatio(9, 2)));
+        // Stopped close to the edge of reach rather than walking up to the target.
+        Assert.True(reach.Gap(unit, s.World.Positions.Get(unit), enemy) > Fix.FromInt(3));
         Assert.Single(s.World.Orders.Get(unit));
         Assert.False(s.World.PathFollows.Has(unit));
     }
