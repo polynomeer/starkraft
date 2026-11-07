@@ -1,0 +1,56 @@
+name: Core
+
+on:
+  push:
+    paths:
+      - "core/**"
+      - "core.tests/**"
+      - "content/**"
+      - "global.json"
+      - ".github/workflows/core.yml"
+  pull_request:
+    paths:
+      - "core/**"
+      - "core.tests/**"
+      - "content/**"
+      - "global.json"
+      - ".github/workflows/core.yml"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Run tests and write checkpoint hashes
+        shell: bash
+        env:
+          SAMJAE_HASH_OUT: ${{ github.workspace }}/hashes-${{ matrix.os }}.txt
+        run: dotnet test --project core.tests -c Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-hashes-${{ matrix.os }}
+          path: hashes-${{ matrix.os }}.txt
+          if-no-files-found: error
+
+  compare:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: hashes
+          merge-multiple: true
+      - name: Require identical hashes on every OS
+        run: |
+          ls hashes
+          test "$(ls hashes | wc -l)" -eq 3
+          test "$(md5sum hashes/* | cut -d' ' -f1 | sort -u | wc -l)" -eq 1
+          cat hashes/hashes-ubuntu-latest.txt
