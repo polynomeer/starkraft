@@ -25,12 +25,24 @@ public sealed class Simulation
     public PathfindingSystem Pathing { get; }
     public MovementSystem Movement { get; }
     public CombatSystem Combat { get; }
+    public Resources Resources { get; }
+    public BuildingPlacement Buildings { get; }
+    public HarvestSystem Harvest { get; }
+    public ConstructionSystem Construction { get; }
+    public ResearchSystem Research { get; }
+    public ProductionSystem Production { get; }
 
     private Simulation(World world, GameContent content, ulong randomState)
     {
         World = world;
         Content = content;
         _random = new DeterministicRandom(randomState);
+        Resources = new Resources(world);
+        Buildings = new BuildingPlacement(world, content, Resources);
+        Harvest = new HarvestSystem(world, content);
+        Construction = new ConstructionSystem(world, content);
+        Research = new ResearchSystem(world, content, Resources);
+        Production = new ProductionSystem(world, content, Resources);
         Pathing = new PathfindingSystem(world);
         Movement = new MovementSystem(world, content);
         Combat = new CombatSystem(world, content);
@@ -39,7 +51,11 @@ public sealed class Simulation
         _tickOrder = new ITickSystem[]
         {
             new AliveSystem(world),
+            Harvest,
             new OccupancySystem(world),
+            Construction,
+            Research,
+            Production,
             Pathing,
             Movement,
             Combat,
@@ -70,6 +86,9 @@ public sealed class Simulation
     public void Step()
     {
         World.ClearRemovedEvents();
+        Resources.ClearChanges();
+        Research.ClearEvents();
+        Production.ClearEvents();
         foreach (ITickSystem system in _tickOrder)
         {
             system.Tick();

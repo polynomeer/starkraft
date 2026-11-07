@@ -2,12 +2,19 @@ using System;
 
 namespace Samjae.Core;
 
-/// <summary>Solves queued path requests within the tick's node budget. Requests that run out of budget carry over.</summary>
+/// <summary>
+/// Solves queued path requests within the tick's node budget. Requests that run out of budget carry over.
+/// A goal that is blocked or taken by another unit is replaced by the nearest free tile, so groups sent to one spot
+/// spread around it and units sent to a building or resource stop beside it. Kotlin gave such requests no path.
+/// A tile already chosen as another unit's goal counts as taken, so two units do not keep chasing the same spot.
+/// A unit already near a blocked goal that cannot reach any free tile stays where it is, which ends its move.
+/// </summary>
 public sealed class PathfindingSystem : ITickSystem
 {
     private readonly World _world;
     private readonly Pathfinder _pathfinder;
     private readonly int[] _output;
+    private readonly System.Collections.Generic.Dictionary<int, int> _claimedGoals = new();
 
     public int LastTickRequests { get; private set; }
     public int LastTickSolved { get; private set; }
@@ -31,6 +38,7 @@ public sealed class PathfindingSystem : ITickSystem
         LastTickNodesUsed = 0;
         LastTickBudgetExhausted = 0;
         LastTickRequests = queue.Count;
+        CollectClaimedGoals();
 
         for (int i = 0; i < queue.Count; i++)
         {
@@ -47,12 +55,17 @@ public sealed class PathfindingSystem : ITickSystem
             }
 
             if (!_world.Positions.TryGet(id, out Position position)
-                || GoalFor(orders[0], position) is not (int goalX, int goalY))
+                || GoalFor(orders[0], position) is not (int rawGoalX, int rawGoalY))
             {
                 continue;
             }
 
-            if (Solve(id, position, orders[0], goalX, goalY, ref remainingBudget))
+            (int goalX, int goalY) = orders[0] is Order.Attack
+                ? (rawGoalX, rawGoalY)
+                : FreeGoalNear(id, rawGoalX, rawGoalY, position.X.FloorToInt(), position.Y.FloorToInt());
+
+            bool substituted = (goalX, goalY) != (rawGoalX, rawGoalY);
+            if (Solve(id, position, orders[0], goalX, goalY, ref remainingBudget, substituted ? (rawGoalX, rawGoalY) : null))
             {
                 queue.SetId(carried++, id);
             }
@@ -63,16 +76,28 @@ public sealed class PathfindingSystem : ITickSystem
     }
 
     /// <summary>Returns true when the request ran out of budget and must be retried next tick.</summary>
-    private bool Solve(int id, Position position, Order order, int goalX, int goalY, ref int remainingBudget)
+    private bool Solve(int id, Position position, Order order, int goalX, int goalY, ref int remainingBudget, (int X, int Y)? blockedGoal)
     {
-        int length = _pathfinder.FindPath(
-            position.X.FloorToInt(), position.Y.FloorToInt(), goalX, goalY, remainingBudget, _output,
-            allowOccupiedGoal: order is Order.Attack);
+        int fromX = position.X.FloorToInt();
+        int fromY = position.Y.FloorToInt();
+        int length = _pathfinder.FindPath(fromX, fromY, goalX, goalY, remainingBudget, _output, allowOccupiedGoal: order is Order.Attack);
+        if (length == 0 && !_pathfinder.LastBudgetExhausted && blockedGoal is (int X, int Y) original
+            && System.Math.Max(System.Math.Abs(fromX - original.X), System.Math.Abs(fromY - original.Y)) <= GoalSearchRadius)
+        {
+            (goalX, goalY) = (fromX, fromY);
+            length = _pathfinder.FindPath(fromX, fromY, goalX, goalY, remainingBudget, _output);
+        }
+
         remainingBudget -= _pathfinder.LastNodesUsed;
         LastTickNodesUsed += _pathfinder.LastNodesUsed;
         if (length > 0)
         {
             _world.PathFollows.Set(id, new PathFollow(_output[..length], length, 0, goalX, goalY));
+            if (order is not Order.Attack)
+            {
+                _claimedGoals[goalY * _world.Map.Width + goalX] = id;
+            }
+
             LastTickSolved++;
             return false;
         }
@@ -108,6 +133,68 @@ public sealed class PathfindingSystem : ITickSystem
                     : null;
             default:
                 return null;
+        }
+    }
+
+    private const int GoalSearchRadius = 8;
+
+    /// <summary>The goal itself if free, else the free tile closest to it within a few rings. The unit's own tile counts as free.</summary>
+    private (int X, int Y) FreeGoalNear(int id, int goalX, int goalY, int fromX, int fromY)
+    {
+        if (IsFreeFor(id, goalX, goalY, fromX, fromY))
+        {
+            return (goalX, goalY);
+        }
+
+        for (int radius = 1; radius <= GoalSearchRadius; radius++)
+        {
+            (int X, int Y)? best = null;
+            int bestDistance = int.MaxValue;
+            for (int y = goalY - radius; y <= goalY + radius; y++)
+            {
+                for (int x = goalX - radius; x <= goalX + radius; x++)
+                {
+                    bool onRing = System.Math.Max(System.Math.Abs(x - goalX), System.Math.Abs(y - goalY)) == radius;
+                    int distance = (x - goalX) * (x - goalX) + (y - goalY) * (y - goalY);
+                    if (onRing && distance < bestDistance && IsFreeFor(id, x, y, fromX, fromY))
+                    {
+                        best = (x, y);
+                        bestDistance = distance;
+                    }
+                }
+            }
+
+            if (best is (int X, int Y) found)
+            {
+                return found;
+            }
+        }
+
+        return (goalX, goalY);
+    }
+
+    private bool IsFreeFor(int id, int x, int y, int fromX, int fromY)
+    {
+        if (!_world.Map.IsPassable(x, y))
+        {
+            return false;
+        }
+
+        bool claimedByOther = _claimedGoals.TryGetValue(y * _world.Map.Width + x, out int owner) && owner != id;
+        return !claimedByOther && ((x == fromX && y == fromY) || !_world.Occupancy.IsBlocked(x, y));
+    }
+
+    /// <summary>Goals of units still walking a path, rebuilt every tick from state, so it never needs saving.</summary>
+    private void CollectClaimedGoals()
+    {
+        _claimedGoals.Clear();
+        foreach (int id in _world.PathFollows)
+        {
+            if (_world.Orders.TryGet(id, out var orders) && orders.Count > 0 && orders[0] is not Order.Attack)
+            {
+                PathFollow path = _world.PathFollows.Get(id);
+                _claimedGoals[path.GoalY * _world.Map.Width + path.GoalX] = id;
+            }
         }
     }
 

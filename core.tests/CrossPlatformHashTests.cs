@@ -58,6 +58,17 @@ public class CrossPlatformHashTests
             battle.Simulation.Step();
         }
 
+        var economy = new EconomyScenario();
+        for (int tick = 0; tick <= 1200; tick++)
+        {
+            if (tick % 200 == 0)
+            {
+                lines.Add(Line($"economy-{tick}", economy.Simulation.ComputeHash()));
+            }
+
+            economy.Simulation.Step();
+        }
+
         return lines.ToArray();
     }
 

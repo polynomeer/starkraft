@@ -31,7 +31,11 @@ public class MovementTests
     public void System_order_is_pinned()
     {
         Assert.Equal(
-            new[] { "AliveSystem", "OccupancySystem", "PathfindingSystem", "MovementSystem", "CombatSystem" },
+            new[]
+            {
+                "AliveSystem", "HarvestSystem", "OccupancySystem", "ConstructionSystem", "ResearchSystem",
+                "ProductionSystem", "PathfindingSystem", "MovementSystem", "CombatSystem",
+            },
             New().SystemOrder.ToArray());
     }
 
