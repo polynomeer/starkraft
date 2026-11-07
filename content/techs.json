@@ -1,0 +1,10 @@
+{
+  "list": [
+    {
+      "id": "advanced_training",
+      "buildMs": 1200,
+      "oreCost": 75,
+      "producerTypes": ["hall"]
+    }
+  ]
+}

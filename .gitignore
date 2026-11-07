@@ -47,3 +47,6 @@ bin/
 art/sampajeon/design2/project/
 art/sampajeon/build/
 __pycache__/
+
+### .NET ###
+obj/

@@ -1,0 +1,47 @@
+{
+  "list": [
+    {
+      "id": "hall",
+      "archetype": "producer",
+      "hp": 400,
+      "armor": 1,
+      "footprintWidth": 2,
+      "footprintHeight": 2,
+      "placementClearance": 1,
+      "supportsTraining": true,
+      "supportsResearch": true,
+      "supportsRally": true,
+      "supportsDropoff": true,
+      "dropoffResourceKinds": ["ore"],
+      "productionQueueLimit": 3,
+      "rallyOffsetX": 4.0,
+      "oreCost": 100
+    },
+    {
+      "id": "granary",
+      "archetype": "econDepot",
+      "hp": 350,
+      "armor": 1,
+      "footprintWidth": 2,
+      "footprintHeight": 2,
+      "placementClearance": 1,
+      "supportsDropoff": true,
+      "dropoffResourceKinds": ["ore"],
+      "productionQueueLimit": 0,
+      "oreCost": 75
+    },
+    {
+      "id": "still",
+      "archetype": "gasDepot",
+      "hp": 325,
+      "armor": 1,
+      "footprintWidth": 2,
+      "footprintHeight": 2,
+      "placementClearance": 1,
+      "supportsDropoff": true,
+      "dropoffResourceKinds": ["gas"],
+      "productionQueueLimit": 0,
+      "oreCost": 90
+    }
+  ]
+}

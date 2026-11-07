@@ -1,0 +1,33 @@
+{
+  "list": [
+    {
+      "id": "artisan",
+      "archetype": "worker",
+      "hp": 40,
+      "speedTilesPerSecond": 4.75,
+      "oreCost": 50,
+      "buildMs": 1000,
+      "producerTypes": ["hall"]
+    },
+    {
+      "id": "gunner",
+      "archetype": "infantry",
+      "hp": 45,
+      "speedTilesPerSecond": 4.5,
+      "weaponId": "matchlock",
+      "oreCost": 50,
+      "buildMs": 1500,
+      "producerTypes": ["hall"]
+    },
+    {
+      "id": "brute",
+      "archetype": "lightMelee",
+      "hp": 35,
+      "speedTilesPerSecond": 5.75,
+      "weaponId": "club",
+      "oreCost": 25,
+      "buildMs": 1100,
+      "producerTypes": ["hall"]
+    }
+  ]
+}

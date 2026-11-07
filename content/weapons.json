@@ -1,0 +1,6 @@
+{
+  "list": [
+    { "id": "matchlock", "damage": 6, "range": 4.5, "cooldownMs": 240 },
+    { "id": "club", "damage": 5, "range": 0.6, "cooldownMs": 160 }
+  ]
+}
