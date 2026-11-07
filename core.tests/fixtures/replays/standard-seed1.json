@@ -1,0 +1,1231 @@
+{
+  "format": "samjae-replay",
+  "version": 1,
+  "contentHash": "c6bc55e446b7f2d1",
+  "scenario": {
+    "width": 48,
+    "height": 32,
+    "seed": "1",
+    "blocked": [
+      [
+        19,
+        7
+      ],
+      [
+        28,
+        24
+      ],
+      [
+        14,
+        11
+      ],
+      [
+        33,
+        20
+      ],
+      [
+        15,
+        0
+      ],
+      [
+        32,
+        31
+      ],
+      [
+        19,
+        21
+      ],
+      [
+        28,
+        10
+      ],
+      [
+        14,
+        22
+      ],
+      [
+        33,
+        9
+      ],
+      [
+        21,
+        30
+      ],
+      [
+        26,
+        1
+      ],
+      [
+        18,
+        10
+      ],
+      [
+        29,
+        21
+      ],
+      [
+        20,
+        27
+      ],
+      [
+        27,
+        4
+      ],
+      [
+        19,
+        17
+      ],
+      [
+        28,
+        14
+      ],
+      [
+        18,
+        8
+      ],
+      [
+        29,
+        23
+      ],
+      [
+        20,
+        28
+      ],
+      [
+        27,
+        3
+      ],
+      [
+        19,
+        12
+      ],
+      [
+        28,
+        19
+      ],
+      [
+        17,
+        23
+      ],
+      [
+        30,
+        8
+      ],
+      [
+        23,
+        11
+      ],
+      [
+        24,
+        20
+      ],
+      [
+        15,
+        10
+      ],
+      [
+        32,
+        21
+      ],
+      [
+        20,
+        26
+      ],
+      [
+        27,
+        5
+      ],
+      [
+        17,
+        28
+      ],
+      [
+        30,
+        3
+      ],
+      [
+        19,
+        12
+      ],
+      [
+        28,
+        19
+      ],
+      [
+        17,
+        1
+      ],
+      [
+        30,
+        30
+      ],
+      [
+        22,
+        28
+      ],
+      [
+        25,
+        3
+      ],
+      [
+        16,
+        7
+      ],
+      [
+        31,
+        24
+      ],
+      [
+        19,
+        18
+      ],
+      [
+        28,
+        13
+      ],
+      [
+        15,
+        24
+      ],
+      [
+        32,
+        7
+      ],
+      [
+        22,
+        22
+      ],
+      [
+        25,
+        9
+      ],
+      [
+        23,
+        26
+      ],
+      [
+        24,
+        5
+      ],
+      [
+        16,
+        5
+      ],
+      [
+        31,
+        26
+      ],
+      [
+        22,
+        16
+      ],
+      [
+        25,
+        15
+      ],
+      [
+        15,
+        15
+      ],
+      [
+        32,
+        16
+      ],
+      [
+        17,
+        12
+      ],
+      [
+        30,
+        19
+      ],
+      [
+        22,
+        18
+      ],
+      [
+        25,
+        13
+      ]
+    ],
+    "stockpiles": [
+      {
+        "faction": 1,
+        "ore": 200,
+        "gas": 0
+      },
+      {
+        "faction": 2,
+        "ore": 200,
+        "gas": 0
+      }
+    ],
+    "entities": [
+      {
+        "kind": "building",
+        "faction": 1,
+        "type": "hall",
+        "tileX": 4,
+        "tileY": 14
+      },
+      {
+        "kind": "node",
+        "resource": "ore",
+        "x": 688128,
+        "y": 688128,
+        "amount": 1500,
+        "yield": 5
+      },
+      {
+        "kind": "node",
+        "resource": "ore",
+        "x": 688128,
+        "y": 1409024,
+        "amount": 1500,
+        "yield": 5
+      },
+      {
+        "kind": "unit",
+        "faction": 1,
+        "type": "artisan",
+        "x": 491520,
+        "y": 884736
+      },
+      {
+        "kind": "unit",
+        "faction": 1,
+        "type": "artisan",
+        "x": 491520,
+        "y": 1015808
+      },
+      {
+        "kind": "unit",
+        "faction": 1,
+        "type": "artisan",
+        "x": 491520,
+        "y": 1146880
+      },
+      {
+        "kind": "unit",
+        "faction": 1,
+        "type": "artisan",
+        "x": 491520,
+        "y": 1277952
+      },
+      {
+        "kind": "building",
+        "faction": 2,
+        "type": "hall",
+        "tileX": 42,
+        "tileY": 14
+      },
+      {
+        "kind": "node",
+        "resource": "ore",
+        "x": 2457600,
+        "y": 688128,
+        "amount": 1500,
+        "yield": 5
+      },
+      {
+        "kind": "node",
+        "resource": "ore",
+        "x": 2457600,
+        "y": 1409024,
+        "amount": 1500,
+        "yield": 5
+      },
+      {
+        "kind": "unit",
+        "faction": 2,
+        "type": "artisan",
+        "x": 2654208,
+        "y": 884736
+      },
+      {
+        "kind": "unit",
+        "faction": 2,
+        "type": "artisan",
+        "x": 2654208,
+        "y": 1015808
+      },
+      {
+        "kind": "unit",
+        "faction": 2,
+        "type": "artisan",
+        "x": 2654208,
+        "y": 1146880
+      },
+      {
+        "kind": "unit",
+        "faction": 2,
+        "type": "artisan",
+        "x": 2654208,
+        "y": 1277952
+      }
+    ]
+  },
+  "ticks": [
+    {
+      "tick": 0,
+      "commands": [
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            4
+          ],
+          "target": 2
+        },
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            5
+          ],
+          "target": 2
+        },
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            6
+          ],
+          "target": 3
+        },
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            7
+          ],
+          "target": 3
+        },
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "artisan"
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            11
+          ],
+          "target": 9
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            12
+          ],
+          "target": 9
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            13
+          ],
+          "target": 10
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            14
+          ],
+          "target": 10
+        },
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "artisan"
+        }
+      ]
+    },
+    {
+      "tick": 10,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "artisan"
+        },
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "artisan"
+        }
+      ]
+    },
+    {
+      "tick": 20,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "artisan"
+        },
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "artisan"
+        }
+      ]
+    },
+    {
+      "tick": 40,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        },
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "artisan"
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "commands": [
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            15
+          ],
+          "target": 2
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            16
+          ],
+          "target": 9
+        }
+      ]
+    },
+    {
+      "tick": 90,
+      "commands": [
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            17
+          ],
+          "target": 2
+        },
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            18
+          ],
+          "target": 9
+        }
+      ]
+    },
+    {
+      "tick": 100,
+      "commands": [
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            20
+          ],
+          "target": 9
+        }
+      ]
+    },
+    {
+      "tick": 110,
+      "commands": [
+        {
+          "player": 1,
+          "type": "harvest",
+          "units": [
+            19
+          ],
+          "target": 2
+        }
+      ]
+    },
+    {
+      "tick": 140,
+      "commands": [
+        {
+          "player": 2,
+          "type": "harvest",
+          "units": [
+            21
+          ],
+          "target": 9
+        }
+      ]
+    },
+    {
+      "tick": 730,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 740,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 1410,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 1420,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 1750,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "brute"
+        }
+      ]
+    },
+    {
+      "tick": 2110,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 2390,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 2800,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 3090,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 3420,
+      "commands": [
+        {
+          "player": 2,
+          "type": "train",
+          "building": 8,
+          "unitType": "brute"
+        }
+      ]
+    },
+    {
+      "tick": 3480,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 3510,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3570,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            33
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3630,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            26,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3640,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            26,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3650,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            26,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3660,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3670,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3680,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3690,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3700,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            26,
+            28,
+            30,
+            33
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3710,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3720,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3730,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3740,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            26,
+            28,
+            30,
+            33
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3750,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30,
+            33
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 3760,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30,
+            33
+          ],
+          "x": 2818048,
+          "y": 983040
+        }
+      ]
+    },
+    {
+      "tick": 4120,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 4150,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4180,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            28,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4190,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            28,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4200,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            28,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4210,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            28,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4790,
+      "commands": [
+        {
+          "player": 1,
+          "type": "train",
+          "building": 1,
+          "unitType": "gunner"
+        }
+      ]
+    },
+    {
+      "tick": 4820,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            30,
+            34
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    },
+    {
+      "tick": 4830,
+      "commands": [
+        {
+          "player": 1,
+          "type": "attackMove",
+          "units": [
+            22,
+            24,
+            26,
+            30
+          ],
+          "x": 3112959,
+          "y": 1015807
+        }
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "tick": 0,
+      "hash": "a3a863c159f6685e"
+    },
+    {
+      "tick": 200,
+      "hash": "f104e7fa7713f349"
+    },
+    {
+      "tick": 400,
+      "hash": "13cddeaf474a50ee"
+    },
+    {
+      "tick": 600,
+      "hash": "33099cb33d5d6524"
+    },
+    {
+      "tick": 800,
+      "hash": "8b54d7a795060276"
+    },
+    {
+      "tick": 1000,
+      "hash": "60b7b7f07e412f63"
+    },
+    {
+      "tick": 1200,
+      "hash": "c819dc1aac3e870d"
+    },
+    {
+      "tick": 1400,
+      "hash": "87e857604f71c20b"
+    },
+    {
+      "tick": 1600,
+      "hash": "742526b6132febc1"
+    },
+    {
+      "tick": 1800,
+      "hash": "59ebae590c9b498c"
+    },
+    {
+      "tick": 2000,
+      "hash": "427f672ce23881dc"
+    },
+    {
+      "tick": 2200,
+      "hash": "b211553206ec016f"
+    },
+    {
+      "tick": 2400,
+      "hash": "d2bce97f036f9282"
+    },
+    {
+      "tick": 2600,
+      "hash": "a0164b9e8b1301f1"
+    },
+    {
+      "tick": 2800,
+      "hash": "a365e11c8310d01e"
+    },
+    {
+      "tick": 3000,
+      "hash": "3a5998f12e43e314"
+    },
+    {
+      "tick": 3200,
+      "hash": "e6a3196dd46681ee"
+    },
+    {
+      "tick": 3400,
+      "hash": "3be2900cba5e86ac"
+    },
+    {
+      "tick": 3600,
+      "hash": "3e83b1954118c776"
+    },
+    {
+      "tick": 3800,
+      "hash": "d20c51b23dbbb5de"
+    },
+    {
+      "tick": 4000,
+      "hash": "078dbbe30aed1767"
+    },
+    {
+      "tick": 4200,
+      "hash": "248d0b7a7234d8d3"
+    },
+    {
+      "tick": 4400,
+      "hash": "4e658c446057f03c"
+    },
+    {
+      "tick": 4600,
+      "hash": "88729d23775616c7"
+    },
+    {
+      "tick": 4800,
+      "hash": "7dce78481279322f"
+    },
+    {
+      "tick": 4831,
+      "hash": "160308d23d0b7ba1"
+    }
+  ],
+  "end": {
+    "tick": 4831,
+    "winner": 1,
+    "reason": "Elimination"
+  }
+}

@@ -69,6 +69,12 @@ public class CrossPlatformHashTests
             economy.Simulation.Step();
         }
 
+        (Replay match, _) = ReplayTests.PlayStandard(3UL);
+        foreach (ReplayCheckpoint checkpoint in match.Checkpoints)
+        {
+            lines.Add(Line($"bots-{checkpoint.Tick}", checkpoint.Hash));
+        }
+
         return lines.ToArray();
     }
 

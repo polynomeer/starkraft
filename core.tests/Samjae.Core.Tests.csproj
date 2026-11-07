@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../core/Samjae.Core.csproj" />
+    <ProjectReference Include="../bots/Samjae.Bots.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="4.0.2" />

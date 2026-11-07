@@ -14,7 +14,7 @@ Modules:
 - `server/` — Go authoritative websocket server (`cmd/server`) plus `cmd/replaycheck`.
 - `client/` — Go headless CLI client (`cmd/client`) and bot (`cmd/bot`).
 - `shared-protocol/` — JSON schema + golden envelopes for wire protocol v1.
-- `core/`, `core.tests/`, `content/` — C# rewrite of the rule core in progress, see `docs/p1-core-port-plan.md`. `CoreBoundaryTests` bans floating point, IO and engine use in `core/`.
+- `core/`, `core.tests/`, `content/`, `bots/` — C# rewrite of the rule core in progress, see `docs/p1-core-port-plan.md`. `CoreBoundaryTests` bans floating point, IO and engine use in `core/`. Recorded bot matches in `core.tests/fixtures/replays/` must keep reproducing; after an intended rule change regenerate them with `SAMJAE_WRITE_REPLAYS=1 dotnet test --project core.tests` and explain why in the commit.
 - `spike/` — P0 Godot baseline scene and its own older core copy. Kept for re-measuring until P2 starts; do not build on it.
 
 Gradle includes only `sim` and `tools`; `server` and `client` are independent Go modules (run `go` commands inside each directory).

@@ -78,6 +78,21 @@ public sealed class BuildingPlacement
         return new PlacementResult(Spawn(faction, def, tileX, tileY), null);
     }
 
+    /// <summary>For scenario setup: a finished building, free of cost and requirements. Fails only if the ground is taken.</summary>
+    public int PlaceFinished(int faction, string typeId, int tileX, int tileY)
+    {
+        BuildingDef def = _content.BuildingOrNull(typeId) ?? throw new System.ArgumentException($"Unknown building '{typeId}'.");
+        if (!CanPlace(tileX, tileY, def.FootprintWidth, def.FootprintHeight))
+        {
+            throw new System.ArgumentException($"No room for {typeId} at ({tileX},{tileY}).");
+        }
+
+        int id = Spawn(faction, def, tileX, tileY);
+        _world.ConstructionSites.Remove(id);
+        _world.Healths.Get(id).Hp = def.Hp;
+        return id;
+    }
+
     public CancelConstructionFailure? CancelConstruction(int id, string reason = "constructionCanceled")
     {
         if (!_world.ConstructionSites.TryGet(id, out ConstructionSite site))
