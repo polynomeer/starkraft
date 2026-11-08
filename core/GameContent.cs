@@ -175,6 +175,11 @@ public sealed class GameContent
                 {
                     RequireKnown(_statuses, effect.StatusId!, where, "status");
                 }
+
+                if (effect.Summon?.UnitId is string summoned)
+                {
+                    RequireKnown(_units, summoned, where, "summoned unit");
+                }
             }
         }
     }
@@ -270,6 +275,9 @@ public sealed class GameContent
                 writer.Write((byte)e.Target.Faction);
                 WriteInts(writer, e.Target.Radius.Raw, e.Amount);
                 writer.Write(e.StatusId ?? "");
+                writer.Write(e.Summon?.UnitId ?? "");
+                writer.Write(e.Summon?.CopyOther ?? false);
+                writer.Write(e.Summon?.LifetimeTicks ?? 0);
             }
         }
     }

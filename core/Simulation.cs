@@ -14,7 +14,7 @@ public sealed class Simulation
     public const int TicksPerSecond = 20;
 
     private const int StateMagic = 0x4A53; // "SJ"
-    private const int StateVersion = 4;
+    private const int StateVersion = 5;
 
     private readonly ITickSystem[] _tickOrder;
     private readonly CommandProcessor _commands;
@@ -58,6 +58,7 @@ public sealed class Simulation
         {
             new AliveSystem(world),
             new StatusSystem(world),
+            new LifetimeSystem(world),
             Harvest,
             new OccupancySystem(world),
             Construction,

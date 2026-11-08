@@ -33,7 +33,14 @@ public class EffectTests
           {"id":"thorn","archetype":"infantry","hp":100,"radius":0.4,"speedTilesPerSecond":3.0,"weaponId":"blade",
            "triggers":[{"on":"damaged","effects":[{"type":"damage","amount":3,"target":{"shape":"other","faction":"enemy"}}]}]},
           {"id":"leech","archetype":"infantry","hp":100,"radius":0.4,"speedTilesPerSecond":3.0,"weaponId":"blade",
-           "triggers":[{"on":"hit","effects":[{"type":"heal","amount":4,"target":{"shape":"self"}}]}]}
+           "triggers":[{"on":"hit","effects":[{"type":"heal","amount":4,"target":{"shape":"self"}}]}]},
+          {"id":"raiser","archetype":"infantry","hp":100,"radius":0.4,"speedTilesPerSecond":3.0,"weaponId":"blade",
+           "triggers":[{"on":"kill","effects":[{"type":"summon","copyOther":true,"at":"other","lifetimeMs":250}]}]},
+          {"id":"wreck","archetype":"structure","hp":50,"radius":0.4,"speedTilesPerSecond":0},
+          {"id":"rigger","archetype":"infantry","hp":10,"radius":0.4,"speedTilesPerSecond":3.0,
+           "triggers":[{"on":"death","effects":[{"type":"summon","unit":"wreck","at":"self"}]}]},
+          {"id":"caller","archetype":"infantry","hp":100,"radius":0.4,"speedTilesPerSecond":3.0,"weaponId":"blade",
+           "triggers":[{"on":"hit","effects":[{"type":"summon","unit":"runner","count":3,"at":"self"}]}]}
         ]}
         """;
 
@@ -46,7 +53,7 @@ public class EffectTests
     internal static Simulation Skirmish()
     {
         Simulation s = New();
-        string[] types = { "grower", "bomber", "thorn", "leech", "fighter" };
+        string[] types = { "grower", "bomber", "thorn", "leech", "fighter", "raiser", "rigger" };
         for (int i = 0; i < 20; i++)
         {
             string type = types[i % types.Length];
@@ -93,10 +100,111 @@ public class EffectTests
         s.World.Statuses.Set(id, new List<StatusInstance> { new(statusId, stacks, ticks) });
 
     [Fact]
-    public void Statuses_count_down_before_any_other_system()
+    public void Statuses_and_lifetimes_count_down_before_any_other_system()
     {
         var order = New().SystemOrder.ToList();
         Assert.Equal(order.IndexOf("AliveSystem") + 1, order.IndexOf("StatusSystem"));
+        Assert.Equal(order.IndexOf("StatusSystem") + 1, order.IndexOf("LifetimeSystem"));
+    }
+
+    [Fact]
+    public void Kill_raises_a_copy_of_the_victim_for_the_killer_until_its_lifetime_ends()
+    {
+        Simulation s = New();
+        Bystanders(s);
+        Unit(s, "raiser", 5, 5, faction: 1);
+        int victim = Unit(s, "fighter", 7, 5, faction: 2, hp: 10);
+
+        s.Step();
+        Assert.False(s.World.Positions.Has(victim));
+        EffectEvent summon = Assert.Single(s.Effects.LastTickEvents);
+        Assert.Equal(EffectKind.Summon, summon.Kind);
+        int risen = summon.Target;
+        Assert.Equal(new UnitTag(1, "fighter"), s.World.Tags.Get(risen));
+        Assert.Equal((Tile(7), Tile(5)), (s.World.Positions.Get(risen).X, s.World.Positions.Get(risen).Y));
+        Assert.Equal(100, s.World.Healths.Get(risen).Hp);
+        Assert.True(s.World.Weapons.Has(risen));
+
+        Run(s, 5);
+        Assert.True(s.World.Positions.Has(risen));
+        s.Step();
+        Assert.False(s.World.Positions.Has(risen));
+        Assert.Contains(new RemovalEvent(risen, 1, "fighter", "expired"), s.World.RemovedEvents);
+    }
+
+    [Fact]
+    public void Death_summon_leaves_a_permanent_unit_where_the_owner_fell()
+    {
+        Simulation s = New();
+        Bystanders(s);
+        int fighter = Unit(s, "fighter", 5, 5, faction: 1);
+        int rigger = Unit(s, "rigger", 7, 5, faction: 2, hp: 10);
+        s.World.Orders.Get(fighter).Add(new Order.Attack(rigger));
+
+        s.Step();
+        int wreck = Assert.Single(s.Effects.LastTickEvents).Target;
+        Assert.Equal(new UnitTag(2, "wreck"), s.World.Tags.Get(wreck));
+        Assert.Equal(Tile(7), s.World.Positions.Get(wreck).X);
+        Assert.False(s.World.Lifetimes.Has(wreck));
+    }
+
+    [Theory]
+    [InlineData(false, "4,4 5,4 6,4")]
+    [InlineData(true, "5,4 6,4 4,5")]
+    public void Summons_take_the_nearest_free_tiles_in_row_order(bool blockCorner, string expected)
+    {
+        Simulation s = New();
+        Bystanders(s);
+        if (blockCorner)
+        {
+            s.World.Map.SetBlocked(4, 4, true);
+        }
+
+        Unit(s, "caller", 5, 5, faction: 1);
+        Unit(s, "dummy", 7, 5, faction: 2);
+
+        s.Step();
+        string tiles = string.Join(' ', s.Effects.LastTickEvents.Select(e =>
+            $"{s.World.Positions.Get(e.Target).X.FloorToInt()},{s.World.Positions.Get(e.Target).Y.FloorToInt()}"));
+        Assert.Equal(expected, tiles);
+    }
+
+    [Fact]
+    public void Summons_that_do_not_fit_are_not_created()
+    {
+        Simulation s = New();
+        Bystanders(s);
+        for (int y = 5 - EffectSystem.SummonSearchRadius; y <= 5 + EffectSystem.SummonSearchRadius; y++)
+        {
+            for (int x = 5 - EffectSystem.SummonSearchRadius; x <= 5 + EffectSystem.SummonSearchRadius; x++)
+            {
+                s.World.Map.SetBlocked(x, y, (x, y) != (5, 5) && (x, y) != (6, 5) && (x, y) != (4, 5));
+            }
+        }
+
+        Unit(s, "caller", 5, 5, faction: 1);
+        Unit(s, "dummy", 6, 5, faction: 2);
+
+        s.Step();
+        EffectEvent only = Assert.Single(s.Effects.LastTickEvents);
+        Assert.Equal(4, s.World.Positions.Get(only.Target).X.FloorToInt());
+    }
+
+    [Fact]
+    public void Lifetimes_survive_save_and_load()
+    {
+        Simulation s = New();
+        Bystanders(s);
+        Unit(s, "raiser", 5, 5, faction: 1);
+        Unit(s, "fighter", 7, 5, faction: 2, hp: 10);
+        Run(s, 2);
+        Assert.Equal(1, s.World.Lifetimes.Count);
+
+        Simulation loaded = Simulation.LoadState(s.SaveState(), Data);
+        Run(s, 5);
+        Run(loaded, 5);
+        Assert.Equal(0, s.World.Lifetimes.Count);
+        Assert.Equal(s.ComputeHash(), loaded.ComputeHash());
     }
 
     [Fact]
@@ -268,7 +376,7 @@ public class EffectTests
             }
         }
 
-        Assert.Equal(new[] { EffectKind.ApplyStatus, EffectKind.Damage, EffectKind.Heal }, kinds.Order().ToArray());
+        Assert.Equal(new[] { EffectKind.ApplyStatus, EffectKind.Damage, EffectKind.Heal, EffectKind.Summon }, kinds.Order().ToArray());
     }
 
     [Fact]
@@ -308,6 +416,11 @@ public class EffectTests
     [InlineData("""{"type":"damage","amount":5,"status":"frenzy","target":{"shape":"self"}}""", "unknown key 'status'")]
     [InlineData("""{"type":"poison","target":{"shape":"self"}}""", "unknown effect type")]
     [InlineData("""{"type":"heal","amount":0,"target":{"shape":"self"}}""", "'amount'")]
+    [InlineData("""{"type":"summon","unit":"u","copyOther":true,"at":"self"}""", "exactly one")]
+    [InlineData("""{"type":"summon","at":"self"}""", "exactly one")]
+    [InlineData("""{"type":"summon","unit":"u","at":"circle"}""", "'self' or 'other'")]
+    [InlineData("""{"type":"summon","unit":"ghost","at":"self"}""", "unknown summoned unit 'ghost'")]
+    [InlineData("""{"type":"summon","unit":"u","at":"self","target":{"shape":"self"}}""", "unknown key 'target'")]
     public void Bad_effects_are_rejected(string effect, string message)
     {
         string units = "{\"list\":[{\"id\":\"u\",\"archetype\":\"a\",\"hp\":1,\"radius\":0.4,\"speedTilesPerSecond\":1,"

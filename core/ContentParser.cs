@@ -137,6 +137,11 @@ public static class ContentParser
 
     private static EffectDef ParseEffect(Fields f)
     {
+        if (f.Text("type") == "summon")
+        {
+            return ParseSummon(f);
+        }
+
         EffectTarget target = ParseTarget(f.Object("target"));
         return f.Text("type") switch
         {
@@ -145,6 +150,32 @@ public static class ContentParser
             "heal" => new EffectDef(EffectKind.Heal, target, f.RequiredInt("amount", 1), null),
             string other => throw new InvalidDataException($"{f.Where}: unknown effect type '{other}'."),
         };
+    }
+
+    /// <summary>A summon names a unit or copies the other party, never both, and appears at the owner or the other party.</summary>
+    private static EffectDef ParseSummon(Fields f)
+    {
+        string? unit = f.OptionalText("unit");
+        bool copyOther = f.Flag("copyOther");
+        if ((unit == null) == !copyOther)
+        {
+            throw new InvalidDataException($"{f.Where}: a summon needs exactly one of 'unit' and 'copyOther'.");
+        }
+
+        TargetShape at = f.Text("at") switch
+        {
+            "self" => TargetShape.Self,
+            "other" => TargetShape.Other,
+            string other => throw new InvalidDataException($"{f.Where}: a summon appears at 'self' or 'other', not '{other}'."),
+        };
+        int lifetimeMs = f.Int("lifetimeMs", 0);
+        int lifetime = lifetimeMs == 0 ? 0 : GameContent.MillisecondsToTicks(lifetimeMs);
+        return new EffectDef(
+            EffectKind.Summon,
+            new EffectTarget(at, TargetFaction.Any, Fix.Zero),
+            f.Int("count", 1, minimum: 1),
+            null,
+            new SummonDef(unit, copyOther, lifetime));
     }
 
     /// <summary>A circle must say which side it hits, so an area effect never lands on friends by default.</summary>

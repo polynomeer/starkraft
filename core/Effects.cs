@@ -17,6 +17,7 @@ public enum EffectKind : byte
     ApplyStatus = 1,
     Damage = 2,
     Heal = 3,
+    Summon = 4,
 }
 
 /// <summary><see cref="Other"/> is the other party of the trigger: the victim, the killer or the attacker.</summary>
@@ -37,8 +38,17 @@ public enum TargetFaction : byte
 
 public sealed record EffectTarget(TargetShape Shape, TargetFaction Faction, Fix Radius);
 
-/// <summary><see cref="Amount"/> is hit points for damage and heal, and stacks for a status.</summary>
-public sealed record EffectDef(EffectKind Kind, EffectTarget Target, int Amount, string? StatusId);
+/// <summary>
+/// What a summon creates: a named unit type, or a copy of the trigger's other party (a fallen enemy rising for the
+/// summoner). A lifetime of zero means the unit stays until killed.
+/// </summary>
+public sealed record SummonDef(string? UnitId, bool CopyOther, int LifetimeTicks);
+
+/// <summary>
+/// <see cref="Amount"/> is hit points for damage and heal, stacks for a status, and units for a summon. A summon's
+/// target shape is where it appears: at the owner or at the other party.
+/// </summary>
+public sealed record EffectDef(EffectKind Kind, EffectTarget Target, int Amount, string? StatusId, SummonDef? Summon = null);
 
 public enum TriggerEvent : byte
 {
@@ -72,6 +82,40 @@ public sealed class StatusInstance
 }
 
 public readonly record struct EffectEvent(int Source, int Target, EffectKind Kind, int Amount, string? StatusId);
+
+/// <summary>
+/// Removes summoned units whose time is up, right after statuses count down. A lifetime of N lasts the N ticks after
+/// the one the unit appeared in, like a status.
+/// </summary>
+public sealed class LifetimeSystem : ITickSystem
+{
+    private readonly World _world;
+    private readonly List<int> _expired = new();
+
+    public LifetimeSystem(World world) => _world = world;
+
+    public void Tick()
+    {
+        _expired.Clear();
+        foreach (int id in _world.Lifetimes)
+        {
+            int remaining = _world.Lifetimes.Get(id);
+            if (remaining == 0)
+            {
+                _expired.Add(id);
+            }
+            else
+            {
+                _world.Lifetimes.Set(id, remaining - 1);
+            }
+        }
+
+        foreach (int id in _expired)
+        {
+            _world.Remove(id, "expired");
+        }
+    }
+}
 
 /// <summary>Sums of status bonuses, read by movement and combat.</summary>
 public static class StatusRules
@@ -163,12 +207,14 @@ public sealed class StatusSystem : ITickSystem
 public sealed class EffectSystem
 {
     public const int MaxChainDepth = 4;
+    public const int SummonSearchRadius = 3;
 
     private readonly World _world;
     private readonly GameContent _content;
     private readonly Reach _reach;
     private readonly Queue<Firing> _queue = new();
     private readonly List<int> _targets = new();
+    private readonly HashSet<int> _standingTiles = new();
     private readonly List<EffectEvent> _events = new();
 
     public EffectSystem(World world, GameContent content)
@@ -233,7 +279,11 @@ public sealed class EffectSystem
             return;
         }
 
-        _queue.Enqueue(new Firing(owner, tag.TypeId, tag.Faction, position.X, position.Y, on, other, depth));
+        // The other party may be removed before this firing resolves, so where it stood and what it was are kept now.
+        bool otherKnown = _world.Tags.TryGet(other, out UnitTag otherTag) & _world.Positions.TryGet(other, out Position otherAt);
+        _queue.Enqueue(new Firing(
+            owner, tag.TypeId, tag.Faction, position.X, position.Y, on, other, depth,
+            otherKnown ? otherTag.TypeId : null, otherKnown ? otherAt.X : Fix.Zero, otherKnown ? otherAt.Y : Fix.Zero));
     }
 
     private IReadOnlyList<EffectDef> TriggersOf(string typeId, TriggerEvent on)
@@ -256,6 +306,12 @@ public sealed class EffectSystem
 
     private void Apply(in Firing firing, EffectDef effect)
     {
+        if (effect.Kind == EffectKind.Summon)
+        {
+            Summon(firing, effect);
+            return;
+        }
+
         CollectTargets(firing, effect.Target);
         foreach (int target in _targets)
         {
@@ -374,6 +430,79 @@ public sealed class EffectSystem
         _world.Remove(target, "death");
     }
 
+    /// <summary>
+    /// Summoned units belong to the owner's faction and take free tiles nearest the anchor, searching rings out to
+    /// <see cref="SummonSearchRadius"/> in row order. Units that do not fit are not created. They first act next tick.
+    /// </summary>
+    private void Summon(in Firing firing, EffectDef effect)
+    {
+        SummonDef summon = effect.Summon!;
+        bool atOther = effect.Target.Shape == TargetShape.Other;
+        string? typeId = summon.CopyOther ? firing.OtherType : summon.UnitId;
+        bool needsOther = atOther || summon.CopyOther;
+        if ((needsOther && firing.OtherType == null) || typeId == null || _content.UnitOrNull(typeId) is not UnitDef def)
+        {
+            return;
+        }
+
+        Fix anchorX = atOther ? firing.OtherX : firing.X;
+        Fix anchorY = atOther ? firing.OtherY : firing.Y;
+        CollectStandingTiles();
+        for (int i = 0; i < effect.Amount; i++)
+        {
+            if (FreeTileNear(anchorX.FloorToInt(), anchorY.FloorToInt()) is not (int x, int y))
+            {
+                return;
+            }
+
+            _standingTiles.Add(y * _world.Map.Width + x);
+            WeaponRef? weapon = def.WeaponId == null ? null : new WeaponRef(def.WeaponId);
+            var position = new Position(Fix.FromInt(x) + Fix.Half, Fix.FromInt(y) + Fix.Half);
+            int id = _world.Spawn(position, new UnitTag(firing.OwnerFaction, def.Id), new Health(def.Hp, def.Hp, def.Armor), weapon, ProductionSystem.TrainedVisionRange);
+            if (summon.LifetimeTicks > 0)
+            {
+                _world.Lifetimes.Set(id, summon.LifetimeTicks);
+            }
+
+            _events.Add(new EffectEvent(firing.Owner, id, EffectKind.Summon, 1, null));
+        }
+    }
+
+    /// <summary>Tiles under living units now. The occupancy grid is from the start of the tick and still holds the dead.</summary>
+    private void CollectStandingTiles()
+    {
+        _standingTiles.Clear();
+        foreach (int id in _world.Positions)
+        {
+            if (_world.IsAttackable(id) && !_world.Footprints.Has(id))
+            {
+                Position p = _world.Positions.Get(id);
+                _standingTiles.Add(p.Y.FloorToInt() * _world.Map.Width + p.X.FloorToInt());
+            }
+        }
+    }
+
+    private (int X, int Y)? FreeTileNear(int centerX, int centerY)
+    {
+        for (int radius = 0; radius <= SummonSearchRadius; radius++)
+        {
+            for (int y = centerY - radius; y <= centerY + radius; y++)
+            {
+                for (int x = centerX - radius; x <= centerX + radius; x++)
+                {
+                    bool onRing = Math.Abs(x - centerX) == radius || Math.Abs(y - centerY) == radius;
+                    if (onRing && _world.Map.IsPassable(x, y) && !_world.Occupancy.IsStaticBlocked(x, y)
+                        && !_standingTiles.Contains(y * _world.Map.Width + x))
+                    {
+                        return (x, y);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     private readonly record struct Firing(
         int Owner,
         string OwnerType,
@@ -382,5 +511,8 @@ public sealed class EffectSystem
         Fix Y,
         TriggerEvent On,
         int Other,
-        int Depth);
+        int Depth,
+        string? OtherType,
+        Fix OtherX,
+        Fix OtherY);
 }

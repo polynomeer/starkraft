@@ -35,6 +35,9 @@ public sealed class World
     public EntityStore<int> AutoAttackTargets { get; } = new();
     public EntityStore<List<StatusInstance>> Statuses { get; } = new();
 
+    /// <summary>Ticks left for summoned units that expire.</summary>
+    public EntityStore<int> Lifetimes { get; } = new();
+
     /// <summary>Sorted containers, because these are serialised by walking them.</summary>
     public SortedDictionary<int, ResourceStockpile> Stockpiles { get; } = new();
     public SortedDictionary<int, SortedSet<string>> UnlockedTechs { get; } = new();
@@ -161,6 +164,7 @@ public sealed class World
         Harvesters.Remove(id);
         AutoAttackTargets.Remove(id);
         Statuses.Remove(id);
+        Lifetimes.Remove(id);
     }
 
     private static void RemoveReferencesTo(EntityStore<int> store, int target)

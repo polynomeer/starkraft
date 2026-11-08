@@ -36,6 +36,7 @@ internal static class WorldCodec
         WriteStore(w, world.Harvesters, WriteHarvester);
         WriteStore(w, world.AutoAttackTargets, (o, c) => o.Write(c));
         WriteStore(w, world.Statuses, WriteStatuses);
+        WriteStore(w, world.Lifetimes, (o, c) => o.Write(c));
         WriteFactionTables(w, world);
     }
 
@@ -69,6 +70,7 @@ internal static class WorldCodec
         ReadStore(r, world.Harvesters, ReadHarvester);
         ReadStore(r, world.AutoAttackTargets, i => i.ReadInt32());
         ReadStore(r, world.Statuses, ReadStatuses);
+        ReadStore(r, world.Lifetimes, i => i.ReadInt32());
         ReadFactionTables(r, world);
     }
 
