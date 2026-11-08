@@ -47,7 +47,7 @@ public class CrossPlatformHashTests
             scenario.StepOnce();
         }
 
-        var battle = new BattleScenario(seed: 21UL);
+        var battle = new BattleScenario(seed: 21UL, roughTerrain: true);
         for (int tick = 0; tick <= 1200; tick++)
         {
             if (tick % 200 == 0)

@@ -201,6 +201,29 @@ public class HarvestTests
         Assert.NotEqual(small, s.World.Harvesters.Get(loaded).TargetNodeId);
     }
 
+    // Ported from AppTest "retargets gas harvesters only to gas nodes on depletion" and its loaded variant.
+    [Fact]
+    public void Gas_workers_move_only_to_gas_nodes_and_keep_their_cargo()
+    {
+        Simulation s = New();
+        Building(s, "Depot", 1, "10", "4", 9, 3);
+        int dry = Node(s, "4", "4", 3, ResourceKind.Gas);
+        Node(s, "5", "5", 500);
+        int fallback = Node(s, "7", "8", 20, ResourceKind.Gas);
+        int empty = Worker(s, 1, "6", "9", dry, 3);
+        int loaded = Worker(s, 1, "4.5", "4", dry, 3);
+        s.World.Orders.Get(empty).Add(new Order.Move(Fix.FromInt(4), Fix.FromInt(4)));
+
+        s.Harvest.Tick();
+
+        Assert.False(s.World.ResourceNodes.Has(dry));
+        Assert.Equal(fallback, s.World.Harvesters.Get(empty).TargetNodeId);
+        Assert.Equal(new Order.Move(Fix.FromInt(7), Fix.FromInt(8)), s.World.Orders.Get(empty)[0]);
+        Harvester carrying = s.World.Harvesters.Get(loaded);
+        Assert.Equal((fallback, ResourceKind.Gas, 3), (carrying.TargetNodeId, carrying.CargoKind, carrying.CargoAmount));
+    }
+
+    // Ported from AppTest "clears harvesters targeting depleted node".
     [Fact]
     public void A_worker_with_no_node_left_stops_harvesting()
     {
@@ -208,8 +231,10 @@ public class HarvestTests
         int dry = Node(s, "4", "4", 3);
         int worker = Worker(s, 1, "10", "10", dry, 3);
         Worker(s, 1, "4.5", "4", dry, 3);
+        s.World.Orders.Get(worker).Add(new Order.Move(Fix.FromInt(4), Fix.FromInt(4)));
         s.Harvest.Tick();
         Assert.False(s.World.Harvesters.Has(worker));
+        Assert.Empty(s.World.Orders.Get(worker));
     }
 
     [Fact]

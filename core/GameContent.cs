@@ -128,6 +128,11 @@ public sealed class GameContent
     {
         foreach (T def in defs)
         {
+            if (key(def).Length == 0)
+            {
+                throw new InvalidDataException($"A {kind} has an empty id.");
+            }
+
             if (!index.TryAdd(key(def), def))
             {
                 throw new InvalidDataException($"Duplicate {kind} id '{key(def)}'.");

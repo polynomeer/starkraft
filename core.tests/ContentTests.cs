@@ -20,6 +20,7 @@ public class ContentTests
         {"list":[
           {"id":"Depot","archetype":"producer","hp":400,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsTraining":true,"supportsResearch":true,"supportsRally":true,"supportsDropoff":true,"dropoffResourceKinds":["ore"],"productionQueueLimit":3,"rallyOffsetX":4.0,"rallyOffsetY":0.0,"oreCost":100},
           {"id":"Academy","archetype":"tech","hp":250,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"productionQueueLimit":0,"oreCost":125,"requiredBuildingTypes":["Depot"],"requiredResearchIds":["AdvancedTraining"]},
+          {"id":"ResourceDepot","archetype":"econDepot","hp":350,"armor":1,"footprintWidth":2,"footprintHeight":2,"placementClearance":1,"supportsDropoff":true,"dropoffResourceKinds":["ore"],"productionQueueLimit":0,"oreCost":75},
           {"id":"GasDepot","archetype":"gasDepot","hp":325,"armor":1,"footprintWidth":2,"footprintHeight":2,"supportsDropoff":true,"dropoffResourceKinds":["gas"],"oreCost":90}
         ]}
         """;
@@ -41,6 +42,7 @@ public class ContentTests
         BuildingDef depot = content.BuildingOrNull("Depot")!;
         Assert.Equal("producer", depot.Archetype);
         Assert.Equal(2, depot.FootprintWidth);
+        Assert.Equal(2, depot.FootprintHeight);
         Assert.Equal(1, depot.PlacementClearance);
         Assert.True(depot.SupportsTraining && depot.SupportsResearch && depot.SupportsRally && depot.SupportsDropoff);
         Assert.Equal(new[] { ResourceKind.Ore }, depot.DropoffResourceKinds);
@@ -50,10 +52,20 @@ public class ContentTests
         Assert.Equal(400, depot.Hp);
 
         BuildingDef academy = content.BuildingOrNull("Academy")!;
+        Assert.Equal("tech", academy.Archetype);
         Assert.Equal(new[] { "Depot" }, academy.RequiredBuildingTypes);
         Assert.Equal(new[] { "AdvancedTraining" }, academy.RequiredResearchIds);
         Assert.False(academy.SupportsTraining);
-        Assert.Equal(new[] { ResourceKind.Gas }, content.BuildingOrNull("GasDepot")!.DropoffResourceKinds);
+        BuildingDef resourceDepot = content.BuildingOrNull("ResourceDepot")!;
+        Assert.Equal("econDepot", resourceDepot.Archetype);
+        Assert.False(resourceDepot.SupportsTraining || resourceDepot.SupportsRally);
+        Assert.True(resourceDepot.SupportsDropoff);
+        Assert.Equal(new[] { ResourceKind.Ore }, resourceDepot.DropoffResourceKinds);
+        Assert.Equal(75, resourceDepot.OreCost);
+
+        BuildingDef gasDepot = content.BuildingOrNull("GasDepot")!;
+        Assert.Equal("gasDepot", gasDepot.Archetype);
+        Assert.Equal(new[] { ResourceKind.Gas }, gasDepot.DropoffResourceKinds);
 
         UnitDef marine = content.UnitOrNull("Marine")!;
         Assert.Equal("infantry", marine.Archetype);
@@ -66,6 +78,7 @@ public class ContentTests
         TechDef tech = content.TechOrNull("AdvancedTraining")!;
         Assert.Equal(24, tech.BuildTicks);
         Assert.Equal(75, tech.OreCost);
+        Assert.Equal(new[] { "Depot" }, tech.ProducerTypes);
     }
 
     // Ported from DataRepoTest "returns null for unsupported build or train specs".
@@ -135,6 +148,7 @@ public class ContentTests
     [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1,"weaponId":"None"}]}""", "unknown weapon 'None'")]
     [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1,"producerTypes":["None"]}]}""", "unknown producer 'None'")]
     [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1},{"id":"A","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1}]}""", "Duplicate unit id 'A'")]
+    [InlineData("""{"list":[{"id":"","archetype":"x","hp":1,"radius":0.4,"speedTilesPerSecond":1}]}""", "A unit has an empty id")]
     [InlineData("""{"list":[{"id":"A","archetype":"x","hp":1,"speedTilesPerSecond":1}]}""", "missing 'radius'")]
     [InlineData("""{"units":[]}""", "'list' array")]
     public void Invalid_units_are_rejected_with_a_clear_message(string units, string expected)

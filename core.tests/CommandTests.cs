@@ -229,6 +229,17 @@ public class CommandTests
         Assert.Equal(new RallyPoint(F(15), F(16)), s.World.RallyPoints.Get(depot));
     }
 
+    // Ported from AppTest "issue emits command ack records" (rally on a building that does not exist).
+    [Fact]
+    public void Rally_is_rejected_for_a_building_that_does_not_exist()
+    {
+        Simulation s = New(EconomyContent.Standard);
+        AddOpponent(s);
+
+        Assert.Equal(CommandRejection.NotYourBuilding, Issue(s, new PlayerCommand.Rally(1, 999, F(15), F(16))).Rejection);
+        Assert.False(s.World.RallyPoints.Has(999));
+    }
+
     // Ported from SurrenderCommandTest.
     [Fact]
     public void Surrender_ends_the_match_with_the_opponent_as_winner()

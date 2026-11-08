@@ -3,12 +3,15 @@ using Samjae.Core;
 
 namespace Samjae.Core.Tests;
 
-/// <summary>Two armies of real content units attack-moving into each other on a map with rocks.</summary>
+/// <summary>
+/// Two armies of real content units attack-moving into each other on a map with rocks, and optionally a patch of rough
+/// terrain (cost 3) in the middle, as in Kotlin's DeterminismTest.
+/// </summary>
 internal sealed class BattleScenario
 {
     public Simulation Simulation { get; }
 
-    public BattleScenario(ulong seed)
+    public BattleScenario(ulong seed, bool roughTerrain = false)
     {
         var random = new DeterministicRandom(seed);
         Simulation = Simulation.Create(new MatchSetup(40, 24, seed), TestContent.Real);
@@ -16,6 +19,14 @@ internal sealed class BattleScenario
         for (int i = 0; i < 40; i++)
         {
             world.Map.SetBlocked(10 + random.NextInt(20), random.NextInt(24), true);
+        }
+
+        for (int x = 16; roughTerrain && x < 24; x++)
+        {
+            for (int y = 6; y < 18; y++)
+            {
+                world.Map.SetCost(x, y, Fix.FromInt(3));
+            }
         }
 
         for (int i = 0; i < 30; i++)

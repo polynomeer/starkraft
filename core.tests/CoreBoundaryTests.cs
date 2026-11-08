@@ -66,6 +66,76 @@ public class CoreBoundaryTests
         Assert.Empty(violations);
     }
 
+    [Fact]
+    public void Core_never_iterates_hash_ordered_collections()
+    {
+        string coreDirectory = TestContent.RepositoryPath("core");
+        var violations = new List<string>();
+        foreach (string path in Directory.GetFiles(coreDirectory, "*.cs", SearchOption.AllDirectories).Where(path => !IsBuildOutput(path)))
+        {
+            violations.AddRange(ScanHashIteration(Path.GetFileName(path), File.ReadAllLines(path)));
+        }
+
+        Assert.Empty(violations);
+    }
+
+    [Theory]
+    [InlineData("private readonly Dictionary<int, int> _claims = new();", "foreach (int id in _claims.Keys)")]
+    [InlineData("var seen = new HashSet<string>();", "foreach (string id in seen)")]
+    [InlineData("private readonly HashSet<int> _tiles = new();", "int[] all = _tiles.ToArray();")]
+    public void Hash_iteration_scan_detects_loops(string declaration, string use)
+    {
+        Assert.NotEmpty(ScanHashIteration("sample.cs", new[] { declaration, use }));
+    }
+
+    [Theory]
+    [InlineData("private readonly Dictionary<int, int> _claims = new();", "_claims.TryGetValue(id, out int owner);")]
+    [InlineData("private readonly SortedDictionary<int, bool[]> _visible = new();", "foreach (bool[] tiles in _visible.Values)")]
+    public void Hash_iteration_scan_allows_lookups_and_sorted_loops(string declaration, string use)
+    {
+        Assert.Empty(ScanHashIteration("sample.cs", new[] { declaration, use }));
+    }
+
+    /// <summary>
+    /// A word boundary before the type name leaves out SortedDictionary and SortedSet.
+    /// Dictionary and HashSet enumerate in an order that depends on hashing and insertion history, so rules may look
+    /// things up in them but never walk them. Sorted collections and entity stores walk in key order.
+    /// </summary>
+    private static IEnumerable<string> ScanHashIteration(string name, string[] lines)
+    {
+        var declared = new HashSet<string>();
+        var declaration = new Regex(@"\b(Dictionary|HashSet)<.*?>\s+(\w+)\s*[=;]");
+        var implicitDeclaration = new Regex(@"\bvar\s+(\w+)\s*=\s*new\s+(Dictionary|HashSet)<");
+        foreach (string line in lines.Select(StripLineComment))
+        {
+            Match explicitMatch = declaration.Match(line);
+            if (explicitMatch.Success)
+            {
+                declared.Add(explicitMatch.Groups[2].Value);
+            }
+
+            Match implicitMatch = implicitDeclaration.Match(line);
+            if (implicitMatch.Success)
+            {
+                declared.Add(implicitMatch.Groups[1].Value);
+            }
+        }
+
+        for (int number = 0; number < lines.Length; number++)
+        {
+            string code = StripLineComment(lines[number]);
+            foreach (string variable in declared)
+            {
+                string loop = $@"\bforeach\s*\([^)]*\bin\s+{variable}(\.Keys|\.Values)?\s*\)";
+                string linq = $@"\b{variable}(\.Keys|\.Values)?\.(Select|Where|OrderBy|First|Last|ToArray|ToList|Aggregate|Min|Max|Sum)\b";
+                if (Regex.IsMatch(code, loop) || Regex.IsMatch(code, linq))
+                {
+                    yield return $"{name}:{number + 1} iterates hash-ordered '{variable}': {lines[number].Trim()}";
+                }
+            }
+        }
+    }
+
     [Theory]
     [InlineData("double speed = 1;")]
     [InlineData("var value = Math.Sqrt(2);")]

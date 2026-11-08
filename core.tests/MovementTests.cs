@@ -396,4 +396,22 @@ public class MovementTests
 
         Assert.Equal(a.Simulation.ComputeHash(), b.Simulation.ComputeHash());
     }
+
+    // Ported from DeterminismTest: two factions, rocks, rough terrain and combat, run twice.
+    [Fact]
+    public void Battle_on_rough_terrain_gives_the_same_hash_and_the_terrain_matters()
+    {
+        var a = new BattleScenario(seed: 21UL, roughTerrain: true);
+        var b = new BattleScenario(seed: 21UL, roughTerrain: true);
+        var flat = new BattleScenario(seed: 21UL);
+        for (int tick = 0; tick < 500; tick++)
+        {
+            a.Simulation.Step();
+            b.Simulation.Step();
+            flat.Simulation.Step();
+        }
+
+        Assert.Equal(a.Simulation.ComputeHash(), b.Simulation.ComputeHash());
+        Assert.NotEqual(flat.Simulation.ComputeHash(), a.Simulation.ComputeHash());
+    }
 }
