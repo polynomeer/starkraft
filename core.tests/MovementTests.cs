@@ -33,7 +33,7 @@ public class MovementTests
         Assert.Equal(
             new[]
             {
-                "AliveSystem", "HarvestSystem", "OccupancySystem", "ConstructionSystem", "ResearchSystem",
+                "AliveSystem", "StatusSystem", "HarvestSystem", "OccupancySystem", "ConstructionSystem", "ResearchSystem",
                 "ProductionSystem", "PathfindingSystem", "MovementSystem", "CombatSystem", "VictorySystem", "VisionSystem",
             },
             New().SystemOrder.ToArray());

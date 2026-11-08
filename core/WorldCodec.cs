@@ -35,6 +35,7 @@ internal static class WorldCodec
         WriteStore(w, world.ResourceNodes, (o, c) => { o.Write((byte)c.Kind); o.Write(c.Remaining); o.Write(c.YieldPerTick); });
         WriteStore(w, world.Harvesters, WriteHarvester);
         WriteStore(w, world.AutoAttackTargets, (o, c) => o.Write(c));
+        WriteStore(w, world.Statuses, WriteStatuses);
         WriteFactionTables(w, world);
     }
 
@@ -67,6 +68,7 @@ internal static class WorldCodec
         ReadStore(r, world.ResourceNodes, i => new ResourceNode((ResourceKind)i.ReadByte(), i.ReadInt32(), i.ReadInt32()));
         ReadStore(r, world.Harvesters, ReadHarvester);
         ReadStore(r, world.AutoAttackTargets, i => i.ReadInt32());
+        ReadStore(r, world.Statuses, ReadStatuses);
         ReadFactionTables(r, world);
     }
 
@@ -101,6 +103,29 @@ internal static class WorldCodec
         bool has = r.ReadBoolean();
         int value = r.ReadInt32();
         return has ? value : null;
+    }
+
+    private static void WriteStatuses(BinaryWriter w, List<StatusInstance> statuses)
+    {
+        w.Write(statuses.Count);
+        foreach (StatusInstance status in statuses)
+        {
+            w.Write(status.StatusId);
+            w.Write(status.Stacks);
+            w.Write(status.RemainingTicks);
+        }
+    }
+
+    private static List<StatusInstance> ReadStatuses(BinaryReader r)
+    {
+        int count = r.ReadInt32();
+        var statuses = new List<StatusInstance>(count);
+        for (int i = 0; i < count; i++)
+        {
+            statuses.Add(new StatusInstance(r.ReadString(), r.ReadInt32(), r.ReadInt32()));
+        }
+
+        return statuses;
     }
 
     private static void WriteOrders(BinaryWriter w, List<Order> orders)

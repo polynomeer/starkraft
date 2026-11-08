@@ -14,7 +14,7 @@ public sealed class Simulation
     public const int TicksPerSecond = 20;
 
     private const int StateMagic = 0x4A53; // "SJ"
-    private const int StateVersion = 3;
+    private const int StateVersion = 4;
 
     private readonly ITickSystem[] _tickOrder;
     private readonly CommandProcessor _commands;
@@ -26,6 +26,7 @@ public sealed class Simulation
     public PathfindingSystem Pathing { get; }
     public MovementSystem Movement { get; }
     public CombatSystem Combat { get; }
+    public EffectSystem Effects { get; }
     public Resources Resources { get; }
     public BuildingPlacement Buildings { get; }
     public HarvestSystem Harvest { get; }
@@ -49,12 +50,14 @@ public sealed class Simulation
         _commands = new CommandProcessor(this);
         Pathing = new PathfindingSystem(world);
         Movement = new MovementSystem(world, content);
-        Combat = new CombatSystem(world, content);
+        Effects = new EffectSystem(world, content);
+        Combat = new CombatSystem(world, content, Effects);
 
         // The tick order, in one place. Changing it changes every hash and replay.
         _tickOrder = new ITickSystem[]
         {
             new AliveSystem(world),
+            new StatusSystem(world),
             Harvest,
             new OccupancySystem(world),
             Construction,
@@ -101,6 +104,7 @@ public sealed class Simulation
         Resources.ClearChanges();
         Research.ClearEvents();
         Production.ClearEvents();
+        Effects.ClearEvents();
         var results = new CommandResult[commands.Length];
         for (int i = 0; i < commands.Length; i++)
         {

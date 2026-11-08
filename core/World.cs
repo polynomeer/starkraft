@@ -33,6 +33,7 @@ public sealed class World
     public EntityStore<ResourceNode> ResourceNodes { get; } = new();
     public EntityStore<Harvester> Harvesters { get; } = new();
     public EntityStore<int> AutoAttackTargets { get; } = new();
+    public EntityStore<List<StatusInstance>> Statuses { get; } = new();
 
     /// <summary>Sorted containers, because these are serialised by walking them.</summary>
     public SortedDictionary<int, ResourceStockpile> Stockpiles { get; } = new();
@@ -159,6 +160,7 @@ public sealed class World
         ResourceNodes.Remove(id);
         Harvesters.Remove(id);
         AutoAttackTargets.Remove(id);
+        Statuses.Remove(id);
     }
 
     private static void RemoveReferencesTo(EntityStore<int> store, int target)

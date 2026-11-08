@@ -15,14 +15,16 @@ public sealed class CombatSystem : ITickSystem
     private readonly World _world;
     private readonly GameContent _content;
     private readonly Reach _reach;
+    private readonly EffectSystem _effects;
     private readonly Dictionary<int, int> _reservedDamage = new();
     private readonly List<PlannedAttack> _planned = new();
     private readonly List<AttackEvent> _events = new();
 
-    public CombatSystem(World world, GameContent content)
+    public CombatSystem(World world, GameContent content, EffectSystem effects)
     {
         _world = world;
         _content = content;
+        _effects = effects;
         _reach = new Reach(world, content);
     }
 
@@ -45,6 +47,8 @@ public sealed class CombatSystem : ITickSystem
         {
             ApplyAttack(attack);
         }
+
+        _effects.Resolve();
     }
 
     private void PlanAttack(int id)
@@ -79,7 +83,7 @@ public sealed class CombatSystem : ITickSystem
             _world.AutoAttackTargets.Set(id, target);
         }
 
-        int damage = DamageAgainst(def, target);
+        int damage = DamageAgainst(shooter, target);
         _reservedDamage[target] = ReservedOn(target) + damage;
         _planned.Add(new PlannedAttack(id, target, damage, ordered));
     }
@@ -148,7 +152,7 @@ public sealed class CombatSystem : ITickSystem
                 continue;
             }
 
-            bool survives = effectiveHp > DamageAgainst(shooter.Weapon, other);
+            bool survives = effectiveHp > DamageAgainst(shooter, other);
             if (best == 0 || (survives && !bestSurvives) || (survives == bestSurvives && gap < bestGap))
             {
                 best = other;
@@ -179,6 +183,7 @@ public sealed class CombatSystem : ITickSystem
         health.Hp -= attack.Damage;
         bool killed = health.Hp <= 0;
         _events.Add(new AttackEvent(attack.Attacker, attack.Target, attack.Damage, health.Hp, killed));
+        _effects.QueueHit(attack.Attacker, attack.Target, killed);
         if (!killed)
         {
             return;
@@ -200,7 +205,13 @@ public sealed class CombatSystem : ITickSystem
         return gap <= shooter.Weapon.Range;
     }
 
-    private int DamageAgainst(WeaponDef weapon, int target) => Math.Max(0, weapon.Damage - _world.Healths.Get(target).Armor);
+    /// <summary>Status bonuses can push armor below zero, which adds damage.</summary>
+    private int DamageAgainst(in Shooter shooter, int target)
+    {
+        int damage = shooter.Weapon.Damage + StatusRules.DamageBonus(_world, _content, shooter.Id);
+        int armor = _world.Healths.Get(target).Armor + StatusRules.ArmorBonus(_world, _content, target);
+        return Math.Max(0, damage - armor);
+    }
 
     private int ReservedOn(int target) => _reservedDamage.GetValueOrDefault(target);
 

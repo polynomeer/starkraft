@@ -313,9 +313,10 @@ public sealed class MovementSystem : ITickSystem
 
     private Fix SpeedFor(int id)
     {
-        return _world.Tags.TryGet(id, out UnitTag tag) && _content.UnitOrNull(tag.TypeId) is UnitDef unit
+        Fix speed = _world.Tags.TryGet(id, out UnitTag tag) && _content.UnitOrNull(tag.TypeId) is UnitDef unit
             ? unit.SpeedPerTick
             : DefaultSpeedPerTick;
+        return StatusRules.ScaleSpeed(_world, _content, id, speed);
     }
 
     private bool IsDiagonalCornerBlocked(int tileX, int tileY, int stepX, int stepY)

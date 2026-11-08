@@ -25,7 +25,8 @@ public sealed record UnitDef(
     int FootprintHeight,
     IReadOnlyList<string> ProducerTypes,
     IReadOnlyList<string> RequiredBuildingTypes,
-    IReadOnlyList<string> RequiredResearchIds)
+    IReadOnlyList<string> RequiredResearchIds,
+    IReadOnlyList<TriggerDef> Triggers)
 {
     public bool IsTrainable => BuildTicks > 0;
 }
@@ -70,27 +71,32 @@ public sealed class GameContent
     private readonly Dictionary<string, WeaponDef> _weapons = new();
     private readonly Dictionary<string, BuildingDef> _buildings = new();
     private readonly Dictionary<string, TechDef> _techs = new();
+    private readonly Dictionary<string, StatusDef> _statuses = new();
 
     public IReadOnlyList<UnitDef> Units { get; }
     public IReadOnlyList<WeaponDef> Weapons { get; }
     public IReadOnlyList<BuildingDef> Buildings { get; }
     public IReadOnlyList<TechDef> Techs { get; }
+    public IReadOnlyList<StatusDef> Statuses { get; }
     public ulong Hash { get; }
 
     public GameContent(
         IReadOnlyList<UnitDef> units,
         IReadOnlyList<WeaponDef> weapons,
         IReadOnlyList<BuildingDef> buildings,
-        IReadOnlyList<TechDef> techs)
+        IReadOnlyList<TechDef> techs,
+        IReadOnlyList<StatusDef>? statuses = null)
     {
         Units = units;
         Weapons = weapons;
         Buildings = buildings;
         Techs = techs;
+        Statuses = statuses ?? Array.Empty<StatusDef>();
         Index(units, _units, def => def.Id, "unit");
         Index(weapons, _weapons, def => def.Id, "weapon");
         Index(buildings, _buildings, def => def.Id, "building");
         Index(techs, _techs, def => def.Id, "tech");
+        Index(Statuses, _statuses, def => def.Id, "status");
         ValidateReferences();
         Hash = ComputeHash();
     }
@@ -104,6 +110,7 @@ public sealed class GameContent
     public WeaponDef? WeaponOrNull(string id) => _weapons.GetValueOrDefault(id);
     public BuildingDef? BuildingOrNull(string id) => _buildings.GetValueOrDefault(id);
     public TechDef? TechOrNull(string id) => _techs.GetValueOrDefault(id);
+    public StatusDef? StatusOrNull(string id) => _statuses.GetValueOrDefault(id);
 
     /// <summary>Rounds up, so a timer is never shorter than the data asks for at any tick rate.</summary>
     public static int MillisecondsToTicks(int milliseconds) =>
@@ -133,6 +140,7 @@ public sealed class GameContent
             RequireAllKnown(_buildings, unit.ProducerTypes, where, "producer");
             RequireAllKnown(_buildings, unit.RequiredBuildingTypes, where, "required building");
             RequireAllKnown(_techs, unit.RequiredResearchIds, where, "required research");
+            ValidateTriggers(unit, where);
         }
 
         foreach (BuildingDef building in Buildings)
@@ -148,6 +156,26 @@ public sealed class GameContent
             RequireAllKnown(_buildings, tech.ProducerTypes, where, "producer");
             RequireAllKnown(_buildings, tech.RequiredBuildingTypes, where, "required building");
             RequireAllKnown(_techs, tech.RequiredResearchIds, where, "required research");
+        }
+    }
+
+    private void ValidateTriggers(UnitDef unit, string where)
+    {
+        var seen = new HashSet<TriggerEvent>();
+        foreach (TriggerDef trigger in unit.Triggers)
+        {
+            if (!seen.Add(trigger.On))
+            {
+                throw new InvalidDataException($"{where} has more than one '{trigger.On}' trigger.");
+            }
+
+            foreach (EffectDef effect in trigger.Effects)
+            {
+                if (effect.Kind == EffectKind.ApplyStatus)
+                {
+                    RequireKnown(_statuses, effect.StatusId!, where, "status");
+                }
+            }
         }
     }
 
@@ -178,6 +206,7 @@ public sealed class GameContent
             WriteInts(writer, u.Hp, u.Armor, u.Radius.Raw, u.SpeedPerTick.Raw, u.OreCost, u.GasCost, u.BuildTicks, u.FootprintWidth, u.FootprintHeight);
             writer.Write(u.WeaponId ?? "");
             WriteLists(writer, u.ProducerTypes, u.RequiredBuildingTypes, u.RequiredResearchIds);
+            WriteTriggers(writer, u.Triggers);
         }
 
         foreach (WeaponDef w in Weapons)
@@ -196,6 +225,12 @@ public sealed class GameContent
             writer.Write(t.Id);
             WriteInts(writer, t.BuildTicks, t.OreCost, t.GasCost);
             WriteLists(writer, t.ProducerTypes, t.RequiredBuildingTypes, t.RequiredResearchIds);
+        }
+
+        foreach (StatusDef s in Statuses)
+        {
+            writer.Write(s.Id);
+            WriteInts(writer, s.DurationTicks, s.MaxStacks, s.DamagePerStack, s.ArmorPerStack, s.SpeedPercentPerStack);
         }
 
         writer.Flush();
@@ -219,6 +254,24 @@ public sealed class GameContent
 
         WriteInts(writer, b.ProductionQueueLimit, b.RallyOffsetX.Raw, b.RallyOffsetY.Raw, b.OreCost, b.GasCost);
         WriteLists(writer, b.RequiredBuildingTypes, b.RequiredResearchIds);
+    }
+
+    private static void WriteTriggers(BinaryWriter writer, IReadOnlyList<TriggerDef> triggers)
+    {
+        writer.Write(triggers.Count);
+        foreach (TriggerDef trigger in triggers)
+        {
+            writer.Write((byte)trigger.On);
+            writer.Write(trigger.Effects.Count);
+            foreach (EffectDef e in trigger.Effects)
+            {
+                writer.Write((byte)e.Kind);
+                writer.Write((byte)e.Target.Shape);
+                writer.Write((byte)e.Target.Faction);
+                WriteInts(writer, e.Target.Radius.Raw, e.Amount);
+                writer.Write(e.StatusId ?? "");
+            }
+        }
     }
 
     private static void WriteInts(BinaryWriter writer, params int[] values)

@@ -19,16 +19,18 @@ public sealed class Reach
     public bool IsInReach(int attacker, Position from, int target, Fix range) => Gap(attacker, from, target) <= range;
 
     /// <summary>Distance between the attacker's edge and the target's edge. Negative when they overlap.</summary>
-    public Fix Gap(int attacker, Position from, int target)
+    public Fix Gap(int attacker, Position from, int target) => GapFromPoint(from, target) - RadiusOf(attacker);
+
+    /// <summary>Distance from a point to the target's edge. Negative when the point is inside it.</summary>
+    public Fix GapFromPoint(Position from, int target)
     {
-        Fix attackerRadius = RadiusOf(attacker);
         if (_world.Footprints.TryGet(target, out BuildingFootprint footprint))
         {
-            return DistanceToRectangle(from, footprint) - attackerRadius;
+            return DistanceToRectangle(from, footprint);
         }
 
         Position to = _world.Positions.Get(target);
-        return Fix.Length(to.X - from.X, to.Y - from.Y) - attackerRadius - RadiusOf(target);
+        return Fix.Length(to.X - from.X, to.Y - from.Y) - RadiusOf(target);
     }
 
     private Fix RadiusOf(int id) =>

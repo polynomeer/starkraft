@@ -8,12 +8,15 @@ namespace Samjae.Core;
 /// <summary>Turns JSON text into <see cref="GameContent"/>. The caller reads the files, so the core itself does no IO.</summary>
 public static class ContentParser
 {
-    public static GameContent Parse(string unitsJson, string weaponsJson, string buildingsJson, string techsJson) =>
+    /// <summary><paramref name="statusesJson"/> may be left out for content that uses no statuses.</summary>
+    public static GameContent Parse(
+        string unitsJson, string weaponsJson, string buildingsJson, string techsJson, string? statusesJson = null) =>
         new(
             ParseList(unitsJson, "units", ParseUnit),
             ParseList(weaponsJson, "weapons", ParseWeapon),
             ParseList(buildingsJson, "buildings", ParseBuilding),
-            ParseList(techsJson, "techs", ParseTech));
+            ParseList(techsJson, "techs", ParseTech),
+            statusesJson == null ? null : ParseList(statusesJson, "statuses", ParseStatus));
 
     private static List<T> ParseList<T>(string json, string fileName, Func<Fields, T> parseItem)
     {
@@ -52,7 +55,8 @@ public static class ContentParser
         f.Int("footprintHeight", 0),
         f.TextList("producerTypes"),
         f.TextList("requiredBuildingTypes"),
-        f.TextList("requiredResearchIds"));
+        f.TextList("requiredResearchIds"),
+        ParseTriggers(f));
 
     private static WeaponDef ParseWeapon(Fields f) => new(
         f.Text("id"),
@@ -90,6 +94,96 @@ public static class ContentParser
         f.TextList("producerTypes"),
         f.TextList("requiredBuildingTypes"),
         f.TextList("requiredResearchIds"));
+
+    private static StatusDef ParseStatus(Fields f) => new(
+        f.Text("id"),
+        GameContent.MillisecondsToTicks(f.RequiredInt("durationMs", 1)),
+        f.Int("maxStacks", 1, minimum: 1),
+        f.SignedInt("damagePerStack"),
+        f.SignedInt("armorPerStack"),
+        f.SignedInt("speedPercentPerStack"));
+
+    private static List<TriggerDef> ParseTriggers(Fields f)
+    {
+        var triggers = new List<TriggerDef>();
+        foreach (Fields t in f.Objects("triggers"))
+        {
+            TriggerEvent on = t.Text("on") switch
+            {
+                "kill" => TriggerEvent.Kill,
+                "death" => TriggerEvent.Death,
+                "damaged" => TriggerEvent.Damaged,
+                "hit" => TriggerEvent.Hit,
+                string other => throw new InvalidDataException($"{t.Where}: unknown trigger '{other}'."),
+            };
+            var effects = new List<EffectDef>();
+            foreach (Fields e in t.Objects("effects"))
+            {
+                effects.Add(ParseEffect(e));
+                e.RejectUnknownKeys();
+            }
+
+            if (effects.Count == 0)
+            {
+                throw new InvalidDataException($"{t.Where}: a trigger needs at least one effect.");
+            }
+
+            triggers.Add(new TriggerDef(on, effects));
+            t.RejectUnknownKeys();
+        }
+
+        return triggers;
+    }
+
+    private static EffectDef ParseEffect(Fields f)
+    {
+        EffectTarget target = ParseTarget(f.Object("target"));
+        return f.Text("type") switch
+        {
+            "applyStatus" => new EffectDef(EffectKind.ApplyStatus, target, f.Int("stacks", 1, minimum: 1), f.Text("status")),
+            "damage" => new EffectDef(EffectKind.Damage, target, f.RequiredInt("amount", 1), null),
+            "heal" => new EffectDef(EffectKind.Heal, target, f.RequiredInt("amount", 1), null),
+            string other => throw new InvalidDataException($"{f.Where}: unknown effect type '{other}'."),
+        };
+    }
+
+    /// <summary>A circle must say which side it hits, so an area effect never lands on friends by default.</summary>
+    private static EffectTarget ParseTarget(Fields f)
+    {
+        TargetShape shape = f.Text("shape") switch
+        {
+            "self" => TargetShape.Self,
+            "other" => TargetShape.Other,
+            "circle" => TargetShape.Circle,
+            string other => throw new InvalidDataException($"{f.Where}: unknown target shape '{other}'."),
+        };
+        string? factionText = f.OptionalText("faction");
+        if (shape == TargetShape.Circle && factionText == null)
+        {
+            throw new InvalidDataException($"{f.Where}: a circle needs 'faction'.");
+        }
+
+        TargetFaction faction = (factionText ?? "any") switch
+        {
+            "any" => TargetFaction.Any,
+            "ally" => TargetFaction.Ally,
+            "enemy" => TargetFaction.Enemy,
+            string other => throw new InvalidDataException($"{f.Where}: unknown faction '{other}'."),
+        };
+        Fix radius = shape == TargetShape.Circle ? f.Fixed("radius") : Fix.Zero;
+        if (shape != TargetShape.Circle && f.Has("radius"))
+        {
+            throw new InvalidDataException($"{f.Where}: only a circle has a 'radius'.");
+        }
+
+        if (radius < Fix.Zero)
+        {
+            throw new InvalidDataException($"{f.Where}: 'radius' must not be negative.");
+        }
+
+        f.RejectUnknownKeys();
+        return new EffectTarget(shape, faction, radius);
+    }
 
     private static List<ResourceKind> ParseKinds(Fields f)
     {
@@ -140,7 +234,40 @@ public static class ContentParser
             return value.GetString();
         }
 
-        public int Int(string key, int fallback) => TryGet(key, out JsonElement value) ? ReadInt(key, value, 0) : fallback;
+        public int Int(string key, int fallback, int minimum = 0) =>
+            TryGet(key, out JsonElement value) ? ReadInt(key, value, minimum) : fallback;
+
+        public int SignedInt(string key) => TryGet(key, out JsonElement value) ? ReadInt(key, value, int.MinValue) : 0;
+
+        public bool Has(string key) => TryGet(key, out _);
+
+        public Fields Object(string key)
+        {
+            if (!TryGet(key, out JsonElement value))
+            {
+                throw new InvalidDataException($"{Where}: missing '{key}'.");
+            }
+
+            return new Fields(value, $"{Where}.{key}");
+        }
+
+        public List<Fields> Objects(string key)
+        {
+            var items = new List<Fields>();
+            if (!TryGet(key, out JsonElement value))
+            {
+                return items;
+            }
+
+            RequireKind(key, value, JsonValueKind.Array);
+            int index = 0;
+            foreach (JsonElement item in value.EnumerateArray())
+            {
+                items.Add(new Fields(item, $"{Where}.{key}[{index++}]"));
+            }
+
+            return items;
+        }
 
         public int RequiredInt(string key, int minimum)
         {

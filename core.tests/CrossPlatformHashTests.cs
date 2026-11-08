@@ -69,7 +69,18 @@ public class CrossPlatformHashTests
             economy.Simulation.Step();
         }
 
-        (Replay match, _) = ReplayTests.PlayStandard(3UL);
+        Simulation skirmish = EffectTests.Skirmish();
+        for (int tick = 0; tick <= 600; tick++)
+        {
+            if (tick % 100 == 0)
+            {
+                lines.Add(Line($"effects-{tick}", skirmish.ComputeHash()));
+            }
+
+            skirmish.Step();
+        }
+
+                (Replay match, _) = ReplayTests.PlayStandard(3UL);
         foreach (ReplayCheckpoint checkpoint in match.Checkpoints)
         {
             lines.Add(Line($"bots-{checkpoint.Tick}", checkpoint.Hash));
