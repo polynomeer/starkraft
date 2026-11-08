@@ -12,6 +12,7 @@ namespace Samjae.Core;
 public sealed class PathfindingSystem : ITickSystem
 {
     private readonly World _world;
+    private readonly GameContent _content;
     private readonly Pathfinder _pathfinder;
     private readonly int[] _output;
     private readonly System.Collections.Generic.Dictionary<int, int> _claimedGoals = new();
@@ -22,9 +23,10 @@ public sealed class PathfindingSystem : ITickSystem
     public int LastTickBudgetExhausted { get; private set; }
     public int LastTickCarryOver { get; private set; }
 
-    public PathfindingSystem(World world)
+    public PathfindingSystem(World world, GameContent content)
     {
         _world = world;
+        _content = content;
         _pathfinder = new Pathfinder(world.Map, world.Occupancy);
         _output = new int[world.Map.Width * world.Map.Height];
     }
@@ -45,6 +47,12 @@ public sealed class PathfindingSystem : ITickSystem
             int id = queue.IdAt(i);
             if (!_world.Orders.TryGet(id, out var orders) || orders.Count == 0)
             {
+                continue;
+            }
+
+            if (Layers.IsAir(_world, _content, id))
+            {
+                FlyStraight(id, orders[0]);
                 continue;
             }
 
@@ -73,6 +81,22 @@ public sealed class PathfindingSystem : ITickSystem
 
         queue.Reset(carried);
         LastTickCarryOver = carried;
+    }
+
+    /// <summary>
+    /// Air units fly straight to the goal tile: a one-node path that costs no budget, claims no goal and is never
+    /// moved off a taken tile, because nothing blocks the air.
+    /// </summary>
+    private void FlyStraight(int id, Order order)
+    {
+        if (!_world.Positions.TryGet(id, out Position position) || GoalFor(order, position) is not (int x, int y)
+            || !_world.Map.InBounds(x, y))
+        {
+            return;
+        }
+
+        _world.PathFollows.Set(id, new PathFollow(new[] { y * _world.Map.Width + x }, 1, 0, x, y));
+        LastTickSolved++;
     }
 
     /// <summary>Returns true when the request ran out of budget and must be retried next tick.</summary>

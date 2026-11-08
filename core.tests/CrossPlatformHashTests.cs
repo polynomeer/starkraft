@@ -91,6 +91,17 @@ public class CrossPlatformHashTests
             duel.Step();
         }
 
+        Simulation skies = LayerTests.Skies();
+        for (int tick = 0; tick <= 600; tick++)
+        {
+            if (tick % 100 == 0)
+            {
+                lines.Add(Line($"layers-{tick}", skies.ComputeHash()));
+            }
+
+            skies.Step();
+        }
+
                 (Replay match, _) = ReplayTests.PlayStandard(3UL);
         foreach (ReplayCheckpoint checkpoint in match.Checkpoints)
         {

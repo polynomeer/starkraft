@@ -66,7 +66,26 @@ public sealed class CommandProcessor
             return new CommandResult(index, CommandRejection.InvalidTarget);
         }
 
-        return OrderUnits(index, command.Player, command.Units, command.Queued, _ => new Order.Attack(command.Target));
+        List<int> own = OwnUnits(command.Player, command.Units, workersOnly: false);
+        if (own.Count == 0)
+        {
+            return new CommandResult(index, CommandRejection.NoOwnUnits);
+        }
+
+        // Units that cannot hit the target's layer are left out, so they keep their current orders.
+        own.RemoveAll(id => !Layers.CanTarget(_world, _simulation.Content, id, command.Target));
+        if (own.Count == 0)
+        {
+            return new CommandResult(index, CommandRejection.InvalidTarget);
+        }
+
+        foreach (int id in own)
+        {
+            PrepareOrders(id, command.Queued);
+            _world.Orders.Get(id).Add(new Order.Attack(command.Target));
+        }
+
+        return new CommandResult(index, null, own.Count);
     }
 
     private CommandResult HarvestNode(int index, PlayerCommand.Harvest command)

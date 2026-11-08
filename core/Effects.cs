@@ -493,13 +493,16 @@ public sealed class EffectSystem
         }
     }
 
-    /// <summary>Tiles under living units now. The occupancy grid is from the start of the tick and still holds the dead.</summary>
+    /// <summary>
+    /// Tiles under living ground units now. The occupancy grid is from the start of the tick and still holds the dead.
+    /// Air units take no tile.
+    /// </summary>
     private void CollectStandingTiles()
     {
         _standingTiles.Clear();
         foreach (int id in _world.Positions)
         {
-            if (_world.IsAttackable(id) && !_world.Footprints.Has(id))
+            if (_world.IsAttackable(id) && !_world.Footprints.Has(id) && !Layers.IsAir(_world, _content, id))
             {
                 Position p = _world.Positions.Get(id);
                 _standingTiles.Add(p.Y.FloorToInt() * _world.Map.Width + p.X.FloorToInt());

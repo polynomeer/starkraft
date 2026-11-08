@@ -58,13 +58,42 @@ public static class ContentParser
         f.TextList("requiredBuildingTypes"),
         f.TextList("requiredResearchIds"),
         ParseTriggers(f),
-        f.TextList("abilities"));
+        f.TextList("abilities"),
+        f.OptionalText("layer") switch
+        {
+            null or "ground" => MoveLayer.Ground,
+            "air" => MoveLayer.Air,
+            string other => throw new InvalidDataException($"{f.Where}: unknown layer '{other}'."),
+        });
 
     private static WeaponDef ParseWeapon(Fields f) => new(
         f.Text("id"),
         f.RequiredInt("damage", 0),
         f.Fixed("range"),
-        GameContent.MillisecondsToTicks(f.RequiredInt("cooldownMs", 0)));
+        GameContent.MillisecondsToTicks(f.RequiredInt("cooldownMs", 0)),
+        ParseWeaponTargets(f));
+
+    /// <summary>Weapons hit only the ground unless they say otherwise.</summary>
+    private static LayerMask ParseWeaponTargets(Fields f)
+    {
+        if (!f.Has("targets"))
+        {
+            return LayerMask.Ground;
+        }
+
+        LayerMask mask = 0;
+        foreach (string name in f.TextList("targets"))
+        {
+            mask |= name switch
+            {
+                "ground" => LayerMask.Ground,
+                "air" => LayerMask.Air,
+                _ => throw new InvalidDataException($"{f.Where}: unknown target layer '{name}'."),
+            };
+        }
+
+        return mask != 0 ? mask : throw new InvalidDataException($"{f.Where}: 'targets' needs at least one layer.");
+    }
 
     private static BuildingDef ParseBuilding(Fields f) => new(
         f.Text("id"),

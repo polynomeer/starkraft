@@ -256,6 +256,7 @@ public sealed class MovementSystem : ITickSystem
         target = null;
         return _world.Tags.TryGet(id, out UnitTag tag)
             && _world.IsEnemyOf(targetId, tag.Faction)
+            && Layers.CanTarget(_world, _content, id, targetId)
             && _world.Positions.TryGet(targetId, out target);
     }
 
@@ -285,6 +286,11 @@ public sealed class MovementSystem : ITickSystem
     /// </summary>
     private bool TryReplan(int id, Position position, Order order, PathFollow path, int nodeX, int nodeY)
     {
+        if (Layers.IsAir(_world, _content, id))
+        {
+            return false;
+        }
+
         int tileX = position.X.FloorToInt();
         int tileY = position.Y.FloorToInt();
         int stepX = tileX + System.Math.Sign(nodeX - tileX);
@@ -414,7 +420,8 @@ public sealed class MovementSystem : ITickSystem
 
         foreach (int other in _world.AliveIds)
         {
-            if (other != id && _world.IsEnemyOf(other, tag.Faction) && _reach.IsInReach(id, source, other, range))
+            if (other != id && _world.IsEnemyOf(other, tag.Faction) && Layers.CanTarget(_world, _content, id, other)
+                && _reach.IsInReach(id, source, other, range))
             {
                 return true;
             }

@@ -107,7 +107,7 @@ public sealed class CombatSystem : ITickSystem
             return (0, false);
         }
 
-        if (!_world.IsEnemyOf(attack.Target, shooter.Faction))
+        if (!_world.IsEnemyOf(attack.Target, shooter.Faction) || !CanHit(shooter, attack.Target))
         {
             orders.RemoveAt(0);
             _world.ClearPath(shooter.Id);
@@ -199,11 +199,14 @@ public sealed class CombatSystem : ITickSystem
 
     private bool InRange(in Shooter shooter, int target) => InRange(shooter, target, out _);
 
+    /// <summary>A target the weapon cannot hit is never in range.</summary>
     private bool InRange(in Shooter shooter, int target, out Fix gap)
     {
         gap = _reach.Gap(shooter.Id, shooter.Position, target);
-        return gap <= shooter.Weapon.Range;
+        return gap <= shooter.Weapon.Range && CanHit(shooter, target);
     }
+
+    private bool CanHit(in Shooter shooter, int target) => Layers.CanHit(shooter.Weapon, Layers.Of(_world, _content, target));
 
     /// <summary>Status bonuses can push armor below zero, which adds damage.</summary>
     private int DamageAgainst(in Shooter shooter, int target)

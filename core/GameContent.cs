@@ -27,12 +27,13 @@ public sealed record UnitDef(
     IReadOnlyList<string> RequiredBuildingTypes,
     IReadOnlyList<string> RequiredResearchIds,
     IReadOnlyList<TriggerDef> Triggers,
-    IReadOnlyList<string> Abilities)
+    IReadOnlyList<string> Abilities,
+    MoveLayer Layer)
 {
     public bool IsTrainable => BuildTicks > 0;
 }
 
-public sealed record WeaponDef(string Id, int Damage, Fix Range, int CooldownTicks);
+public sealed record WeaponDef(string Id, int Damage, Fix Range, int CooldownTicks, LayerMask Targets);
 
 public sealed record BuildingDef(
     string Id,
@@ -244,12 +245,14 @@ public sealed class GameContent
             WriteLists(writer, u.ProducerTypes, u.RequiredBuildingTypes, u.RequiredResearchIds);
             WriteTriggers(writer, u.Triggers);
             WriteLists(writer, u.Abilities);
+            writer.Write((byte)u.Layer);
         }
 
         foreach (WeaponDef w in Weapons)
         {
             writer.Write(w.Id);
             WriteInts(writer, w.Damage, w.Range.Raw, w.CooldownTicks);
+            writer.Write((byte)w.Targets);
         }
 
         foreach (BuildingDef b in Buildings)

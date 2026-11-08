@@ -49,7 +49,7 @@ public sealed class Simulation
         Production = new ProductionSystem(world, content, Resources);
         Vision = new VisionSystem(world);
         _commands = new CommandProcessor(this);
-        Pathing = new PathfindingSystem(world);
+        Pathing = new PathfindingSystem(world, content);
         Movement = new MovementSystem(world, content);
         Effects = new EffectSystem(world, content);
         Abilities = new AbilitySystem(world, content, Effects);
@@ -62,7 +62,7 @@ public sealed class Simulation
             new StatusSystem(world),
             new LifetimeSystem(world),
             Harvest,
-            new OccupancySystem(world),
+            new OccupancySystem(world, content),
             Construction,
             Research,
             Production,
