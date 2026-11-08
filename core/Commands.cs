@@ -23,6 +23,9 @@ public abstract record PlayerCommand(int Player)
     public sealed record CancelResearch(int Player, int Building) : PlayerCommand(Player);
     public sealed record Rally(int Player, int Building, Fix X, Fix Y) : PlayerCommand(Player);
     public sealed record Surrender(int Player) : PlayerCommand(Player);
+
+    /// <summary>One caster, so a group order does not spend every caster's cooldown. Target is 0 unless the ability targets a unit; X and Y are read only for a point.</summary>
+    public sealed record Cast(int Player, int Caster, string AbilityId, int Target = 0, Fix X = default, Fix Y = default, bool Queued = false) : PlayerCommand(Player);
 }
 
 public enum CommandRejection : byte
@@ -39,6 +42,7 @@ public enum CommandRejection : byte
     Research,
     CancelBuild,
     NothingToCancel,
+    Cast,
 }
 
 /// <summary>

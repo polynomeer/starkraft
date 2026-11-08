@@ -80,6 +80,17 @@ public class CrossPlatformHashTests
             skirmish.Step();
         }
 
+        var duel = new AbilityTests.Duel();
+        for (int tick = 0; tick <= 600; tick++)
+        {
+            if (tick % 100 == 0)
+            {
+                lines.Add(Line($"abilities-{tick}", duel.Simulation.ComputeHash()));
+            }
+
+            duel.Step();
+        }
+
                 (Replay match, _) = ReplayTests.PlayStandard(3UL);
         foreach (ReplayCheckpoint checkpoint in match.Checkpoints)
         {

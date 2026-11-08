@@ -250,6 +250,19 @@ public static class CommandJson
             case PlayerCommand.CancelResearch c: Building(w, "cancelResearch", c.Building); break;
             case PlayerCommand.Rally c: Building(w, "rally", c.Building); w.WriteNumber("x", c.X.Raw); w.WriteNumber("y", c.Y.Raw); break;
             case PlayerCommand.Surrender: w.WriteString("type", "surrender"); break;
+            case PlayerCommand.Cast c:
+                w.WriteString("type", "cast");
+                w.WriteNumber("caster", c.Caster);
+                w.WriteString("ability", c.AbilityId);
+                w.WriteNumber("target", c.Target);
+                w.WriteNumber("x", c.X.Raw);
+                w.WriteNumber("y", c.Y.Raw);
+                if (c.Queued)
+                {
+                    w.WriteBoolean("queued", true);
+                }
+
+                break;
             default: throw new ArgumentException($"Unserialised command {command.GetType().Name}.");
         }
 
@@ -280,6 +293,7 @@ public static class CommandJson
             "cancelResearch" => new PlayerCommand.CancelResearch(player, I("building")),
             "rally" => new PlayerCommand.Rally(player, I("building"), F("x"), F("y")),
             "surrender" => new PlayerCommand.Surrender(player),
+            "cast" => new PlayerCommand.Cast(player, I("caster"), S("ability"), I("target"), F("x"), F("y"), queued),
             string other => throw new InvalidDataException($"Unknown command type '{other}'."),
         };
     }

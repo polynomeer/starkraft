@@ -38,6 +38,9 @@ public sealed class World
     /// <summary>Ticks left for summoned units that expire.</summary>
     public EntityStore<int> Lifetimes { get; } = new();
 
+    /// <summary>Abilities still cooling down, in the order they were cast.</summary>
+    public EntityStore<List<AbilityCooldown>> Cooldowns { get; } = new();
+
     /// <summary>Sorted containers, because these are serialised by walking them.</summary>
     public SortedDictionary<int, ResourceStockpile> Stockpiles { get; } = new();
     public SortedDictionary<int, SortedSet<string>> UnlockedTechs { get; } = new();
@@ -165,6 +168,7 @@ public sealed class World
         AutoAttackTargets.Remove(id);
         Statuses.Remove(id);
         Lifetimes.Remove(id);
+        Cooldowns.Remove(id);
     }
 
     private static void RemoveReferencesTo(EntityStore<int> store, int target)

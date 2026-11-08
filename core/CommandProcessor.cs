@@ -43,6 +43,7 @@ public sealed class CommandProcessor
             PlayerCommand.CancelResearch c => CancelResearch(index, c),
             PlayerCommand.Rally c => Rally(index, c),
             PlayerCommand.Surrender c => Surrender(index, c),
+            PlayerCommand.Cast c => Cast(index, c),
             _ => throw new System.ArgumentException($"Unhandled command {command.GetType().Name}."),
         };
     }
@@ -250,6 +251,36 @@ public sealed class CommandProcessor
 
         _world.RallyPoints.Set(command.Building, new RallyPoint(command.X, command.Y));
         return new CommandResult(index, null, EntityId: command.Building);
+    }
+
+    /// <summary>
+    /// A cast on cooldown is accepted: the caster walks into range and casts once the ability is ready, so a cooldown
+    /// is never a reason to lose the order.
+    /// </summary>
+    private CommandResult Cast(int index, PlayerCommand.Cast command)
+    {
+        if (OwnUnits(command.Player, new[] { command.Caster }, workersOnly: false).Count == 0)
+        {
+            return new CommandResult(index, CommandRejection.NoOwnUnits);
+        }
+
+        if (AbilityRules.AbilityOf(_world, _simulation.Content, command.Caster, command.AbilityId) is not AbilityDef ability)
+        {
+            return new CommandResult(index, CommandRejection.Cast, Detail: CastFailure.UnknownAbility.ToString());
+        }
+
+        int target = ability.TargetKind == AbilityTargetKind.Unit ? command.Target : 0;
+        bool point = ability.TargetKind == AbilityTargetKind.Point;
+        Fix x = point ? command.X : Fix.Zero;
+        Fix y = point ? command.Y : Fix.Zero;
+        if (AbilityRules.CheckTarget(_world, ability, command.Caster, target, x, y) is CastFailure failure)
+        {
+            return new CommandResult(index, CommandRejection.Cast, Detail: failure.ToString());
+        }
+
+        PrepareOrders(command.Caster, command.Queued);
+        _world.Orders.Get(command.Caster).Add(new Order.Cast(ability.Id, target, x, y));
+        return new CommandResult(index, null, 1);
     }
 
     private CommandResult Surrender(int index, PlayerCommand.Surrender command)

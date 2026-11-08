@@ -60,7 +60,7 @@ public sealed class PathfindingSystem : ITickSystem
                 continue;
             }
 
-            (int goalX, int goalY) = orders[0] is Order.Attack
+            (int goalX, int goalY) = AbilityRules.ChasesUnit(orders[0])
                 ? (rawGoalX, rawGoalY)
                 : FreeGoalNear(id, rawGoalX, rawGoalY, position.X.FloorToInt(), position.Y.FloorToInt());
 
@@ -80,7 +80,7 @@ public sealed class PathfindingSystem : ITickSystem
     {
         int fromX = position.X.FloorToInt();
         int fromY = position.Y.FloorToInt();
-        int length = _pathfinder.FindPath(fromX, fromY, goalX, goalY, remainingBudget, _output, allowOccupiedGoal: order is Order.Attack);
+        int length = _pathfinder.FindPath(fromX, fromY, goalX, goalY, remainingBudget, _output, allowOccupiedGoal: AbilityRules.ChasesUnit(order));
         if (length == 0 && !_pathfinder.LastBudgetExhausted && blockedGoal is (int X, int Y) original
             && System.Math.Max(System.Math.Abs(fromX - original.X), System.Math.Abs(fromY - original.Y)) <= GoalSearchRadius)
         {
@@ -93,7 +93,7 @@ public sealed class PathfindingSystem : ITickSystem
         if (length > 0)
         {
             _world.PathFollows.Set(id, new PathFollow(_output[..length], length, 0, goalX, goalY));
-            if (order is not Order.Attack)
+            if (!AbilityRules.ChasesUnit(order))
             {
                 _claimedGoals[goalY * _world.Map.Width + goalX] = id;
             }
@@ -131,6 +131,13 @@ public sealed class PathfindingSystem : ITickSystem
                 return _world.Positions.TryGet(attack.Target, out Position target)
                     ? (target.X.FloorToInt(), target.Y.FloorToInt())
                     : null;
+            case Order.Cast { Target: > 0 } cast:
+                return _world.Positions.TryGet(cast.Target, out Position castTarget)
+                    ? (castTarget.X.FloorToInt(), castTarget.Y.FloorToInt())
+                    : null;
+            case Order.Cast point:
+                // Casts without a target never ask for a path, so the rest walk to a point.
+                return (point.X.FloorToInt(), point.Y.FloorToInt());
             default:
                 return null;
         }
@@ -190,7 +197,7 @@ public sealed class PathfindingSystem : ITickSystem
         _claimedGoals.Clear();
         foreach (int id in _world.PathFollows)
         {
-            if (_world.Orders.TryGet(id, out var orders) && orders.Count > 0 && orders[0] is not Order.Attack)
+            if (_world.Orders.TryGet(id, out var orders) && orders.Count > 0 && !AbilityRules.ChasesUnit(orders[0]))
             {
                 PathFollow path = _world.PathFollows.Get(id);
                 _claimedGoals[path.GoalY * _world.Map.Width + path.GoalX] = id;

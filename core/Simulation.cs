@@ -14,7 +14,7 @@ public sealed class Simulation
     public const int TicksPerSecond = 20;
 
     private const int StateMagic = 0x4A53; // "SJ"
-    private const int StateVersion = 5;
+    private const int StateVersion = 6;
 
     private readonly ITickSystem[] _tickOrder;
     private readonly CommandProcessor _commands;
@@ -27,6 +27,7 @@ public sealed class Simulation
     public MovementSystem Movement { get; }
     public CombatSystem Combat { get; }
     public EffectSystem Effects { get; }
+    public AbilitySystem Abilities { get; }
     public Resources Resources { get; }
     public BuildingPlacement Buildings { get; }
     public HarvestSystem Harvest { get; }
@@ -51,6 +52,7 @@ public sealed class Simulation
         Pathing = new PathfindingSystem(world);
         Movement = new MovementSystem(world, content);
         Effects = new EffectSystem(world, content);
+        Abilities = new AbilitySystem(world, content, Effects);
         Combat = new CombatSystem(world, content, Effects);
 
         // The tick order, in one place. Changing it changes every hash and replay.
@@ -66,6 +68,7 @@ public sealed class Simulation
             Production,
             Pathing,
             Movement,
+            Abilities,
             Combat,
             new VictorySystem(world),
             Vision,

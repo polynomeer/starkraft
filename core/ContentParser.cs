@@ -8,15 +8,16 @@ namespace Samjae.Core;
 /// <summary>Turns JSON text into <see cref="GameContent"/>. The caller reads the files, so the core itself does no IO.</summary>
 public static class ContentParser
 {
-    /// <summary><paramref name="statusesJson"/> may be left out for content that uses no statuses.</summary>
+    /// <summary>Statuses and abilities may be left out for content that uses none.</summary>
     public static GameContent Parse(
-        string unitsJson, string weaponsJson, string buildingsJson, string techsJson, string? statusesJson = null) =>
+        string unitsJson, string weaponsJson, string buildingsJson, string techsJson, string? statusesJson = null, string? abilitiesJson = null) =>
         new(
             ParseList(unitsJson, "units", ParseUnit),
             ParseList(weaponsJson, "weapons", ParseWeapon),
             ParseList(buildingsJson, "buildings", ParseBuilding),
             ParseList(techsJson, "techs", ParseTech),
-            statusesJson == null ? null : ParseList(statusesJson, "statuses", ParseStatus));
+            statusesJson == null ? null : ParseList(statusesJson, "statuses", ParseStatus),
+            abilitiesJson == null ? null : ParseList(abilitiesJson, "abilities", ParseAbility));
 
     private static List<T> ParseList<T>(string json, string fileName, Func<Fields, T> parseItem)
     {
@@ -56,7 +57,8 @@ public static class ContentParser
         f.TextList("producerTypes"),
         f.TextList("requiredBuildingTypes"),
         f.TextList("requiredResearchIds"),
-        ParseTriggers(f));
+        ParseTriggers(f),
+        f.TextList("abilities"));
 
     private static WeaponDef ParseWeapon(Fields f) => new(
         f.Text("id"),
@@ -116,24 +118,94 @@ public static class ContentParser
                 "hit" => TriggerEvent.Hit,
                 string other => throw new InvalidDataException($"{t.Where}: unknown trigger '{other}'."),
             };
-            var effects = new List<EffectDef>();
-            foreach (Fields e in t.Objects("effects"))
-            {
-                effects.Add(ParseEffect(e));
-                e.RejectUnknownKeys();
-            }
-
-            if (effects.Count == 0)
-            {
-                throw new InvalidDataException($"{t.Where}: a trigger needs at least one effect.");
-            }
-
-            triggers.Add(new TriggerDef(on, effects));
+            triggers.Add(new TriggerDef(on, ParseEffects(t, "a trigger")));
             t.RejectUnknownKeys();
         }
 
         return triggers;
     }
+
+    private static List<EffectDef> ParseEffects(Fields f, string owner)
+    {
+        var effects = new List<EffectDef>();
+        foreach (Fields e in f.Objects("effects"))
+        {
+            effects.Add(ParseEffect(e));
+            e.RejectUnknownKeys();
+        }
+
+        if (effects.Count == 0)
+        {
+            throw new InvalidDataException($"{f.Where}: {owner} needs at least one effect.");
+        }
+
+        return effects;
+    }
+
+    /// <summary>
+    /// A unit target names which side it may be cast on, and only targeted abilities have a range. Effects may use
+    /// <c>other</c> only when there is one: a target unit, or a point for where a summon appears.
+    /// </summary>
+    private static AbilityDef ParseAbility(Fields f)
+    {
+        AbilityTargetKind kind = f.Text("target") switch
+        {
+            "none" => AbilityTargetKind.None,
+            "unit" => AbilityTargetKind.Unit,
+            "point" => AbilityTargetKind.Point,
+            string other => throw new InvalidDataException($"{f.Where}: unknown ability target '{other}'."),
+        };
+        string? factionText = f.OptionalText("targetFaction");
+        if ((kind == AbilityTargetKind.Unit) != (factionText != null))
+        {
+            throw new InvalidDataException($"{f.Where}: 'targetFaction' is required for a unit target and allowed only there.");
+        }
+
+        if ((kind == AbilityTargetKind.None) == f.Has("range"))
+        {
+            throw new InvalidDataException($"{f.Where}: 'range' is required for a unit or point target and allowed only there.");
+        }
+
+        Fix range = kind == AbilityTargetKind.None ? Fix.Zero : f.Fixed("range");
+        if (range < Fix.Zero)
+        {
+            throw new InvalidDataException($"{f.Where}: 'range' must not be negative.");
+        }
+
+        var ability = new AbilityDef(
+            f.Text("id"),
+            kind,
+            factionText == null ? TargetFaction.Any : ParseFaction(f, factionText),
+            range,
+            GameContent.MillisecondsToTicks(f.Int("cooldownMs", 0)),
+            ParseEffects(f, "an ability"));
+        foreach (EffectDef effect in ability.Effects)
+        {
+            RequireOtherExists(f, kind, effect);
+        }
+
+        return ability;
+    }
+
+    private static void RequireOtherExists(Fields f, AbilityTargetKind kind, EffectDef effect)
+    {
+        bool usesOther = effect.Target.Shape == TargetShape.Other;
+        bool summon = effect.Kind == EffectKind.Summon;
+        bool hasPlace = kind != AbilityTargetKind.None;
+        bool hasUnit = kind == AbilityTargetKind.Unit;
+        if ((usesOther && !(summon ? hasPlace : hasUnit)) || (effect.Summon?.CopyOther == true && !hasUnit))
+        {
+            throw new InvalidDataException($"{f.Where}: an effect uses 'other', but this ability has no target for it.");
+        }
+    }
+
+    private static TargetFaction ParseFaction(Fields f, string text) => text switch
+    {
+        "any" => TargetFaction.Any,
+        "ally" => TargetFaction.Ally,
+        "enemy" => TargetFaction.Enemy,
+        string other => throw new InvalidDataException($"{f.Where}: unknown faction '{other}'."),
+    };
 
     private static EffectDef ParseEffect(Fields f)
     {
@@ -194,13 +266,7 @@ public static class ContentParser
             throw new InvalidDataException($"{f.Where}: a circle needs 'faction'.");
         }
 
-        TargetFaction faction = (factionText ?? "any") switch
-        {
-            "any" => TargetFaction.Any,
-            "ally" => TargetFaction.Ally,
-            "enemy" => TargetFaction.Enemy,
-            string other => throw new InvalidDataException($"{f.Where}: unknown faction '{other}'."),
-        };
+        TargetFaction faction = ParseFaction(f, factionText ?? "any");
         Fix radius = shape == TargetShape.Circle ? f.Fixed("radius") : Fix.Zero;
         if (shape != TargetShape.Circle && f.Has("radius"))
         {

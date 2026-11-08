@@ -37,6 +37,7 @@ internal static class WorldCodec
         WriteStore(w, world.AutoAttackTargets, (o, c) => o.Write(c));
         WriteStore(w, world.Statuses, WriteStatuses);
         WriteStore(w, world.Lifetimes, (o, c) => o.Write(c));
+        WriteStore(w, world.Cooldowns, WriteCooldowns);
         WriteFactionTables(w, world);
     }
 
@@ -71,6 +72,7 @@ internal static class WorldCodec
         ReadStore(r, world.AutoAttackTargets, i => i.ReadInt32());
         ReadStore(r, world.Statuses, ReadStatuses);
         ReadStore(r, world.Lifetimes, i => i.ReadInt32());
+        ReadStore(r, world.Cooldowns, ReadCooldowns);
         ReadFactionTables(r, world);
     }
 
@@ -118,6 +120,28 @@ internal static class WorldCodec
         }
     }
 
+    private static void WriteCooldowns(BinaryWriter w, List<AbilityCooldown> cooldowns)
+    {
+        w.Write(cooldowns.Count);
+        foreach (AbilityCooldown cooldown in cooldowns)
+        {
+            w.Write(cooldown.AbilityId);
+            w.Write(cooldown.RemainingTicks);
+        }
+    }
+
+    private static List<AbilityCooldown> ReadCooldowns(BinaryReader r)
+    {
+        int count = r.ReadInt32();
+        var cooldowns = new List<AbilityCooldown>(count);
+        for (int i = 0; i < count; i++)
+        {
+            cooldowns.Add(new AbilityCooldown(r.ReadString(), r.ReadInt32()));
+        }
+
+        return cooldowns;
+    }
+
     private static List<StatusInstance> ReadStatuses(BinaryReader r)
     {
         int count = r.ReadInt32();
@@ -161,6 +185,9 @@ internal static class WorldCodec
             case Order.Attack o:
                 w.Write((byte)6); w.Write(o.Target);
                 break;
+            case Order.Cast o:
+                w.Write((byte)7); w.Write(o.AbilityId); w.Write(o.Target); w.Write(o.X.Raw); w.Write(o.Y.Raw);
+                break;
             default:
                 throw new InvalidOperationException($"Unserialised order type {order.GetType().Name}.");
         }
@@ -189,6 +216,7 @@ internal static class WorldCodec
             4 => new Order.Hold(),
             5 => new Order.Construct(r.ReadInt32()),
             6 => new Order.Attack(r.ReadInt32()),
+            7 => new Order.Cast(r.ReadString(), r.ReadInt32(), ReadFix(r), ReadFix(r)),
             _ => throw new InvalidDataException($"Unknown order tag {tag}."),
         };
     }

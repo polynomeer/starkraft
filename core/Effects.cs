@@ -239,6 +239,31 @@ public sealed class EffectSystem
     /// <summary>Records a weapon hit. Call before the target is removed, so its death trigger knows where it stood.</summary>
     public void QueueHit(int attacker, int target, bool killed) => QueueHit(attacker, target, killed, depth: 0, weapon: true);
 
+    /// <summary>
+    /// Applies a cast's effects at once, then resolves the triggers they set off. <c>other</c> is the target unit, or
+    /// the point for where a summon appears; a circle is centred on the target, the point, or the caster.
+    /// </summary>
+    public void Cast(int caster, AbilityDef ability, int target, Fix x, Fix y)
+    {
+        UnitTag tag = _world.Tags.Get(caster);
+        Position at = _world.Positions.Get(caster);
+        Firing firing = ability.TargetKind switch
+        {
+            AbilityTargetKind.Unit => CastFiring(caster, tag, at, target, _world.Tags.Get(target).TypeId, _world.Positions.Get(target)),
+            AbilityTargetKind.Point => CastFiring(caster, tag, at, 0, null, new Position(x, y)),
+            _ => new Firing(caster, tag.TypeId, tag.Faction, at.X, at.Y, 0, 0, 0, null, Fix.Zero, Fix.Zero, false, at.X, at.Y),
+        };
+        foreach (EffectDef effect in ability.Effects)
+        {
+            Apply(firing, effect);
+        }
+
+        Resolve();
+    }
+
+    private static Firing CastFiring(int caster, UnitTag tag, Position at, int other, string? otherType, Position center) =>
+        new(caster, tag.TypeId, tag.Faction, at.X, at.Y, 0, other, 0, otherType, center.X, center.Y, true, center.X, center.Y);
+
     public void Resolve()
     {
         while (_queue.Count > 0)
@@ -283,7 +308,8 @@ public sealed class EffectSystem
         bool otherKnown = _world.Tags.TryGet(other, out UnitTag otherTag) & _world.Positions.TryGet(other, out Position otherAt);
         _queue.Enqueue(new Firing(
             owner, tag.TypeId, tag.Faction, position.X, position.Y, on, other, depth,
-            otherKnown ? otherTag.TypeId : null, otherKnown ? otherAt.X : Fix.Zero, otherKnown ? otherAt.Y : Fix.Zero));
+            otherKnown ? otherTag.TypeId : null, otherKnown ? otherAt.X : Fix.Zero, otherKnown ? otherAt.Y : Fix.Zero,
+            otherKnown, position.X, position.Y));
     }
 
     private IReadOnlyList<EffectDef> TriggersOf(string typeId, TriggerEvent on)
@@ -350,7 +376,7 @@ public sealed class EffectSystem
                 AddIfFactionMatches(firing, firing.Other, target.Faction);
                 break;
             case TargetShape.Circle:
-                var center = new Position(firing.X, firing.Y);
+                var center = new Position(firing.CenterX, firing.CenterY);
                 foreach (int id in _world.Positions)
                 {
                     if (_world.IsAttackable(id) && _reach.GapFromPoint(center, id) <= target.Radius)
@@ -439,8 +465,7 @@ public sealed class EffectSystem
         SummonDef summon = effect.Summon!;
         bool atOther = effect.Target.Shape == TargetShape.Other;
         string? typeId = summon.CopyOther ? firing.OtherType : summon.UnitId;
-        bool needsOther = atOther || summon.CopyOther;
-        if ((needsOther && firing.OtherType == null) || typeId == null || _content.UnitOrNull(typeId) is not UnitDef def)
+        if ((atOther && !firing.OtherAnchored) || typeId == null || _content.UnitOrNull(typeId) is not UnitDef def)
         {
             return;
         }
@@ -503,6 +528,10 @@ public sealed class EffectSystem
         return null;
     }
 
+    /// <summary>
+    /// <see cref="On"/> is 0 for a cast. <see cref="OtherAnchored"/> says <see cref="OtherX"/> and <see cref="OtherY"/>
+    /// are a real place: the other party, or a cast's point. A circle is centred on <see cref="CenterX"/>, <see cref="CenterY"/>.
+    /// </summary>
     private readonly record struct Firing(
         int Owner,
         string OwnerType,
@@ -514,5 +543,8 @@ public sealed class EffectSystem
         int Depth,
         string? OtherType,
         Fix OtherX,
-        Fix OtherY);
+        Fix OtherY,
+        bool OtherAnchored,
+        Fix CenterX,
+        Fix CenterY);
 }

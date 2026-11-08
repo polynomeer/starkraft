@@ -34,7 +34,7 @@ public class MovementTests
             new[]
             {
                 "AliveSystem", "StatusSystem", "LifetimeSystem", "HarvestSystem", "OccupancySystem", "ConstructionSystem", "ResearchSystem",
-                "ProductionSystem", "PathfindingSystem", "MovementSystem", "CombatSystem", "VictorySystem", "VisionSystem",
+                "ProductionSystem", "PathfindingSystem", "MovementSystem", "AbilitySystem", "CombatSystem", "VictorySystem", "VisionSystem",
             },
             New().SystemOrder.ToArray());
     }

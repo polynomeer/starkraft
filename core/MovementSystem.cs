@@ -55,6 +55,10 @@ public sealed class MovementSystem : ITickSystem
             {
                 TickAttackChase(id, position, orders, attack);
             }
+            else if (orders[0] is Order.Cast cast)
+            {
+                TickCastApproach(id, position, cast);
+            }
             else if (orders[0] is not Order.Hold)
             {
                 TickRoute(id, position, orders, orders[0]);
@@ -203,6 +207,50 @@ public sealed class MovementSystem : ITickSystem
         }
     }
 
+    /// <summary>
+    /// Walks a caster into range and stops it there; the ability system casts and drops the order. A target that is
+    /// gone is left for the ability system to drop. A path that ends short of range is asked for again, so a caster
+    /// keeps following a unit that moved.
+    /// </summary>
+    private void TickCastApproach(int id, Position position, Order.Cast cast)
+    {
+        if (AbilityRules.AbilityOf(_world, _content, id, cast.AbilityId) is not AbilityDef ability
+            || ability.TargetKind == AbilityTargetKind.None
+            || AbilityRules.CheckTarget(_world, ability, id, cast.Target, cast.X, cast.Y) != null)
+        {
+            return;
+        }
+
+        if (AbilityRules.InRange(_world, _reach, ability, id, cast))
+        {
+            _world.ClearPath(id);
+            return;
+        }
+
+        if (cast.Target > 0 && RefreshChasePath(id, _world.Positions.Get(cast.Target)))
+        {
+            return;
+        }
+
+        if (!_world.PathFollows.TryGet(id, out PathFollow path))
+        {
+            TryRequestMissingPath(id);
+            return;
+        }
+
+        if (path.Index >= path.Length)
+        {
+            _world.ClearPath(id);
+            return;
+        }
+
+        (int nodeX, int nodeY) = NodeTile(path);
+        if (!TryReplan(id, position, cast, path, nodeX, nodeY))
+        {
+            AdvanceTowardNode(id, position, path, nodeX, nodeY);
+        }
+    }
+
     private bool IsValidAttackTarget(int id, int targetId, out Position? target)
     {
         target = null;
@@ -241,7 +289,7 @@ public sealed class MovementSystem : ITickSystem
         int tileY = position.Y.FloorToInt();
         int stepX = tileX + System.Math.Sign(nodeX - tileX);
         int stepY = tileY + System.Math.Sign(nodeY - tileY);
-        bool isAttackGoal = order is Order.Attack && stepX == path.GoalX && stepY == path.GoalY;
+        bool isAttackGoal = AbilityRules.ChasesUnit(order) && stepX == path.GoalX && stepY == path.GoalY;
         bool blocked = !_world.Map.IsPassable(stepX, stepY)
             || (!isAttackGoal && _world.Occupancy.IsBlockedAllowing(stepX, stepY, tileX, tileY))
             || IsDiagonalCornerBlocked(tileX, tileY, stepX, stepY);

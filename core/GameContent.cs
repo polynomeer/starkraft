@@ -26,7 +26,8 @@ public sealed record UnitDef(
     IReadOnlyList<string> ProducerTypes,
     IReadOnlyList<string> RequiredBuildingTypes,
     IReadOnlyList<string> RequiredResearchIds,
-    IReadOnlyList<TriggerDef> Triggers)
+    IReadOnlyList<TriggerDef> Triggers,
+    IReadOnlyList<string> Abilities)
 {
     public bool IsTrainable => BuildTicks > 0;
 }
@@ -72,12 +73,14 @@ public sealed class GameContent
     private readonly Dictionary<string, BuildingDef> _buildings = new();
     private readonly Dictionary<string, TechDef> _techs = new();
     private readonly Dictionary<string, StatusDef> _statuses = new();
+    private readonly Dictionary<string, AbilityDef> _abilities = new();
 
     public IReadOnlyList<UnitDef> Units { get; }
     public IReadOnlyList<WeaponDef> Weapons { get; }
     public IReadOnlyList<BuildingDef> Buildings { get; }
     public IReadOnlyList<TechDef> Techs { get; }
     public IReadOnlyList<StatusDef> Statuses { get; }
+    public IReadOnlyList<AbilityDef> Abilities { get; }
     public ulong Hash { get; }
 
     public GameContent(
@@ -85,18 +88,21 @@ public sealed class GameContent
         IReadOnlyList<WeaponDef> weapons,
         IReadOnlyList<BuildingDef> buildings,
         IReadOnlyList<TechDef> techs,
-        IReadOnlyList<StatusDef>? statuses = null)
+        IReadOnlyList<StatusDef>? statuses = null,
+        IReadOnlyList<AbilityDef>? abilities = null)
     {
         Units = units;
         Weapons = weapons;
         Buildings = buildings;
         Techs = techs;
         Statuses = statuses ?? Array.Empty<StatusDef>();
+        Abilities = abilities ?? Array.Empty<AbilityDef>();
         Index(units, _units, def => def.Id, "unit");
         Index(weapons, _weapons, def => def.Id, "weapon");
         Index(buildings, _buildings, def => def.Id, "building");
         Index(techs, _techs, def => def.Id, "tech");
         Index(Statuses, _statuses, def => def.Id, "status");
+        Index(Abilities, _abilities, def => def.Id, "ability");
         ValidateReferences();
         Hash = ComputeHash();
     }
@@ -111,6 +117,7 @@ public sealed class GameContent
     public BuildingDef? BuildingOrNull(string id) => _buildings.GetValueOrDefault(id);
     public TechDef? TechOrNull(string id) => _techs.GetValueOrDefault(id);
     public StatusDef? StatusOrNull(string id) => _statuses.GetValueOrDefault(id);
+    public AbilityDef? AbilityOrNull(string id) => _abilities.GetValueOrDefault(id);
 
     /// <summary>Rounds up, so a timer is never shorter than the data asks for at any tick rate.</summary>
     public static int MillisecondsToTicks(int milliseconds) =>
@@ -141,6 +148,12 @@ public sealed class GameContent
             RequireAllKnown(_buildings, unit.RequiredBuildingTypes, where, "required building");
             RequireAllKnown(_techs, unit.RequiredResearchIds, where, "required research");
             ValidateTriggers(unit, where);
+            ValidateAbilityList(unit, where);
+        }
+
+        foreach (AbilityDef ability in Abilities)
+        {
+            ValidateEffects(ability.Effects, $"ability '{ability.Id}'");
         }
 
         foreach (BuildingDef building in Buildings)
@@ -169,17 +182,35 @@ public sealed class GameContent
                 throw new InvalidDataException($"{where} has more than one '{trigger.On}' trigger.");
             }
 
-            foreach (EffectDef effect in trigger.Effects)
-            {
-                if (effect.Kind == EffectKind.ApplyStatus)
-                {
-                    RequireKnown(_statuses, effect.StatusId!, where, "status");
-                }
+            ValidateEffects(trigger.Effects, where);
+        }
+    }
 
-                if (effect.Summon?.UnitId is string summoned)
-                {
-                    RequireKnown(_units, summoned, where, "summoned unit");
-                }
+    private void ValidateAbilityList(UnitDef unit, string where)
+    {
+        var seen = new HashSet<string>();
+        foreach (string id in unit.Abilities)
+        {
+            RequireKnown(_abilities, id, where, "ability");
+            if (!seen.Add(id))
+            {
+                throw new InvalidDataException($"{where} lists ability '{id}' more than once.");
+            }
+        }
+    }
+
+    private void ValidateEffects(IReadOnlyList<EffectDef> effects, string where)
+    {
+        foreach (EffectDef effect in effects)
+        {
+            if (effect.Kind == EffectKind.ApplyStatus)
+            {
+                RequireKnown(_statuses, effect.StatusId!, where, "status");
+            }
+
+            if (effect.Summon?.UnitId is string summoned)
+            {
+                RequireKnown(_units, summoned, where, "summoned unit");
             }
         }
     }
@@ -212,6 +243,7 @@ public sealed class GameContent
             writer.Write(u.WeaponId ?? "");
             WriteLists(writer, u.ProducerTypes, u.RequiredBuildingTypes, u.RequiredResearchIds);
             WriteTriggers(writer, u.Triggers);
+            WriteLists(writer, u.Abilities);
         }
 
         foreach (WeaponDef w in Weapons)
@@ -236,6 +268,15 @@ public sealed class GameContent
         {
             writer.Write(s.Id);
             WriteInts(writer, s.DurationTicks, s.MaxStacks, s.DamagePerStack, s.ArmorPerStack, s.SpeedPercentPerStack);
+        }
+
+        foreach (AbilityDef a in Abilities)
+        {
+            writer.Write(a.Id);
+            writer.Write((byte)a.TargetKind);
+            writer.Write((byte)a.TargetFaction);
+            WriteInts(writer, a.Range.Raw, a.CooldownTicks);
+            WriteEffects(writer, a.Effects);
         }
 
         writer.Flush();
@@ -267,18 +308,23 @@ public sealed class GameContent
         foreach (TriggerDef trigger in triggers)
         {
             writer.Write((byte)trigger.On);
-            writer.Write(trigger.Effects.Count);
-            foreach (EffectDef e in trigger.Effects)
-            {
-                writer.Write((byte)e.Kind);
-                writer.Write((byte)e.Target.Shape);
-                writer.Write((byte)e.Target.Faction);
-                WriteInts(writer, e.Target.Radius.Raw, e.Amount);
-                writer.Write(e.StatusId ?? "");
-                writer.Write(e.Summon?.UnitId ?? "");
-                writer.Write(e.Summon?.CopyOther ?? false);
-                writer.Write(e.Summon?.LifetimeTicks ?? 0);
-            }
+            WriteEffects(writer, trigger.Effects);
+        }
+    }
+
+    private static void WriteEffects(BinaryWriter writer, IReadOnlyList<EffectDef> effects)
+    {
+        writer.Write(effects.Count);
+        foreach (EffectDef e in effects)
+        {
+            writer.Write((byte)e.Kind);
+            writer.Write((byte)e.Target.Shape);
+            writer.Write((byte)e.Target.Faction);
+            WriteInts(writer, e.Target.Radius.Raw, e.Amount);
+            writer.Write(e.StatusId ?? "");
+            writer.Write(e.Summon?.UnitId ?? "");
+            writer.Write(e.Summon?.CopyOther ?? false);
+            writer.Write(e.Summon?.LifetimeTicks ?? 0);
         }
     }
 

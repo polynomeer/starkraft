@@ -50,6 +50,9 @@ public abstract record Order
     public sealed record Hold : Order;
     public sealed record Construct(int Target) : Order;
     public sealed record Attack(int Target) : Order;
+
+    /// <summary>Walk into range and cast. <see cref="Target"/> is 0 unless the ability targets a unit; X and Y are used only for a point.</summary>
+    public sealed record Cast(string AbilityId, int Target, Fix X, Fix Y) : Order;
 }
 
 public sealed class PathFollow
